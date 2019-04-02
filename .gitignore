@@ -50,9 +50,3 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-
-
-#Autogenerados de eclipse
-.cproject
-.project
-.settings/
