@@ -54,5 +54,5 @@ dkms.conf
 
 #Autogenerados de eclipse
 .cproject
-.proyect
+.project
 .settings/
