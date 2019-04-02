@@ -10,8 +10,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "Kernel/Kernel.h"
+
 
 int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+
+	procesoKernel();
+
 	return EXIT_SUCCESS;
 }

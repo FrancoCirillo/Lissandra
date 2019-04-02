@@ -86,6 +86,8 @@ listadoProcesos* listaProcesos;
 //configuracion es global
 config configuracion;
 
+int procesoKernel();
+
 //liberar free()
 proceso* popProceso();
 void escucharYEncolarProcesos();
