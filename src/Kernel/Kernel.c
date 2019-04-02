@@ -9,6 +9,7 @@
 
 int main()
 {
+	inicializarConfiguracion();
 
 	inicializarMetricas();
 
@@ -18,9 +19,9 @@ int main()
 
 	leerProcesosDesdeConsola();
 
-	escucharYEncolarProcesos();
+	//escucharYEncolarProcesos();
 
-	ejecutar(listaProcesos,m);
+	//ejecutar();
 
 
 	return 0;
@@ -79,6 +80,7 @@ void escucharYEncolarProcesos(){
 
 }
 void informarMetricas(){
+	loguear("Metricas informadas");
 	//logueo
 	//reinicio valores
 }
@@ -120,7 +122,7 @@ int realizar_proceso(proceso *unProceso){
 	}
 	return 1;
 }
-void obtenerConfiguracion(){
+void inicializarConfiguracion(){
 	char* rutaConfiguracion="configuracion.config";
 	config configuracion;
 	configuracion.quantum=atoi(getByKey(rutaConfiguracion,"quantum"));
@@ -128,6 +130,7 @@ void obtenerConfiguracion(){
 	configuracion.gradoMultiprocesamiento=atoi(getByKey(rutaConfiguracion,"gradoMultiprocesamiento"));
 	configuracion.ip=getByKey(rutaConfiguracion,"ip");
 	configuracion.puerto=getByKey(rutaConfiguracion,"puerto");
+	configuracion.rutaLog=getByKey)rutaConfiguracion,"rutaLog");
 }
 instruccion* obtenerInstruccion(proceso *unProceso){
 	listaInstruccion* aux=unProceso->listaInstrucciones;
@@ -162,12 +165,29 @@ memoria obtenerMemoria(instruccion instr){
 void metricarInsert(clock_t tiempoRespuesta){
 	m.tiempoInsert=(m.tiempoInsert*m.cantidadInsert+tiempoRespuesta)/(m.cantidadInsert++);
 }
-void loggear(char* mensaje){
-	puts(mensaje);
+
+void loguear(char *valor){
+	g_logger = log_create(configuracion.rutaLog,"un logueo" , 1, LOG_LEVEL_INFO);
+	log_info(g_logger, valor);
+	log_destroy(g_logger);
 }
 void inicializarMemorias(){
-
+	loguear("Memorias inicializadas");
 }
 char* getByKey(char* ruta, char* buscado){
-	return "123";
+	char* valor;
+
+	//ahora, vamos a abrir el archivo de configuracion "tp0.config"
+	g_config = config_create(ruta);
+
+	//tenemos que levantar en valor asociado a la clave "CLAVE" del archivo y asignarselo a la variable valor
+	valor=config_get_string_value(g_config,clave);
+	loguear("Obteniendo datos");
+	loguear(valor);
+	//config_destroy(g_config);
+	return valor;
+
+}
+void inicializarMetricas(){
+	loguear("Metricas inicializadas");
 }

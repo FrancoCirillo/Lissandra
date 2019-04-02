@@ -49,6 +49,7 @@ typedef struct config{
 	int gradoMultiprocesamiento;
 	int codigoInsert;
 	int codigoSelect;
+	char* rutaLog;
 	char* ip;
 	char* puerto;
 }config;
@@ -94,5 +95,7 @@ void metricarInsert(clock_t tiempoRespuesta);
 void loggear(char* mensaje);
 char* getByKey(char* ruta, char* buscado);
 void informarMetricas();
-void inicializarMemorias()
+void inicializarMemorias();
+void inicializarMetricas();
+void inicializarConfiguracion();
 #endif /* kernel.h */
