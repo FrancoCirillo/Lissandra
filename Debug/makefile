@@ -24,19 +24,19 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: tp-2019-Como-PCs-en-el-agua
+all: tp-2019-1c-Como-PCs-en-el-agua
 
 # Tool invocations
-tp-2019-Como-PCs-en-el-agua: $(OBJS) $(USER_OBJS)
+tp-2019-1c-Como-PCs-en-el-agua: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cross GCC Linker'
-	gcc -L/usr/include/commons -o "tp-2019-Como-PCs-en-el-agua" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L/usr/include/commons -o "tp-2019-1c-Como-PCs-en-el-agua" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) tp-2019-Como-PCs-en-el-agua
+	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) tp-2019-1c-Como-PCs-en-el-agua
 	-@echo ' '
 
 .PHONY: all clean dependents

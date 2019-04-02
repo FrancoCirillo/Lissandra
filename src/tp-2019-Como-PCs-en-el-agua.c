@@ -10,12 +10,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "Kernel/Kernel.h"
 
+int pr(void) {
 
-int main(void) {
-
-	procesoKernel();
 
 	return EXIT_SUCCESS;
 }

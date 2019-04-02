@@ -7,7 +7,8 @@
 
 #include "Kernel.h"
 
-int procesoKernel() {
+int main() {
+
 	inicializarConfiguracion();
 
 	inicializarMetricas();
@@ -119,7 +120,7 @@ int realizar_proceso(proceso *unProceso) {
 	return 1;
 }
 void inicializarConfiguracion() {
-	char* rutaConfiguracion = "configuracion.config";
+	char* rutaConfiguracion = "Kernel.config";
 	config configuracion;
 	configuracion.quantum = atoi(getByKey(rutaConfiguracion, "quantum"));
 	configuracion.codigoError = atoi(
@@ -149,8 +150,9 @@ instruccion* obtenerInstruccion(proceso *unProceso) {
 
 }
 response* enviar_instruccion(instruccion *i) {
-	response *r;
-	return r;
+	response r={.descripcion="Una descripcion",.codigoRespuesta=1,.tipoEnviado=1};
+
+	return &r;
 }
 
 memoria obtenerMemoria(instruccion* instr) {
@@ -176,7 +178,7 @@ char* getByKey(char* ruta, char* key) {
 
 	//ahora, vamos a abrir el archivo de configuracion "tp0.config"
 	g_config = config_create(ruta);
-
+	puts("Config accedido!");
 	//tenemos que levantar en valor asociado a la clave "CLAVE" del archivo y asignarselo a la variable valor
 	valor = config_get_string_value(g_config, key);
 	loggear("Obteniendo datos");
