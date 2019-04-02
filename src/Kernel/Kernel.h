@@ -15,10 +15,14 @@
 #include<commons/config.h>
 #include<readline/readline.h>
 #include<stdio.h>
-//#include "utils.h"
 #include<readline/readline.h>
 #include <stdio.h>
 #include <string.h>
+#include "utils.h"
+#include<commons/config.h>
+
+t_log* g_logger;
+t_config* g_config;
 
 typedef enum {NEW,READY,EXEC,EXIT}estado;
 
@@ -88,9 +92,13 @@ void escucharYEncolarProcesos();
 void informarMetricas();
 void leerProcesosDesdeConsola();
 int realizar_proceso(proceso *unProceso );
-memoria obtenerMemoria(instruccion instr);
+
+memoria obtenerMemoria(instruccion* instr);
+
 instruccion* obtenerInstruccion(proceso *unProceso);
-response* enviar_mensaje(instruccion instr);
+
+response* enviar_instruccion(instruccion *i);
+
 void metricarInsert(clock_t tiempoRespuesta);
 void loggear(char* mensaje);
 char* getByKey(char* ruta, char* buscado);
@@ -98,4 +106,5 @@ void informarMetricas();
 void inicializarMemorias();
 void inicializarMetricas();
 void inicializarConfiguracion();
+
 #endif /* kernel.h */

@@ -24,6 +24,7 @@ int main()
 	//ejecutar();
 
 
+
 	return 0;
 }
 
@@ -48,7 +49,7 @@ int ejecutar(){
 				agregarAlFinal(listaProcesos,p);
 			}
 			//sleep;
-			obtenerConfiguracion();
+			inicializarConfiguracion();
 		}
 	}
 
@@ -61,11 +62,11 @@ proceso* popProceso(){
 void agregarAlFinal(listadoProcesos* listado,proceso unProceso){
 	listadoProcesos* aux=listado;
 	if(aux==NULL){
-			aux=malloc(sizeof(listadoProcesos));
-			aux->p=unProceso;
-			aux->sig=NULL;
-			return;
-		}
+		aux=malloc(sizeof(listadoProcesos));
+		aux->p=unProceso;
+		aux->sig=NULL;
+		return;
+	}
 	while(aux->sig!=NULL){
 		aux=aux->sig;
 	}
@@ -101,7 +102,7 @@ int realizar_proceso(proceso *unProceso){
 
 		instruccion->tiempoEnvio=clock();
 
-		response=enviar_mensaje(*instruccion);//responde con el tipo de instruccion enviada
+		response=enviar_instruccion(instruccion);//responde con el tipo de instruccion enviada
 
 		instruccion->tiempoRespuesta=instruccion->tiempoEnvio-clock();
 
@@ -130,7 +131,7 @@ void inicializarConfiguracion(){
 	configuracion.gradoMultiprocesamiento=atoi(getByKey(rutaConfiguracion,"gradoMultiprocesamiento"));
 	configuracion.ip=getByKey(rutaConfiguracion,"ip");
 	configuracion.puerto=getByKey(rutaConfiguracion,"puerto");
-	configuracion.rutaLog=getByKey)rutaConfiguracion,"rutaLog");
+	configuracion.rutaLog=getByKey(rutaConfiguracion,"rutaLog");
 }
 instruccion* obtenerInstruccion(proceso *unProceso){
 	listaInstruccion* aux=unProceso->listaInstrucciones;
@@ -150,15 +151,12 @@ instruccion* obtenerInstruccion(proceso *unProceso){
 	return &aux->instruccion;
 
 }
-response* enviar_mensaje(instruccion instr){
-	//utilizo datos de conexion para enviar_mensaje
-	memoria m;
-	response r;
-	//utilizo criterios para definir memoria
-	m=obtenerMemoria(instr);
-	return &r;
+response* enviar_instruccion(instruccion *i){
+	response *r;
+	return r;
 }
-memoria obtenerMemoria(instruccion instr){
+
+memoria obtenerMemoria(instruccion* instr){
 	memoria m;
 	return m;
 }
@@ -174,14 +172,14 @@ void loguear(char *valor){
 void inicializarMemorias(){
 	loguear("Memorias inicializadas");
 }
-char* getByKey(char* ruta, char* buscado){
+char* getByKey(char* ruta, char* key){
 	char* valor;
 
 	//ahora, vamos a abrir el archivo de configuracion "tp0.config"
 	g_config = config_create(ruta);
 
 	//tenemos que levantar en valor asociado a la clave "CLAVE" del archivo y asignarselo a la variable valor
-	valor=config_get_string_value(g_config,clave);
+	valor=config_get_string_value(g_config,key);
 	loguear("Obteniendo datos");
 	loguear(valor);
 	//config_destroy(g_config);
