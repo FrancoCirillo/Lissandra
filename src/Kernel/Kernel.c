@@ -27,18 +27,16 @@ int main()
 }
 
 int ejecutar(){
-	config configuracion=obtenerConfiguracion();
+	proceso* p;
 	while(1){
-		config configuracion=obtenerConfiguracion();
-
-		proceso p=pop(listaProcesos);
-		if(p=null){
+		p=popProceso();
+		if(p==NULL){
 			//sleep
 			loggear("No hay nada que correr");
 		}else{
 			p->estadoActual=EXEC;
 
-			if(!realizar_proceso(p,configuracion)){
+			if(!realizar_proceso(p)){
 				return 0;
 			}
 			//agrega el P al final de la cola luego de enviarlo(y este internamente lleva la cuenta de por cual va en current)
@@ -46,11 +44,34 @@ int ejecutar(){
 				return 1;
 			}else{
 				p->estadoActual==NEW;
-				push(listaProcesos,p);
+				agregarAlFinal(listaProcesos,p);
 			}
 			//sleep;
+			obtenerConfiguracion();
 		}
 	}
+
+}
+proceso* popProceso(){
+	proceso unProceso=listaProcesos->p;
+	listaProcesos=listaProcesos->sig;
+	return &unProceso;
+}
+void agregarAlFinal(listadoProcesos* listado,proceso unProceso){
+	listadoProcesos* aux=listado;
+	if(aux==NULL){
+			aux=malloc(sizeof(listadoProcesos));
+			aux->p=unProceso;
+			aux->sig=NULL;
+			return;
+		}
+	while(aux->sig!=NULL){
+		aux=aux->sig;
+	}
+
+	aux->sig=malloc(sizeof(listadoProcesos));
+	aux->sig->p=unProceso;
+	aux->sig->sig=NULL;
 
 }
 void escucharYEncolarProcesos(){
@@ -64,29 +85,29 @@ void informarMetricas(){
 void leerProcesosDesdeConsola(){
 	//leo creo nuevo proceso y agrego a lista
 }
-int realizar_proceso(proceso unProceso , config configuracion){
-	response respuesta;
-	char* instruccion;
+int realizar_proceso(proceso *unProceso){
+	response* response;
+	instruccion* instruccion;
 
 
 
-	for(int i=0, i<configuracion->quantum,i++){
+	for(int i=0; i<configuracion.quantum;i++){
 
 		//Se asume que todos tienen por lo menos 1 instruccion
 
-		instruccion=obtenerInstruccion(unProceso,i);
+		instruccion=obtenerInstruccion(unProceso);
 
 		instruccion->tiempoEnvio=clock();
 
-		response=enviar_mensaje(instruccion,configuracion);//responde con el tipo de instruccion enviada
+		response=enviar_mensaje(*instruccion);//responde con el tipo de instruccion enviada
 
-		instruccion->tiempoRespuesta=clock();
+		instruccion->tiempoRespuesta=instruccion->tiempoEnvio-clock();
 
-		if(response->tipoEnviado==configuracion->codigoInsert){
-			m->cantidadInsert++;
-			push (tiemposInserts,instruccion->tiempoRespuesta-instruccion->tiempoEnvio);
+		if(response->tipoEnviado==configuracion.codigoInsert){
+			m.cantidadInsert++;
+			metricarInsert (instruccion->tiempoRespuesta);
 		}
-		if(response->codigoRespuesta==configuracion->codigoError){
+		if(response->codigoRespuesta==configuracion.codigoError){
 			loggear("ERRROR:");
 			loggear(response->codigoRespuesta);
 			//0 si pincha
@@ -99,31 +120,54 @@ int realizar_proceso(proceso unProceso , config configuracion){
 	}
 	return 1;
 }
-config obtenerConfiguracion(){
+void obtenerConfiguracion(){
 	char* rutaConfiguracion="configuracion.config";
-	config c;
-	c->quantum=getByKey(rutaConfiguracion,"quantum");
-	c->codigoError=getByKey(rutaConfiguracion,"codigoError");
-	c->gradoMultiprocesamiento=getByKey(rutaConfiguracion,"gradoMultiprocesamiento");
-	c->ip=getByKey(rutaConfiguracion,"ip");
-	c->puerto=getByKey(rutaConfiguracion,"puerto");
+	config configuracion;
+	configuracion.quantum=atoi(getByKey(rutaConfiguracion,"quantum"));
+	configuracion.codigoError=atoi(getByKey(rutaConfiguracion,"codigoError"));
+	configuracion.gradoMultiprocesamiento=atoi(getByKey(rutaConfiguracion,"gradoMultiprocesamiento"));
+	configuracion.ip=getByKey(rutaConfiguracion,"ip");
+	configuracion.puerto=getByKey(rutaConfiguracion,"puerto");
 }
-char* obtenerInstruccion(proceso unProceso,posicion){
-	intruccion i=unProceso->listaInstrucciones[unProceso->current];
-	if(i==null){
+instruccion* obtenerInstruccion(proceso *unProceso){
+	listaInstruccion* aux=unProceso->listaInstrucciones;
+	if(aux==NULL){
 		unProceso->estadoActual=EXIT;
+		unProceso->current++;
+		return NULL;
 	}
-	unProceso->current++;
-	return i;
+	for(int i=0;i<unProceso->current;i++){
+		if(aux->sig!=NULL){
+			aux=aux->sig;
+		}else{
+			unProceso->estadoActual=EXIT;
+			unProceso->current++;
+		}
+	}
+	return &aux->instruccion;
 
 }
-void enviar_mensaje(instruccion instr,config configuracion){
+response* enviar_mensaje(instruccion instr){
 	//utilizo datos de conexion para enviar_mensaje
-
+	memoria m;
+	response r;
 	//utilizo criterios para definir memoria
-	memoria m=obtenerMemoria(instr);
-
+	m=obtenerMemoria(instr);
+	return &r;
 }
 memoria obtenerMemoria(instruccion instr){
+	memoria m;
+	return m;
+}
+void metricarInsert(clock_t tiempoRespuesta){
+	m.tiempoInsert=(m.tiempoInsert*m.cantidadInsert+tiempoRespuesta)/(m.cantidadInsert++);
+}
+void loggear(char* mensaje){
+	puts(mensaje);
+}
+void inicializarMemorias(){
 
+}
+char* getByKey(char* ruta, char* buscado){
+	return "123";
 }

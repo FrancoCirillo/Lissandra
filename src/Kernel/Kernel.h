@@ -5,8 +5,8 @@
  *      Author: rodrigo diaz
  */
 
-#ifndef TP0_H_
-#define TP0_H_
+#ifndef Kernel_H_
+#define Kernel_H_
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -15,47 +15,59 @@
 #include<commons/config.h>
 #include<readline/readline.h>
 #include<stdio.h>
-#include "utils.h"
+//#include "utils.h"
 #include<readline/readline.h>
 #include <stdio.h>
-enum estado(NEW,READY,EXEC,EXIT);
-struct{
+#include <string.h>
+
+typedef enum {NEW,READY,EXEC,EXIT}estado;
+
+typedef struct instruccion{
+	char* instr;
+	clock_t tiempoEnvio;
+	clock_t tiempoRespuesta;
+}instruccion;
+typedef struct listaInstruccion{
+	instruccion instruccion;
+	instruccion* sig;
+}listaInstruccion;
+typedef struct proceso{
 	estado estadoActual;
 	int current;
-	instruccion* listaInstrucciones;
+	listaInstruccion *listaInstrucciones;
 }proceso;
 
-struct {
-	char* instr;
-	int tiempoEnvio;
-	int tiempoRespuesta;
-}instruccion;
 
-struct {
+typedef struct listadoProcesos{
+	proceso p;
+	struct listadoProcesos *sig;
+}listadoProcesos;
+
+typedef struct config{
 	int quantum;
 	int codigoError;
 	int gradoMultiprocesamiento;
 	int codigoInsert;
 	int codigoSelect;
-	int ip;
-	int puerto;
+	char* ip;
+	char* puerto;
 }config;
 
-struct {
+typedef struct response{
 	int codigoRespuesta;
 	char* descripcion;
 	int tipoEnviado;
 
 }response;
 
-struct {
+typedef struct metricas{
 	int cantidadInsert;
 	int cantidadSelect;
-	listaInts tiemposInserts;
-	listaInts tiemposSelects
+	clock_t tiempoInsert;
+	clock_t tiempoSelect;
 }metricas;
 
-struct {
+typedef struct memoria{
 	int ip;
 	int puerto;
 }memoria;
@@ -63,10 +75,24 @@ struct {
 //metricas son globales
 metricas m;
 //lista procesos es global
-proceso* listaProcesos;
+listadoProcesos* listaProcesos;
 //criterios de memorias son globales
 
+//configuracion es global
+config configuracion;
 
 //liberar free()
-
+proceso* popProceso();
+void escucharYEncolarProcesos();
+void informarMetricas();
+void leerProcesosDesdeConsola();
+int realizar_proceso(proceso *unProceso );
+memoria obtenerMemoria(instruccion instr);
+instruccion* obtenerInstruccion(proceso *unProceso);
+response* enviar_mensaje(instruccion instr);
+void metricarInsert(clock_t tiempoRespuesta);
+void loggear(char* mensaje);
+char* getByKey(char* ruta, char* buscado);
+void informarMetricas();
+void inicializarMemorias()
 #endif /* kernel.h */
