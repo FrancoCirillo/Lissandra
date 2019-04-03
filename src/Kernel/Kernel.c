@@ -43,7 +43,7 @@ int ejecutar() {
 			if (p->estadoActual == EXIT) {
 				return 1;
 			} else {
-				p->estadoActual == NEW;
+				p->estadoActual == READY;
 				agregarAlFinal(listaProcesos, p);
 			}
 			//sleep;
