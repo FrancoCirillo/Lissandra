@@ -34,7 +34,7 @@ int ejecutar() {
 			//sleep
 			loggear("No hay nada que correr");
 		} else {
-			p->estadoActual = EXEC;
+			p->estadoActual = READY;
 
 			if (!realizar_proceso(p)) {
 				return 0;
@@ -89,7 +89,7 @@ void leerProcesosDesdeConsola() {
 int realizar_proceso(proceso *unProceso) {
 	response* response;
 	instruccion* instruccion;
-
+	unProceso->estadoActual==EXEC;
 	for (int i = 0; i < configuracion.quantum; i++) {
 
 		//Se asume que todos tienen por lo menos 1 instruccion
