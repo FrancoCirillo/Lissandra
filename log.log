@@ -1,0 +1,6 @@
+[INFO] 19:45:39:329 Servidor/(4491:4491): Servidor listo para recibir al cliente
+[INFO] 19:46:47:496 Servidor/(4586:4586): Servidor listo para recibir al cliente
+[INFO] 19:55:36:129 Servidor/(4943:4943): Servidor listo para recibir al cliente
+[INFO] 19:55:44:609 Servidor/(4943:4943): Se conecto un cliente!
+[INFO] 19:55:44:609 Servidor/(4943:4943): Me llego el mensaje Hola, soy un valor
+[ERROR] 19:55:53:42 Servidor/(4943:4943): el cliente se desconecto. Terminando servidor

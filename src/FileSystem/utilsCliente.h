@@ -1,12 +1,5 @@
-/*
- * conexiones.h
- *
- *  Created on: 2 mar. 2019
- *      Author: utnso
- */
-
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef UTILS_CLIENTE_
+#define UTILS_CLIENTE_
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -15,12 +8,7 @@
 #include<sys/socket.h>
 #include<netdb.h>
 #include<string.h>
-
-typedef enum
-{
-	MENSAJE,
-	PAQUETE
-}op_code;
+#include"definicionesConexiones.h"
 
 typedef struct
 {
@@ -43,4 +31,4 @@ void enviar_paquete(t_paquete* paquete, int socket_cliente);
 void liberar_conexion(int socket_cliente);
 void eliminar_paquete(t_paquete* paquete);
 
-#endif /* UTILS_H_ */
+#endif /* UTILS_CLIENTE_ */

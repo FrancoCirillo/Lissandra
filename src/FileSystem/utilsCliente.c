@@ -5,7 +5,7 @@
  *      Author: utnso
  */
 
-#include "utils.h"
+#include "utilsCliente.h"
 
 
 void* serializar_paquete(t_paquete* paquete, int bytes)
