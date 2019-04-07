@@ -43,7 +43,7 @@ int ejecutar() {
 			if (p->estadoActual == EXIT) {
 				return 1;
 			} else {
-				p->estadoActual == READY;
+				p->estadoActual = READY;
 				agregarAlFinal(listaProcesos, p);
 			}
 			//sleep;
@@ -84,6 +84,7 @@ void informarMetricas() {
 	//reinicio valores
 }
 void leerProcesosDesdeConsola() {
+	puts("Leyendo desde consola");
 	//leo creo nuevo proceso y agrego a lista
 }
 int realizar_proceso(proceso *unProceso) {
@@ -120,15 +121,12 @@ int realizar_proceso(proceso *unProceso) {
 	return 1;
 }
 void inicializarConfiguracion() {
-	char* rutaConfiguracion = "Kernel.config";
-	config configuracion;
+	char* rutaConfiguracion = "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/src/Kernel/Kernel.config";
 	configuracion.quantum = atoi(getByKey(rutaConfiguracion, "quantum"));
-	configuracion.codigoError = atoi(
-			getByKey(rutaConfiguracion, "codigoError"));
-	configuracion.gradoMultiprocesamiento = atoi(
-			getByKey(rutaConfiguracion, "gradoMultiprocesamiento"));
-	configuracion.ip = getByKey(rutaConfiguracion, "ip");
-	configuracion.puerto = getByKey(rutaConfiguracion, "puerto");
+	configuracion.codigoError = atoi(getByKey(rutaConfiguracion, "codigoError"));
+	configuracion.gradoMultiprocesamiento = atoi(getByKey(rutaConfiguracion, "gradoMultiprocesamiento"));
+	configuracion.ip = getByKey(rutaConfiguracion, "IP");
+	configuracion.puerto = getByKey(rutaConfiguracion, "PUERTO");
 	configuracion.rutaLog = getByKey(rutaConfiguracion, "rutaLog");
 }
 instruccion* obtenerInstruccion(proceso *unProceso) {
@@ -165,8 +163,7 @@ void metricarInsert(clock_t tiempoRespuesta) {
 }
 
 void loggear(char *valor) {
-	g_logger = log_create(configuracion.rutaLog, "un logueo", 1,
-			LOG_LEVEL_INFO);
+	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
 	log_destroy(g_logger);
 }
@@ -181,8 +178,10 @@ char* getByKey(char* ruta, char* key) {
 	puts("Config accedido!");
 	//tenemos que levantar en valor asociado a la clave "CLAVE" del archivo y asignarselo a la variable valor
 	valor = config_get_string_value(g_config, key);
-	loggear("Obteniendo datos");
-	loggear(valor);
+	puts("El valor encontrado fue: ");
+	puts(valor);
+//	loggear("Obteniendo datos");
+//	loggear(valor);
 	//config_destroy(g_config);
 	return valor;
 
