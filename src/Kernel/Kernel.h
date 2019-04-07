@@ -108,5 +108,4 @@ void informarMetricas();
 void inicializarMemorias();
 void inicializarMetricas();
 void inicializarConfiguracion();
-
 #endif /* kernel.h */

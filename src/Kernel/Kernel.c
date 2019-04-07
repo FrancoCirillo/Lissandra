@@ -84,7 +84,7 @@ void informarMetricas() {
 	//reinicio valores
 }
 void leerProcesosDesdeConsola() {
-	puts("Leyendo desde consola");
+	loggear("Leyendo desde consola");
 	//leo creo nuevo proceso y agrego a lista
 }
 int realizar_proceso(proceso *unProceso) {
@@ -172,16 +172,10 @@ void inicializarMemorias() {
 }
 char* getByKey(char* ruta, char* key) {
 	char* valor;
-
-	//ahora, vamos a abrir el archivo de configuracion "tp0.config"
 	g_config = config_create(ruta);
-	puts("Config accedido!");
-	//tenemos que levantar en valor asociado a la clave "CLAVE" del archivo y asignarselo a la variable valor
 	valor = config_get_string_value(g_config, key);
-	puts("El valor encontrado fue: ");
-	puts(valor);
-//	loggear("Obteniendo datos");
-//	loggear(valor);
+	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------",key,valor);
+
 	//config_destroy(g_config);
 	return valor;
 
@@ -189,3 +183,7 @@ char* getByKey(char* ruta, char* key) {
 void inicializarMetricas() {
 	loggear("Metricas inicializadas");
 }
+
+
+
+
