@@ -19,6 +19,7 @@ int main() {
 
 	leerProcesosDesdeConsola();
 
+	iniciarServidor(IP_KERNEL, PORT);
 	//escucharYEncolarProcesos();
 
 	//ejecutar();

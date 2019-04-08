@@ -1,0 +1,4 @@
+[INFO] 18:34:54:43 Servidor/(26242:26242): Servidor listo para recibir al cliente
+[INFO] 18:35:03:66 Servidor/(26242:26242): Se conecto un cliente!
+[INFO] 18:35:03:72 Servidor/(26242:26242): Me llego el mensaje 7890;parametro1;parametro2;parametro3;parametro4;
+[ERROR] 18:35:03:75 Servidor/(26242:26242): el cliente se desconecto. Terminando servidor
