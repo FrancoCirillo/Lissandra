@@ -7,7 +7,7 @@
 
 #include "servidor.h"
 
-int iniciarServidor(void)
+int iniciarServidor(char* ip_proceso, char* puerto_a_abrir)
 {
 	void iterator(char* value)
 	{
@@ -16,7 +16,7 @@ int iniciarServidor(void)
 
 	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG);
 
-	int server_fd = iniciar_servidor();
+	int server_fd = iniciar_servidor(ip_proceso, puerto_a_abrir);
 	log_info(logger, "Servidor listo para recibir al cliente");
 	int cliente_fd = esperar_cliente(server_fd);
 

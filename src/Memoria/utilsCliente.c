@@ -8,55 +8,85 @@
 #include "utilsCliente.h"
 
 
-void* serializar_paquete(t_paquete* paquete, int bytes)
-{
-	void * magic = malloc(bytes);
-	int desplazamiento = 0;
+//FUNCION PRINCIPAL:
+int enviarInstruccion(cod_proceso proceso, char* instruccion) {
 
-	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int));
-	desplazamiento+= sizeof(int);
-	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
-	desplazamiento+= paquete->buffer->size;
+	char* ip_proceso; //IP del Servidor
+//	char* puerto_proceso; TODO
 
-	return magic;
+	switch (proceso) {
+	case (KERNEL):
+		ip_proceso = strdup(IP_KERNEL);
+		break;
+	case(FILESYSTEM):
+		ip_proceso = strdup(IP_FILESYSTEM);
+		break;
+	case(MEMORIA):
+		ip_proceso = strdup(IP_MEMORIA);
+		break;
+	default:
+//TODO	log_warning(logger, "ERROR!");
+		puts("EL CODIGO DEL PROCESO NO ES CORRECTO");
+		break;
+	}
+
+	puts("Creando conexion...");
+
+	//conexion es el socket_cliente
+	int conexion = crear_conexion(ip_proceso, PORT);
+
+	enviar_mensaje(instruccion, conexion);
+
+	close(conexion);
+	return 0;
 }
 
+//Conecta el socket_cliente con el Servidor con ip ip y puerto puerto.
 int crear_conexion(char *ip, char* puerto)
 {
-	struct addrinfo hints;
+	struct addrinfo hints;//Es para pasarle nuestras preferencias a getaddrinfo
 	struct addrinfo *server_info;
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+	memset(&hints, 0, sizeof(hints)); //Se llena toda la estructura de 0s (por las dudas)
+	//Relleno default de addrinfo (no tiene importancia):
+	hints.ai_family = AF_UNSPEC; //No importa si es ipv4 o ipv6
+	hints.ai_socktype = SOCK_STREAM; //Usamos TCP
+	hints.ai_flags = AI_PASSIVE; //Rellena la IP por nosotros TODO:Chequear si queremos esto. Creo que igual no importa xq llenamos el primer argumetno de getaddrinfo con ip
 
+
+	//Rellena la estructura server_info con la info del Servidor (En realidad es un addrinfo**)
 	getaddrinfo(ip, puerto, &hints, &server_info);
+	//TODO: Chqeuear los errores de getaddrinfo()
 
+	//Crea el socket_cliente
+	//TODO: recorrer la lista "server_info" en vez de asumir que el primero funciona (Beeje's)
 	int socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
+	//ai_addr contiene el puerto e ip del servidor
 	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
-		printf("error");
+		puts("Error: no se pudo conectar con el Servidor"); //TODO: log de error
 
 	freeaddrinfo(server_info);
 
+	//una vez conectado, se pueden enviar cosas a traves del socket_cliente
 	return socket_cliente;
 }
 
+//Envia mensaje a traves de socket_cliente
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 
-	paquete->codigo_operacion = MENSAJE;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
+	crear_buffer(paquete);
+	paquete->codigo_operacion = MENSAJE; //MENSAJE o PAQUETE
+	paquete->buffer->size = strlen(mensaje) + 1;//strlen no cuenta el el \0
 	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size); //Copia el mensaje al buffer
 
-	int bytes = paquete->buffer->size + 2*sizeof(int);
+	int bytes = paquete->buffer->size + 2*sizeof(int);//un int por op_code codigo_operacion, otro por int size  (Creo)
+	//TODO: Revisar si usar 2*sizeof(int) o usar sizeof(paquete->buffer->size) + sizeof(paquete->codigo_operacion)
 
+	//Convierto de struct paquete a void* (Conjunto de bytes ""sin tipo"")
 	void* a_enviar = serializar_paquete(paquete, bytes);
 
 	send(socket_cliente, a_enviar, bytes, 0);
@@ -65,7 +95,28 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
+//Necesita la el tamanio total del paquete (bytes)
+void* serializar_paquete(t_paquete* paquete, int bytes)
+{
+	void * magic = malloc(bytes);
+	int desplazamiento = 0;
 
+	//Guardo en magic el codigo_operacion (MENSAJE o PAQUETE)
+	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(paquete->codigo_operacion));
+	desplazamiento+= sizeof(paquete->codigo_operacion);
+
+	//Guardo en magic el el tamanio (size) del PAQUETE o MENSAJE (stream)
+	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(paquete->buffer->size));
+	desplazamiento+= sizeof(paquete->buffer->size);
+
+	//Teniendo el tamanio (size) del MENSAJE o PAQUETE (stream), lo puedo guardar en magic
+	memcpy(magic + desplazamiento, paquete->buffer->stream, paquete->buffer->size);
+	desplazamiento+= paquete->buffer->size;
+
+	return magic;
+}
+
+//Inicializa un buffer y lo llena de vacio
 void crear_buffer(t_paquete* paquete)
 {
 	paquete->buffer = malloc(sizeof(t_buffer));
@@ -73,16 +124,18 @@ void crear_buffer(t_paquete* paquete)
 	paquete->buffer->stream = NULL;
 }
 
-t_paquete* crear_super_paquete(void)
-{
-	//me falta un malloc!
-	t_paquete* paquete;
+//Funciones de PAQUETE:
 
-	//descomentar despues de arreglar
-	//paquete->codigo_operacion = PAQUETE;
-	//crear_buffer(paquete);
-	return paquete;
-}
+//t_paquete* crear_super_paquete(void)
+//{
+//	//me falta un malloc!
+//	t_paquete* paquete;
+//
+//	//descomentar despues de arreglar
+//	//paquete->codigo_operacion = PAQUETE;
+//	//crear_buffer(paquete);
+//	return paquete;
+//}
 
 t_paquete* crear_paquete(void)
 {
@@ -117,9 +170,4 @@ void eliminar_paquete(t_paquete* paquete)
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
 	free(paquete);
-}
-
-void liberar_conexion(int socket_cliente)
-{
-	close(socket_cliente);
 }

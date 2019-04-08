@@ -1,7 +1,7 @@
 /*
- * conexiones.h
+ * utilsSevidir.h
  *
- *  Created on: 3 mar. 2019
+ *  Created on: 6 mar. 2019
  *      Author: utnso
  */
 
@@ -18,8 +18,9 @@
 #include<string.h>
 #include"definicionesConexiones.h"
 
-#define IP "127.0.0.1"
-#define PUERTO "4444"
+//Definidos en definicionesConexiones (Mala practica?)
+//#define IP "127.0.0.1"
+//#define PUERTO "4444"
 
 typedef struct instr{
 	int codigoInstruccion;
@@ -35,7 +36,7 @@ t_log* logger;
 
 void* recibir_buffer(int*, int);
 
-int iniciar_servidor(void);
+int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir);
 int esperar_cliente(int);
 t_list* recibir_paquete(int);
 void recibir_mensaje(int);

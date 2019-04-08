@@ -5,9 +5,18 @@
  *      Author: utnso
  */
 
+/*
+ *
+ * iniciar_servidor() cambia IP_MEMORIA (y PORT?) según qué proceso
+ * lo llame, pero no está hecho polimorficamente.
+ * TODO: hacer iniciar_servidor() generica para poder tener
+ * un urtilsServidor.h y .c compartido entre los procesos
+ *
+ */
+
 #include"utilsServidor.h"
 
-int iniciar_servidor(void)
+int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir)
 {
 	int socket_servidor;
 
@@ -18,7 +27,7 @@ int iniciar_servidor(void)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    getaddrinfo(IP, PUERTO, &hints, &servinfo);
+    getaddrinfo(ip_proceso, puerto_a_abrir, &hints, &servinfo);//TODO: cambiar esto para que sea generico
 
     for (p=servinfo; p != NULL; p = p->ai_next)
     {
@@ -46,7 +55,7 @@ int esperar_cliente(int socket_servidor)
 	struct sockaddr_in dir_cliente;
 	int tam_direccion = sizeof(struct sockaddr_in);
 
-	int socket_cliente = accept(socket_servidor, (void*) &dir_cliente, &tam_direccion);
+	int socket_cliente = accept( socket_servidor, (void*) &dir_cliente, &tam_direccion);
 
 	log_info(logger, "Se conecto un cliente!");
 

@@ -9,7 +9,6 @@
 #define MEMORIA_MEMORIA_H_
 
 #include<stdio.h>
-#include"tp0.h"
 #include"servidor.h"
 
 #endif /* MEMORIA_MEMORIA_H_ */

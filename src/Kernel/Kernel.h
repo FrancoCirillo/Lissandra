@@ -19,7 +19,6 @@
 #include<readline/readline.h>
 #include <stdio.h>
 #include <string.h>
-#include "tp0.h"
 #include"servidor.h"
 
 t_log* g_logger;
