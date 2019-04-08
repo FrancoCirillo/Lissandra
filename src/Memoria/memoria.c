@@ -9,6 +9,6 @@
 
 int main() {
 	printf("PROCESO MEMORIA");
-	iniciarCliente();
+	iniciarServidor();
 	return 0;
 }

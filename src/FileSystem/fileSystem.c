@@ -2,6 +2,6 @@
 
 int main() {
 	printf("PROCESO FILESYSTEM");
-	iniciarServidor();
+	enviarInstruccion("123456;parametro1;parametro2;parametro3;parametro4;", MEMORIA);
 	return 0;
 }

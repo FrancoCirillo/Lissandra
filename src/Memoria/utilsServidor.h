@@ -21,7 +21,15 @@
 #define IP "127.0.0.1"
 #define PUERTO "4444"
 
-
+typedef struct instr{
+	int codigoInstruccion;
+	char* param1;
+	char* param2;
+	char* param3;
+	char* param4;
+}instr;
+char* substr(const char *src, int m, int n);
+int deserializar(char* mensaje,instr* outPut);
 
 t_log* logger;
 

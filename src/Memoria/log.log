@@ -1,0 +1,8 @@
+[INFO] 22:04:38:725 Servidor/(9813:9813): Servidor listo para recibir al cliente
+[INFO] 22:06:04:568 Servidor/(9813:9813): Se conecto un cliente!
+[INFO] 22:06:04:575 Servidor/(9813:9813): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[INFO] 22:08:45:231 Servidor/(9935:9935): Servidor listo para recibir al cliente
+[INFO] 22:09:08:30 Servidor/(9935:9935): Se conecto un cliente!
+[INFO] 22:09:08:30 Servidor/(9935:9935): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[ERROR] 22:09:08:31 Servidor/(9935:9935): el cliente se desconecto. Terminando servidor
+[INFO] 22:28:17:46 Servidor/(10514:10514): Servidor listo para recibir al cliente

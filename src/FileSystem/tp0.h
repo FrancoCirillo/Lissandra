@@ -17,9 +17,6 @@
 
 #include "utilsCliente.h"
 
-int iniciarCliente();
-t_log* iniciar_logger(void);
-t_config* leer_config(void);
-void leer_consola(t_log* logger);
-t_paquete* armar_paquete();
+int enviarInstruccion(char* instruccion, cod_proceso proceso);
+t_config* leer_config();
 #endif /* TP0_H_ */
