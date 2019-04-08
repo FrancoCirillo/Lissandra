@@ -5,15 +5,6 @@
  *      Author: utnso
  */
 
-/*
- *
- * iniciar_servidor() cambia IP_MEMORIA (y PORT?) según qué proceso
- * lo llame, pero no está hecho polimorficamente.
- * TODO: hacer iniciar_servidor() generica para poder tener
- * un urtilsServidor.h y .c compartido entre los procesos
- *
- */
-
 #include"utilsServidor.h"
 
 int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir)
