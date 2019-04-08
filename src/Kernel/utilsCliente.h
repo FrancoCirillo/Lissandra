@@ -22,6 +22,7 @@ typedef struct {
 
 int enviarInstruccion(cod_proceso proceso, char* instruccion);
 
+int conectar_con_proceso(cod_proceso proceso);
 int crear_conexion(char* ip, char* puerto);
 void enviar_mensaje(char* mensaje, int socket_cliente);
 t_paquete* crear_paquete(void);

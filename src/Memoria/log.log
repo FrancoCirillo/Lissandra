@@ -48,3 +48,7 @@
 [INFO] 18:35:03:65 Servidor/(26241:26241): Se conecto un cliente!
 [INFO] 18:35:03:72 Servidor/(26241:26241): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
 [ERROR] 18:35:03:73 Servidor/(26241:26241): el cliente se desconecto. Terminando servidor
+[INFO] 19:29:51:4 Servidor/(3664:3664): Servidor listo para recibir al cliente
+[INFO] 19:29:55:222 Servidor/(3664:3664): Se conecto un cliente!
+[INFO] 19:29:55:223 Servidor/(3664:3664): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[ERROR] 19:29:55:223 Servidor/(3664:3664): el cliente se desconecto. Terminando servidor

@@ -8,37 +8,30 @@
 #include "utilsCliente.h"
 
 
-//FUNCION PRINCIPAL:
-int enviarInstruccion(cod_proceso proceso, char* instruccion) {
-
+int conectar_con_proceso(cod_proceso proceso){
 	char* ip_proceso; //IP del Servidor
-//	char* puerto_proceso; TODO
+	//	char* puerto_proceso; TODO
 
-	switch (proceso) {
-	case (KERNEL):
-		ip_proceso = strdup(IP_KERNEL);
-		break;
-	case(FILESYSTEM):
-		ip_proceso = strdup(IP_FILESYSTEM);
-		break;
-	case(MEMORIA):
-		ip_proceso = strdup(IP_MEMORIA);
-		break;
-	default:
-//TODO	log_warning(logger, "ERROR!");
-		puts("EL CODIGO DEL PROCESO NO ES CORRECTO");
-		break;
-	}
+		switch (proceso) {
+		case (KERNEL):
+			ip_proceso = strdup(IP_KERNEL);
+			break;
+		case(FILESYSTEM):
+			ip_proceso = strdup(IP_FILESYSTEM);
+			break;
+		case(MEMORIA):
+			ip_proceso = strdup(IP_MEMORIA);
+			break;
+		default:
+	//TODO	log_warning(logger, "ERROR!");
+			puts("EL CODIGO DEL PROCESO NO ES CORRECTO");
+			break;
+		}
 
-	puts("Creando conexion...");
+		puts("Creando conexion...");
 
-	//conexion es el socket_cliente
-	int conexion = crear_conexion(ip_proceso, PORT);
-
-	enviar_mensaje(instruccion, conexion);
-
-	close(conexion);
-	return 0;
+		//conexion es el socket_cliente
+		return crear_conexion(ip_proceso, PORT);
 }
 
 //Conecta el socket_cliente con el Servidor con ip ip y puerto puerto.
