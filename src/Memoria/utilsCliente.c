@@ -56,11 +56,13 @@ int crear_conexion(char *ip, char* puerto)
 	int socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
 
 	//ai_addr contiene el puerto e ip del servidor
-	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
-		puts("Error: no se pudo conectar con el Servidor"); //TODO: log de error
-
+	while(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1){
+		puts("Error: no se pudo conectar con el Servidor, reintentando...");
+		sleep(2); //TODO: log de error
+	}
 	freeaddrinfo(server_info);
 
+	puts("Conectado como Cliente");
 	//una vez conectado, se pueden enviar cosas a traves del socket_cliente
 	return socket_cliente;
 }

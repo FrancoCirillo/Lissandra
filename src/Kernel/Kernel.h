@@ -19,7 +19,8 @@
 #include<readline/readline.h>
 #include <stdio.h>
 #include <string.h>
-#include"servidor.h"
+#include"utilsCliente.h"
+#include"utilsServidor.h"
 
 t_log* g_logger;
 t_config* g_config;

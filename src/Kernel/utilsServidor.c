@@ -9,6 +9,7 @@
 
 int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir)
 {
+	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG);
 	int socket_servidor;
 
     struct addrinfo hints, *servinfo, *p;
@@ -18,7 +19,7 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    getaddrinfo(ip_proceso, puerto_a_abrir, &hints, &servinfo);//TODO: cambiar esto para que sea generico
+    getaddrinfo(ip_proceso, puerto_a_abrir, &hints, &servinfo);
 
     for (p=servinfo; p != NULL; p = p->ai_next)
     {
@@ -39,6 +40,29 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir)
     log_trace(logger, "Listo para escuchar a mi cliente");
 
     return socket_servidor;
+}
+
+int escuchar_en(int server_fd){
+
+	int cliente_fd = esperar_cliente(server_fd); //accept()
+	while(1)
+	{	
+		int cod_op = recibir_operacion(cliente_fd);
+		switch(cod_op)
+		{
+		case MENSAJE:
+			recibir_mensaje(cliente_fd);//guardado en request
+			return EXIT_SUCCESS;
+//			break;
+		case -1:
+			log_error(logger, "el cliente se desconecto. Terminando servidor");
+			return EXIT_FAILURE;
+		default:
+			log_warning(logger, "Operacion desconocida. No quieras meter la pata");
+			break;
+		}
+	}
+
 }
 
 int esperar_cliente(int socket_servidor)
@@ -78,36 +102,12 @@ void* recibir_buffer(int* size, int socket_cliente)
 
 void recibir_mensaje(int socket_cliente)
 {
-	instr* request = malloc(sizeof(instr));
+	request = malloc(sizeof(instr));
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
 	log_info(logger, "Me llego el mensaje %s", buffer);
 	deserializar(buffer, request);
 	free(buffer);
-}
-
-//podemos usar la lista de valores para poder hablar del for y de como recorrer la lista
-t_list* recibir_paquete(int socket_cliente)
-{
-	int size;
-	int desplazamiento = 0;
-	void * buffer;
-	t_list* valores = list_create();
-	int tamanio;
-
-	buffer = recibir_buffer(&size, socket_cliente);
-	while(desplazamiento < size)
-	{
-		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-		desplazamiento+=sizeof(int);
-		char* valor = malloc(tamanio);
-		memcpy(valor, buffer+desplazamiento, tamanio);
-		desplazamiento+=tamanio;
-		list_add(valores, valor);
-	}
-	free(buffer);
-	return valores;
-	return NULL;
 }
 
 int deserializar(char* mensaje,instr* outPut){

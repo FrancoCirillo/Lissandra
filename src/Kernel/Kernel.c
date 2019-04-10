@@ -19,7 +19,11 @@ int main() {
 
 	leerProcesosDesdeConsola();
 
-	iniciarServidor(IP_KERNEL, PORT);
+	server_fd = iniciar_servidor(IP_KERNEL, PORT); //socket(), bind(), listen()
+	puts("Listo para escuchar");
+	puts("Escuchando...");
+	escuchar_en(server_fd);
+	close(server_fd);
 	//escucharYEncolarProcesos();
 
 	//ejecutar();

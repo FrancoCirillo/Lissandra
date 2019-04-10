@@ -1,10 +1,3 @@
-/*
- * utilsSevidir.h
- *
- *  Created on: 6 mar. 2019
- *      Author: utnso
- */
-
 #ifndef UTILS_SERVIDOR
 #define UTILS_SERVIDOR
 
@@ -18,10 +11,6 @@
 #include<string.h>
 #include"definicionesConexiones.h"
 
-//Definidos en definicionesConexiones (Mala practica?)
-//#define IP "127.0.0.1"
-//#define PUERTO "4444"
-
 typedef struct instr{
 	int codigoInstruccion;
 	char* param1;
@@ -33,9 +22,11 @@ char* substr(const char *src, int m, int n);
 int deserializar(char* mensaje,instr* outPut);
 
 t_log* logger;
+instr* request;
+int server_fd;
 
 void* recibir_buffer(int*, int);
-
+int escuchar_en(int server_fd);
 int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir);
 int esperar_cliente(int);
 t_list* recibir_paquete(int);

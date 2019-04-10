@@ -52,3 +52,55 @@
 [INFO] 19:29:55:222 Servidor/(3664:3664): Se conecto un cliente!
 [INFO] 19:29:55:223 Servidor/(3664:3664): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
 [ERROR] 19:29:55:223 Servidor/(3664:3664): el cliente se desconecto. Terminando servidor
+[INFO] 20:43:28:783 Servidor/(6800:6800): Servidor listo para recibir al cliente
+[INFO] 20:43:39:633 Servidor/(6800:6800): Se conecto un cliente!
+[INFO] 20:43:39:633 Servidor/(6800:6800): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[ERROR] 20:43:39:634 Servidor/(6800:6800): el cliente se desconecto. Terminando servidor
+[INFO] 20:47:08:312 Servidor/(7001:7001): Servidor listo para recibir al cliente
+[INFO] 20:47:14:226 Servidor/(7001:7001): Se conecto un cliente!
+[INFO] 20:47:14:227 Servidor/(7001:7001): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[ERROR] 20:47:20:237 Servidor/(7001:7001): el cliente se desconecto. Terminando servidor
+[INFO] 20:50:59:368 Servidor/(7231:7231): Servidor listo para recibir al cliente
+[INFO] 20:51:03:639 Servidor/(7231:7231): Se conecto un cliente!
+[INFO] 20:51:03:639 Servidor/(7231:7231): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[ERROR] 20:51:15:239 Servidor/(7231:7231): el cliente se desconecto. Terminando servidor
+[INFO] 20:51:55:356 Servidor/(7256:7256): Servidor listo para recibir al cliente
+[INFO] 20:52:00:307 Servidor/(7256:7256): Se conecto un cliente!
+[INFO] 20:52:00:308 Servidor/(7256:7256): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[INFO] 20:55:46:682 Servidor/(7855:7855): Servidor listo para recibir al cliente
+[INFO] 20:55:51:241 Servidor/(7855:7855): Se conecto un cliente!
+[INFO] 20:55:51:241 Servidor/(7855:7855): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[ERROR] 20:57:27:971 Servidor/(7855:7855): el cliente se desconecto. Terminando servidor
+[INFO] 20:59:08:336 Servidor/(8085:8085): Servidor listo para recibir al cliente
+[INFO] 20:59:13:112 Servidor/(8085:8085): Se conecto un cliente!
+[INFO] 20:59:13:112 Servidor/(8085:8085): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[INFO] 21:00:47:265 Servidor/(8268:8268): Servidor listo para recibir al cliente
+[INFO] 21:00:52:548 Servidor/(8268:8268): Se conecto un cliente!
+[INFO] 21:00:52:548 Servidor/(8268:8268): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[ERROR] 21:01:00:972 Servidor/(8268:8268): el cliente se desconecto. Terminando servidor
+[INFO] 21:01:48:442 Servidor/(8326:8326): Servidor listo para recibir al cliente
+[INFO] 21:01:53:301 Servidor/(8326:8326): Se conecto un cliente!
+[INFO] 21:01:53:301 Servidor/(8326:8326): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[INFO] 21:04:17:826 Servidor/(8385:8385): Servidor listo para recibir al cliente
+[INFO] 21:04:22:281 Servidor/(8385:8385): Se conecto un cliente!
+[INFO] 21:04:22:282 Servidor/(8385:8385): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[INFO] 21:05:57:27 Servidor/(8439:8439): Servidor listo para recibir al cliente
+[INFO] 21:07:40:70 Servidor/(8486:8486): Servidor listo para recibir al cliente
+[INFO] 21:07:42:787 Servidor/(8486:8486): Se conecto un cliente!
+[INFO] 21:07:42:787 Servidor/(8486:8486): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[INFO] 22:07:13:759 Servidor/(3617:3617): Servidor listo para recibir al cliente
+[INFO] 22:07:31:208 Servidor/(3639:3639): Servidor listo para recibir al cliente
+[INFO] 22:10:20:584 Servidor/(3852:3852): Servidor listo para recibir al cliente
+[INFO] 22:10:24:533 Servidor/(3852:3852): Se conecto un cliente!
+[ERROR] 22:11:07:783 Servidor/(3852:3852): el cliente se desconecto. Terminando servidor
+[INFO] 22:13:30:229 Servidor/(4086:4086): Servidor listo para recibir al cliente
+[INFO] 22:13:33:523 Servidor/(4086:4086): Se conecto un cliente!
+[INFO] 22:13:33:524 Servidor/(4086:4086): Me llego el mensaje 1;mensaje;conexion;memoria;xd;
+[INFO] 23:29:00:677 Servidor/(7417:7417): Se conecto un cliente!
+[ERROR] 23:29:16:853 Servidor/(7417:7417): el cliente se desconecto. Terminando servidor
+[INFO] 23:35:31:465 Servidor/(7800:7800): Se conecto un cliente!
+[INFO] 23:35:31:465 Servidor/(7800:7800): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[INFO] 23:37:17:906 Servidor/(7961:7961): Se conecto un cliente!
+[INFO] 23:37:17:907 Servidor/(7961:7961): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
+[INFO] 23:39:25:584 Servidor/(8123:8123): Se conecto un cliente!
+[INFO] 23:39:25:584 Servidor/(8123:8123): Me llego el mensaje 123456;parametro1;parametro2;parametro3;parametro4;
