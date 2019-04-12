@@ -9,6 +9,7 @@
 
 int main() {
 
+	puts("PROCESO KERNEL");
 	inicializarConfiguracion();
 
 	inicializarMetricas();
@@ -24,6 +25,7 @@ int main() {
 	puts("Escuchando...");
 	escuchar_en(server_fd);
 	close(server_fd);
+
 	//escucharYEncolarProcesos();
 
 	//ejecutar();
