@@ -7,9 +7,10 @@
 
 
 #include "Herramientas.h"
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-int main(){
+int main(){/*
 	//Variable que almacenara los datos parseados
 	instr *x;
 	//Mensaje a parsear
@@ -17,19 +18,24 @@ int main(){
 	char* mensajeSerializado;
 	deserializar(mensaje,x);
 	//Serializar una variable
-	mensajeSerializado=serializar(x);
+	mensajeSerializado=serializar(x);*/
+	time_t tiempo=time(NULL);
+	if(tiempo!=-1){
+		puts("hola");
+		printf("El tiempo es de %s",ctime(&tiempo));
+	}
 }
 int digitosDe(int x){
-    int count=0;
+	int count=0;
 	if(x==0){
 		return 1;
 	}
-    while(x != 0)
-    {
-        // n = n/10
-        x /= 10;
-        ++count;
-    }
+	while(x != 0)
+	{
+		// n = n/10
+		x /= 10;
+		++count;
+	}
 	return count;
 }
 char* serializar(instr *x){
@@ -134,4 +140,13 @@ char* substr(const char *src, int m, int n)
 	// return the destination string
 	return dest - len;
 }
-
+char* obtener_tiempo_cadena(){
+	time_t tiempo=time(NULL);
+	return ctime(&tiempo);
+}
+time_t obtener_tiempo(){
+	return time(NULL);
+}
+double segundos_entre(time_t tiempo1,time_t tiempo2){
+	return difftime(tiempo1,tiempo2);
+}

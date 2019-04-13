@@ -33,5 +33,7 @@ typedef struct instr{
 char* substr(const char *src, int m, int n);
 char* serializar(instr *x);
 int deserializar(char* mensaje,instr *outPut);
-
+char* obtener_tiempo_cadena();
+time_t obtener_tiempo();
+double segundos_entre(time_t tiempo1,time_t tiempo2);
 #endif /* HERRAMIENTAS_HERRAMIENTAS_H_ */
