@@ -1,6 +1,8 @@
 #include "memoria.h"
 
 int main() {
+	pruebaHilos();
+/*
 	printf("PROCESO MEMORIA\n");
 	printf("Como cliente: \n");
 //
@@ -12,5 +14,6 @@ int main() {
 	enviar_mensaje("123456;HOLA;SI;QUE;TUL;", conexion_Kernel);
 	sleep(2);
 	close(conexion_FileSystem);
+*/
 	return 0;
 }
