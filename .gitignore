@@ -24,8 +24,6 @@
 
 # Shared objects (inc. Windows DLLs)
 *.dll
-*.so
-*.so.*
 *.dylib
 
 # Executables
@@ -52,4 +50,4 @@ Mkfile.old
 dkms.conf
 
 #Pruebas
-src/Pruebas/
+*.log
