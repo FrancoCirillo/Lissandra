@@ -4,14 +4,17 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../tiempo.c \
 ../utilsCliente.c \
 ../utilsServidor.c 
 
 OBJS += \
+./tiempo.o \
 ./utilsCliente.o \
 ./utilsServidor.o 
 
 C_DEPS += \
+./tiempo.d \
 ./utilsCliente.d \
 ./utilsServidor.d 
 
