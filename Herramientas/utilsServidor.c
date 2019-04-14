@@ -107,7 +107,7 @@ void* recibir_buffer(int* size, int socket_cliente)
 
 void recibir_mensaje(int socket_cliente)
 {
-	request = malloc(sizeof(instr));
+	request = malloc(sizeof(instr_t));
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
 	log_info(logger, "Me llego el mensaje %s", buffer);
@@ -115,7 +115,7 @@ void recibir_mensaje(int socket_cliente)
 	free(buffer);
 }
 
-int deserializar(char* mensaje,instr* outPut){
+int deserializar(char* mensaje,instr_t* outPut){
 	//El mensaje debe poseer el \0 final
 	//formato: codigoInstruccion;param1;param2;param3;param4;
 	char* aux=mensaje;

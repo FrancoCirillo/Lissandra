@@ -13,10 +13,10 @@
 
 
 char* substr(const char *src, int m, int n);
-int deserializar(char* mensaje,instr* outPut);
+int deserializar(char* mensaje,instr_t* outPut);
 
 t_log* logger;
-instr* request;
+instr_t* request;
 int server_fd;
 
 void* recibir_buffer(int*, int);

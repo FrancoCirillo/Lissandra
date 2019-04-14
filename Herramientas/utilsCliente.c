@@ -110,7 +110,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes) //Not to be confused wit
 	return magic;
 }
 //TODO: solucionar mal modelado envio de mensajes (revisar enviar_mensaje/paquete, serializar, serializar_paquete)
-char* serializar(instr *x){
+char* serializar(instr_t *x){
 	char* caracterSeparador=";";
 	char* codigoInstruccion=malloc(64);
 	// Obtengo cantidad de digitos del codigo y lo multiplico por el tamanio de un char+ tamanio de campos+tamanio de ;

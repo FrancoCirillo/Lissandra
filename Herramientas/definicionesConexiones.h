@@ -27,12 +27,22 @@ typedef enum
 	PAQUETE
 }op_code;
 
-typedef struct instr{
+typedef struct instr_t{
+	time_t timestamp;
 	int codigoInstruccion;
 	char* param1;
 	char* param2;
 	char* param3;
 	char* param4;
-}instr;
+}instr_t;
+typedef struct remitente_t{
+	char* ip;
+	char* puerto;
+}remitente_t;
+typedef struct remitente_instr_t{
+	instr_t *instruccion;
+	remitente_t *remitente;
+}remitente_instr_t;
+
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */
