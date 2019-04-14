@@ -21,6 +21,7 @@
 #include <string.h>
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
+#include <pthread.h>
 
 t_log* g_logger;
 t_config* g_config;

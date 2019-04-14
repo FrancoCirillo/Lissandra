@@ -1,5 +1,5 @@
 /*
- * kernel.h
+ * kernel.c
  *
  *  Created on: 1 apr. 2019
  *      Author: rodrigo diaz
@@ -9,7 +9,7 @@
 
 int main() {
 
-	puts("PROCESO KERNEL");
+	/*puts("PROCESO KERNEL");
 	inicializarConfiguracion();
 
 	inicializarMetricas();
@@ -19,20 +19,13 @@ int main() {
 	informarMetricas();
 
 	leerProcesosDesdeConsola();
-
-	server_fd = iniciar_servidor(IP_KERNEL, PORT); //socket(), bind(), listen()
-	puts("Listo para escuchar");
-	puts("Escuchando...");
-	escuchar_en(server_fd);
-	close(server_fd);
-
+	 */
 	//escucharYEncolarProcesos();
 
 	//ejecutar();
 
 	return 0;
 }
-
 int ejecutar() {
 	proceso* p;
 	while (1) {
@@ -166,7 +159,7 @@ memoria obtenerMemoria(instruccion* instr) {
 }
 void metricarInsert(clock_t tiempoRespuesta) {
 	m.tiempoInsert = (m.tiempoInsert * m.cantidadInsert + tiempoRespuesta)
-			/ (m.cantidadInsert++);
+					/ (m.cantidadInsert++);
 }
 
 void loggear(char *valor) {
