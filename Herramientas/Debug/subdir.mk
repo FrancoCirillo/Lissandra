@@ -4,18 +4,21 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../ejemplo-cliente-servidor-hilos.c \
 ../hilos.c \
 ../tiempo.c \
 ../utilsCliente.c \
 ../utilsServidor.c 
 
 OBJS += \
+./ejemplo-cliente-servidor-hilos.o \
 ./hilos.o \
 ./tiempo.o \
 ./utilsCliente.o \
 ./utilsServidor.o 
 
 C_DEPS += \
+./ejemplo-cliente-servidor-hilos.d \
 ./hilos.d \
 ./tiempo.d \
 ./utilsCliente.d \

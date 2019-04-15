@@ -5,7 +5,7 @@
  *      Author: rodrigo diaz
  */
 
-#include <ejemplo-cliente-servidor-hilos.h>
+#include "ejemplo-cliente-servidor-hilos.h"
 void* iniciarServidor(void *p);
 void* iniciarCliente(void *p);
 void ejemplo(){
