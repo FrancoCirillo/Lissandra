@@ -36,8 +36,10 @@ int conectar_con_proceso(cod_proceso proceso){
 //Conecta el socket_cliente con el Servidor con ip ip y puerto puerto.
 int crear_conexion(char *ip, char* puerto)
 {
+	//TODO: recibir el logger
 	struct addrinfo hints;//Es para pasarle nuestras preferencias a getaddrinfo
 	struct addrinfo *server_info;
+	int socket_cliente;
 
 	memset(&hints, 0, sizeof(hints)); //Se llena toda la estructura de 0s (por las dudas)
 	//Relleno default de addrinfo (no tiene importancia):
@@ -52,7 +54,12 @@ int crear_conexion(char *ip, char* puerto)
 
 	//Crea el socket_cliente
 	//TODO: recorrer la lista "server_info" en vez de asumir que el primero funciona (Beeje's)
-	int socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
+	if((socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol))<0){
+		printf("Error al crear el socket cliente \n");
+//		log_error(logger, "Error al crear el socket cliente");
+		close(socket_cliente);
+		return -1;//
+	}
 
 	//ai_addr contiene el puerto e ip del servidor
 	while(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1){

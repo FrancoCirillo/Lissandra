@@ -8,29 +8,30 @@
 #include"utilsServidor.h"
 
 int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
-	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG);
+	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG); //TODO: recibirlo por parametro (Cada proceso tiene su logger)
 	int socket_servidor;
 
-	struct addrinfo hints, *servinfo, *p;
+	struct addrinfo hints, *servinfo, *p; //Estructuras solo para llenar servinfo
 
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+	hints.ai_family = AF_UNSPEC; //No importa si es ipv4 o ipv6
+	hints.ai_socktype = SOCK_STREAM; //Usamos TCP
+	hints.ai_flags = AI_PASSIVE;//Rellena la IP por nosotros
 
-	getaddrinfo(ip_proceso, puerto_a_abrir, &hints, &servinfo);
+	//Aca se llenan los datos de servinfo:
+	getaddrinfo(ip_proceso, puerto_a_abrir, &hints, &servinfo); //TODO: chequear los errores de getaddrinfo
 
-	for (p = servinfo; p != NULL; p = p->ai_next) {
-		if ((socket_servidor = socket(p->ai_family, p->ai_socktype,
-				p->ai_protocol)) == -1)
-			continue;
-
-		if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) == -1) {
-			close(socket_servidor);
-			continue;
-		}
-		break;
+	if ((socket_servidor = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) <0){
+		log_error(logger, "Error al crear el socket servidor");
+		//TODO: Cerrar socket servidor?
+		return -1;
 	}
+
+	if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) < 0) {
+		log_error(logger, "Error al vincular el socket servidor con el puerto");
+		close(socket_servidor);
+		return -1;
+		}
 
 	listen(socket_servidor, SOMAXCONN);
 
