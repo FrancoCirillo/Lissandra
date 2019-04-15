@@ -11,7 +11,7 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
 	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG); //TODO: recibirlo por parametro (Cada proceso tiene su logger)
 	int socket_servidor;
 
-	struct addrinfo hints, *servinfo, *p; //Estructuras solo para llenar servinfo
+	struct addrinfo hints, *servinfo; //Estructuras solo para llenar servinfo
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; //No importa si es ipv4 o ipv6
@@ -27,14 +27,17 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
 		return -1;
 	}
 
-	if (bind(socket_servidor, p->ai_addr, p->ai_addrlen) < 0) {
+	if (bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen) < 0) {
 		log_error(logger, "Error al vincular el socket servidor con el puerto");
 		close(socket_servidor);
 		return -1;
 		}
 
-	listen(socket_servidor, SOMAXCONN);
-
+	if ((listen(socket_servidor, SOMAXCONN))<0){ //TODO: queremos SO MAX CONNECTIONS?
+		log_error(logger, "Error al dejar todo listo para escuchar en socket servidor");
+		//TODO: Cerrar socket servidor?
+		return -1;
+	}
 	freeaddrinfo(servinfo);
 
 	log_trace(logger, "Listo para escuchar a mi cliente");
