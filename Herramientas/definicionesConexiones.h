@@ -35,10 +35,12 @@ typedef struct instr_t{
 	char* param3;
 	char* param4;
 }instr_t;
+
 typedef struct remitente_t{
 	char* ip;
 	char* puerto;
 }remitente_t;
+
 typedef struct remitente_instr_t{
 	instr_t *instruccion;
 	remitente_t *remitente;

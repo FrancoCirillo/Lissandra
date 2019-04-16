@@ -6,6 +6,7 @@
 C_SRCS += \
 ../ejemplo-cliente-servidor-hilos.c \
 ../hilos.c \
+../serializaciones.c \
 ../tiempo.c \
 ../utilsCliente.c \
 ../utilsServidor.c 
@@ -13,6 +14,7 @@ C_SRCS += \
 OBJS += \
 ./ejemplo-cliente-servidor-hilos.o \
 ./hilos.o \
+./serializaciones.o \
 ./tiempo.o \
 ./utilsCliente.o \
 ./utilsServidor.o 
@@ -20,6 +22,7 @@ OBJS += \
 C_DEPS += \
 ./ejemplo-cliente-servidor-hilos.d \
 ./hilos.d \
+./serializaciones.d \
 ./tiempo.d \
 ./utilsCliente.d \
 ./utilsServidor.d 
