@@ -31,6 +31,13 @@ typedef struct instr_t{
 	char* param4;
 }instr_t;
 
+typedef enum cod_proceso
+{
+	KERNEL,
+	MEMORIA,
+	FILESYSTEM
+}cod_proceso;
+
 typedef struct remitente_t{
 	char* ip;
 	char* puerto;
