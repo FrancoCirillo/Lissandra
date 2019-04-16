@@ -14,12 +14,7 @@
 #define PORT "4444"
 
 //TODO Diseñar correctamente las herramientas y conexiones (arreglar este .h)
-typedef enum
-{
-	KERNEL,
-	MEMORIA,
-	FILESYSTEM
-}cod_proceso;
+
 
 typedef enum
 {
