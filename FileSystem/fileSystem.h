@@ -4,6 +4,7 @@
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
+#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include <string.h>
@@ -16,12 +17,16 @@
 void loggear(char*);
 void inicializarConfig(void);
 
+#define RUTA_TABLAS "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/mnj/LISANDRA_FS/TABLAS/"
+#define RUTA_BLOQUES "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/mnj/LISANDRA_FS/BLOQUES/"
+#define RUTA_PUNTO_MONTAJE "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/mnj/LISANDRA_FS/"
+			//TODO Ver como parametrizar esto!
 
 t_log* g_logger;
 t_config* g_config;
 
 
-enum codigo{
+typedef enum{
 	CODIGO_SELECT = 3,
 	ERROR_SELECT = -3,
 	CODIGO_INSERT = 4,
@@ -32,58 +37,47 @@ enum codigo{
 	ERROR_DESCRIBE = -6,
 	CODIGO_DROP = 7,
 	ERROR_DROP = -7
-	};
+	}cod_instr;
 
 
-typedef struct archivo{
+
+typedef struct archivo_t{
 	int size;
-	int blocks[];    // Ver esto, no le puedo asignar un tamaño fijo al array..
-}archivo;
+	int blocks[];
+}archivo_t;
 
-typedef struct metadata{
+typedef struct metadata_t{
 	char * consistency;
 	char * partitions;
 	time_t compactation_time;
-}metadata;
+}metadata_t;
 
-typedef struct metadata_FS{
-
-}metadata_FS;
-
-typedef struct archivo_config{
+typedef struct archivo_config_FS_t{
 	int PUERTO_ESCUCHA;
 	char* PUNTO_MONTAJE;
 	int TAMANIO_VALUE;
 	time_t RETARDO;
 	time_t TIEMPO_DUMP;
-}archivo_config;
+}archivo_config_FS_t;
+//Recordar que los ultimos 2 son modificables. Inotify()    No creo que sea necesario el struct.
+//Grabar valores correctos. y poder leerlos.
+
+archivo_config_FS_t configuracion;
 
 
-archivo_config configuracion;
-
-
-typedef struct memoria{
-	int ip;
-	int puerto;
-}memoria;
-
-typedef struct instruccion_memoria{
-	char* instruccion;
-	memoria memo;
-}instruccion_memoria;
-
-
-typedef struct registro{
-	//u_int16 key;
+typedef struct registro_t{
+	//u_int16 key;			//TODO ver este tipo.
 	char* value;
 	time_t timestamp;
 }registro;
 
-typedef struct tabla{
-	metadata* metadata_tabla;
+
+char* leerMetadata_FS();//hacer, es un único archivo
+
+typedef struct metadata_FS_t{
 	int block_size;
 	int blocks;
-	int magic_number;
+	char* magic_number;
 }tabla;
 
 

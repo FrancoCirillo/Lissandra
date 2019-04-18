@@ -13,6 +13,7 @@ int main() {
 	//crearArchivoConfig();
 	inicializarConfig();
 
+
 	loggear("File system is comming..");
 
 	printf("Creado el log");
@@ -46,15 +47,13 @@ int main() {
 	return 0;
 }
 
+//TODO Terminarlo bien. Dejarlo listo.
 void inicializarConfig(void){
-	configuracion.PUNTO_MONTAJE = "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/archivo.log";
-
-			//"mnj/LISANDRA_FS/archivo.log";
+	configuracion.PUNTO_MONTAJE = strcat(RUTA_PUNTO_MONTAJE,"Configuracion_LFS.config");
 	configuracion.PUERTO_ESCUCHA = 5555;
 	configuracion.TAMANIO_VALUE = 5;
 	configuracion.RETARDO = 20000;
 	configuracion.TIEMPO_DUMP = 40000;
-
 }
 
 void loggear(char *valor) {
@@ -62,3 +61,11 @@ void loggear(char *valor) {
 		log_info(g_logger, valor);
 		log_destroy(g_logger);
 	}
+
+char* leer_config(char* clave) {
+	char* valor;
+	g_config = config_create(RUTA_PUNTO_MONTAJE);
+	valor = config_get_string_value(g_config, clave);
+	config_destroy(g_config);
+	return valor;
+}
