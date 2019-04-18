@@ -51,3 +51,11 @@ dkms.conf
 
 #Pruebas
 *.log
+
+#Programas
+FileSystem
+Memoria
+Kernel
+
+#Biblioteca Herramientas
+libHerramientas.so
