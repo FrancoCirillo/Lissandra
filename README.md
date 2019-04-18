@@ -33,9 +33,10 @@ Antes de abrir algun proceso, hay que avisarle al SO adonde están *nuestra* Sha
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/
 ```
 Luego sin cerrar la terminal ejecutar el programa.
+
 **Esto se hace automaticamente si se ejecuta desde los .sh**
 
-#####Consideraciones si se quiere correr desde Eclipse:
+##### Consideraciones si se quiere correr desde Eclipse:
 Para usar nuestra Shared Library desde Eclipse:
 1. En Run Configurations, seleccionamos la que queremos modificar (Kernel, Memoria o FileSystem)
 2. En la Pestaña Environment clickeamos "Select..."

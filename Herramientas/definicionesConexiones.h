@@ -14,12 +14,7 @@
 #define PORT "4444"
 
 //TODO Diseñar correctamente las herramientas y conexiones (arreglar este .h)
-typedef enum
-{
-	KERNEL,
-	MEMORIA,
-	FILESYSTEM
-}cod_proceso;
+
 
 typedef enum
 {
@@ -35,10 +30,19 @@ typedef struct instr_t{
 	char* param3;
 	char* param4;
 }instr_t;
+
+typedef enum cod_proceso
+{
+	KERNEL,
+	MEMORIA,
+	FILESYSTEM
+}cod_proceso;
+
 typedef struct remitente_t{
 	char* ip;
 	char* puerto;
 }remitente_t;
+
 typedef struct remitente_instr_t{
 	instr_t *instruccion;
 	remitente_t *remitente;

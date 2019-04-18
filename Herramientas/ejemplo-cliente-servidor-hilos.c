@@ -4,7 +4,7 @@
  *  Created on: 14 apr. 2019
  *      Author: rodrigo diaz
  */
-
+/*
 #include "ejemplo-cliente-servidor-hilos.h"
 void* iniciarServidor(void *p);
 void* iniciarCliente(void *p);
@@ -49,3 +49,4 @@ void* iniciarServidor(void *p){
 	close(server_fd);
 
 }
+*/

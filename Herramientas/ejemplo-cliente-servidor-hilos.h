@@ -4,7 +4,7 @@
  *  Created on: 14 abr. 2019
  *      Author: rodrigo diaz
  */
-
+/*
 #ifndef EJEMPLO_CLIENTE_SERVIDOR_HILOS_H_
 #define EJEMPLO_CLIENTE_SERVIDOR_HILOS_H_
 
@@ -25,3 +25,5 @@
 
 
 #endif /* EJEMPLO_CLIENTE_SERVIDOR_HILOS_H_ */
+
+*/
