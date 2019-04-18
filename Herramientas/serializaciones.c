@@ -74,7 +74,7 @@ int recibir_paquete(int socket_cliente, instr_t ** instruccion){
 //TODO: fijarse si tendria que pasar &
 void deserializar_instruccion(void* instruccion, instr_t** instruccionFinal){
 
-	int desplazamineto = 0;
+	int desplazamiento = 0;
 
 	time_t timestamp;
 	int codInstruccion;
@@ -82,30 +82,30 @@ void deserializar_instruccion(void* instruccion, instr_t** instruccionFinal){
 	int tamanioP1, tamanioP2, tamanioP3, tamanioP4;
 
 	//Copia en instruccionFinal el timestamp y codigo instruccion, que ya conoce cuanto ocupan
-	memcpy(&(*instruccionFinal)->timestamp, instruccion + desplazamineto, sizeof(timestamp));
-	desplazamineto += sizeof(timestamp);
-	memcpy(&(*instruccionFinal)->codigoInstruccion, instruccion + desplazamineto, sizeof(codInstruccion));
-	desplazamineto += sizeof(codInstruccion);
+	memcpy(&(*instruccionFinal)->timestamp, instruccion + desplazamiento, sizeof(timestamp));
+	desplazamiento += sizeof(timestamp);
+	memcpy(&(*instruccionFinal)->codigoInstruccion, instruccion + desplazamiento, sizeof(codInstruccion));
+	desplazamiento += sizeof(codInstruccion);
 
 	//Para copiar los parametros(de tamanio variable), recibimos en ints sus respectivos tamanios
-	memcpy(&tamanioP1, instruccion + desplazamineto, sizeof(int));
-	desplazamineto += sizeof(int);
-	memcpy(&(*instruccionFinal)->param1, instruccion + desplazamineto, tamanioP1);
-	desplazamineto += tamanioP1;
+	memcpy(&tamanioP1, instruccion + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(&(*instruccionFinal)->param1, instruccion + desplazamiento, tamanioP1);
+	desplazamiento += tamanioP1;
 
-	memcpy(&tamanioP2, instruccion + desplazamineto, sizeof(int));
-	desplazamineto += sizeof(int);
-	memcpy(&(*instruccionFinal)->param2, instruccion + desplazamineto, tamanioP2);
-	desplazamineto += tamanioP2;
+	memcpy(&tamanioP2, instruccion + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(&(*instruccionFinal)->param2, instruccion + desplazamiento, tamanioP2);
+	desplazamiento += tamanioP2;
 
-	memcpy(&tamanioP3, instruccion + desplazamineto, sizeof(int));
-	desplazamineto += sizeof(int);
-	memcpy(&(*instruccionFinal)->param3, instruccion + desplazamineto, tamanioP3);
-	desplazamineto += tamanioP3;
+	memcpy(&tamanioP3, instruccion + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(&(*instruccionFinal)->param3, instruccion + desplazamiento, tamanioP3);
+	desplazamiento += tamanioP3;
 
-	memcpy(&tamanioP4, instruccion + desplazamineto, sizeof(int));
-	desplazamineto += sizeof(int);
-	memcpy(&(*instruccionFinal)->param4, instruccion + desplazamineto, tamanioP4);
+	memcpy(&tamanioP4, instruccion + desplazamiento, sizeof(int));
+	desplazamiento += sizeof(int);
+	memcpy(&(*instruccionFinal)->param4, instruccion + desplazamiento, tamanioP4);
 
 }
 
@@ -116,7 +116,7 @@ void enviar_instruccion(instr_t* instruccion, int socket_cliente){
 	int tamanioParam3 = instruccion->param3 != NULL? strlen(instruccion->param3) + 1: 0;
 	int tamanioParam4 = instruccion->param4 != NULL? strlen(instruccion->param4) + 1: 0;
 
-	int tamanioTotal = sizeof(time_t) + sizeof(int) + tamanioParam1 + tamanioParam2 + tamanioParam3 + tamanioParam4; //Asi xq sizeof(estructura) != suma de el tamanio de los elementos
+	int tamanioTotal = sizeof(time_t) + sizeof(int) + tamanioParam1 + tamanioParam2 + tamanioParam3 + tamanioParam4; //Asi xq sizeof(estructura) != suma del tamanio de los elementos
 
 	void * a_enviar = serializar_instruccion (instruccion, tamanioParam1, tamanioParam2, tamanioParam3, tamanioParam4);
 
