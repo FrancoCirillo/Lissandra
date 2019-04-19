@@ -1,8 +1,6 @@
 #ifndef FILE_SYSTEM_H
 #define FILE_SYSTEM_H
 
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
 #include<stdio.h>
@@ -12,15 +10,20 @@
 #include<commons/config.h>
 #include<commons/string.h>
 #include<readline/readline.h>
-#include <pthread.h>
+#include<pthread.h>
+
 
 void loggear(char*);
 void inicializarConfig(void);
+void evaluar_instruccion(remitente_instr_t*);
+
 
 #define RUTA_TABLAS "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/mnj/LISANDRA_FS/TABLAS/"
 #define RUTA_BLOQUES "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/mnj/LISANDRA_FS/BLOQUES/"
 #define RUTA_PUNTO_MONTAJE "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/mnj/LISANDRA_FS/"
-			//TODO Ver como parametrizar esto!
+#define RUTA_PUNTO_MONTAJE_2 "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/mnj"			//TODO Ver como parametrizar esto!
+#define RUTA_PUNTO_MONTAJE_3 "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/archivo.log"
+
 
 t_log* g_logger;
 t_config* g_config;
@@ -79,6 +82,8 @@ typedef struct metadata_FS_t{
 	int blocks;
 	char* magic_number;
 }tabla;
+
+
 
 
 
