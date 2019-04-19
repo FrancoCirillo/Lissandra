@@ -26,39 +26,35 @@
 t_log* g_logger;
 t_config* g_config;
 
-typedef enum {NEW,READY,EXEC,EXIT}estado;
+//typedef enum {NEW,READY,EXEC,EXIT}estado;
 
-typedef struct instruccion{
-	char* instr;
-	clock_t tiempoEnvio;
-	clock_t tiempoRespuesta;
-}instruccion;
-typedef struct listaInstruccion{
-	instruccion instruccion;
-	instruccion* sig;
-}listaInstruccion;
+typedef struct instruccion_t{
+	int codigo_instruccion;
+	time_t timestamp;
+	char* param1;
+	char* param2;
+	char* param3;
+	char* param4;
+	struct instruccion_t* sig;
+}instruccion_t;
+
+
 typedef struct proceso{
-	estado estadoActual;
-	int current;
-	listaInstruccion *listaInstrucciones;
+	instruccion_t* current;
+	instruccion_t *instrucciones;
+	struct proceso* sig;
 }proceso;
 
 
-typedef struct listadoProcesos{
-	proceso p;
-	struct listadoProcesos *sig;
-}listadoProcesos;
 
 typedef struct config{
 	int quantum;
-	int codigoError;
 	int gradoMultiprocesamiento;
-	int codigoInsert;
-	int codigoSelect;
 	char* rutaLog;
 	char* ip;
 	char* puerto;
-}config;
+
+}config_t;
 
 typedef struct response{
 	int codigoRespuesta;
@@ -79,36 +75,45 @@ typedef struct memoria{
 	int puerto;
 }memoria;
 
-//metricas son globales
 metricas m;
-//lista procesos es global
-listadoProcesos* listaProcesos;
-//criterios de memorias son globales
+proceso* cola_ready=NULL;
+config_t configuracion;
+int total_hilos=0;
 
-//configuracion es global
-config configuracion;
 
-int procesoKernel();
 
-//liberar free()
+//Proceso principal
+void* ejecutar_proceso(void* un_proceso);
+instruccion_t* ejecutar_instruccion(instruccion_t* instruccion);
+instruccion_t* enviar_i(instruccion_t* i);
+void finalizar_proceso(proceso* p);
+void encolar_o_finalizar_proceso(proceso* p);
+
+//Getter y setters
+instruccion_t *obtener_instruccion(proceso* p);
+proceso* obtener_sig_proceso();
+memoria obtenerMemoria(instruccion_t* instr);
+char* obtener_por_clave(char* ruta, char* key);
+void encolar_proceso(proceso *p);
+
+//Herramientas
+int hilos_disponibles();
+void inicializarConfiguracion();
+void loggear(char* mensaje);
+void informarMetricas();
+
+/*
 proceso* popProceso();
 void escucharYEncolarProcesos();
-void informarMetricas();
+
 void leerProcesosDesdeConsola();
 int realizar_proceso(proceso *unProceso );
-
-memoria obtenerMemoria(instruccion* instr);
-
 instruccion* obtenerInstruccion(proceso *unProceso);
+response* mandar_instruccion(instruccion *i);
 
-response* enviar_instruccion(instruccion *i);
-
-void metricarInsert(clock_t tiempoRespuesta);
-void loggear(char* mensaje);
 char* getByKey(char* ruta, char* buscado);
 void informarMetricas();
 void inicializarMemorias();
 void inicializarMetricas();
-void inicializarConfiguracion();
-
+*/
 #endif /* kernel.h */
