@@ -47,11 +47,7 @@ char* getByKey(char* ruta, char* key) {
 
 void leerConsola() {
 	char *actual, *comando, *param1, *param2, *param3, *param4;
-	comando = strdup("NULL");
-	param1 = strdup("NULL");
-	param2 = strdup("NULL");
-	param3 = strdup("NULL");
-	param4 = strdup("NULL");
+	comando = param1 = param2 = param3 = param4 = NULL;
 
 	printf("\n----------Esperando requests----------\n");
 	printf("Cuando desee finalizar, presione ENTER\n\n");
@@ -64,10 +60,10 @@ void leerConsola() {
 		{
 			switch(i){
 			case 0: comando = strdup(actual); break;
-			case 1: param1 = strdup(actual); break;
-			case 2: param2 = strdup(actual); break;
-			case 3: param3 = strdup(actual); break;
-			case 4: param4 = strdup(actual); break;
+			case 1: param1 = actual != NULL? strdup(actual): actual; break;
+			case 2: param2 = actual != NULL? strdup(actual): actual; break;
+			case 3: param3 = actual != NULL? strdup(actual): actual; break;
+			case 4: param4 = actual != NULL? strdup(actual): actual; break;
 			}
 			actual = strtok (NULL, " ");
 		}
@@ -75,11 +71,7 @@ void leerConsola() {
 		free(request);
 
 		reconocerRequest(comando, param1, param2, param3, param4);
-		comando = strdup("NULL");
-		param1 = strdup("NULL");
-		param2 = strdup("NULL");
-		param3 = strdup("NULL");
-		param4 = strdup("NULL");
+		comando = param1 = param2 = param3 = param4 = NULL;
 
 		request = readline("> ");
 	}
@@ -123,10 +115,10 @@ instr_t *crearInstruccion(int codigoRequest, char* p1, char* p2, char* p3, char*
 	instr_t instruccionCreada ={
 		.timestamp = nuevoTSmp,
 		.codigoInstruccion = codigoRequest,
-		.param1 = strdup(p1),
-		.param2 = strdup(p2),
-		.param3 = strdup(p3),
-		.param4 = strdup(p4)
+		.param1 = p1 != NULL? strdup(p1): p1,
+		.param2 = p2 != NULL? strdup(p2): p2,
+		.param3 = p3 != NULL? strdup(p3): p3,
+		.param4 = p4 != NULL? strdup(p4): p4
 	};
 
 /*
