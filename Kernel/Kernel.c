@@ -6,33 +6,107 @@
  */
 
 #include "Kernel.h"
-
+void* consola(void *param);
 int main() {
 	inicializarConfiguracion();
 	instruccion_t i1={
 			1,
 			obtener_tiempo(),
-			"Param1",
+			"Hilo 1 instr 1",
 			"Param2",
 			"Param3",
 			"Param4",
 			NULL
 	};
-	proceso p={
+
+	instruccion_t i2={
+			2,
+			obtener_tiempo(),
+			"Hilo 1 instr 2",
+			"Manzana",
+			"Pera",
+			"Limon",
+			NULL
+	};
+
+	i1.sig=&i2;
+
+	instruccion_t i3={
+			3,
+			obtener_tiempo(),
+			"Hilo 1 instr 3",
+			"Soy un parametro",
+			"YO tambien",
+			"Yo puede ser",
+			NULL
+	};
+
+	i2.sig=&i3;
+
+	proceso p1={
 			&i1,
 			&i1,
 			NULL
 	};
+
+	instruccion_t i_1={
+			1,
+			obtener_tiempo(),
+			"Hilo 2 instr 1",
+			"Param2",
+			"Param3",
+			"Param4",
+			NULL
+	};
+
+	instruccion_t i_2={
+			2,
+			obtener_tiempo(),
+			"Hilo 2 instr2",
+			"Manzana",
+			"Pera",
+			"Limon",
+			NULL
+	};
+	i_1.sig=&i_2;
+	proceso p2={
+			&i_1,
+			&i_1,
+			NULL
+	};
 	loggear("Iniciando....");
-	loggear(obtener_tiempo_cadena());
-	encolar_proceso(&p);
-	ejecutar();
+	inicializar_semaforos();
+
+	encolar_proceso(&p1);
+	encolar_proceso(&p2);
+
+//	ejecutar();
+
+	sleep(10);
+	loggear("FIN");
+//	pthread_t un_hilo;
+//	pthread_attr_t attr;
+//	pthread_create(&un_hilo,&attr,consola,NULL);
+//	pthread_join(un_hilo,NULL);
 	return 0;
 }
+void* consola(void* param){
+	while(1){
+		sleep(1);
+		char * cosa=readline(">");
+		printf("La cosa es %s",cosa);
+		return NULL;
+	}
+
+}
+
+
 int ejecutar(){
 	loggear("Ejecutando");
+//	hilos_t *cola_hilos=NULL;
+
 	while(hilos_disponibles()&&cola_ready!=NULL){//Se puede procesar
-		loggear("Hay hilos!! Ejecutando");
+		loggear("Hay hilos y procesos!! Ejecutando...\n");
 		proceso *p=obtener_sig_proceso();
 
 		pthread_t un_hilo;
@@ -41,15 +115,16 @@ int ejecutar(){
 		pthread_attr_init(&attr);
 		pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
 		loggear("Se creo un hilo para atender la solicitud!");
-		pthread_join(un_hilo,NULL);
-		loggear("Hilo finalizado");
 		total_hilos++;
-
+//		pthread_join(un_hilo,NULL);
+		pthread_detach(un_hilo);
+		loggear("Hilo detacheado");
 	}
-	loggear("No hay mas hilos disponibles o procesos pendientes");
+	loggear("No hay mas hilos disponibles o procesos pendientes para ejecutar");
 	return 1;
 }
 void* ejecutar_proceso(void* un_proceso){
+	loggear("Ejecutando proceso....");
 	proceso* p=(proceso*)un_proceso;
 	instruccion_t* instruccion_obtenida;
 	for(int i=0;i<configuracion.quantum;i++){
@@ -80,11 +155,13 @@ void* ejecutar_proceso(void* un_proceso){
 			return NULL;
 		}
 	}
-	loggear("Fin de quantum, encolando");
+	loggear("Fin de quantum, encolando o finalizando");
 
 	total_hilos--;
 
 	encolar_o_finalizar_proceso(p);
+
+
 	return NULL;
 }
 instruccion_t* ejecutar_instruccion(instruccion_t* i){
@@ -93,22 +170,27 @@ instruccion_t* ejecutar_instruccion(instruccion_t* i){
 	return respuesta;
 }
 instruccion_t* enviar_i(instruccion_t* i){
-	loggear("ENVIANDO INSTRUCCION ");
+	loggear("ENVIANDO INSTRUCCION FAKE");
 	i->codigo_instruccion=0;
 	i->timestamp=obtener_tiempo();
+	printf("\n ##### \n Instruccion enviada %d, %s, %s, %s, %s\n",i->codigo_instruccion,i->param1,i->param2,i->param3,i->param4);
 	return i;
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==NULL){//Pudo justo haber quedado parado al final
 		finalizar_proceso(p);
 	}else{
+
 		encolar_proceso(p);
+	//	ejecutar();
 	}
 }
 void finalizar_proceso(proceso* p){
 	loggear("Se finalizo correctamente un proceso !!. Se libera su memoria");
 }
 void encolar_proceso(proceso *p){
+	semaforo_wait(&semaforo_procesos_ready);
+	puts("HOLA");
 	proceso *aux=cola_ready;
 	if(aux==NULL){
 		cola_ready=p;
@@ -119,22 +201,29 @@ void encolar_proceso(proceso *p){
 		aux->sig=p;
 		p->sig=NULL;
 	}
+	semaforo_signal(&semaforo_procesos_ready);
+	//Se ejecuta siempre que haya un hilo disponible y proceso para procesar.
+	// Siempre implica un encolar, ya sea por agregar un hilo a la cola o porque un hilo se libero y disminuyo la cantidad corriendo.
+	ejecutar();
 }
-
+proceso* obtener_sig_proceso(){
+	semaforo_wait(&semaforo_procesos_ready);
+	proceso* aux=cola_ready;
+	cola_ready=cola_ready->sig;
+	aux->sig=NULL;
+	semaforo_signal(&semaforo_procesos_ready);
+	return aux;
+}
 instruccion_t* obtener_instruccion(proceso* p){
 	instruccion_t* actual=p->current;
 	if(actual!=NULL){
 		p->current=p->current->sig;
 	}else{
-		loggear("No mas instrucciones");
+		loggear("No hay mas instrucciones");
 	}
 	return actual;
 }
-proceso* obtener_sig_proceso(){
-	proceso* aux=cola_ready;
-	cola_ready=cola_ready->sig;
-	return aux;
-}
+
 int hilos_disponibles(){
 	//Compara el total de config con la cantidad creada;
 	return configuracion.gradoMultiprocesamiento>total_hilos;
@@ -177,6 +266,22 @@ char* obtener_por_clave(char* ruta, char* key) {
 void inicializarMetricas() {
 	loggear("Metricas inicializadas");
 }
+void inicializar_semaforos(){
+	sem_init(&semaforo_procesos_ready,0,1);
+	loggear("Semaforos inicializados");
+}
+void semaforo_wait(sem_t *semaforo){
+	int n=sem_wait(semaforo);
+	if(n!=0){
+		loggear("Error al hacer wait");
+	}
+}
+void semaforo_signal(sem_t *semaforo){
+	int n=sem_post(semaforo);
+	if(n!=0){
+		loggear("Error al hacer signal");
+	}
+}
 /*
 instruccion* obtenerInstruccion(proceso *unProceso) {
 	listaInstruccion* aux = unProceso->listaInstrucciones;
@@ -199,53 +304,6 @@ instruccion* obtenerInstruccion(proceso *unProceso) {
  */
 
 /*
-int ejecutar() {
-	proceso* p;
-	while (1) {
-		p = popProceso();
-		if (p == NULL) {
-			//sleep
-			loggear("No hay nada que correr");
-		} else {
-			p->estadoActual = READY;
-
-			if (!realizar_proceso(p)) {
-				return 0;
-			}
-			//agrega el P al final de la cola luego de enviarlo(y este internamente lleva la cuenta de por cual va en current)
-			if (p->estadoActual == EXIT) {
-				return 1;
-			} else {
-				p->estadoActual = READY;
-				agregarAlFinal(cola_ready, p);
-			}
-			//sleep;
-			inicializarConfiguracion();
-		}
-	}
-
-}
-proceso* popProceso() {
-	proceso unProceso = cola_ready->p;
-	cola_ready = cola_ready->sig;
-	return unProceso;
-}
-void encolarProceso(listadoProcesos* listado, proceso unProceso) {
-	listadoProcesos* aux = listado;
-	if (aux == NULL) {
-		aux = malloc(sizeof(listadoProcesos));
-		aux->p = unProceso;
-		aux->sig = NULL;
-		return;
-	}
-	while (aux->sig != NULL) {
-		aux = aux->sig;
-	}
-	aux->sig = malloc(sizeof(listadoProcesos));
-	aux->sig->p = unProceso;
-	aux->sig->sig = NULL;
-
-}
 void escucharYEncolarProcesos() {
 	//va recibiendo y encolando al final procesos estado new;
 
@@ -294,3 +352,23 @@ int realizar_proceso(proceso *unProceso) {
 }*/
 
 
+
+/*
+void encolar_hilo(hilos_t *cola,hilos_t* nuevo){
+	hilos_t* aux=cola;
+	if(cola==NULL){
+		cola=nuevo;
+	}else{
+		while(aux->sig!=NULL){
+			aux=aux->sig;
+		}
+		aux->sig=nuevo;
+		nuevo->sig=NULL;
+	}
+}
+hilos_t* obtener_hilo(hilos_t *cola){
+	hilos_t* aux=cola;
+	cola=cola->sig;
+	aux->sig=NULL;
+	return aux;
+}*/
