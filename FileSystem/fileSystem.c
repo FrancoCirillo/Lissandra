@@ -17,16 +17,19 @@ int main() {
 	 */
 
 //	inicializar_memtable();
-							/* Lista de colas con datos a dumpear, vacia.
-	 	 	 	 	 	 	   iniciar cronometro del DUMP (iterativamente, siempre que tenga al menos un dato.)
-	 	 	 	 	 	 	   es un nodo por tabla.
-	 	 	 	 	 	 	   al hacer dumpeo, se toma una tabla y se guarda los datos en el .tmp de la tabla.
+				/* Lista de colas con datos a dumpear, vacia.
+	 	 	 	   iniciar cronometro del DUMP (iterativamente, siempre que tenga al menos un dato.)
+	 	 	 	   es un nodo por tabla.
+	 	 	  	   al hacer dumpeo, se toma una tabla y se guarda los datos en el .tmp de la tabla.
 	 	 	 	 	 	 	 */
 
+	crear_directorio("OtraTabla");
+	crear_archivo_bin("Particion2", "OtraTabla");
 
 	//HARDCODEO - NO MIRAR :P
-
+	//loggear_FS("Arrancamos\n");
 	//EJEMPLO CREATE;
+	/*
 	remitente_instr_t* mensaje;
 	instr_t* instruccion_m;
 	remitente_t* remitente_m;
@@ -44,39 +47,24 @@ int main() {
 	remitente_m->puerto = PORT;
 
 	mensaje->remitente = remitente_m;
+
 	//	CREATE [TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
 
 			//Ver bien qué me llega, qué devuelvo.
 
-	while(true){
+	//Acá iria un hilo para cada instruccion que va llegando
 
-	evaluarInstruccion(mensaje);
+	//evaluarInstruccion(mensaje);
+*/
 
-	//Ver como llevar esto..
-	}
-
-/*    VISTO CON RODRI: pseudocódigo
-      * intruccion
-      * la memoria
-      * -Servidor debe recibir mensaje ya como instruccion-memoria; crea hilo con funcion procesar
-      * -Hacer struct que contenga instruccion y memoria
-      * procesar(struct instruccion-memoria){
-      *     Interpreto intruccion y utilizo response
-      *             if(codigo==CODIGO_CREATE)
-      *                     hacer_create(instruccion)// piso codigo de instruccion por codigo de error/Respuesta y parametro 1 por respuesta
-      *             responder(instruccion-memoria);
-      *
-      *             RECORDAR EL JOIN;
-      *             Y MALLOC.
-      *
-      *
-      *             Cola de colas/ Castear.
-	*/
 	return 0;
-}
 
+}
+/*
 
 void evaluar_instruccion(remitente_instr_t* mensaje){
+
+	cod_instr resultado;
 
 	switch(mensaje->instruccion->codigoInstruccion){
 
@@ -89,19 +77,19 @@ void evaluar_instruccion(remitente_instr_t* mensaje){
 		break;
 
 	case CODIGO_CREATE:
+
 		char* nombre_tabla = mensaje->instruccion->param1;
 		string_to_upper(nombre_tabla);
 
-		cod_instr resultado;
-
 		if(!existe_Tabla(nombre_tabla)){
 			execute_create(mensaje->instruccion);
-			response(mensaje->remitente, 0);
-			loggear("La tabla %s se creó correctamente.\n", nombre_tabla);
+			resultado = EXITO;
+			char * nota = "La tabla %s se creó correctamente.\n", nombre_tabla
+			loggear_FS("La tabla %s se creó correctamente.\n", nombre_tabla);
 		}
 		else{
-			loggear("La tabla %s se ya existe en el File System.\n", nombre_tabla);
-			response(mensaje->remitente, ERROR_CREATE);
+			loggear_FS("La tabla %s se ya existe en el File System.\n", nombre_tabla);
+			resultado = ERROR_CREATE;
 		}
 
 		break;
@@ -117,41 +105,116 @@ void evaluar_instruccion(remitente_instr_t* mensaje){
 	default:
 		//verrrr
 	}
+	//response(mensaje->remitente, resultado);
 
 };
 
 
 
-bool existe_Tabla(nombre_tabla){
-	return true;
+bool existe_Tabla(char * nombre_tabla){
+	return false;
 }
 
 void execute_create(instr_t* inst){
 
+	crear_directorio(inst->param1);
+	crear_metadata();
+	crear_particiones();
+	asignar_bloques();
+	response();
+}
+*/
 
+void crear_directorio(char * nomb){	//FUNCIONA!
+
+	char* ruta= malloc(sizeof(char)*(strlen(nomb) + strlen(RUTA_TABLAS)) +1);
+	ruta = concat(RUTA_TABLAS, nomb);
+	mkdir(ruta, S_IRWXU);
+	printf("Se creó la carpeta: %s \n", nomb);
+	free(ruta);
+}
+
+
+void crear_archivo_bin(char * nombre, char* tabla){		//Listo.
+	char* ruta= malloc(sizeof(char)*(strlen(RUTA_TABLAS) + strlen(nombre) + strlen(tabla)) +1+1+4); //esto ultimo es por: \0, /, .bin
+	ruta= concat(ruta, RUTA_TABLAS);
+	ruta= concat(ruta, tabla);
+	ruta= concat(ruta, "/");
+	ruta= concat(ruta, nombre);
+	ruta= concat(ruta, ".bin");
+	FILE* f = fopen(ruta, "a");
+	printf("Se creó la carpeta %s en la tabla %s", nombre, tabla); //Loggear..
+	archivo_inicializar(ruta);
+	free(ruta);
+//	archivo_t* archivo = archivo_nuevo();
+	free(f);
+//	return archivo;
+}
+
+void archivo_inicializar(char * ruta){    //No funciona..
+	FILE *f = fopen(ruta,"a+");
+	char* bloque_num = "0";     //     ---> acá va cero. Pero desp devuelve un numero..int bloque_disponible(); TODO HACER FUNCION.
+	char* cadena = concat("SIZE = \nBlocks = []\n");
+	char* cadena = "SIZE= \nBlocks \= []\n";
+	fwrite(cadena, 1, sizeof(cadena),f);
+//	fflush(f);
+	fclose(f);
+	free(cadena);
+	free(bloque_num);
+}
+
+void crear_archivo_tmp(char * nombre, char* tabla){		//Listo.
+	char* ruta= malloc(sizeof(char)*(strlen(RUTA_TABLAS) + strlen(nombre) + strlen(tabla)) +1+1+4); //esto ultimo es por: \0, /, .bin
+	ruta= concat(ruta, RUTA_TABLAS);
+	ruta= concat(ruta, tabla);
+	ruta= concat(ruta, "/");
+	ruta= concat(ruta, nombre);
+	ruta= concat(ruta, ".tmp");
+	FILE* f = fopen(ruta, "a");
+	printf("Se creó la carpeta %s en la tabla %s", nombre, tabla);
+	free(ruta);
+	free(f);
+	//archivo_inicializar_tmp();    -->Esto le asigna el nombre correlativo al ultimo
+	//tmp existente. Depende la cantidad de dumpeos del momento.
 
 }
 
 
-
 //TODO Terminarlo bien. Dejarlo listo.
-void inicializarConfig(void){
-	configuracion.PUNTO_MONTAJE = strcat(RUTA_PUNTO_MONTAJE,"Configuracion_LFS.config");
+void inicializarConfig(void){		//Valores random
+	configuracion.PUNTO_MONTAJE = RUTA_PUNTO_MONTAJE;
 	configuracion.PUERTO_ESCUCHA = 5555;
 	configuracion.TAMANIO_VALUE = 5;
 	configuracion.RETARDO = 20000;
 	configuracion.TIEMPO_DUMP = 40000;
 }
 
-void loggear(char *valor) {
-		g_logger = log_create(RUTA_PUNTO_MONTAJE_3,"File System", 1, LOG_LEVEL_INFO);
+char* concat( char *s1, char *s2)		//Listo.
+{
+    char *result = malloc(strlen(s1) + strlen(s2) + 1);
+    strcpy(result, s1);
+    strcat(result, s2);
+    return result;
+}
+char* concat3( char *s1, char *s2, char * s3)		//Listo.
+{
+    char *result = malloc(strlen(s1) + strlen(s2) + strlen(s3) + 1);
+    strcpy(result, s1);
+    strcat(result, s2);
+    strcat(result, s3);
+    return result;
+}
+
+
+void loggear_FS(char *valor) {	//Listo
+		g_logger = log_create("Lissandra.log","File System", 1, LOG_LEVEL_INFO);
 		log_info(g_logger, valor);
 		log_destroy(g_logger);
 	}
 
-char* leer_config(char* clave) {
+char* leer_config(char* clave) {	//Listo
 	char* valor;
-	g_config = config_create(RUTA_PUNTO_MONTAJE);
+	g_config = config_create("Lissandra.config");
 	valor = config_get_string_value(g_config, clave);
 	config_destroy(g_config);
 	return valor;
