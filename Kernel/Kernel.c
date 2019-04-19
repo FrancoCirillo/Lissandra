@@ -144,12 +144,17 @@ void inicializarMemorias() {
 }
 void inicializarConfiguracion() {
 	char* rutaConfiguracion = "Kernel.config";
-	configuracion.quantum=malloc(sizeof(int));
 	configuracion.quantum = atoi(obtener_por_clave(rutaConfiguracion, "quantum"));
 	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave(rutaConfiguracion, "gradoMultiprocesamiento"));
 	configuracion.ip = obtener_por_clave(rutaConfiguracion, "IP");
 	configuracion.puerto = obtener_por_clave(rutaConfiguracion, "PUERTO");
 	configuracion.rutaLog = obtener_por_clave(rutaConfiguracion, "rutaLog");
+
+}
+void actualizar_configuracion(){
+	char* rutaConfiguracion = "Kernel.config";
+	configuracion.quantum = atoi(obtener_por_clave(rutaConfiguracion, "quantum"));
+	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave(rutaConfiguracion, "gradoMultiprocesamiento"));
 
 }
 memoria obtenerMemoria(instruccion_t* instr) {

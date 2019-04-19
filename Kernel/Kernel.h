@@ -101,7 +101,7 @@ int hilos_disponibles();
 void inicializarConfiguracion();
 void loggear(char* mensaje);
 void informarMetricas();
-
+void actualizar_configuracion();
 /*
 proceso* popProceso();
 void escucharYEncolarProcesos();
