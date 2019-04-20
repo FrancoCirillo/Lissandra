@@ -82,8 +82,11 @@ void inicializarConfig(void);
 char* leerMetadata_FS();		//TODO hacer, es un único archivo
 void crear_directorio(char * );
 bool existe_Tabla(char * );
-
-
+FILE * crear_archivo(char * , char* , char* );
+void archivo_inicializar(FILE * );
+//void crear_metadata(char * ,char *, int,time_t);
+void crear_metadata(char * ,char *, int,int);
+void metadata_inicializar(FILE* ,char*, int,int);
 
 							/*MANEJO INTRUCCIONES*/
 
