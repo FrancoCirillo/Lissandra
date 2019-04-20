@@ -8,6 +8,7 @@
 #ifndef Kernel_H_
 #define Kernel_H_
 
+#include<semaphore.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<commons/log.h>
@@ -19,8 +20,9 @@
 #include<readline/readline.h>
 #include <stdio.h>
 #include <string.h>
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
+//#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
+//#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
+
 #include <pthread.h>
 
 t_log* g_logger;
@@ -75,7 +77,15 @@ typedef struct memoria{
 	int puerto;
 }memoria;
 
+typedef struct hilos_t{
+	pthread_t *hilo;
+	pthread_attr_t *attr;
+	struct hilos_t *sig;
+}hilos_t;
+
+
 metricas m;
+sem_t semaforo_procesos_ready;
 proceso* cola_ready=NULL;
 config_t configuracion;
 int total_hilos=0;
@@ -83,6 +93,7 @@ int total_hilos=0;
 
 
 //Proceso principal
+int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
 instruccion_t* ejecutar_instruccion(instruccion_t* instruccion);
 instruccion_t* enviar_i(instruccion_t* i);
@@ -95,6 +106,8 @@ proceso* obtener_sig_proceso();
 memoria obtenerMemoria(instruccion_t* instr);
 char* obtener_por_clave(char* ruta, char* key);
 void encolar_proceso(proceso *p);
+hilos_t* obtener_hilo(hilos_t *cola);
+void encolar_hilo(hilos_t *cola,hilos_t* nuevo);
 
 //Herramientas
 int hilos_disponibles();
@@ -102,6 +115,10 @@ void inicializarConfiguracion();
 void loggear(char* mensaje);
 void informarMetricas();
 void actualizar_configuracion();
+void inicializar_semaforos();
+void semaforo_signal(sem_t *semaforo);
+void semaforo_wait(sem_t *semaforo);
+
 /*
 proceso* popProceso();
 void escucharYEncolarProcesos();

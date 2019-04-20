@@ -65,6 +65,13 @@ void leerConsola() {
 			case 3: param3 = actual != NULL? strdup(actual): actual; break;
 			case 4: param4 = actual != NULL? strdup(actual): actual; break;
 			}
+
+			if(i==2 && strcmp(comando, "INSERT")==0){
+				actual = strtok (NULL, "");
+				param3 = strdup(actual);
+				break;
+			}
+
 			actual = strtok (NULL, " ");
 		}
 
@@ -139,10 +146,10 @@ instr_t *crearInstruccion(int codigoRequest, char* p1, char* p2, char* p3, char*
 void print_instruccion(instr_t* instruccion){
 	printf("timestamp: %lld\n", (long long)instruccion->timestamp);
 	printf("codigoInstruccion: %d\n", instruccion->codigoInstruccion);
-	printf("Param1: %s\n", instruccion->param1);
-	printf("Param2: %s\n", instruccion->param2);
-	printf("Param3: %s\n", instruccion->param3);
-	printf("Param4: %s\n\n", instruccion->param4);
+	printf("param1: %s\n", instruccion->param1);
+	printf("param2: %s\n", instruccion->param2);
+	printf("param3: %s\n", instruccion->param3);
+	printf("param4: %s\n\n", instruccion->param4);
 }
 
 
