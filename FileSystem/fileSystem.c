@@ -33,6 +33,10 @@ int main() {
 																	//Todo lo paso a int para probar que funcione el crear_Metadata.
 	crear_metadata("Holanda", "HC", 9, 333666999);
 
+	crear_bloques();
+
+	crear_particiones("Holanda", 5);
+
 	//HARDCODEO
 	//loggear_FS("Arrancamos\n");
 	//EJEMPLO CREATE;
@@ -152,6 +156,36 @@ FILE* crear_archivo(char * nombre, char* tabla, char * ext){
 	return f;
 }
 
+void crear_bloque(char * nombre){
+	char* ruta= malloc(sizeof(char)*(strlen(RUTA_BLOQUES) + strlen(nombre) + strlen(".bin"))+1);
+	sprintf(ruta, "%s%s%s", RUTA_BLOQUES, nombre, ".bin");
+	fopen(ruta, "w");
+	free(ruta);
+}
+
+
+void crear_particiones(char * tabla, int cantidad){
+	FILE* f;
+	for(int i = 1; i <= cantidad; i++){
+		char * nomb_part = concat("Part_", string_itoa(i));
+		f = crear_archivo(nomb_part, tabla, ".bin");
+		archivo_inicializar(f);
+	}
+	fclose(f);
+}
+
+void crear_bloques(){
+	int cantidad = 10; //leer del metadata del FS
+	char* num;
+	for(int i = 1; i<= cantidad; i++){
+		num = string_itoa(i);
+		crear_bloque(num);
+	}
+	printf("Se crearon los bloques del 1 al %d\n", cantidad);
+
+}
+
+
 //void crear_metadata(char * tabla,char * consistency, int particiones,time_t timestamp){     <-- int x time_t para probar
 void crear_metadata(char * tabla,char * consistency, int particiones,int timestamp){
 	FILE* f = crear_archivo("Metadata", tabla, "");
@@ -172,6 +206,7 @@ void archivo_inicializar(FILE* f){
 	sprintf(cadena, "%s%s%s%s%s","SIZE = ",string_itoa(5), "\nBlocks = [", bloque_num_s, "]\n");  //Delegar..
 	fwrite(cadena, sizeof(char), strlen(cadena)+1,f);
 	free(cadena);
+	free(bloque_num_s);
 	printf("Se inicializó el archivo.\n");
 }
 
@@ -210,6 +245,7 @@ char* concat( char *s1, char *s2)		//Listo.
     strcat(result, s2);
     return result;
 }
+
 char* concat3( char *s1, char *s2, char * s3)		//Listo.
 {
     char *result = malloc(strlen(s1) + strlen(s2) + strlen(s3) + 1);

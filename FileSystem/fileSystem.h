@@ -87,6 +87,9 @@ void archivo_inicializar(FILE * );
 //void crear_metadata(char * ,char *, int,time_t);
 void crear_metadata(char * ,char *, int,int);
 void metadata_inicializar(FILE* ,char*, int,int);
+void crear_particiones(char * , int );
+void crear_bloque(char * );
+void crear_bloques();
 
 							/*MANEJO INTRUCCIONES*/
 
