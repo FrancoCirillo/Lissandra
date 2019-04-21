@@ -128,7 +128,6 @@ instr_t *crearInstruccion(int codigoRequest, char* p1, char* p2, char* p3, char*
 		.param4 = p4 != NULL? strdup(p4): p4
 	};
 
-/*
 	instr_t *miInstr = malloc(sizeof(instruccionCreada));
 
 	memcpy(miInstr, &instruccionCreada, sizeof(instruccionCreada));
@@ -136,11 +135,6 @@ instr_t *crearInstruccion(int codigoRequest, char* p1, char* p2, char* p3, char*
 	print_instruccion(miInstr);
 
 	return miInstr;
-*/
-
-	print_instruccion(&instruccionCreada);
-
-	return &instruccionCreada;
 }
 
 void print_instruccion(instr_t* instruccion){
