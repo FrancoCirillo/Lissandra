@@ -14,6 +14,14 @@
 #include<sys/stat.h>
 #include<dirent.h>
 
+//ORDEN PARAMETROS
+
+//SELECT [NOMBRE_TABLA] [KEY]
+//INSERT [NOMBRE_TABLA] [KEY] “[VALUE]” [Timestamp]     <- opcional el timestamp?
+//CREATE [NOMBRE_TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
+//DESCRIBE [NOMBRE_TABLA]    <- opcional el param.
+//DROP [NOMBRE_TABLA]
+
 
 #define RUTA_TABLAS "mnj/Lissandra_FS/Tablas/"
 #define RUTA_BLOQUES "mnj/Lissandra_FS/Bloques/"
@@ -79,26 +87,34 @@ char* magic_number;
 
 void loggear_FS(char*);
 void inicializarConfig(void);
+
 char* leerMetadata_FS();		//TODO hacer, es un único archivo
-void crear_directorio(char * );
-bool existe_Tabla(char * );
-FILE * crear_archivo(char * , char* , char* );
+
+void  crear_directorio(char * );
+FILE* crear_archivo(char * , char* , char* );
+void  crear_particiones(char *);
+void  crear_bloque(char * );
+void  crear_bloques();
+void  crear_metadata(char * ,char *, char *,char *);
+
+int existe_Tabla(char * );
+
 void archivo_inicializar(FILE * );
-//void crear_metadata(char * ,char *, int,time_t);
-void crear_metadata(char * ,char *, int,int);
-void metadata_inicializar(FILE* ,char*, int,int);
-void crear_particiones(char * , int );
-void crear_bloque(char * );
-void crear_bloques();
+void metadata_inicializar(FILE* , char * , char* ,char* );
 
 							/*MANEJO INTRUCCIONES*/
 
 void evaluar_instruccion(remitente_instr_t*);
-void* execute_create(instr_t*);
-void* execute_insert(instr_t*);
-void* execute_select(instr_t*);
-void* execute_describe(instr_t*);
-void* execute_drop(instr_t*);
+void execute_create(instr_t*);
+void execute_insert(instr_t*);
+void execute_select(instr_t*);
+void execute_describe(instr_t*);
+void execute_drop(instr_t*);
+instr_t* i_create(instr_t * );
+instr_t* i_insert(instr_t * );
+instr_t* i_select(instr_t * );
+instr_t* i_describe(instr_t * );
+instr_t* i_drop(instr_t * );
 
 							/*MANEJO DE CADENAS*/
 
@@ -106,8 +122,11 @@ char* concat(char *, char *);
 char* concat3( char* , char*, char*);
 
 							/*Comunicación*/
-void response(remitente_t*, cod_instr);
+void response(remitente_t*);
 
+							/*Compactación*/
+void* compactar(instr_t* );
+void compactation(char*);
 
 
 #endif /* FILE_SYSTEM_H */
