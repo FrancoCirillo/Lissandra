@@ -7,6 +7,12 @@
 
 #include "Kernel.h"
 void* consola(void *param);
+// Declaration of thread condition variable
+pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
+// declaring mutex
+pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
+int done = 1;
+
 int main() {
 	inicializarConfiguracion();
 	instruccion_t i1={
@@ -53,7 +59,7 @@ int main() {
 			1,
 			obtener_tiempo(),
 			"Hilo 2 instr 1",
-			"Param2",
+			"Param2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			"Param3",
 			"Param4",
 			NULL
@@ -74,24 +80,62 @@ int main() {
 			&i_1,
 			NULL
 	};
+
+	instruccion_t i__1={
+			1,
+			obtener_tiempo(),
+			"Hilo 3 instr 1",
+			"Param2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"Param3",
+			"Param4",
+			NULL
+	};
+
+	instruccion_t i__2={
+			2,
+			obtener_tiempo(),
+			"Hilo 3 instr2",
+			"Manzana",
+			"Pera",
+			"Limon",
+			NULL
+	};
+	i__1.sig=&i__2;
+	proceso p3={
+			&i__1,
+			&i__1,
+			NULL
+	};
+
+
 	loggear("Iniciando....");
 	inicializar_semaforos();
 
 	encolar_proceso(&p1);
 	encolar_proceso(&p2);
+	encolar_proceso(&p3);
+	loggear("\n\n ENCOLADOS!\n\n");
 
-//	ejecutar();
 
-	sleep(10);
+/*	pthread_t un_hilo;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&un_hilo,&attr,ejecutar,NULL);
+	pthread_detach(un_hilo);
+	loggear("Continuando");
+	continuar_ejecucion();*/
+
+	sleep(100);
 	loggear("FIN");
-//	pthread_t un_hilo;
-//	pthread_attr_t attr;
-//	pthread_create(&un_hilo,&attr,consola,NULL);
-//	pthread_join(un_hilo,NULL);
+
+	//	pthread_t un_hilo;
+	//	pthread_attr_t attr;
+	//	pthread_create(&un_hilo,&attr,consola,NULL);
+	//	pthread_join(un_hilo,NULL);
 	return 0;
 }
 void* consola(void* param){
-	while(1){
+	while(1==1){
 		sleep(1);
 		char * cosa=readline(">");
 		printf("La cosa es %s",cosa);
@@ -99,15 +143,33 @@ void* consola(void* param){
 	}
 
 }
+/*
+void continuar_ejecucion(){
+	loggear("Enviando senial en 2 segundos");
+	sleep(2);
+	pthread_mutex_lock(&lock_ejecutar);
+	pthread_cond_signal(&cond_ejecutar);
+	pthread_mutex_unlock(&lock_ejecutar);
 
-
+	loggear("Senial enviada!");
+}*/
 int ejecutar(){
-	loggear("Ejecutando");
-//	hilos_t *cola_hilos=NULL;
-
+	proceso *p;
+	/*
+	printf("%p",p);
+	while(1==1){
+		//Espero a la senial para seguir
+		loggear("Esperando!");
+		pthread_mutex_lock(&lock_ejecutar);
+		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
+		pthread_mutex_unlock(&lock_ejecutar);
+		sleep(1);
+		loggear("Espera finalizada");
+		loggear("Ejecutando");
+	 */
 	while(hilos_disponibles()&&cola_ready!=NULL){//Se puede procesar
 		loggear("Hay hilos y procesos!! Ejecutando...\n");
-		proceso *p=obtener_sig_proceso();
+		p=obtener_sig_proceso();
 
 		pthread_t un_hilo;
 		pthread_attr_t attr;
@@ -116,17 +178,19 @@ int ejecutar(){
 		pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
 		loggear("Se creo un hilo para atender la solicitud!");
 		total_hilos++;
-//		pthread_join(un_hilo,NULL);
+		//		pthread_join(un_hilo,NULL);
 		pthread_detach(un_hilo);
 		loggear("Hilo detacheado");
 	}
 	loggear("No hay mas hilos disponibles o procesos pendientes para ejecutar");
+
 	return 1;
 }
 void* ejecutar_proceso(void* un_proceso){
 	loggear("Ejecutando proceso....");
 	proceso* p=(proceso*)un_proceso;
 	instruccion_t* instruccion_obtenida;
+	//sleep(1);
 	for(int i=0;i<configuracion.quantum;i++){
 		loggear("Hay quantum!");
 		instruccion_obtenida=obtener_instruccion(p);
@@ -143,7 +207,7 @@ void* ejecutar_proceso(void* un_proceso){
 			}else{
 
 				loggear("ERROR al ejecutar la instruccion, Codigo=");
-				printf("\n\n %d",respuesta->codigo_instruccion);
+				printf("\n\n %d MENSAJE=%s",respuesta->codigo_instruccion,respuesta->param1);
 			}
 		}else{
 
@@ -151,7 +215,9 @@ void* ejecutar_proceso(void* un_proceso){
 			finalizar_proceso(p);
 
 			total_hilos--;
-
+			ejecutar();
+			//ejecutar2();
+			// Ejecutar aca!
 			return NULL;
 		}
 	}
@@ -166,6 +232,7 @@ void* ejecutar_proceso(void* un_proceso){
 }
 instruccion_t* ejecutar_instruccion(instruccion_t* i){
 	loggear("Se ejecuta una instruccion");
+//	sleep(1);
 	instruccion_t* respuesta=enviar_i(i);
 	return respuesta;
 }
@@ -182,15 +249,18 @@ void encolar_o_finalizar_proceso(proceso* p){
 	}else{
 
 		encolar_proceso(p);
-	//	ejecutar();
+
+		//continuar_ejecucion();
+			ejecutar();
 	}
+
 }
 void finalizar_proceso(proceso* p){
 	loggear("Se finalizo correctamente un proceso !!. Se libera su memoria");
 }
 void encolar_proceso(proceso *p){
 	semaforo_wait(&semaforo_procesos_ready);
-	puts("HOLA");
+	loggear("Encolando proceso!");
 	proceso *aux=cola_ready;
 	if(aux==NULL){
 		cola_ready=p;
@@ -199,12 +269,14 @@ void encolar_proceso(proceso *p){
 			aux=aux->sig;
 		}
 		aux->sig=p;
-		p->sig=NULL;
 	}
+	p->sig=NULL;
 	semaforo_signal(&semaforo_procesos_ready);
+	loggear("Proceso encolado!");
 	//Se ejecuta siempre que haya un hilo disponible y proceso para procesar.
 	// Siempre implica un encolar, ya sea por agregar un hilo a la cola o porque un hilo se libero y disminuyo la cantidad corriendo.
 	ejecutar();
+	//continuar_ejecucion();
 }
 proceso* obtener_sig_proceso(){
 	semaforo_wait(&semaforo_procesos_ready);
@@ -282,6 +354,7 @@ void semaforo_signal(sem_t *semaforo){
 		loggear("Error al hacer signal");
 	}
 }
+
 /*
 instruccion* obtenerInstruccion(proceso *unProceso) {
 	listaInstruccion* aux = unProceso->listaInstrucciones;
