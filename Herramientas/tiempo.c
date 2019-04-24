@@ -1,15 +1,10 @@
-/*
- * tiempo.c
- *
- *  Created on: 14 abr. 2019
- *      Author: utnso
- */
-
+//-------tiempo.c-------
 
 #include "tiempo.h"
 
 //Ejemplo Pthread
-/*#include <pthread.h>
+/*
+#include <pthread.h>
 
 void* funcion(void* numero){
 	int* numero_pasado=(int*) numero;
@@ -47,7 +42,8 @@ void* funcion(void* numero){
 
 	}
 	printf("FIN");
-}*/
+}
+*/
 
 char* obtener_tiempo_cadena(){
 	time_t tiempo=time(NULL);

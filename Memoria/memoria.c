@@ -6,7 +6,7 @@ int main() {
 
 	//inicializarConfiguracion();
 
-	leerConsola();
+	//leerConsola();
 
 	//config_destroy(g_config);
 
@@ -15,17 +15,17 @@ int main() {
 
 void inicializarConfiguracion() {
 	char* rutaConfig = "memoria.config";
-	configuracion.PUERTO = atoi(getByKey(rutaConfig, "PUERTO"));
-	configuracion.IP_FS = atoi(getByKey(rutaConfig, "IP_FS"));
-	configuracion.PUERTO_FS = atoi(getByKey(rutaConfig, "PUERTO_FS"));
+	configuracion.PUERTO = getByKey(rutaConfig, "PUERTO");
+	configuracion.IP_FS = getByKey(rutaConfig, "IP_FS");
+	configuracion.PUERTO_FS = getByKey(rutaConfig, "PUERTO_FS");
 	configuracion.IP_SEEDS = getByKey(rutaConfig, "IP_SEEDS");
 	configuracion.PUERTO_SEEDS = getByKey(rutaConfig, "PUERTO_SEEDS");
-	configuracion.RETARDO_MEMORIA = getByKey(rutaConfig, "RETARDO_MEMORIA");
-	configuracion.RETARDO_FS = getByKey(rutaConfig, "RETARDO_FS");
-	configuracion.TAMANIO_MEMORIA = getByKey(rutaConfig, "TAMANIO_MEMORIA");
-	configuracion.RETARDO_JOURNAL = getByKey(rutaConfig, "RETARDO_JOURNAL");
-	configuracion.RETARDO_GOSSIPING = getByKey(rutaConfig, "RETARDO_GOSSIPING");
-	configuracion.MEMORY_NUMBER = getByKey(rutaConfig, "MEMORY_NUMBER");
+	configuracion.RETARDO_MEMORIA = atoi(getByKey(rutaConfig, "RETARDO_MEMORIA"));
+	configuracion.RETARDO_FS = atoi(getByKey(rutaConfig, "RETARDO_FS"));
+	configuracion.TAMANIO_MEMORIA = atoi(getByKey(rutaConfig, "TAMANIO_MEMORIA"));
+	configuracion.RETARDO_JOURNAL = atoi(getByKey(rutaConfig, "RETARDO_JOURNAL"));
+	configuracion.RETARDO_GOSSIPING = atoi(getByKey(rutaConfig, "RETARDO_GOSSIPING"));
+	configuracion.MEMORY_NUMBER = atoi(getByKey(rutaConfig, "MEMORY_NUMBER"));
 	configuracion.RUTA_LOG = getByKey(rutaConfig, "RUTA_LOG");
 }
 
@@ -45,6 +45,7 @@ char* getByKey(char* ruta, char* key) {
 	return valor;
 }
 
+/*
 void leerConsola() {
 	char *actual, *comando, *param1, *param2, *param3, *param4;
 	comando = param1 = param2 = param3 = param4 = NULL;
@@ -146,6 +147,7 @@ void print_instruccion(instr_t* instruccion){
 	printf("param4: %s\n\n", instruccion->param4);
 }
 
+*/
 
 
 

@@ -1,10 +1,6 @@
-///*
-// * procesar.h
-// *
-// *  Created on: 15 abr. 2019
-// *      Author: utnso
-// */
-//
+//-------procesar.h-------
+
+
 //#ifndef PROCESAR_H_
 //#define PROCESAR_H_
 //

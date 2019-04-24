@@ -1,9 +1,5 @@
-/*
- * cliente.c
- *
- *  Created on: 14 apr. 2019
- *      Author: rodrigo diaz
- */
+//------ejemplo-cliente-servidor-hilos.c------
+
 /*
 #include "ejemplo-cliente-servidor-hilos.h"
 void* iniciarServidor(void *p);

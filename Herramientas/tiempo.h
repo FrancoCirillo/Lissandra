@@ -1,10 +1,4 @@
-/*
- * tiempo.h
- *
- *  Created on: 14 abr. 2019
- *      Author: utnso
- */
-
+//-------tiempo.h-------
 
 #ifndef HERRAMIENTAS_TIEMPO_H
 #define HERRAMIENTAS_TIEMPO_H

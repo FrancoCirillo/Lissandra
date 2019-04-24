@@ -1,10 +1,4 @@
-/*
- * hilos.c
- *
- *  Created on: 14 abr. 2019
- *      Author: utnso
- */
-
+//--------hilos.c--------
 
 #include "hilos.h"
 
@@ -17,10 +11,9 @@ void* funcion(void* numero){
 	}
 	printf("\n La suma para %d es %d \n",*numero_pasado,suma);
 	free(numero);
-
 }
 
- int pruebaHilos(){
+int pruebaHilos(){
 /*
 	//Variable que almacenara los datos parseados
 	instr *x;

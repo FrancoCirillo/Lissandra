@@ -1,9 +1,4 @@
-/*
- * conexiones.c
- *
- *  Created on: 2 mar. 2019
- *      Author: utnso
- */
+//-------utilsCliente.c-------
 
 #include "utilsCliente.h"
 
@@ -60,7 +55,7 @@ int crear_conexion(char *ip, char* puerto, char* miIP)
 	//Relleno default de addrinfo (no tiene importancia):
 	hints.ai_family = AF_UNSPEC; //No importa si es ipv4 o ipv6
 	hints.ai_socktype = SOCK_STREAM; //Usamos TCP
-	hints.ai_flags = AI_PASSIVE; //Rellena la IP por nosotros TODO:Chequear si queremos esto. Creo que igual no importa xq llenamos el primer argumetno de getaddrinfo con ip
+	hints.ai_flags = AI_PASSIVE; //Rellena la IP por nosotros TODO:Chequear si queremos esto. Creo que igual no importa xq llenamos el primer argumento de getaddrinfo con ip
 
 
 	//Rellena la estructura server_info con la info del Servidor (En realidad es un addrinfo**)

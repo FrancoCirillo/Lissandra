@@ -1,15 +1,11 @@
-/*
- * conexiones.c
- *
- *  Created on: 3 mar. 2019
- *      Author: utnso
- */
+//-------utilsServidor.c-------
 
 #include"utilsServidor.h"
 
 /*
  * socket() y bind()
  */
+
 int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
 	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG); //TODO: recibirlo por parametro (Cada proceso tiene su logger)
 	int socket_servidor;
@@ -51,7 +47,7 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
 
 int vigilar_conexiones_entrantes(int listener){
 
-	//Gracias a a guia de Beej:
+	//Gracias a la guia de Beej:
 	fd_set master;    // lista 'master' de file descriptors
 	fd_set read_fds;  // lista temporal de fds para el select()
 	int fdmax;        // mayor file descriptor (para recorrerlos todos con el for)
@@ -94,24 +90,23 @@ int vigilar_conexiones_entrantes(int listener){
 						if (newfd == -1) {
 							perror("accept");
 						} else {
-							printf(
-									"Conexion al file desctiptor '%d' aceptada!, el accept() creo el nuevo fd '%d'.\n"
+							printf(	"Conexion al file desctiptor '%d' aceptada!, el accept() creo el nuevo fd '%d'.\n"
 									"Se lo agrego a la lista de fds que vigila el select\n", i, newfd);
 							FD_SET(newfd, &master); // se agrega al set master
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande
 							printf("%s en el socket '%d'", imprimir_quien_se_conecto(remoteaddr), newfd);
 							}
 					} else if (i!=0){ //el fd ya existia
-							 //recibir los mensakes
-						instr_t * instrcuccion_recibida;
-						if (recibir_paquete(i, &instrcuccion_recibida) < 0) {
+							 //recibir los mensajes
+						instr_t * instruccion_recibida;
+						if (recibir_request(i, &instruccion_recibida) < 0) {
 							puts("No se recibio ninguna instruccion.");
 							perror("recv");
 							FD_CLR(i, &master);
 						} else {
-							puts("Recibi la siguiente instruccionn: ");
-							print_instruccion(instrcuccion_recibida);
-							//crear_hilo(instruccion_recibida);?
+							puts("Recibi la siguiente instruccion: ");
+							print_instruccion(instruccion_recibida);
+							//crear_hilo(instruccion_recibida);??
 						}
 					}
 					else if (i==0){ //stdin
@@ -127,18 +122,27 @@ int vigilar_conexiones_entrantes(int listener){
 
 char* imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr) {
 	char remoteIP[INET6_ADDRSTRLEN];
-	char* ipCliente = inet_ntop(remoteaddr.ss_family,
-			&(((struct sockaddr_in *) &remoteaddr)->sin_addr), remoteIP,
-			INET_ADDRSTRLEN);
+	char* ip_cliente = inet_ntop(remoteaddr.ss_family,
+						&(((struct sockaddr_in *) &remoteaddr)->sin_addr),
+						remoteIP,
+						INET_ADDRSTRLEN);
 	char* nombreCliente;
-	if (strcmp(ipCliente, IP_MEMORIA) == 0)
+	if (strcmp(ip_cliente, IP_MEMORIA) == 0)
 		nombreCliente = strdup("Memoria");
-	else if (strcmp(ipCliente, IP_FILESYSTEM) == 0)
+	else if (strcmp(ip_cliente, IP_FILESYSTEM) == 0)
 		nombreCliente = strdup("File System");
-	else if (strcmp(ipCliente, IP_KERNEL) == 0)
+	else if (strcmp(ip_cliente, IP_KERNEL) == 0)
 		nombreCliente = strdup("Kernel");
 	else
 		nombreCliente = strdup("Nuevo cliente");
-	printf("\nNueva conexion del cliente %s (%s)\n", ipCliente, nombreCliente);
-	return ipCliente;
+	printf("\nNueva conexion del cliente %s (%s)\n", ip_cliente, nombreCliente);
+	return ip_cliente;
 }
+
+
+
+
+
+
+
+

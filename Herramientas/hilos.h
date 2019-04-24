@@ -1,9 +1,4 @@
-/*
- * hilos.h
- *
- *  Created on: 14 abr. 2019
- *      Author: utnso
- */
+//------hilos.h------
 
 #ifndef HILOS_H_
 #define HILOS_H_
@@ -12,6 +7,6 @@
 #include<stdlib.h>
 #include <pthread.h>
 
- int pruebaHilos();
+int pruebaHilos();
 
 #endif /* HILOS_H_ */

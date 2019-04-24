@@ -1,12 +1,9 @@
-/*
- * definicionesConexiones.h
- *
- *  Created on: 7 abr. 2019
- *      Author: utnso
- */
+//-------definicionesConexiones.h-------
 
 #ifndef MEMORIA_DEFINICIONESCONEXIONES_H_
 #define MEMORIA_DEFINICIONESCONEXIONES_H_
+
+#include <commons/collections/list.h>
 
 #define IP_FILESYSTEM "127.0.0.2"
 #define IP_MEMORIA "127.0.0.3"
@@ -15,7 +12,14 @@
 
 //TODO Diseñar correctamente las herramientas y conexiones (arreglar este .h)
 
-enum codigos{
+typedef enum cod_proceso{
+	KERNEL,
+	MEMORIA,
+	FILESYSTEM
+}cod_proceso;
+
+typedef enum cod_op{
+	CODIGO_EXITO,
 	CODIGO_SELECT = 3,
 	ERROR_SELECT = -3,
 	CODIGO_INSERT = 4,
@@ -28,24 +32,13 @@ enum codigos{
 	ERROR_DROP = -7,
 	CODIGO_JOURNAL = 8,
 	ERROR_JOURNAL = -8
-};
-
-
-typedef enum cod_proceso{
-	KERNEL,
-	MEMORIA,
-	FILESYSTEM
-}cod_proceso;
+}cod_op;
 
 typedef struct instr_t{
 	time_t timestamp;
-	int codigoInstruccion;
-	char* param1;
-	char* param2;
-	char* param3;
-	char* param4;
+	cod_op codigo_operacion;
+	t_list* parametros;
 }instr_t;
-
 
 typedef struct remitente_t{
 	char* ip;
@@ -56,6 +49,17 @@ typedef struct remitente_instr_t{
 	instr_t *instruccion;
 	remitente_t *remitente;
 }remitente_instr_t;
+
+typedef struct{
+	int size;
+	void* stream;
+}t_buffer;
+
+typedef struct{
+	time_t timestamp;
+	cod_op codigo_operacion;
+	t_buffer* buffer;
+}t_paquete;
 
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */

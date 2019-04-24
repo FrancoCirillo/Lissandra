@@ -1,9 +1,5 @@
-/*
- * ejemplo-cliente-servidor-hilos.h
- *
- *  Created on: 14 abr. 2019
- *      Author: rodrigo diaz
- */
+//------ejemplo-cliente-servidor-hilos.h------
+
 /*
 #ifndef EJEMPLO_CLIENTE_SERVIDOR_HILOS_H_
 #define EJEMPLO_CLIENTE_SERVIDOR_HILOS_H_
@@ -24,6 +20,5 @@
 #include <pthread.h>
 
 
-#endif /* EJEMPLO_CLIENTE_SERVIDOR_HILOS_H_ */
-
+#endif /* EJEMPLO_CLIENTE_SERVIDOR_HILOS_H_
 */

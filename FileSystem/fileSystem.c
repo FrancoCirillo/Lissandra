@@ -83,7 +83,7 @@ instr_t* create(instr_t * instruccion){
 
 	if(!existe_Tabla(nombre_tabla)){
 		execute_create(instruccion);
-		respuesta->codigoInstruccion = EXITO;
+		respuesta->codigoInstruccion = 0;	//EXITO
 		nota = concat3("La tabla ",instruccion->param1," se creó correctamente.\n");
 		loggear_FS(nota);
 	}
@@ -116,7 +116,7 @@ void evaluar_instruccion(remitente_instr_t* mensaje){
 
 	case CODIGO_CREATE:
 		printf("CREATE\n\n");
-		respuesta = i_create(mensaje->instruccion);					//todos tienen que devolver un valor,
+		//respuesta = i_create(mensaje->instruccion);					//todos tienen que devolver un valor,
 
 		break;
 
@@ -136,7 +136,9 @@ void evaluar_instruccion(remitente_instr_t* mensaje){
 	mensaje->instruccion=respuesta;  //Esto pisa el parametro 1 con el mensaje a enviarle a memoria.
 	//y el codigo de instr es el codigo de la respuesta. (0 es exito, o el num neg es el error que corresponde)
 
+	/*TODO
 	responder(mensaje);
+	*/
 
 	printf("Finalizo la instruccion.\n");
 	//ver de hacer un free al mensaje si es necesario, o ver donde.

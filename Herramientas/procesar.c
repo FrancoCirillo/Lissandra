@@ -1,10 +1,6 @@
-/*
- * procesar.c
- *
- *  Created on: 15 abr. 2019
- *      Author: rodrigo diaz
- */
-//
+//-------procesar.c-------
+
+
 //#include "procesar.h"
 //
 //const cod_proceso soy=KERNEL;
