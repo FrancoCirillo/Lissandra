@@ -26,8 +26,10 @@ t_list* recibir_paquete(int);
 int recibir_request(int, instr_t**);
 int recibir_timestamp(int, time_t*);
 int recibir_operacion(int, cod_op*);
+t_paquete* instruccion_a_paquete(instr_t* instruccionAEnviar);
+void* serializar_request(instr_t* instruccionAEnviar, int* tamanio);
+int enviar_request(instr_t* instruccionAEnviar, int socket_cliente);
 void print_instruccion(instr_t* instruccion);
-
 
 /*
 void * serializar_instruccion(instr_t *instruccion, int* tamanioTotalInstruccion);

@@ -29,10 +29,10 @@ void crear_buffer(t_paquete* paquete) {
 	paquete->buffer->stream = NULL;
 }
 
-t_paquete* crear_paquete(cod_op codOperacion, time_t nuevoTimestamp) {
+t_paquete* crear_paquete(cod_op nuevoCodOp, time_t nuevoTimestamp) {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->timestamp = nuevoTimestamp;
-	paquete->codigo_operacion = codOperacion;
+	paquete->codigo_operacion = nuevoCodOp;
 	crear_buffer(paquete);
 	return paquete;
 }
@@ -120,6 +120,37 @@ int recibir_timestamp(int socket_cliente, time_t* nuevoTimestamp) {
 
 int recibir_operacion(int socket_cliente, cod_op* nuevaOperacion) {
 	return recv(socket_cliente, nuevaOperacion, sizeof(cod_op), MSG_WAITALL);
+}
+
+t_paquete* instruccion_a_paquete(instr_t* instruccionAEnviar){
+
+	t_paquete* paqueteAEnviar = crear_paquete(instruccionAEnviar->codigo_operacion, instruccionAEnviar->timestamp);
+
+	void iterator(void* valor){
+		int tamanio = strlen((char*)valor)+1;
+		agregar_a_paquete(paqueteAEnviar, valor, tamanio);
+	}
+
+	list_iterate(instruccionAEnviar->parametros, (void*) iterator);
+
+	return paqueteAEnviar;
+}
+
+void* serializar_request(instr_t* instruccionAEnviar, int* tamanio){
+
+	t_paquete* paqueteAEnviar = instruccion_a_paquete(instruccionAEnviar);
+	int bytes = paqueteAEnviar->buffer->size + 2*sizeof(int) + sizeof(time_t);
+	void* paqueteSerializado = serializar_paquete(paqueteAEnviar, bytes);
+
+	return paqueteSerializado;
+}
+
+int enviar_request(instr_t* instruccionAEnviar, int socket_cliente){
+	int tamanio;
+	void* a_enviar = serializar_request(instruccionAEnviar, &tamanio);
+	int s = send(socket_cliente, a_enviar, tamanio, 0);
+	free (a_enviar);
+	return s;
 }
 
 void print_instruccion(instr_t* instruccion){
