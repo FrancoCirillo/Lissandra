@@ -42,6 +42,6 @@ Para usar nuestra Shared Library desde Eclipse:
 2. En la Pestaña Environment clickeamos "Select..."
 3. Elegimos LD_LIBRARY_PATH y le damos Ok
 4. La seleccionamos y la editamos con "Edit..."
-5. Le **agregamos** al final de lo que ya está en el campo "Value" el path a nuestra biblioteca, en este caso le agregamos `:/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug` (incluidos los ":")
+5. Le **agregamos** al final de lo que ya está en el campo "Value" el path a nuestra biblioteca, en este caso le agregamos `:/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/` (incluidos los ":")
 6. "Apply"
 Hacer esto para Kernel, Memoria y FileSystem
