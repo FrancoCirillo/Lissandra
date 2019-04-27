@@ -2,6 +2,7 @@
 
 #include "serializaciones.h"
 
+
 void* serializar_paquete(t_paquete* paquete, int bytes) {
 	void * magic = malloc(bytes);
 
@@ -22,12 +23,14 @@ void* serializar_paquete(t_paquete* paquete, int bytes) {
 	return magic;
 }
 
+
 //Hay que crear un buffer cada parametro
 void crear_buffer(t_paquete* paquete) {
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = 0;
 	paquete->buffer->stream = NULL;
 }
+
 
 t_paquete* crear_paquete(cod_op nuevoCodOp, time_t nuevoTimestamp) {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -37,11 +40,13 @@ t_paquete* crear_paquete(cod_op nuevoCodOp, time_t nuevoTimestamp) {
 	return paquete;
 }
 
+
 void eliminar_paquete(t_paquete* paquete) {
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
 	free(paquete);
 }
+
 
 //Para agregar los parametros al paquete
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio) {
@@ -66,6 +71,7 @@ void* recibir_buffer(int* size, int socket_cliente) {
 	return buffer;
 }
 
+
 t_list* recibir_paquete(int socket_cliente) {
 	int size;
 	int desplazamiento = 0;
@@ -88,6 +94,7 @@ t_list* recibir_paquete(int socket_cliente) {
 	return valores;
 	return NULL;
 }
+
 
 int recibir_request(int socket_cliente, instr_t** instruccion) {
 	time_t nuevoTimestamp;
@@ -114,13 +121,16 @@ int recibir_request(int socket_cliente, instr_t** instruccion) {
 	return 0;
 }
 
+
 int recibir_timestamp(int socket_cliente, time_t* nuevoTimestamp) {
 	return recv(socket_cliente, nuevoTimestamp, sizeof(time_t), MSG_WAITALL);
 }
 
+
 int recibir_operacion(int socket_cliente, cod_op* nuevaOperacion) {
 	return recv(socket_cliente, nuevaOperacion, sizeof(cod_op), MSG_WAITALL);
 }
+
 
 t_paquete* instruccion_a_paquete(instr_t* instruccionAEnviar){
 
@@ -136,6 +146,7 @@ t_paquete* instruccion_a_paquete(instr_t* instruccionAEnviar){
 	return paqueteAEnviar;
 }
 
+
 void* serializar_request(instr_t* instruccionAEnviar, int* tamanio){
 
 	t_paquete* paqueteAEnviar = instruccion_a_paquete(instruccionAEnviar);
@@ -145,6 +156,7 @@ void* serializar_request(instr_t* instruccionAEnviar, int* tamanio){
 	return paqueteSerializado;
 }
 
+
 int enviar_request(instr_t* instruccionAEnviar, int socket_cliente){
 	int tamanio;
 	void* a_enviar = serializar_request(instruccionAEnviar, &tamanio);
@@ -152,6 +164,83 @@ int enviar_request(instr_t* instruccionAEnviar, int socket_cliente){
 	free (a_enviar);
 	return s;
 }
+
+
+instr_t* crear_instruccion(char* request){
+	char *actual, *comando, *valor;
+	comando = NULL;
+	valor = malloc(sizeof(int));
+	t_list* listaParam = list_create();
+
+	actual = strtok (request, " ");
+	comando = strdup(actual);
+	actual = strtok (NULL, " ");
+
+	for(int i=1; actual != NULL; i++){
+		valor = strdup(actual);
+		list_add(listaParam, valor);
+
+		if(i==1 && strcmp(comando, "INSERT")==0){
+			actual = strtok (NULL, "");
+			valor = strdup(actual);
+			list_add(listaParam, valor);
+			break;
+		}
+		actual = strtok (NULL, " ");
+	}
+	free(request);
+
+	time_t timestampInstruccion = obtener_tiempo();
+	cod_op codigoInstruccion = reconocer_comando(comando);
+
+	instr_t instruccionCreada ={
+		.timestamp = timestampInstruccion,
+		.codigo_operacion = codigoInstruccion,
+		.parametros = listaParam
+	};
+
+	instr_t *miInstr = malloc(sizeof(instruccionCreada));
+
+	memcpy(miInstr, &instruccionCreada, sizeof(instruccionCreada));
+
+	return miInstr;
+}
+
+
+cod_op reconocer_comando(char* comando){
+
+	if (strcmp(comando, "SELECT")==0) {
+		puts("Se detecto comando 'SELECT'\n");
+		return CODIGO_SELECT;
+	}
+	else if (strcmp(comando, "INSERT")==0) {
+		puts("Se detecto comando 'INSERT'\n");
+		return CODIGO_INSERT;
+	}
+	else if (strcmp(comando, "CREATE")==0) {
+		puts("Se detecto comando 'CREATE'\n");
+		return CODIGO_CREATE;
+	}
+	else if (strcmp(comando, "DESCRIBE")==0) {
+		puts("Se detecto comando 'DESCRIBE'\n");
+		return CODIGO_DESCRIBE;
+	}
+	else if (strcmp(comando, "DROP")==0) {
+		puts("Se detecto comando 'DROP'\n");
+		return CODIGO_DROP;
+	}
+	else{ 	/* if (strcmp(comando, "JOURNAL")==0) */
+		puts("Se detecto comando 'JOURNAL'\n");
+		return CODIGO_JOURNAL;
+	}
+	/*
+	else{
+		puts("Comando invalido\n\n");
+		return ERROR_INPUT;
+	}
+	*/
+}
+
 
 void print_instruccion(instr_t* instruccion){
 
@@ -164,6 +253,9 @@ void print_instruccion(instr_t* instruccion){
 	printf("Parametros:\n");
 	list_iterate(instruccion->parametros, (void*) iterator);
 }
+
+
+
 
 
 

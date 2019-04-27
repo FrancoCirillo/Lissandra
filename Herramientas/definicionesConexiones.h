@@ -20,18 +20,24 @@ typedef enum cod_proceso{
 
 typedef enum cod_op{
 	CODIGO_EXITO,
-	CODIGO_SELECT = 3,
-	ERROR_SELECT = -3,
-	CODIGO_INSERT = 4,
-	ERROR_INSERT = -4,
-	CODIGO_CREATE = 5,
-	ERROR_CREATE = -5,
-	CODIGO_DESCRIBE = 6,
-	ERROR_DESCRIBE = -6,
-	CODIGO_DROP = 7,
-	ERROR_DROP = -7,
-	CODIGO_JOURNAL = 8,
-	ERROR_JOURNAL = -8
+	CODIGO_SELECT,
+	ERROR_SELECT = -1,
+	CODIGO_INSERT = 2,
+	ERROR_INSERT = -2,
+	CODIGO_CREATE = 3,
+	ERROR_CREATE = -3,
+	CODIGO_DESCRIBE = 4,
+	ERROR_DESCRIBE = -4,
+	CODIGO_DROP = 5,
+	ERROR_DROP = -5,
+	CODIGO_JOURNAL = 6,
+	ERROR_JOURNAL = -6,
+	CODIGO_ADD = 7,
+	ERROR_ADD = -7,
+	CODIGO_RUN = 8,
+	ERROR_RUN = -8,
+	CODIGO_METRICS = 9,
+	ERROR_METRICS = -9
 }cod_op;
 
 typedef struct instr_t{
@@ -50,12 +56,12 @@ typedef struct remitente_instr_t{
 	remitente_t *remitente;
 }remitente_instr_t;
 
-typedef struct{
+typedef struct t_buffer{
 	int size;
 	void* stream;
 }t_buffer;
 
-typedef struct{
+typedef struct t_paquete{
 	time_t timestamp;
 	cod_op codigo_operacion;
 	t_buffer* buffer;
