@@ -2,6 +2,8 @@
 
 #include "tiempo.h"
 
+
+
 //Ejemplo Pthread
 /*
 #include <pthread.h>
@@ -55,3 +57,17 @@ time_t obtener_tiempo(){
 double segundos_entre(time_t tiempo1,time_t tiempo2){
 	return difftime(tiempo1,tiempo2);
 }
+int get_timestamp(){
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;   // retorna en mili segundos.
+				//timeval tiene 2 atributos que son en segundos y en microsegundos. Por eso el pasaje.
+}
+
+int dif_timestamps(int t1, int t2){
+	return t1 - t2;
+}
+int max_timestamp(int t1, int t2){
+	return t1>t2? t1: t2;
+}
+
