@@ -29,9 +29,9 @@ int recibir_operacion(int, cod_op*);
 t_paquete* instruccion_a_paquete(instr_t* instruccionAEnviar);
 void* serializar_request(instr_t* instruccionAEnviar, int* tamanio);
 int enviar_request(instr_t* instruccionAEnviar, int socket_cliente);
-instr_t* crear_instruccion(char* request);
+instr_t* leer_a_instruccion(char* request);
 cod_op reconocer_comando(char* comando);
 void print_instruccion(instr_t* instruccion);
-
+instr_t* crear_instruccion(time_t timestampNuevo, cod_op codInstNuevo, t_list* listaParamNueva);
 
 #endif /* SERIALIZACIONES_H_ */
