@@ -1,3 +1,5 @@
+//---------memoria.h---------
+
 #ifndef MEMORIA_MEMORIA_H_
 #define MEMORIA_MEMORIA_H_
 
@@ -36,9 +38,17 @@ typedef struct config{
 config configuracion;
 
 
-void inicializarConfiguracion();
+void inicializar_configuracion();
 void loggear(char* valor);
-char* getByKey(char* ruta, char* key);
+char* obtener_por_clave(char* ruta, char* clave);
+
+void ejecutar_instruccion(instr_t* instruccion);
+void ejecutar_instruccion_select(instr_t* instruccion);
+void ejecutar_instruccion_insert(instr_t* instruccion);
+void ejecutar_instruccion_create(instr_t* instruccion);
+void ejecutar_instruccion_describe(instr_t* instruccion);
+void ejecutar_instruccion_drop(instr_t* instruccion);
+void ejecutar_instruccion_journal(instr_t* instruccion);
 
 
 #endif /* MEMORIA_MEMORIA_H_ */
