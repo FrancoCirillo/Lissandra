@@ -4,6 +4,7 @@
 #define MEMORIA_DEFINICIONESCONEXIONES_H_
 
 #include <commons/collections/list.h>
+#include "tiempo.h"
 
 #define IP_FILESYSTEM "127.0.0.2"
 #define IP_MEMORIA "127.0.0.3"
@@ -41,7 +42,7 @@ typedef enum cod_op{
 }cod_op;
 
 typedef struct instr_t{
-	time_t timestamp;
+	mseg_t timestamp;
 	cod_op codigo_operacion;
 	t_list* parametros;
 }instr_t;
@@ -62,7 +63,7 @@ typedef struct t_buffer{
 }t_buffer;
 
 typedef struct t_paquete{
-	time_t timestamp;
+	mseg_t timestamp;
 	cod_op codigo_operacion;
 	t_buffer* buffer;
 }t_paquete;

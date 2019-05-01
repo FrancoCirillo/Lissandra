@@ -1,3 +1,5 @@
+//-------fileSystem.c-------
+
 #include "fileSystem.h"
 
 int main() {
@@ -29,7 +31,7 @@ int main() {
 	FILE* f = crear_archivo("Part_1", "Tabla A", ".tmp");
 	archivo_inicializar(f);
 	fclose(f);
-	crear_metadata("OtraTabla", "SC", "5", string_itoa(obtener_tiempo()));      //No me funciona el obtener_tiempo, debo tener algo mal.
+	crear_metadata("OtraTabla", "SC", "5", string_itoa(obtener_ts()));      //No me funciona el obtener_ts, debo tener algo mal.
 	//Todo lo paso a int para probar que funcione el crear_Metadata.
 	//crear_metadata("Tabla A", "SC", 10, 333666999);
 	crear_bloques();

@@ -1,9 +1,4 @@
-/*
- * kernel.c
- *
- *  Created on: 1 apr. 2019
- *      Author: rodrigo diaz
- */
+//---------kernel.c---------
 
 #include "Kernel.h"
 void* consola(void *param);
@@ -17,7 +12,7 @@ int main() {
 	inicializarConfiguracion();
 	instruccion_t i1={
 			1,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 1 instr 1",
 			"Param2",
 			"Param3",
@@ -27,7 +22,7 @@ int main() {
 
 	instruccion_t i2={
 			2,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 1 instr 2",
 			"Manzana",
 			"Pera",
@@ -39,7 +34,7 @@ int main() {
 
 	instruccion_t i3={
 			3,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 1 instr 3",
 			"Soy un parametro",
 			"YO tambien",
@@ -57,7 +52,7 @@ int main() {
 
 	instruccion_t i_1={
 			1,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 2 instr 1",
 			"Param2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			"Param3",
@@ -67,7 +62,7 @@ int main() {
 
 	instruccion_t i_2={
 			2,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 2 instr2",
 			"Manzana",
 			"Pera",
@@ -83,7 +78,7 @@ int main() {
 
 	instruccion_t i__1={
 			1,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 3 instr 1",
 			"Param2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			"Param3",
@@ -93,7 +88,7 @@ int main() {
 
 	instruccion_t i__2={
 			2,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 3 instr2",
 			"Manzana",
 			"Pera",
@@ -239,7 +234,7 @@ instruccion_t* ejecutar_instruccion(instruccion_t* i){
 instruccion_t* enviar_i(instruccion_t* i){
 	loggear("ENVIANDO INSTRUCCION FAKE");
 	i->codigo_instruccion=0;
-	i->timestamp=obtener_tiempo();
+	i->timestamp=obtener_ts();
 	printf("\n ##### \n Instruccion enviada %d, %s, %s, %s, %s\n",i->codigo_instruccion,i->param1,i->param2,i->param3,i->param4);
 	return i;
 }

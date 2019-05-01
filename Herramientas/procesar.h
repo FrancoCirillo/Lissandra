@@ -5,8 +5,8 @@
 //#define PROCESAR_H_
 //
 //
-//#include<stdio.h>
-//#include<stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 //#include <pthread.h>
 //#include "definicionesConexiones.h"
 //

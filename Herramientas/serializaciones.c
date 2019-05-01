@@ -32,8 +32,8 @@ void* serializar_paquete(t_paquete* paquete, int bytes) {
 	void * magic = malloc(bytes);
 
 	int desplazamiento = 0;
-	memcpy(magic + desplazamiento, &(paquete->timestamp), sizeof(time_t));
-	desplazamiento += sizeof(time_t);
+	memcpy(magic + desplazamiento, &(paquete->timestamp), sizeof(mseg_t));
+	desplazamiento += sizeof(mseg_t);
 
 	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(cod_op));
 	desplazamiento += sizeof(cod_op);
@@ -52,7 +52,7 @@ void* serializar_request(instr_t* instruccionAEnviar, int* tamanio){
 
 	t_paquete* paqueteAEnviar = instruccion_a_paquete(instruccionAEnviar);
 
-	int bytes = paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op)+ sizeof(time_t);
+	int bytes = paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op)+ sizeof(mseg_t);
 	void* paqueteSerializado = serializar_paquete(paqueteAEnviar, bytes);
 	*tamanio = bytes;
 	return paqueteSerializado;
@@ -76,7 +76,7 @@ void crear_buffer(t_paquete* paquete) {
 }
 
 
-t_paquete* crear_paquete(cod_op nuevoCodOp, time_t nuevoTimestamp) {
+t_paquete* crear_paquete(cod_op nuevoCodOp, mseg_t nuevoTimestamp) {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 	paquete->timestamp = nuevoTimestamp;
 	paquete->codigo_operacion = nuevoCodOp;
@@ -136,7 +136,7 @@ t_list* recibir_paquete(int socket_cliente) {
 
 
 int recibir_request(int socket_cliente, instr_t** instruccion) {
-	time_t nuevoTimestamp;
+	mseg_t nuevoTimestamp;
 	cod_op nuevoCodOp;
 	t_list* listaParam;
 
@@ -152,7 +152,7 @@ int recibir_request(int socket_cliente, instr_t** instruccion) {
 
 	//Fijarse si el "(*instruccion) -> algo" funciona
 
-	(*instruccion) = malloc( sizeof(time_t) * sizeof(cod_op) + sizeof(listaParam) );
+	(*instruccion) = malloc( sizeof(mseg_t) * sizeof(cod_op) + sizeof(listaParam) );
 	(*instruccion) -> timestamp = nuevoTimestamp;
 	(*instruccion) -> codigo_operacion = nuevoCodOp;
 	(*instruccion) -> parametros = listaParam;
@@ -161,8 +161,8 @@ int recibir_request(int socket_cliente, instr_t** instruccion) {
 }
 
 
-int recibir_timestamp(int socket_cliente, time_t* nuevoTimestamp) {
-	int r = recv(socket_cliente, nuevoTimestamp, sizeof(time_t), MSG_WAITALL);
+int recibir_timestamp(int socket_cliente, mseg_t* nuevoTimestamp) {
+	int r = recv(socket_cliente, nuevoTimestamp, sizeof(mseg_t), MSG_WAITALL);
 	if(r == 0){
 		perror("El cliente se desconecto: ");
 	}
@@ -210,13 +210,13 @@ instr_t* leer_a_instruccion(char* request){
 	}
 	free(requestCopy);
 
-	instr_t *miInstr = crear_instruccion(obtener_tiempo(), reconocer_comando(comando), listaParam);
+	instr_t *miInstr = crear_instruccion(obtener_ts(), reconocer_comando(comando), listaParam);
 
 	return miInstr;
 }
 
 
-instr_t* crear_instruccion(time_t timestampNuevo, cod_op codInstNuevo, t_list* listaParamNueva){
+instr_t* crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list* listaParamNueva){
 
 	instr_t instruccionCreada ={
 		.timestamp = timestampNuevo,

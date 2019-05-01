@@ -3,16 +3,18 @@
 #ifndef HERRAMIENTAS_TIEMPO_H
 #define HERRAMIENTAS_TIEMPO_H
 
-#include<stdio.h>
-#include<stdlib.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+//#include <time.h>
 #include <sys/time.h>
 
-char* obtener_tiempo_cadena();
-time_t obtener_tiempo();
-double segundos_entre(time_t tiempo1,time_t tiempo2);
-int get_timestamp();
-int dif_timestamps(int t1, int t2);
-int max_timestamp(int t1, int t2);
+typedef long int mseg_t;
+
+mseg_t obtener_ts();
+mseg_t dif_timestamps(mseg_t tiempo1, mseg_t tiempo2);
+mseg_t max_timestamp(mseg_t tiempo1, mseg_t tiempo2);
+
+//char* obtener_tiempo_cadena();
+
 
 #endif /* HERRAMIENTAS_TIEMPO_H */

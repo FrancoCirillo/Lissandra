@@ -2,7 +2,7 @@
 
 #include "hilos.h"
 
-void* funcion(void* numero){
+void funcion(void* numero){
 	int* numero_pasado=(int*) numero;
 	int suma=0;
 	printf("Parametro recibido %d",*numero_pasado);

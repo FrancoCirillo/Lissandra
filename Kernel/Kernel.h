@@ -1,38 +1,34 @@
-/*
- * kernel.h
- *
- *  Created on: 1 apr. 2019
- *      Author: rodrigo diaz
- */
+//---------kernel.h---------
 
 #ifndef Kernel_H_
 #define Kernel_H_
 
-#include<semaphore.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include<commons/log.h>
-#include<commons/config.h>
-#include<commons/string.h>
-#include<commons/config.h>
-#include<readline/readline.h>
-#include<stdio.h>
-#include<readline/readline.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
+#include <semaphore.h>
+#include <commons/log.h>
+#include <commons/config.h>
+#include <commons/string.h>
+#include <readline/readline.h>
+#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
 //#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
 //#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
+#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
 
 #include <pthread.h>
 
 t_log* g_logger;
 t_config* g_config;
 
+typedef long int mseg_t;
+
 //typedef enum {NEW,READY,EXEC,EXIT}estado;
 
 typedef struct instruccion_t{
 	int codigo_instruccion;
-	time_t timestamp;
+	mseg_t timestamp;
 	char* param1;
 	char* param2;
 	char* param3;

@@ -1,29 +1,21 @@
 #include "memoria.h"
 
+
 int main() {
 
 	puts("PROCESO MEMORIA\n");
 
 	//inicializarConfiguracion();
 
-	//leerConsola();
-
-	//config_destroy(g_config);
-
+	/*
+	puts("----------Esperando request----------\n");
 	char* request = readline ("> ");
 	instr_t* instr = leer_a_instruccion(request);
 	puts("Instruccion creada:");
 	print_instruccion(instr);
+	*/
 
-	request = "CREATE TABLA1 SC 4 60000";
-	instr = leer_a_instruccion(request);
-	puts("Instruccion creada:");
-	print_instruccion(instr);
-
-
-	instr = leer_a_instruccion("JOURNAL");
-	puts("Instruccion creada:");
-	print_instruccion(instr);
+	//config_destroy(g_config);
 
 	return 0;
 }
@@ -44,7 +36,7 @@ void inicializarConfiguracion() {
 	configuracion.RUTA_LOG = getByKey(rutaConfig, "RUTA_LOG");
 }
 
-void loggear(char *valor) {
+void loggear(char* valor) {
 	g_logger = log_create(configuracion.RUTA_LOG, "memoria", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
 	log_destroy(g_logger);
@@ -61,13 +53,6 @@ char* getByKey(char* ruta, char* key) {
 }
 
 
-/*
-puts("----------Esperando request----------\n");
-char* request = readline("> ");
-instr_t* instr = crear_instruccion(request);
-puts("Instruccion creada:");
-print_instruccion(instr);
- */
 
 
 

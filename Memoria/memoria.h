@@ -16,6 +16,8 @@
 t_log* g_logger;
 t_config* g_config;
 
+typedef long int mseg_t;
+
 typedef struct config{
 	char* PUERTO;
 	char* IP_FS;
@@ -34,15 +36,9 @@ typedef struct config{
 config configuracion;
 
 
-
 void inicializarConfiguracion();
-void loggear(char*);
-char* getByKey(char*, char*);
-/*
-void leerConsola();
-void reconocerRequest(char*, char*, char*, char*, char*);
-instr_t *crearInstruccion(int, char*, char*, char*, char*);
-void print_instruccion(instr_t*);
-*/
+void loggear(char* valor);
+char* getByKey(char* ruta, char* key);
+
 
 #endif /* MEMORIA_MEMORIA_H_ */
