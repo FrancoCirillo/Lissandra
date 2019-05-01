@@ -10,6 +10,21 @@ int main() {
 
 	//config_destroy(g_config);
 
+	char* request = readline ("> ");
+	instr_t* instr = leer_a_instruccion(request);
+	puts("Instruccion creada:");
+	print_instruccion(instr);
+
+	request = "CREATE TABLA1 SC 4 60000";
+	instr = leer_a_instruccion(request);
+	puts("Instruccion creada:");
+	print_instruccion(instr);
+
+
+	instr = leer_a_instruccion("JOURNAL");
+	puts("Instruccion creada:");
+	print_instruccion(instr);
+
 	return 0;
 }
 

@@ -185,36 +185,14 @@ int recibir_operacion(int socket_cliente, cod_op* nuevaOperacion) {
 }
 
 
-
-
-
-
-
-
-
-
-
-instr_t* crear_instruccion(time_t timestampNuevo, cod_op codInstNuevo, t_list* listaParamNueva){
-
-	instr_t instruccionCreada ={
-		.timestamp = timestampNuevo,
-		.codigo_operacion = codInstNuevo,
-		.parametros = listaParamNueva
-	};
-	instr_t *miInstr = malloc(sizeof(instruccionCreada));
-	memcpy(miInstr, &instruccionCreada, sizeof(instruccionCreada));
-
-	return miInstr;
-
-}
-
 instr_t* leer_a_instruccion(char* request){
+	char* requestCopy = strdup(request);
 	char *actual, *comando, *valor;
 	comando = NULL;
 	valor = malloc(sizeof(int));
 	t_list* listaParam = list_create();
 
-	actual = strtok (request, " ");
+	actual = strtok (requestCopy, " ");
 	comando = strdup(actual);
 	actual = strtok (NULL, " ");
 
@@ -230,10 +208,24 @@ instr_t* leer_a_instruccion(char* request){
 		}
 		actual = strtok (NULL, " ");
 	}
-	free(request);
+	free(requestCopy);
 
 	instr_t *miInstr = crear_instruccion(obtener_tiempo(), reconocer_comando(comando), listaParam);
 
+	return miInstr;
+}
+
+
+instr_t* crear_instruccion(time_t timestampNuevo, cod_op codInstNuevo, t_list* listaParamNueva){
+
+	instr_t instruccionCreada ={
+		.timestamp = timestampNuevo,
+		.codigo_operacion = codInstNuevo,
+		.parametros = listaParamNueva
+	};
+
+	instr_t* miInstr = malloc(sizeof(instruccionCreada));
+	memcpy(miInstr, &instruccionCreada, sizeof(instruccionCreada));
 
 	return miInstr;
 }
@@ -284,7 +276,9 @@ void print_instruccion(instr_t* instruccion){
 	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
 	printf("Parametros:\n");
 	list_iterate(instruccion->parametros, (void*) iterator);
+	puts("\n");
 }
+
 
 
 
