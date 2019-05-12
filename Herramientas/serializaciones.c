@@ -272,7 +272,7 @@ void print_instruccion(instr_t* instruccion){
 		printf("%s\n", value);
 	}
 
-	printf("Timestamp: %lld\n", (long long)instruccion->timestamp);
+	printf("Timestamp: %u \n", (unsigned int)instruccion->timestamp);
 	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
 	printf("Parametros:\n");
 	list_iterate(instruccion->parametros, (void*) iterator);

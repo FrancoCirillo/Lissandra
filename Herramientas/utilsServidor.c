@@ -56,21 +56,23 @@ int vigilar_conexiones_entrantes(int listener){
 	struct sockaddr_storage remoteaddr; // direccion del cliente
 	socklen_t addrlen;
 
-
+	char send_buf[100];
 	int i;
 
-	FD_ZERO(&master);    // poner en 0 la "bolsa" de fds
+	FD_ZERO(&master); //los vaciamos
 	FD_ZERO(&read_fds);
 
-	FD_SET(listener, &master);
-
+	FD_SET(listener, &master); // agregamos a los fds que vigila select()
+	FD_SET(0, &master); // 0 es el fd de la consola
 
 	// mantener cual es el fd mas grande (lo pide el seelct())
 	fdmax = listener; // por ahora es este
 
 	while(1) {
-		read_fds = master; //lo copiamos
+		read_fds = master;
 		puts("\nA continuacion se hace el select, esperando data entrante...");
+		printf(">");
+		fflush(stdout);
 		int resultado = select(fdmax + 1, &read_fds, NULL, NULL, NULL);
 		if (resultado == -1) {
 			perror("select");
@@ -87,31 +89,40 @@ int vigilar_conexiones_entrantes(int listener){
 						printf("El file descriptor '%d' ya existia, aceptando nuevas conexiones al mismo...\n",i);
 						// manejo de conexiones nuevas:
 						addrlen = sizeof remoteaddr;
-						newfd = accept(listener,
-								(struct sockaddr *) &remoteaddr, &addrlen);
+						newfd = accept(listener, (struct sockaddr *) &remoteaddr, &addrlen);
 						if (newfd == -1) {
 							perror("accept");
 						} else {
-							printf(
-									"Conexion al file desctiptor '%d' aceptada!, el accept() creo el nuevo fd '%d'.\n"
+							printf( "Conexion al file desctiptor '%d' aceptada!, el accept() creo el nuevo fd '%d'.\n"
 									"Se lo agrego a la lista de fds que vigila el select\n", i, newfd);
 							FD_SET(newfd, &master); // se agrega al set master
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande
 							printf("%s en el socket '%d'", imprimir_quien_se_conecto(remoteaddr), newfd);
 							}
-					} else { //el fd ya existia
-							 //recibir los mensakes
-						instr_t * instrcuccion_recibida;
-						int recibo = recibir_request(i, &instrcuccion_recibida);
-						if (recibo == 0) {
-							printf("\x1b[31m""El cliente se desconecto" "\x1b[0m" "\n"); //TODO: Agregar logger
-							perror("recv");
-							FD_CLR(i, &master);
-						} else {
-							puts("Recibi la siguiente instruccionn: ");
-							print_instruccion(instrcuccion_recibida);
-							//crear_hilo(instruccion_recibida);?
-						}
+					}
+
+					else if(i == 0){
+						puts("Nuevo mensaje en la consola");
+						gets(send_buf);
+						instr_t * request_recibida = leer_a_instruccion(send_buf);
+						puts("Recibi la siguiente instruccion: ");
+						print_instruccion(request_recibida);
+
+					}
+
+					else { // Ya se había hecho accept en el fd
+							 //recibir los mensajes
+							instr_t * instrcuccion_recibida;
+							int recibo = recibir_request(i, &instrcuccion_recibida);
+							if (recibo == 0) {
+								printf("\x1b[31m""El cliente se desconecto" "\x1b[0m" "\n"); //TODO: Agregar logger
+								perror("recv");
+								FD_CLR(i, &master);
+							} else {
+								puts("Recibi la siguiente instruccionn: ");
+								print_instruccion(instrcuccion_recibida);
+								//crear_hilo(instruccion_recibida);?
+							}
 					} // END recibir los mensajes
 				} // END tenemos una nueva conexion entrante
 			} // END recorriendo los fd
