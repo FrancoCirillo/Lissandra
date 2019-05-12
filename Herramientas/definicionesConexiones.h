@@ -10,8 +10,16 @@
 #define IP_MEMORIA "127.0.0.3"
 #define IP_KERNEL "127.0.0.4"
 #define PORT "4444"
-
 //TODO Diseñar correctamente las herramientas y conexiones (arreglar este .h)
+
+#define COLOR_ANSI_ROJO "\x1b[31m"
+#define COLOR_ANSI_VERDE "\x1b[32m"
+#define COLOR_ANSI_AMARILLO  "\x1b[33m"
+#define COLOR_ANSI_AZUL "\x1b[34m"
+#define COLOR_ANSI_MAGENTA "\x1b[35m"
+#define COLOR_ANSI_CYAN    "\x1b[36m"
+#define COLOR_ANSI_RESET   "\x1b[0m"
+
 
 typedef enum cod_proceso{
 	KERNEL,

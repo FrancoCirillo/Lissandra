@@ -5,15 +5,17 @@
 
 int main() {
 
-	printf("\x1b[1;36m	PROCESO MEMORIA \x1b[0m \n");
+	printf(COLOR_ANSI_CYAN"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
 
 	callback = ejecutar_instruccion;
 
 	inicializar_configuracion();
 
+
 	int listenner = iniciar_servidor(IP_MEMORIA, PORT);
 
-	vigilar_conexiones_entrantes(listenner, callback);
+	int conexion_con_fs = conectar_con_proceso(FILESYSTEM, MEMORIA);
+	vigilar_conexiones_entrantes(listenner, callback, conexion_con_fs);
 
 
 	//config_destroy(g_config);
@@ -57,45 +59,46 @@ char* obtener_por_clave(char* ruta, char* clave) {
 }
 
 
-void ejecutar_instruccion(instr_t* instruccion){
+void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
 	switch(instruccion->codigo_operacion){
-	case CODIGO_SELECT: ejecutar_instruccion_select(instruccion); break;
-	case CODIGO_INSERT: ejecutar_instruccion_insert(instruccion); break;
-	case CODIGO_CREATE: ejecutar_instruccion_create(instruccion); break;
-	case CODIGO_DESCRIBE: ejecutar_instruccion_describe(instruccion); break;
-	case CODIGO_DROP: ejecutar_instruccion_drop(instruccion); break;
-	case CODIGO_JOURNAL: ejecutar_instruccion_journal(instruccion); break;
+	case CODIGO_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
+	case CODIGO_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
+	case CODIGO_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
+	case CODIGO_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
+	case CODIGO_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor); break;
+	case CODIGO_JOURNAL: ejecutar_instruccion_journal(instruccion, conexionReceptor); break;
 	default: break;		//evita warnings por no haber cases con los cod_op de errores
 	}
 }
 
 
-void ejecutar_instruccion_select(instr_t* instruccion){
+void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Select");
+	enviar_request(instruccion, conexionReceptor);
 }
 
 
-void ejecutar_instruccion_insert(instr_t* instruccion){
+void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Insert");
 }
 
 
-void ejecutar_instruccion_create(instr_t* instruccion){
+void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Create");
 }
 
 
-void ejecutar_instruccion_describe(instr_t* instruccion){
+void ejecutar_instruccion_describe(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Describe");
 }
 
 
-void ejecutar_instruccion_drop(instr_t* instruccion){
+void ejecutar_instruccion_drop(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Drop");
 }
 
 
-void ejecutar_instruccion_journal(instr_t* instruccion){
+void ejecutar_instruccion_journal(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Journal");
 }
 

@@ -19,8 +19,8 @@ t_log* logger;
 instr_t* request;
 int server_fd;
 
-char* imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr);
+void imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr);
 int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir);
-int vigilar_conexiones_entrantes(int listener, void (*miCallback)(instr_t* instruccion) );
+int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t* instruccionAEjecutar, int conexionReceptor), int conexionReceptor);
 
 #endif /* UTILS_SERVIDOR */

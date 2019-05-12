@@ -100,7 +100,6 @@ void* recibir_buffer(int* size, int socket_cliente) {
 	void * buffer;
 
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-	printf("El tamanio total del buffer recibido es %d\n", *size);
 	buffer = malloc(*size);
 	recv(socket_cliente, buffer, *size, MSG_WAITALL);
 
@@ -121,11 +120,8 @@ t_list* recibir_paquete(int socket_cliente) {
 		i++;
 		memcpy(&tamanio, buffer+desplazamiento, sizeof(int));
 		desplazamiento += sizeof(int);
-		printf("El tamanio del parametro '%d'es de: %d\n", i, size);
 		char* valor = malloc(tamanio);
 		memcpy(valor, buffer+desplazamiento, tamanio);
-		printf("El valor del primer parametro '%d' es de: %s\n", i, valor);
-
 		desplazamiento += tamanio;
 		list_add(valores, valor);
 	}
@@ -193,7 +189,7 @@ instr_t* leer_a_instruccion(char* request){
 	t_list* listaParam = list_create();
 
 	if(strcmp(requestCopy, "CERRAR\n")==0){
-		printf("\x1b[1;36mGracias por usar Lissandra FS!\n \x1b[0m cerrando...\n");
+		printf(COLOR_ANSI_CYAN"Gracias por usar Lissandra FS!\n"COLOR_ANSI_RESET"cerrando...\n");
 		exit(0);
 	}
 
@@ -239,27 +235,27 @@ instr_t* crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list* l
 cod_op reconocer_comando(char* comando){
 
 	if (strcmp(comando, "SELECT")==0) {
-		puts("Se detecto comando 'SELECT'\n");
+//		puts("Se detecto comando 'SELECT'\n");
 		return CODIGO_SELECT;
 	}
 	else if (strcmp(comando, "INSERT")==0) {
-		puts("Se detecto comando 'INSERT'\n");
+//		puts("Se detecto comando 'INSERT'\n");
 		return CODIGO_INSERT;
 	}
 	else if (strcmp(comando, "CREATE")==0) {
-		puts("Se detecto comando 'CREATE'\n");
+//		puts("Se detecto comando 'CREATE'\n");
 		return CODIGO_CREATE;
 	}
 	else if (strcmp(comando, "DESCRIBE")==0) {
-		puts("Se detecto comando 'DESCRIBE'\n");
+//		puts("Se detecto comando 'DESCRIBE'\n");
 		return CODIGO_DESCRIBE;
 	}
 	else if (strcmp(comando, "DROP")==0) {
-		puts("Se detecto comando 'DROP'\n");
+//		puts("Se detecto comando 'DROP'\n");
 		return CODIGO_DROP;
 	}
 	else{ 	/* if (strcmp(comando, "JOURNAL")==0) */
-		puts("Se detecto comando 'JOURNAL'\n");
+//		puts("Se detecto comando 'JOURNAL'\n");
 		return CODIGO_JOURNAL;
 	}
 	/*
@@ -281,7 +277,6 @@ void print_instruccion(instr_t* instruccion){
 	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
 	printf("Parametros:\n");
 	list_iterate(instruccion->parametros, (void*) iterator);
-	puts("\n");
 }
 
 
