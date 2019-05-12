@@ -192,6 +192,11 @@ instr_t* leer_a_instruccion(char* request){
 	valor = malloc(sizeof(int));
 	t_list* listaParam = list_create();
 
+	if(strcmp(requestCopy, "CERRAR\n")==0){
+		printf("\x1b[1;36mGracias por usar Lissandra FS!\n \x1b[0m cerrando...\n");
+		exit(0);
+	}
+
 	actual = strtok (requestCopy, " ");
 	comando = strdup(actual);
 	actual = strtok (NULL, " ");

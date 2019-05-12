@@ -13,6 +13,7 @@
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/hilos.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/serializaciones.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
+#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
 
 
 t_log* g_logger;
@@ -37,6 +38,8 @@ typedef struct config{
 
 config configuracion;
 
+
+void (*callback) (instr_t* instruccion);
 
 void inicializar_configuracion();
 void loggear(char* valor);

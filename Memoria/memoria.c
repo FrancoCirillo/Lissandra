@@ -2,20 +2,19 @@
 
 #include "memoria.h"
 
+
 int main() {
 
-	puts("PROCESO MEMORIA\n");
+	printf("\x1b[1;36m	PROCESO MEMORIA \x1b[0m \n");
 
-	//inicializar_configuracion();
+	callback = ejecutar_instruccion;
 
-	/*
-	puts("----------Esperando request----------\n");
-	char* request = readline ("> ");
-	instr_t* instr = leer_a_instruccion(request);
-	puts("Instruccion creada:");
-	print_instruccion(instr);
-	ejecutar_instruccion(instr);
-	*/
+	inicializar_configuracion();
+
+	int listenner = iniciar_servidor(IP_MEMORIA, PORT);
+
+	vigilar_conexiones_entrantes(listenner, callback);
+
 
 	//config_destroy(g_config);
 
@@ -24,6 +23,7 @@ int main() {
 
 
 void inicializar_configuracion() {
+	puts("Configuracion:");
 	char* rutaConfig = "memoria.config";
 	configuracion.PUERTO = obtener_por_clave(rutaConfig, "PUERTO");
 	configuracion.IP_FS = obtener_por_clave(rutaConfig, "IP_FS");
@@ -51,8 +51,7 @@ char* obtener_por_clave(char* ruta, char* clave) {
 	char* valor;
 	g_config = config_create(ruta);
 	valor = config_get_string_value(g_config, clave);
-
-	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------", clave, valor);
+	printf(" %s: %s \n", clave, valor);
 
 	return valor;
 }
