@@ -60,8 +60,11 @@ char* obtener_por_clave(char* ruta, char* clave) {
 
 
 void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
+
+	if(instruccion->codigo_operacion >= BASE_COD_CONSOLA) instruccion->codigo_operacion -= BASE_COD_CONSOLA;
 	switch(instruccion->codigo_operacion){
 	case CODIGO_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
+	case DEVOLUCION_SELECT: ejecutar_instruccion_devolucion_select(instruccion, conexionReceptor); break;
 	case CODIGO_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
 	case CODIGO_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
 	case CODIGO_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
@@ -74,9 +77,17 @@ void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
 
 void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Select");
+	sleep(1);
+	puts("La tabla no se encontro en Memoria. Consultando al FS");
+	print_instruccion(instruccion);
 	enviar_request(instruccion, conexionReceptor);
 }
 
+
+void ejecutar_instruccion_devolucion_select(instr_t* instruccion, int conexionReceptor){
+	puts("Select realizado en FS, se guardo la siguiente tabla en la memoria:");
+	print_instruccion(instruccion);
+}
 
 void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Insert");
@@ -102,6 +113,10 @@ void ejecutar_instruccion_journal(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Journal");
 }
 
+void ejecutar_instruccion_exito(instr_t* instruccion, int conexionReceptor){
+	puts("Instruccion exitosa:");
+	print_instruccion(instruccion);
+}
 
 
 

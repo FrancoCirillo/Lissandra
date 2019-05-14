@@ -20,6 +20,7 @@
 #define COLOR_ANSI_CYAN    "\x1b[36m"
 #define COLOR_ANSI_RESET   "\x1b[0m"
 
+#define BASE_COD_CONSOLA 100
 
 typedef enum cod_proceso{
 	KERNEL,
@@ -28,8 +29,8 @@ typedef enum cod_proceso{
 }cod_proceso;
 
 typedef enum cod_op{
-	CODIGO_EXITO,
-	CODIGO_SELECT,
+	CODIGO_EXITO = 0,
+	CODIGO_SELECT = 1,
 	ERROR_SELECT = -1,
 	CODIGO_INSERT = 2,
 	ERROR_INSERT = -2,
@@ -46,7 +47,18 @@ typedef enum cod_op{
 	CODIGO_RUN = 8,
 	ERROR_RUN = -8,
 	CODIGO_METRICS = 9,
-	ERROR_METRICS = -9
+	ERROR_METRICS = -9,
+	DEVOLUCION_SELECT = 10,
+	// Solo para saber si devolver los resultados al Kernel o Memoria para que imprima
+	CONSOLA_SELECT = BASE_COD_CONSOLA + CODIGO_SELECT,
+	CONSOLA_INSERT = BASE_COD_CONSOLA + CODIGO_INSERT,
+	CONSOLA_CREATE = BASE_COD_CONSOLA + CODIGO_CREATE,
+	CONSOLA_DESCRIBE = BASE_COD_CONSOLA + CODIGO_DESCRIBE,
+	CONSOLA_DROP = BASE_COD_CONSOLA + CODIGO_DROP,
+	CONSOLA_JOURNAL = BASE_COD_CONSOLA + CODIGO_JOURNAL,
+	CONSOLA_ADD = BASE_COD_CONSOLA + CODIGO_ADD, //No es necesario implementarlo así, pero para consitencia esta así.
+	CONSOLA_RUN = BASE_COD_CONSOLA + CODIGO_RUN,
+	CONSOLA_METRICS = BASE_COD_CONSOLA + CODIGO_METRICS
 }cod_op;
 
 typedef struct instr_t{
