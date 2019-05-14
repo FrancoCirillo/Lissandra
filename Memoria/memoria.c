@@ -2,7 +2,6 @@
 
 #include "memoria.h"
 
-
 int main() {
 
 	printf(COLOR_ANSI_CYAN"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
@@ -15,7 +14,7 @@ int main() {
 	int listenner = iniciar_servidor(IP_MEMORIA, PORT);
 
 	int conexion_con_fs = conectar_con_proceso(FILESYSTEM, MEMORIA);
-	vigilar_conexiones_entrantes(listenner, callback, conexion_con_fs);
+	vigilar_conexiones_entrantes(listenner, callback, conexion_con_fs, CONSOLA_MEMORIA);
 
 
 	//config_destroy(g_config);
@@ -61,32 +60,49 @@ char* obtener_por_clave(char* ruta, char* clave) {
 
 void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
 
-	if(instruccion->codigo_operacion >= BASE_COD_CONSOLA) instruccion->codigo_operacion -= BASE_COD_CONSOLA;
 	switch(instruccion->codigo_operacion){
-	case CODIGO_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
-	case DEVOLUCION_SELECT: ejecutar_instruccion_devolucion_select(instruccion, conexionReceptor); break;
-	case CODIGO_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
-	case CODIGO_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
-	case CODIGO_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
-	case CODIGO_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor); break;
-	case CODIGO_JOURNAL: ejecutar_instruccion_journal(instruccion, conexionReceptor); break;
-	default: break;		//evita warnings por no haber cases con los cod_op de errores
+	case CONSOLA_MEM_SELECT:
+	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_RTA_SELECT:
+	case CONSOLA_MEM_RTA_SELECT: ejecutar_instruccion_devolucion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_INSERT:
+	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_CREATE:
+	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_DESCRIBE:
+	case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_DROP:
+	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_JOURNAL:
+	case CONSOLA_KRN_JOURNAL: ejecutar_instruccion_journal(instruccion, conexionReceptor); break;
+	default: break;
 	}
 }
 
-
 void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor){
-	puts("Ejecutando instruccion Select");
-	sleep(1);
-	puts("La tabla no se encontro en Memoria. Consultando al FS");
-	print_instruccion(instruccion);
-	enviar_request(instruccion, conexionReceptor);
+		puts("Ejecutando instruccion Select");
+		int seEncontro = 0; //No cambiar hasta que se implemente conexionKERNEL
+		sleep(1);//Buscar
+		if(seEncontro){
+			t_list * listaParam = list_create();
+			list_add(listaParam, "Se encontro Tabla1 | 3 | MmMmMMMm");
+			enviar_a_quien_corresponda(CODIGO_EXITO, instruccion, listaParam, conexionReceptor); //Seria conexionKERNEL, Falta implementar
+
+		}
+		else{
+			puts("La tabla no se encontro en Memoria. Consultando al FS");
+			enviar_request(instruccion, conexionReceptor);
+		}
+
 }
 
 
 void ejecutar_instruccion_devolucion_select(instr_t* instruccion, int conexionReceptor){
 	puts("Select realizado en FS, se guardo la siguiente tabla en la memoria:");
 	print_instruccion(instruccion);
+	t_list * listaParam = list_create();
+	list_add(listaParam, "Se encontro Tabla1 | 3 | CHANCHAN");
+	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,  listaParam, conexionReceptor);
 }
 
 void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor){
@@ -120,7 +136,22 @@ void ejecutar_instruccion_exito(instr_t* instruccion, int conexionReceptor){
 
 
 
+void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, int conexionReceptor){
+	instr_t * miInstruccion;
+	switch(quienEnvio(instruccion)){
+	case CONSOLA_KERNEL:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
+		puts("Esto se debio mandar al Kernel:");
+		print_instruccion(miInstruccion);
+//		enviar_request(miInstruccion, conexionReceptor);
+		break;
+	default:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion , listaParam);
+		print_instruccion(miInstruccion);
+		break;
+	}
 
+}
 
 
 

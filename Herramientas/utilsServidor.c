@@ -45,7 +45,7 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
 	return socket_servidor;
 }
 
-int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t* instruccionAEjecutar, int conexionReceptor), int conexionReceptor){
+int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t* instruccionAEjecutar, int conexionReceptor), int conexionReceptor, int queConsola){
 
 	//Gracias a la guia de Beej:
 	fd_set master;    // lista 'master' de file descriptors
@@ -58,7 +58,6 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 	char bufferLeido[100];
 	int i;
-	int leidoPorConsola = 1; //TRUE
 
 	FD_ZERO(&master); //los vaciamos
 	FD_ZERO(&read_fds);
@@ -96,7 +95,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 					}
 					else if(i == 0){
 						fgets(bufferLeido, 100, stdin);
-						instr_t * request_recibida = leer_a_instruccion(bufferLeido, leidoPorConsola);
+						instr_t * request_recibida = leer_a_instruccion(bufferLeido, queConsola);
 						puts("Recibi la siguiente instruccion desde la consola: ");
 						print_instruccion(request_recibida);
 						ejecutar_requestRecibido(request_recibida, conexionReceptor);

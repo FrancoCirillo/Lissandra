@@ -13,6 +13,7 @@
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/string.h>
+#include <commons/collections/list.h>
 #include <sys/stat.h>
 
 //ORDEN PARAMETROS
@@ -25,10 +26,11 @@
 
 void (*callback) (instr_t* instruccion, int conexionReceptor);
 void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor, int flagConsola);
-void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor, int flagConsola);
-void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor, int flagConsola);
-void ejecutar_instruccion_describe(instr_t* instruccion, int conexionReceptor, int flagConsola);
-void ejecutar_instruccion_drop(instr_t* instruccion, int conexionReceptor, int flagConsola);
+void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor);
+void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor);
+void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor);
+void ejecutar_instruccion_describe(instr_t* instruccion, int conexionReceptor);
+void ejecutar_instruccion_drop(instr_t* instruccion, int conexionReceptor);
+void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, int conexionReceptor);
 
 #endif /* FILE_SYSTEM_H */

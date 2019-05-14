@@ -11,7 +11,7 @@ int main() {
 
 	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexion_con_memoria);
+	vigilar_conexiones_entrantes(listenner, callback, conexion_con_memoria, CONSOLA_FS);
 
 	return 0;
 }
@@ -20,54 +20,102 @@ int main() {
 
 void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
 
-	int mostrarPorConsola = 0;
-	if(instruccion->codigo_operacion >= BASE_COD_CONSOLA){
-		instruccion->codigo_operacion -= BASE_COD_CONSOLA;
-		mostrarPorConsola = 1;
-	}
 	switch(instruccion->codigo_operacion){
-	case CODIGO_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor, mostrarPorConsola); break;
-	case CODIGO_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor, mostrarPorConsola); break;
-	case CODIGO_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor, mostrarPorConsola); break;
-	case CODIGO_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor, mostrarPorConsola); break;
-	case CODIGO_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor, mostrarPorConsola); break;
-	default: break;		//evita warnings por no haber cases con los cod_op de errores
+	case CONSOLA_MEM_SELECT:
+	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_INSERT:
+	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_CREATE:
+	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_DESCRIBE:
+	case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_DROP:
+	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor); break;
+	default: break;
 	}
 }
 
 
-void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor, int flagConsola){
+void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Select");
 	sleep(1);
-	instr_t * miInstruccion = leer_a_instruccion("DEVOLUCION_SELECT TABLA3 4 Hola", 0);
-	enviar_request(miInstruccion, conexionReceptor);
+	int tablaPreexistente = 1;
+	if(tablaPreexistente){
+		t_list * listaParam = list_create();
+		list_add(listaParam, "TABLA1");
+		list_add(listaParam, "4");
+		list_add(listaParam, "Hola soy Lissandra");
+		enviar_a_quien_corresponda(DEVOLUCION_SELECT, instruccion,listaParam, conexionReceptor);
+	}
+	else{
+		t_list * listaParam = list_create();
+		list_add(listaParam, "La TABLA 1 No existeee");
+		enviar_a_quien_corresponda(ERROR_SELECT, instruccion,listaParam, conexionReceptor);
+	}
 }
 
 
-void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor, int flagConsola){
+void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Insert");
-	instr_t * miInstruccion = leer_a_instruccion("CODIGO_EXITO SeInserto TABLA1 Inserttt", 0);
-	enviar_request(miInstruccion, conexionReceptor);
+	sleep(1);
+	t_list * listaParam = list_create();
+
+	list_add(listaParam, "Se inserto TABLA1 | 3 | Joya | 150515789");
+
+	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,listaParam, conexionReceptor);
 
 }
 
 
-void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor, int flagConsola){
+void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Create");
-	instr_t * miInstruccion = leer_a_instruccion("CODIGO_EXITO TABLA3 4 Hola", 0);
-	enviar_request(miInstruccion, conexionReceptor);
+
+	t_list * listaParam = list_create();
+
+	list_add(listaParam, "Se creo TABLA2");
+
+	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,listaParam, conexionReceptor);
+
 }
 
 
-void ejecutar_instruccion_describe(instr_t* instruccion, int conexionReceptor, int flagConsola){
+void ejecutar_instruccion_describe(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Describe");
-	instr_t * miInstruccion = leer_a_instruccion("CODIGO_EXITO MetadataTabla3etc", 0);
-		enviar_request(miInstruccion, conexionReceptor);
+	t_list * listaParam = list_create();
+
+	list_add(listaParam, "Metadata Tabla3:	Tipo de consistencia: SC	Numero de Particiones: 4	Tiempo entre compactaciones: 60000");
+
+	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,listaParam, conexionReceptor);
+
 }
 
 
-void ejecutar_instruccion_drop(instr_t* instruccion, int conexionReceptor, int flagConsola){
+void ejecutar_instruccion_drop(instr_t* instruccion, int conexionReceptor){
 	puts("Ejecutando instruccion Drop");
-	instr_t * miInstruccion = leer_a_instruccion("CODIGO_EXITO TABLA3 4 dRRop", 0);
+	t_list * listaParam = list_create();
+
+	list_add(listaParam, "Se borro la Tabla 3");
+
+	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,listaParam, conexionReceptor);
+
+
+}
+
+void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, int conexionReceptor){
+	instr_t * miInstruccion;
+	switch(quienEnvio(instruccion)){
+	case CONSOLA_KERNEL:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		enviar_request(miInstruccion, conexionReceptor);
+		break;
+	case CONSOLA_MEMORIA:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_MEMORIA, listaParam);
+		enviar_request(miInstruccion, conexionReceptor);
+		break;
+	default:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
+		print_instruccion(miInstruccion);
+		break;
+	}
+
 }

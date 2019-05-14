@@ -181,7 +181,7 @@ int recibir_operacion(int socket_cliente, cod_op* nuevaOperacion) {
 }
 
 
-instr_t* leer_a_instruccion(char* request, int enviadoPorConsola){
+instr_t* leer_a_instruccion(char* request, int queConsola){
 	char* requestCopy = strdup(request);
 	char *actual, *comando, *valor;
 	comando = NULL;
@@ -210,16 +210,12 @@ instr_t* leer_a_instruccion(char* request, int enviadoPorConsola){
 		actual = strtok (NULL, " ");
 	}
 	free(requestCopy);
-	printf("el comando aqui es: %s\n", comando);
 
-	if(enviadoPorConsola){
-		puts("Enviado por consola");
-		instr_t *miInstr = crear_instruccion(obtener_ts(), reconocer_comando_consola(comando), listaParam);
-		return miInstr;
-	}
-	else{
-		instr_t *miInstr = crear_instruccion(obtener_ts(), reconocer_comando(comando), listaParam);
-		return miInstr;
+	switch(queConsola){
+	case CONSOLA_KERNEL: return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam); break;
+	case CONSOLA_MEMORIA:return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_MEMORIA, listaParam);break;
+	case CONSOLA_FS:return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_FS, listaParam);break;
+	default: return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam); break;
 	}
 
 }
@@ -269,30 +265,19 @@ cod_op reconocer_comando(char* comando){
 //		puts("Se detecto comando 'JOURNAL'\n");
 		return CODIGO_JOURNAL;
 	}
+	else if (strcmp(comando, "ADD")==0){
+//		puts("Se detecto comando 'JOURNAL'\n");
+		return CODIGO_ADD;
+	}
 
-	else if (strcmp(comando, "ERROR_SELECT")==0){
-//		puts("Se detecto comando 'ERROR_SELECT'\n");
-		return ERROR_SELECT;
+	else if (strcmp(comando, "RUN")==0){
+//		puts("Se detecto comando 'JOURNAL'\n");
+		return CODIGO_RUN;
 	}
-	else if (strcmp(comando, "ERROR_INSERT")==0){
-//		puts("Se detecto comando 'ERROR_INSERT'\n");
-		return ERROR_INSERT;
-	}
-	else if (strcmp(comando, "ERROR_CREATE")==0){
-//		puts("Se detecto comando 'ERROR_SELECT'\n");
-		return ERROR_CREATE;
-	}
-	else if (strcmp(comando, "ERROR_DESCRIBE")==0){
-//		puts("Se detecto comando 'ERROR_DESCRIBE'\n");
-		return ERROR_DESCRIBE;
-	}
-	else if (strcmp(comando, "ERROR_DROP")==0){
-//		puts("Se detecto comando 'ERROR_DROP'\n");
-		return ERROR_DROP;
-	}
-	else if (strcmp(comando, "ERROR_ADD")==0){
-//		puts("Se detecto comando 'ERROR_ADD'\n");
-		return ERROR_ADD;
+
+	else if (strcmp(comando, "METRICS")==0){
+//		puts("Se detecto comando 'JOURNAL'\n");
+		return CODIGO_METRICS;
 	}
 	else{ //TODO: Borrar. Está por si los que codeamos nos comemos alguna letra.
 		puts("NO se reconoció el comando'\n");
@@ -300,55 +285,6 @@ cod_op reconocer_comando(char* comando){
 	}
 
 }
-
-cod_op reconocer_comando_consola(char* comando){
-	if (strcmp(comando, "SELECT")==0) {
-//		puts("Se detecto comando 'SELECT'\n");
-		return CONSOLA_SELECT;
-	}
-	else if (strcmp(comando, "INSERT")==0) {
-//		puts("Se detecto comando 'INSERT'\n");
-		return CONSOLA_INSERT;
-	}
-	else if (strcmp(comando, "CREATE")==0) {
-//		puts("Se detecto comando 'CREATE'\n");
-		return CONSOLA_CREATE;
-	}
-	else if (strcmp(comando, "DESCRIBE")==0) {
-//		puts("Se detecto comando 'DESCRIBE'\n");
-		return CONSOLA_DESCRIBE;
-	}
-	else if (strcmp(comando, "DROP")==0) {
-//		puts("Se detecto comando 'DROP'\n");
-		return CONSOLA_DROP;
-	}
-	else if (strcmp(comando, "JOURNAL")==0){
-//		puts("Se detecto comando 'JOURNAL'\n");
-		return CONSOLA_JOURNAL;
-	}
-
-	else if (strcmp(comando, "ADD")==0){
-//		puts("Se detecto comando 'JOURNAL'\n");
-		return CONSOLA_ADD;
-	}
-
-	else if (strcmp(comando, "RUN")==0){
-//		puts("Se detecto comando 'JOURNAL'\n");
-		return CONSOLA_RUN;
-	}
-
-	else if (strcmp(comando, "METRICS")==0){
-//		puts("Se detecto comando 'JOURNAL'\n");
-		return CONSOLA_METRICS;
-	}
-
-	else{ //TODO: Por mas que no sea requerimiento, hacer algo (No queremos q rompa todo xq se comieron una letra
-		puts("NO se reconoció el comando\n");
-		return CODIGO_DESCRIBE;
-	}
-
-}
-
 
 void print_instruccion(instr_t* instruccion){
 
@@ -363,7 +299,13 @@ void print_instruccion(instr_t* instruccion){
 }
 
 
-
+cod_op quienEnvio(instr_t * instruccion){
+	int codigoAnalizado = instruccion->codigo_operacion;
+	if (codigoAnalizado > BASE_COD_ERROR) codigoAnalizado -= BASE_COD_ERROR;
+	if (codigoAnalizado < BASE_CONSOLA_MEMORIA) return CONSOLA_KERNEL;
+	if (codigoAnalizado < BASE_CONSOLA_FS) return CONSOLA_MEMORIA;
+	return CONSOLA_FS;
+}
 
 
 

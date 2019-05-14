@@ -18,7 +18,7 @@
 
 void* serializar_paquete(t_paquete*, int);
 void crear_buffer(t_paquete*);
-t_paquete* crear_paquete(int, time_t);
+t_paquete* crear_paquete(cod_op nuevoCodOp, mseg_t nuevoTimestamp);
 void eliminar_paquete(t_paquete*);
 void agregar_a_paquete(t_paquete*, void*, int);
 void* recibir_buffer(int*, int);
@@ -32,8 +32,7 @@ int enviar_request(instr_t* instruccionAEnviar, int socket_cliente);
 instr_t* crear_instruccion(time_t timestampNuevo, cod_op codInstNuevo, t_list* listaParamNueva);
 instr_t* leer_a_instruccion(char* request, int enviadoPorConsola);
 cod_op reconocer_comando(char* comando);
-cod_op reconocer_comando_consola(char* comando);
 void print_instruccion(instr_t* instruccion);
-
+cod_op quienEnvio(instr_t * instruccion);
 
 #endif /* SERIALIZACIONES_H_ */
