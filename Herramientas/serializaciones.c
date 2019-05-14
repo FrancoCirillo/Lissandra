@@ -308,8 +308,19 @@ cod_op quienEnvio(instr_t * instruccion){
 }
 
 
+void imprimir_registro(instr_t* instruccion){
 
+	printf("Key %s\n", (char*) list_get(instruccion->parametros, 1));
+	printf("Value %s\n", (char*) list_get(instruccion->parametros, 2));
+	printf("Timestamp: %u \n", (unsigned int)instruccion->timestamp);
 
+}
 
+void loggear_error(instr_t* miInstruccion){
+	printf(COLOR_ANSI_ROJO"%s\n"COLOR_ANSI_RESET, (char*) list_get(miInstruccion->parametros, 0));
+}
+void loggear_exito(instr_t* miInstruccion){
+	printf("%s\n", (char*) list_get(miInstruccion->parametros, 0));
+}
 
 

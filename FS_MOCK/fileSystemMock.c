@@ -21,14 +21,19 @@ int main() {
 void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
 
 	switch(instruccion->codigo_operacion){
+	case CONSOLA_FS_SELECT:
 	case CONSOLA_MEM_SELECT:
 	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_FS_INSERT:
 	case CONSOLA_MEM_INSERT:
 	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
+	case CONSOLA_FS_CREATE:
 	case CONSOLA_MEM_CREATE:
 	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
+	case CONSOLA_FS_DESCRIBE:
 	case CONSOLA_MEM_DESCRIBE:
 	case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
+	case CONSOLA_FS_DROP:
 	case CONSOLA_MEM_DROP:
 	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor); break;
 	default: break;
@@ -42,14 +47,16 @@ void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor){
 	int tablaPreexistente = 1;
 	if(tablaPreexistente){
 		t_list * listaParam = list_create();
-		list_add(listaParam, "TABLA1");
-		list_add(listaParam, "4");
-		list_add(listaParam, "Hola soy Lissandra");
+		list_add(listaParam, (char*) list_get(instruccion->parametros, 0)); //Tabla
+		list_add(listaParam, (char*) list_get(instruccion->parametros, 1)); //Key
+		list_add(listaParam, "Buenas soy un value"); //Value
 		enviar_a_quien_corresponda(DEVOLUCION_SELECT, instruccion,listaParam, conexionReceptor);
 	}
 	else{
 		t_list * listaParam = list_create();
-		list_add(listaParam, "La TABLA 1 No existeee");
+		char cadena [400];
+		sprintf(cadena, "%s%s", (char*) list_get(instruccion->parametros, 0), "No existe");
+		list_add(listaParam, cadena);
 		enviar_a_quien_corresponda(ERROR_SELECT, instruccion,listaParam, conexionReceptor);
 	}
 }
@@ -114,7 +121,9 @@ void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		break;
 	default:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
-		print_instruccion(miInstruccion);
+		if(codigoOperacion == DEVOLUCION_SELECT){
+			imprimir_registro(miInstruccion);
+		}
 		break;
 	}
 

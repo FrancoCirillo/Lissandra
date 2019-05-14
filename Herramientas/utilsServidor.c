@@ -96,8 +96,8 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 					else if(i == 0){
 						fgets(bufferLeido, 100, stdin);
 						instr_t * request_recibida = leer_a_instruccion(bufferLeido, queConsola);
-						puts("Recibi la siguiente instruccion desde la consola: ");
-						print_instruccion(request_recibida);
+//						puts("Recibi la siguiente instruccion desde la consola: ");
+//						print_instruccion(request_recibida);
 						ejecutar_requestRecibido(request_recibida, conexionReceptor);
 					}
 
@@ -110,8 +110,8 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 								perror("recv");
 								FD_CLR(i, &master);
 							} else {
-								puts("Recibi la siguiente instruccion: ");
-								print_instruccion(instrcuccion_recibida);
+//								puts("Recibi la siguiente instruccion: ");
+//								print_instruccion(instrcuccion_recibida);
 								ejecutar_requestRecibido(instrcuccion_recibida, conexionReceptor);
 							}
 					} // END recibir los mensajes

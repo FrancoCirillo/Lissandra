@@ -101,7 +101,9 @@ void ejecutar_instruccion_devolucion_select(instr_t* instruccion, int conexionRe
 	puts("Select realizado en FS, se guardo la siguiente tabla en la memoria:");
 	print_instruccion(instruccion);
 	t_list * listaParam = list_create();
-	list_add(listaParam, "Se encontro Tabla1 | 3 | CHANCHAN");
+	char cadena [400];
+	sprintf(cadena, "%s%s%s%s%s%s%s%u","Se encontro ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
+	list_add(listaParam, cadena);
 	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,  listaParam, conexionReceptor);
 }
 
@@ -147,7 +149,8 @@ void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		break;
 	default:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion , listaParam);
-		print_instruccion(miInstruccion);
+			if(codigoOperacion == CODIGO_EXITO) loggear_exito(miInstruccion);
+			if(codigoOperacion > BASE_COD_ERROR) loggear_error(miInstruccion);
 		break;
 	}
 

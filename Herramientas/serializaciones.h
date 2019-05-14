@@ -34,5 +34,8 @@ instr_t* leer_a_instruccion(char* request, int enviadoPorConsola);
 cod_op reconocer_comando(char* comando);
 void print_instruccion(instr_t* instruccion);
 cod_op quienEnvio(instr_t * instruccion);
+void imprimir_registro(instr_t* instruccion);
+void loggear_exito(instr_t* miInstruccion);
+void loggear_error(instr_t* miInstruccion);
 
 #endif /* SERIALIZACIONES_H_ */
