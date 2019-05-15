@@ -3,6 +3,9 @@
 
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
+#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
+#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
+#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/serializaciones.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +16,7 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/hilos.h"
 
 //ORDEN PARAMETROS
 
@@ -27,9 +31,6 @@
 #define RUTA_BLOQUES "mnj/Lissandra_FS/Bloques/"
 #define RUTA_PUNTO_MONTAJE "mnj/Lissandra_FS/"
 
-t_log* g_logger;
-t_config* g_config;
-
 /*STRUCTS*/
 typedef struct archivo_t{
 int size;
@@ -39,20 +40,19 @@ int blocks[];
 typedef struct metadata_t{
 char * consistency;
 char * partitions;
-time_t compactation_time;
+int compactation_time;
 }metadata_t;
 
 typedef struct archivo_config_FS_t{
-int PUERTO_ESCUCHA;
-char* PUNTO_MONTAJE;
-int TAMANIO_VALUE;
-time_t RETARDO;
-time_t TIEMPO_DUMP;
+char* puerto_escucha;
+char* punto_montaje;
+int tamanio_value;
+int retardo;
+int tiempo_dump;
 }archivo_config_FS_t;
 //Recordar que los ultimos 2 son modificables. Inotify()    No creo que sea necesario el struct.
 //Grabar valores correctos. y poder leerlos.
 
-archivo_config_FS_t configuracion;
 
 
 typedef struct registro_t{
@@ -68,10 +68,15 @@ char* magic_number;
 }tabla;
 
 
+archivo_config_FS_t config_FS;
+t_log* g_logger;
+t_config* g_config;
 							/*ARCHIVOS*/
 
 void loggear_FS(char*);
 void inicializarConfig(void);
+void crear_config();
+char* obtener_clave(char* ruta, char* key);
 
 char* leerMetadata_FS();		//TODO hacer, es un único archivo
 

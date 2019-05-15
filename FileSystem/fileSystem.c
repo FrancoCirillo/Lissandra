@@ -1,13 +1,37 @@
 #include "fileSystem.h"
 
 int main() {
-	printf("PROCESO FILESYSTEM \n");
+
+	printf("PROCESO FILESYSTEM\n");
+
+//	instr_t instruccion;
+//	instruccion.timestamp = get_timestamp();
+//	instruccion.codigo_operacion = CODIGO_CREATE;
+//	instruccion.parametros = list_create();
+//	instruccion.parametros
+
 
 	//DIVIDIR ESTOS PROCESOS EN HILOS.
 
-	//	inicializarConfig();    //Tenerlo listo y borrar esto.
-	//	inicializar_Metadata_FS();		//Tenerlo listo y borrar.
+		//inicializarConfig();    //Tenerlo listo y borrar esto.
+		//printf("%s\n\n" ,config_FS.puerto_escucha);
+		//printf("%d\n\n" ,config_FS.tamanio_value);
 
+
+		//config_destroy(g_config);
+
+/////////////////////////////////////////////////
+
+	//	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
+
+	//	vigilar_conexiones_entrantes(listenner);
+
+
+
+
+
+
+		//	inicializar_Metadata_FS();		//Tenerlo listo y borrar.
 
 	//	inicializar_directorios();
 	/* Esto lee el arch de config,
@@ -25,15 +49,15 @@ int main() {
 
 	//Esto va dentro del create, pero estoy probando.
 
-	crear_directorio("Tabla A");
-	FILE* f = crear_archivo("Part_1", "Tabla A", ".tmp");
-	archivo_inicializar(f);
-	fclose(f);
-	crear_metadata("OtraTabla", "SC", "5", string_itoa(obtener_tiempo()));      //No me funciona el obtener_tiempo, debo tener algo mal.
-	//Todo lo paso a int para probar que funcione el crear_Metadata.
-	//crear_metadata("Tabla A", "SC", 10, 333666999);
-	crear_bloques();
-	crear_particiones("Tabla A");
+//	crear_directorio("Tabla A");
+//	FILE* f = crear_archivo("Part_1", "Tabla A", ".tmp");
+//	archivo_inicializar(f);
+//	fclose(f);
+//	crear_metadata("OtraTabla", "SC", "5", string_itoa(obtener_tiempo()));      //No me funciona el obtener_tiempo, debo tener algo mal.
+//	//Todo lo paso a int para probar que funcione el crear_Metadata.
+//	//crear_metadata("Tabla A", "SC", 10, 333666999);
+//	crear_bloques();
+//	crear_particiones("Tabla A");
 
 	/*
 	//HARDCODEO
@@ -74,6 +98,7 @@ int main() {
 
 }
 
+/*
 instr_t* create(instr_t * instruccion){
 
 	char* nombre_tabla = instruccion->param1;
@@ -99,67 +124,69 @@ instr_t* create(instr_t * instruccion){
 	return respuesta;
 }
 
-void evaluar_instruccion(remitente_instr_t* mensaje){
+*/
 
-	instr_t* respuesta = 0;
-	printf("Me llego la instruccion: ");
-
-	switch(mensaje->instruccion->codigoInstruccion){
-
-	case CODIGO_SELECT:
-		printf("SELECT\n\n");
-		break;
-
-	case CODIGO_INSERT:
-		printf("INSERT\n\n");
-		break;
-
-	case CODIGO_CREATE:
-		printf("CREATE\n\n");
-		//respuesta = i_create(mensaje->instruccion);					//todos tienen que devolver un valor,
-
-		break;
-
-	case CODIGO_DESCRIBE:
-		printf("DESCRIBE\n\n");
-		break;
-
-	case CODIGO_DROP:
-		printf("DROP\n\n");
-		break;
-
-	default:
-	//verrrr
-		printf("No es una instruccion valida dentro del File System.\n\n");
-	}
-
-	mensaje->instruccion=respuesta;  //Esto pisa el parametro 1 con el mensaje a enviarle a memoria.
-	//y el codigo de instr es el codigo de la respuesta. (0 es exito, o el num neg es el error que corresponde)
-
-	/*TODO
-	responder(mensaje);
-	*/
-
-	printf("Finalizo la instruccion.\n");
-	//ver de hacer un free al mensaje si es necesario, o ver donde.
-
-	free(mensaje->instruccion);
-	free(mensaje->remitente);
-	free(mensaje); //terminar de entender como liberar esto o cuando..
-};
-
+//void evaluar_instruccion(remitente_instr_t* mensaje){
+//
+//	instr_t* respuesta = 0;
+//	printf("Me llego la instruccion: ");
+//
+//	switch(mensaje->instruccion->codigoInstruccion){
+//
+//	case CODIGO_SELECT:
+//		printf("SELECT\n\n");
+//		break;
+//
+//	case CODIGO_INSERT:
+//		printf("INSERT\n\n");
+//		break;
+//
+//	case CODIGO_CREATE:
+//		printf("CREATE\n\n");
+//		//respuesta = i_create(mensaje->instruccion);					//todos tienen que devolver un valor,
+//
+//		break;
+//
+//	case CODIGO_DESCRIBE:
+//		printf("DESCRIBE\n\n");
+//		break;
+//
+//	case CODIGO_DROP:
+//		printf("DROP\n\n");
+//		break;
+//
+//	default:
+//	//verrrr
+//		printf("No es una instruccion valida dentro del File System.\n\n");
+//	}
+//
+//	mensaje->instruccion=respuesta;  //Esto pisa el parametro 1 con el mensaje a enviarle a memoria.
+//	//y el codigo de instr es el codigo de la respuesta. (0 es exito, o el num neg es el error que corresponde)
+//
+//	/*TODO
+//	responder(mensaje);
+//	*/
+//
+//	printf("Finalizo la instruccion.\n");
+//	//ver de hacer un free al mensaje si es necesario, o ver donde.
+//
+//	free(mensaje->instruccion);
+//	free(mensaje->remitente);
+//	free(mensaje); //terminar de entender como liberar esto o cuando..
+//};
+//
 
 int existe_Tabla(char * nombre_tabla){
 	return false;
 }
 
-void execute_create(instr_t* inst){
-
-	crear_directorio(inst->param1);
-	crear_metadata(inst->param1,inst->param2,inst->param3,inst->param4);
-	crear_particiones(inst->param1);
-	printf("Se creo el directorio, el metadata y las particiones de la tabla: %s", inst->param1);
-}
+//void execute_create(instr_t* inst){
+//
+//	crear_directorio(inst->param1);
+//	crear_metadata(inst->param1,inst->param2,inst->param3,inst->param4);
+//	crear_particiones(inst->param1);
+//	printf("Se creo el directorio, el metadata y las particiones de la tabla: %s", inst->param1);
+//}
 
 //Crea un directorio unicamente en TABLAS.
 void crear_directorio(char * nomb){
@@ -273,7 +300,7 @@ char* concat3( char *s1, char *s2, char * s3){
 	return result;
 }
 
-
+// poner semaforo
 void loggear_FS(char *valor) {
 	g_logger = log_create("Lissandra.log","File System", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
@@ -288,11 +315,24 @@ char* leer_config(char* clave) {
 	return valor;
 }
 
+
 //TODO FALTA Terminarlo bien. Dejarlo listo.
-void inicializarConfig(void){		//Valores random
-	configuracion.PUNTO_MONTAJE = RUTA_PUNTO_MONTAJE;
-	configuracion.PUERTO_ESCUCHA = 5555;
-	configuracion.TAMANIO_VALUE = 5;
-	configuracion.RETARDO = 20000;
-	configuracion.TIEMPO_DUMP = 40000;
+void inicializarConfig(void){
+	char* ruta_config="FileSystem.config";
+	config_FS.punto_montaje = config_get_string_value(g_config, "PUNTO_MONTAJE");
+	config_FS.puerto_escucha = config_get_string_value(g_config, "PUERTO_ESCUCHA");
+	config_FS.tamanio_value = config_get_int_value(g_config, "TAMANIO_VALUE");
+	config_FS.retardo = config_get_int_value(g_config, "RETARDO");
+	config_FS.tiempo_dump = config_get_int_value(g_config, "TIEMPO_DUMP");
 }
+
+char* obtener_clave(char* ruta, char* key) {
+	char* valor;
+	g_config = config_create(ruta);
+	valor = config_get_string_value(g_config, key);
+	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------",key,valor);
+	//config_destroy(g_config);
+	return valor;
+}
+
+
