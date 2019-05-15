@@ -45,7 +45,7 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
 	return socket_servidor;
 }
 
-int vigilar_conexiones_entrantes(int listener){
+int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t* instruccionAEjecutar, int conexionReceptor), int conexionReceptor, int queConsola){
 
 	//Gracias a la guia de Beej:
 	fd_set master;    // lista 'master' de file descriptors
@@ -56,7 +56,7 @@ int vigilar_conexiones_entrantes(int listener){
 	struct sockaddr_storage remoteaddr; // direccion del cliente
 	socklen_t addrlen;
 
-	char send_buf[100];
+	char bufferLeido[100];
 	int i;
 
 	FD_ZERO(&master); //los vaciamos
@@ -70,44 +70,35 @@ int vigilar_conexiones_entrantes(int listener){
 
 	while(1) {
 		read_fds = master;
-		puts("\nA continuacion se hace el select, esperando data entrante...");
-		printf(">");
+		printf("\n" COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 		fflush(stdout);
 		int resultado = select(fdmax + 1, &read_fds, NULL, NULL, NULL);
 		if (resultado == -1) {
 			perror("select");
 		} else if (resultado > 0) {
-			puts("Se hizo el select (se detecto un dato en los fds abiertos)");
-			puts("Se recorren las conexiones existentes buscando data para leer");
 			//recorrer las conexiones existentes buscando data para leer, empezando desde el fd 0
 			for (i = 0; i <= fdmax; i++) {
-				printf("Se busco en el fileDesctiptor %d\n", i);
 				if (FD_ISSET(i, &read_fds)) { // tenemos una nueva conexion entrante
-					printf("\nEncontramos data para leer, en el fileDesctiptor '%d'!\n",i);
-
 					if (i == listener) {
-						printf("El file descriptor '%d' ya existia, aceptando nuevas conexiones al mismo...\n",i);
 						// manejo de conexiones nuevas:
 						addrlen = sizeof remoteaddr;
 						newfd = accept(listener, (struct sockaddr *) &remoteaddr, &addrlen);
 						if (newfd == -1) {
 							perror("accept");
 						} else {
-							printf( "Conexion al file desctiptor '%d' aceptada!, el accept() creo el nuevo fd '%d'.\n"
-									"Se lo agrego a la lista de fds que vigila el select\n", i, newfd);
+							printf( "\nConexion al file desctiptor '%d' aceptada!, el accept() creo el nuevo fd '%d'.\n", i, newfd);
 							FD_SET(newfd, &master); // se agrega al set master
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande
-							printf("%s en el socket '%d'", imprimir_quien_se_conecto(remoteaddr), newfd);
+							imprimir_quien_se_conecto(remoteaddr);
+							printf("en el socket '%d'\n", newfd);
 							}
 					}
-
 					else if(i == 0){
-						puts("Nuevo mensaje en la consola");
-						gets(send_buf);
-						instr_t * request_recibida = leer_a_instruccion(send_buf);
-						puts("Recibi la siguiente instruccion: ");
-						print_instruccion(request_recibida);
-
+						fgets(bufferLeido, 100, stdin);
+						instr_t * request_recibida = leer_a_instruccion(bufferLeido, queConsola);
+//						puts("Recibi la siguiente instruccion desde la consola: ");
+//						print_instruccion(request_recibida);
+						ejecutar_requestRecibido(request_recibida, conexionReceptor);
 					}
 
 					else { // Ya se había hecho accept en el fd
@@ -115,24 +106,23 @@ int vigilar_conexiones_entrantes(int listener){
 							instr_t * instrcuccion_recibida;
 							int recibo = recibir_request(i, &instrcuccion_recibida);
 							if (recibo == 0) {
-								printf("\x1b[31m""El cliente se desconecto" "\x1b[0m" "\n"); //TODO: Agregar logger
+								printf(COLOR_ANSI_ROJO "El cliente se desconecto" COLOR_ANSI_RESET "\n"); //TODO: Agregar logger
 								perror("recv");
 								FD_CLR(i, &master);
 							} else {
-								puts("Recibi la siguiente instruccionn: ");
-								print_instruccion(instrcuccion_recibida);
-								//crear_hilo(instruccion_recibida);?
+//								puts("Recibi la siguiente instruccion: ");
+//								print_instruccion(instrcuccion_recibida);
+								ejecutar_requestRecibido(instrcuccion_recibida, conexionReceptor);
 							}
 					} // END recibir los mensajes
 				} // END tenemos una nueva conexion entrante
 			} // END recorriendo los fd
 		}
-		puts("Fin del while(1)");
 	} // END while(1)
 	return 0;
 }
 
-char* imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr) {
+void imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr) {
 	char remoteIP[INET6_ADDRSTRLEN];
 	char* ip_cliente = inet_ntop(remoteaddr.ss_family,
 						&(((struct sockaddr_in *) &remoteaddr)->sin_addr),
@@ -147,8 +137,7 @@ char* imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr) {
 		nombreCliente = strdup("Kernel");
 	else
 		nombreCliente = strdup("Nuevo cliente");
-	printf("\nNueva conexion del cliente %s (%s)\n", ip_cliente, nombreCliente);
-	return ip_cliente;
+	printf("\nNueva conexion del cliente %s (%s) ", ip_cliente, nombreCliente);
 }
 
 

@@ -100,7 +100,6 @@ void* recibir_buffer(int* size, int socket_cliente) {
 	void * buffer;
 
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-	printf("El tamanio total del buffer recibido es %d\n", *size);
 	buffer = malloc(*size);
 	recv(socket_cliente, buffer, *size, MSG_WAITALL);
 
@@ -121,11 +120,8 @@ t_list* recibir_paquete(int socket_cliente) {
 		i++;
 		memcpy(&tamanio, buffer+desplazamiento, sizeof(int));
 		desplazamiento += sizeof(int);
-		printf("El tamanio del parametro '%d'es de: %d\n", i, size);
 		char* valor = malloc(tamanio);
 		memcpy(valor, buffer+desplazamiento, tamanio);
-		printf("El valor del primer parametro '%d' es de: %s\n", i, valor);
-
 		desplazamiento += tamanio;
 		list_add(valores, valor);
 	}
@@ -185,12 +181,17 @@ int recibir_operacion(int socket_cliente, cod_op* nuevaOperacion) {
 }
 
 
-instr_t* leer_a_instruccion(char* request){
+instr_t* leer_a_instruccion(char* request, int queConsola){
 	char* requestCopy = strdup(request);
 	char *actual, *comando, *valor;
 	comando = NULL;
 	valor = malloc(sizeof(int));
 	t_list* listaParam = list_create();
+
+	if(strcmp(requestCopy, "CERRAR\n")==0){
+		printf(COLOR_ANSI_CYAN"Gracias por usar Lissandra FS!\n"COLOR_ANSI_RESET"cerrando...\n");
+		exit(0);
+	}
 
 	actual = strtok (requestCopy, " ");
 	comando = strdup(actual);
@@ -210,9 +211,13 @@ instr_t* leer_a_instruccion(char* request){
 	}
 	free(requestCopy);
 
-	instr_t *miInstr = crear_instruccion(obtener_ts(), reconocer_comando(comando), listaParam);
+	switch(queConsola){
+	case CONSOLA_KERNEL: return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam); break;
+	case CONSOLA_MEMORIA:return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_MEMORIA, listaParam);break;
+	case CONSOLA_FS:return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_FS, listaParam);break;
+	default: return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam); break;
+	}
 
-	return miInstr;
 }
 
 
@@ -232,39 +237,54 @@ instr_t* crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list* l
 
 
 cod_op reconocer_comando(char* comando){
-
 	if (strcmp(comando, "SELECT")==0) {
-		puts("Se detecto comando 'SELECT'\n");
+//		puts("Se detecto comando 'SELECT'\n");
 		return CODIGO_SELECT;
 	}
+	if (strcmp(comando, "DEVOLUCION_SELECT")==0) {
+//		puts("Se detecto comando 'SELECT'\n");
+		return DEVOLUCION_SELECT;
+	}
 	else if (strcmp(comando, "INSERT")==0) {
-		puts("Se detecto comando 'INSERT'\n");
+//		puts("Se detecto comando 'INSERT'\n");
 		return CODIGO_INSERT;
 	}
 	else if (strcmp(comando, "CREATE")==0) {
-		puts("Se detecto comando 'CREATE'\n");
+//		puts("Se detecto comando 'CREATE'\n");
 		return CODIGO_CREATE;
 	}
 	else if (strcmp(comando, "DESCRIBE")==0) {
-		puts("Se detecto comando 'DESCRIBE'\n");
+//		puts("Se detecto comando 'DESCRIBE'\n");
 		return CODIGO_DESCRIBE;
 	}
 	else if (strcmp(comando, "DROP")==0) {
-		puts("Se detecto comando 'DROP'\n");
+//		puts("Se detecto comando 'DROP'\n");
 		return CODIGO_DROP;
 	}
-	else{ 	/* if (strcmp(comando, "JOURNAL")==0) */
-		puts("Se detecto comando 'JOURNAL'\n");
+	else if (strcmp(comando, "JOURNAL")==0){
+//		puts("Se detecto comando 'JOURNAL'\n");
 		return CODIGO_JOURNAL;
 	}
-	/*
-	else{
-		puts("Comando invalido\n\n");
-		return ERROR_INPUT;
+	else if (strcmp(comando, "ADD")==0){
+//		puts("Se detecto comando 'JOURNAL'\n");
+		return CODIGO_ADD;
 	}
-	*/
-}
 
+	else if (strcmp(comando, "RUN")==0){
+//		puts("Se detecto comando 'JOURNAL'\n");
+		return CODIGO_RUN;
+	}
+
+	else if (strcmp(comando, "METRICS")==0){
+//		puts("Se detecto comando 'JOURNAL'\n");
+		return CODIGO_METRICS;
+	}
+	else{ //TODO: Borrar. Está por si los que codeamos nos comemos alguna letra.
+		puts("NO se reconoció el comando'\n");
+		return CODIGO_DESCRIBE;
+	}
+
+}
 
 void print_instruccion(instr_t* instruccion){
 
@@ -276,15 +296,31 @@ void print_instruccion(instr_t* instruccion){
 	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
 	printf("Parametros:\n");
 	list_iterate(instruccion->parametros, (void*) iterator);
-	puts("\n");
 }
 
 
+cod_op quienEnvio(instr_t * instruccion){
+	int codigoAnalizado = instruccion->codigo_operacion;
+	if (codigoAnalizado > BASE_COD_ERROR) codigoAnalizado -= BASE_COD_ERROR;
+	if (codigoAnalizado < BASE_CONSOLA_MEMORIA) return CONSOLA_KERNEL;
+	if (codigoAnalizado < BASE_CONSOLA_FS) return CONSOLA_MEMORIA;
+	return CONSOLA_FS;
+}
 
 
+void imprimir_registro(instr_t* instruccion){
 
+	printf("Key %s\n", (char*) list_get(instruccion->parametros, 1));
+	printf("Value %s\n", (char*) list_get(instruccion->parametros, 2));
+	printf("Timestamp: %u \n", (unsigned int)instruccion->timestamp);
 
+}
 
-
+void loggear_error(instr_t* miInstruccion){
+	printf(COLOR_ANSI_ROJO"%s\n"COLOR_ANSI_RESET, (char*) list_get(miInstruccion->parametros, 0));
+}
+void loggear_exito(instr_t* miInstruccion){
+	printf("%s\n", (char*) list_get(miInstruccion->parametros, 0));
+}
 
 
