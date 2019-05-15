@@ -10,6 +10,7 @@
 #include <commons/config.h>
 #include <commons/string.h>
 #include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
 #include <readline/readline.h>
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/hilos.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/serializaciones.h"
@@ -40,21 +41,23 @@ typedef struct config{
 config configuracion;
 
 
-void (*callback) (instr_t* instruccion, int conexionReceptor);
+void (*callback) (instr_t* instruccion, int conexionReceptor, char* ipCliente);
+void (*callbackHandshake) (identificador ids);
 
 void inicializar_configuracion();
 void loggear(char* valor);
 char* obtener_por_clave(char* ruta, char* clave);
 
-void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_devolucion_select(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_describe(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_drop(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_journal(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_exito(instr_t* instruccion, int conexionReceptor);
-void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, int conexionReceptor);
+void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor, t_dictionary* conexionesActuales);
+void ejecutar_instruccion_select(instr_t* instruccion, t_dictionary* conexionesActuales);
+void ejecutar_instruccion_devolucion_select(instr_t* instruccion, t_dictionary* conexionesActuales);
+void ejecutar_instruccion_insert(instr_t* instruccion, t_dictionary* conexionesActuales);
+void ejecutar_instruccion_create(instr_t* instruccion, t_dictionary* conexionesActuales);
+void ejecutar_instruccion_describe(instr_t* instruccion, t_dictionary* conexionesActuales);
+void ejecutar_instruccion_drop(instr_t* instruccion, t_dictionary* conexionesActuales);
+void ejecutar_instruccion_journal(instr_t* instruccion, t_dictionary* conexionesActuales);
+void ejecutar_instruccion_exito(instr_t* instruccion, t_dictionary* conexionesActuales);
+void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, t_dictionary* conexionesActuales);
+void responderHandshake(identificador idsConexionEntrante);
 
 #endif /* MEMORIA_MEMORIA_H_ */

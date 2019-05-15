@@ -7,35 +7,38 @@ int main() {
 
 	callback = ejecutar_instruccion;
 
-	int conexion_con_memoria = conectar_con_proceso(MEMORIA, FILESYSTEM);
+//	inicializar_configuracion();
+
+	//	int conexion_con_memoria = conectar_con_proceso(MEMORIA, FILESYSTEM);
 
 	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexion_con_memoria, CONSOLA_FS);
+	vigilar_conexiones_entrantes(listenner, callback, 0, CONSOLA_FS);
 
 	return 0;
 }
 
 
 
-void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor, char* ipCliente){
 
+	int conexion_con_memoria =  crear_conexion(ipCliente, "4444", IP_FILESYSTEM);
 	switch(instruccion->codigo_operacion){
 	case CONSOLA_FS_SELECT:
 	case CONSOLA_MEM_SELECT:
-	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, conexion_con_memoria); break;
 	case CONSOLA_FS_INSERT:
 	case CONSOLA_MEM_INSERT:
-	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, conexion_con_memoria); break;
 	case CONSOLA_FS_CREATE:
 	case CONSOLA_MEM_CREATE:
-	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, conexion_con_memoria); break;
 	case CONSOLA_FS_DESCRIBE:
 	case CONSOLA_MEM_DESCRIBE:
-	case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexion_con_memoria); break;
 	case CONSOLA_FS_DROP:
 	case CONSOLA_MEM_DROP:
-	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, conexion_con_memoria); break;
 	default: break;
 	}
 }
@@ -127,4 +130,31 @@ void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		break;
 	}
 
+}
+
+
+void inicializar_configuracion() {
+	puts("Configuracion:");
+	char* rutaConfig = "fsMock.config";
+	configuracion.PUERTO_ESCUCHA = obtener_por_clave(rutaConfig, "PUERTO_ESCUCHA");
+	configuracion.TAMANIO_VALUE = atoi(obtener_por_clave(rutaConfig, "TAMANIO_VALUE"));
+	configuracion.TIEMPO_DUMP= atoi(obtener_por_clave(rutaConfig, "TIEMPO_DUMP"));
+	configuracion.RUTA_LOG = obtener_por_clave(rutaConfig, "RUTA_LOG");
+}
+
+
+void loggear(char* valor) {
+	g_logger = log_create(configuracion.RUTA_LOG, "memoria", 1, LOG_LEVEL_INFO);
+	log_info(g_logger, valor);
+	log_destroy(g_logger);
+}
+
+
+char* obtener_por_clave(char* ruta, char* clave) {
+	char* valor;
+	g_config = config_create(ruta);
+	valor = config_get_string_value(g_config, clave);
+	printf(" %s: %s \n", clave, valor);
+
+	return valor;
 }

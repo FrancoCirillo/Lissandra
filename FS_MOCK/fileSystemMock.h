@@ -19,13 +19,29 @@
 //ORDEN PARAMETROS
 
 //SELECT [NOMBRE_TABLA] [KEY]
-//INSERT [NOMBRE_TABLA] [KEY] “[VALUE]” [Timestamp]     <- opcional el timestamp?
+//INSERT [NOMBRE_TABLA] [KEY] “[VALUE]” [Timestamp]
 //CREATE [NOMBRE_TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
-//DESCRIBE [NOMBRE_TABLA]    <- opcional el param.
+//DESCRIBE [NOMBRE_TABLA]
 //DROP [NOMBRE_TABLA]
 
-void (*callback) (instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor);
+t_log* g_logger;
+t_config* g_config;
+
+typedef struct config{
+	char* PUERTO_ESCUCHA;
+	char TAMANIO_VALUE;
+	char TIEMPO_DUMP;
+	char* RUTA_LOG;
+}config;
+
+config configuracion;
+
+void loggear(char* valor);
+void inicializar_configuracion();
+char* obtener_por_clave(char* ruta, char* clave);
+
+void (*callback) (instr_t* instruccion, int conexionReceptor, char* ipCliente);
+void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor, char* ipCliente);
 void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor);
 void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor);
 void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor);
