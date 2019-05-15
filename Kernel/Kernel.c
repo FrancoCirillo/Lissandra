@@ -1,9 +1,4 @@
-/*
- * kernel.c
- *
- *  Created on: 1 apr. 2019
- *      Author: rodrigo diaz
- */
+//---------kernel.c---------
 
 #include "Kernel.h"
 void* consola(void *param);
@@ -11,13 +6,15 @@ void* consola(void *param);
 pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
 // declaring mutex
 pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
+sem_t mutex_cantidad_hilos;
+
 int done = 1;
 
 int main() {
 	inicializarConfiguracion();
 	instruccion_t i1={
 			1,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 1 instr 1",
 			"Param2",
 			"Param3",
@@ -27,7 +24,7 @@ int main() {
 
 	instruccion_t i2={
 			2,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 1 instr 2",
 			"Manzana",
 			"Pera",
@@ -39,7 +36,7 @@ int main() {
 
 	instruccion_t i3={
 			3,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 1 instr 3",
 			"Soy un parametro",
 			"YO tambien",
@@ -57,9 +54,9 @@ int main() {
 
 	instruccion_t i_1={
 			1,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 2 instr 1",
-			"Param2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"Param2",
 			"Param3",
 			"Param4",
 			NULL
@@ -67,7 +64,7 @@ int main() {
 
 	instruccion_t i_2={
 			2,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 2 instr2",
 			"Manzana",
 			"Pera",
@@ -83,7 +80,7 @@ int main() {
 
 	instruccion_t i__1={
 			1,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 3 instr 1",
 			"Param2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			"Param3",
@@ -93,7 +90,7 @@ int main() {
 
 	instruccion_t i__2={
 			2,
-			obtener_tiempo(),
+			obtener_ts(),
 			"Hilo 3 instr2",
 			"Manzana",
 			"Pera",
@@ -111,19 +108,20 @@ int main() {
 	loggear("Iniciando....");
 	inicializar_semaforos();
 
+
+	pthread_t hilo_ejecutador;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_ejecutador,&attr,ejecutar,NULL);
+	pthread_detach(hilo_ejecutador);
+
+
 	encolar_proceso(&p1);
 	encolar_proceso(&p2);
 	encolar_proceso(&p3);
 	loggear("\n\n ENCOLADOS!\n\n");
 
 
-/*	pthread_t un_hilo;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_create(&un_hilo,&attr,ejecutar,NULL);
-	pthread_detach(un_hilo);
-	loggear("Continuando");
-	continuar_ejecucion();*/
 
 	sleep(100);
 	loggear("FIN");
@@ -143,7 +141,7 @@ void* consola(void* param){
 	}
 
 }
-/*
+
 void continuar_ejecucion(){
 	loggear("Enviando senial en 2 segundos");
 	sleep(2);
@@ -152,38 +150,46 @@ void continuar_ejecucion(){
 	pthread_mutex_unlock(&lock_ejecutar);
 
 	loggear("Senial enviada!");
-}*/
+}
 int ejecutar(){
 	proceso *p;
-	/*
-	printf("%p",p);
-	while(1==1){
+
+	while(1){
 		//Espero a la senial para seguir
 		loggear("Esperando!");
 		pthread_mutex_lock(&lock_ejecutar);
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
 		pthread_mutex_unlock(&lock_ejecutar);
+
 		sleep(1);
 		loggear("Espera finalizada");
 		loggear("Ejecutando");
-	 */
-	while(hilos_disponibles()&&cola_ready!=NULL){//Se puede procesar
-		loggear("Hay hilos y procesos!! Ejecutando...\n");
-		p=obtener_sig_proceso();
 
-		pthread_t un_hilo;
-		pthread_attr_t attr;
+		while(hilos_disponibles()&&cola_ready!=NULL){//Se puede procesar
 
-		pthread_attr_init(&attr);
-		pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
-		loggear("Se creo un hilo para atender la solicitud!");
-		total_hilos++;
-		//		pthread_join(un_hilo,NULL);
-		pthread_detach(un_hilo);
-		loggear("Hilo detacheado");
+			loggear("Hay hilos y procesos!! Ejecutando...\n");
+			p=obtener_sig_proceso();
+
+			pthread_t un_hilo;
+			pthread_attr_t attr;
+
+			pthread_attr_init(&attr);
+			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
+			loggear("Se creo un hilo para atender la solicitud!");
+			//loggear(p->current->param1);
+
+			sem_wait(&mutex_cantidad_hilos);
+			total_hilos++;
+			sem_post(&mutex_cantidad_hilos);
+
+			//		pthread_join(un_hilo,NULL);
+			pthread_detach(un_hilo);
+			loggear("Hilo detacheado");
+		}
+		loggear("No hay mas hilos disponibles o procesos pendientes para ejecutar");
+
+
 	}
-	loggear("No hay mas hilos disponibles o procesos pendientes para ejecutar");
-
 	return 1;
 }
 void* ejecutar_proceso(void* un_proceso){
@@ -213,17 +219,17 @@ void* ejecutar_proceso(void* un_proceso){
 
 			loggear("Ultima instruccion finalizada, fin de proceso");
 			finalizar_proceso(p);
-
+			sem_wait(&mutex_cantidad_hilos);
 			total_hilos--;
-			ejecutar();
-			//ejecutar2();
-			// Ejecutar aca!
+			sem_post(&mutex_cantidad_hilos);
 			return NULL;
 		}
 	}
 	loggear("Fin de quantum, encolando o finalizando");
 
+	sem_wait(&mutex_cantidad_hilos);
 	total_hilos--;
+	sem_post(&mutex_cantidad_hilos);
 
 	encolar_o_finalizar_proceso(p);
 
@@ -232,14 +238,14 @@ void* ejecutar_proceso(void* un_proceso){
 }
 instruccion_t* ejecutar_instruccion(instruccion_t* i){
 	loggear("Se ejecuta una instruccion");
-//	sleep(1);
+	//	sleep(1);
 	instruccion_t* respuesta=enviar_i(i);
 	return respuesta;
 }
 instruccion_t* enviar_i(instruccion_t* i){
 	loggear("ENVIANDO INSTRUCCION FAKE");
 	i->codigo_instruccion=0;
-	i->timestamp=obtener_tiempo();
+	i->timestamp=obtener_ts();
 	printf("\n ##### \n Instruccion enviada %d, %s, %s, %s, %s\n",i->codigo_instruccion,i->param1,i->param2,i->param3,i->param4);
 	return i;
 }
@@ -247,19 +253,16 @@ void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==NULL){//Pudo justo haber quedado parado al final
 		finalizar_proceso(p);
 	}else{
-
 		encolar_proceso(p);
-
-		//continuar_ejecucion();
-			ejecutar();
 	}
 
 }
 void finalizar_proceso(proceso* p){
 	loggear("Se finalizo correctamente un proceso !!. Se libera su memoria");
+	continuar_ejecucion();
 }
 void encolar_proceso(proceso *p){
-	semaforo_wait(&semaforo_procesos_ready);
+	sem_wait(&semaforo_procesos_ready);
 	loggear("Encolando proceso!");
 	proceso *aux=cola_ready;
 	if(aux==NULL){
@@ -271,19 +274,19 @@ void encolar_proceso(proceso *p){
 		aux->sig=p;
 	}
 	p->sig=NULL;
-	semaforo_signal(&semaforo_procesos_ready);
+	sem_post(&semaforo_procesos_ready);
 	loggear("Proceso encolado!");
 	//Se ejecuta siempre que haya un hilo disponible y proceso para procesar.
 	// Siempre implica un encolar, ya sea por agregar un hilo a la cola o porque un hilo se libero y disminuyo la cantidad corriendo.
-	ejecutar();
-	//continuar_ejecucion();
+	//ejecutar();
+	continuar_ejecucion();
 }
 proceso* obtener_sig_proceso(){
-	semaforo_wait(&semaforo_procesos_ready);
+	sem_wait(&semaforo_procesos_ready);
 	proceso* aux=cola_ready;
 	cola_ready=cola_ready->sig;
 	aux->sig=NULL;
-	semaforo_signal(&semaforo_procesos_ready);
+	sem_post(&semaforo_procesos_ready);
 	return aux;
 }
 instruccion_t* obtener_instruccion(proceso* p){
@@ -340,20 +343,21 @@ void inicializarMetricas() {
 }
 void inicializar_semaforos(){
 	sem_init(&semaforo_procesos_ready,0,1);
+	sem_init(&mutex_cantidad_hilos,0,1);
 	loggear("Semaforos inicializados");
 }
-void semaforo_wait(sem_t *semaforo){
+/*void sem_wait(sem_t *semaforo){
 	int n=sem_wait(semaforo);
 	if(n!=0){
 		loggear("Error al hacer wait");
 	}
 }
-void semaforo_signal(sem_t *semaforo){
+void sem_post(sem_t *semaforo){
 	int n=sem_post(semaforo);
 	if(n!=0){
 		loggear("Error al hacer signal");
 	}
-}
+}*/
 
 /*
 instruccion* obtenerInstruccion(proceso *unProceso) {

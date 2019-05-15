@@ -1,153 +1,161 @@
+//---------memoria.c---------
+
 #include "memoria.h"
 
 int main() {
 
-	printf("PROCESO MEMORIA\n");
+	printf(COLOR_ANSI_CYAN"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
 
-	//inicializarConfiguracion();
+	callback = ejecutar_instruccion;
 
-	//leerConsola();
+	inicializar_configuracion();
+
+
+	int listenner = iniciar_servidor(IP_MEMORIA, PORT);
+
+	int conexion_con_fs = conectar_con_proceso(FILESYSTEM, MEMORIA);
+	vigilar_conexiones_entrantes(listenner, callback, conexion_con_fs, CONSOLA_MEMORIA);
+
 
 	//config_destroy(g_config);
 
 	return 0;
 }
 
-void inicializarConfiguracion() {
+
+void inicializar_configuracion() {
+	puts("Configuracion:");
 	char* rutaConfig = "memoria.config";
-	configuracion.PUERTO = getByKey(rutaConfig, "PUERTO");
-	configuracion.IP_FS = getByKey(rutaConfig, "IP_FS");
-	configuracion.PUERTO_FS = getByKey(rutaConfig, "PUERTO_FS");
-	configuracion.IP_SEEDS = getByKey(rutaConfig, "IP_SEEDS");
-	configuracion.PUERTO_SEEDS = getByKey(rutaConfig, "PUERTO_SEEDS");
-	configuracion.RETARDO_MEMORIA = atoi(getByKey(rutaConfig, "RETARDO_MEMORIA"));
-	configuracion.RETARDO_FS = atoi(getByKey(rutaConfig, "RETARDO_FS"));
-	configuracion.TAMANIO_MEMORIA = atoi(getByKey(rutaConfig, "TAMANIO_MEMORIA"));
-	configuracion.RETARDO_JOURNAL = atoi(getByKey(rutaConfig, "RETARDO_JOURNAL"));
-	configuracion.RETARDO_GOSSIPING = atoi(getByKey(rutaConfig, "RETARDO_GOSSIPING"));
-	configuracion.MEMORY_NUMBER = atoi(getByKey(rutaConfig, "MEMORY_NUMBER"));
-	configuracion.RUTA_LOG = getByKey(rutaConfig, "RUTA_LOG");
+	configuracion.PUERTO = obtener_por_clave(rutaConfig, "PUERTO");
+	configuracion.IP_FS = obtener_por_clave(rutaConfig, "IP_FS");
+	configuracion.PUERTO_FS = obtener_por_clave(rutaConfig, "PUERTO_FS");
+	configuracion.IP_SEEDS = obtener_por_clave(rutaConfig, "IP_SEEDS");
+	configuracion.PUERTO_SEEDS = obtener_por_clave(rutaConfig, "PUERTO_SEEDS");
+	configuracion.RETARDO_MEMORIA = atoi(obtener_por_clave(rutaConfig, "RETARDO_MEMORIA"));
+	configuracion.RETARDO_FS = atoi(obtener_por_clave(rutaConfig, "RETARDO_FS"));
+	configuracion.TAMANIO_MEMORIA = atoi(obtener_por_clave(rutaConfig, "TAMANIO_MEMORIA"));
+	configuracion.RETARDO_JOURNAL = atoi(obtener_por_clave(rutaConfig, "RETARDO_JOURNAL"));
+	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave(rutaConfig, "RETARDO_GOSSIPING"));
+	configuracion.MEMORY_NUMBER = atoi(obtener_por_clave(rutaConfig, "MEMORY_NUMBER"));
+	configuracion.RUTA_LOG = obtener_por_clave(rutaConfig, "RUTA_LOG");
 }
 
-void loggear(char *valor) {
+
+void loggear(char* valor) {
 	g_logger = log_create(configuracion.RUTA_LOG, "memoria", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
 	log_destroy(g_logger);
 }
 
-char* getByKey(char* ruta, char* key) {
+
+char* obtener_por_clave(char* ruta, char* clave) {
 	char* valor;
 	g_config = config_create(ruta);
-	valor = config_get_string_value(g_config, key);
-
-	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------", key, valor);
+	valor = config_get_string_value(g_config, clave);
+	printf(" %s: %s \n", clave, valor);
 
 	return valor;
 }
 
-/*
-void leerConsola() {
-	char *actual, *comando, *param1, *param2, *param3, *param4;
-	comando = param1 = param2 = param3 = param4 = NULL;
 
-	printf("\n----------Esperando requests----------\n");
-	printf("Cuando desee finalizar, presione ENTER\n\n");
-	char* request = readline("> ");
+void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
 
-	while(strncmp(request, "", 1) != 0) {
-		actual = strtok (request, " ");
+	switch(instruccion->codigo_operacion){
+	case CONSOLA_MEM_SELECT:
+	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_RTA_SELECT:
+	case CONSOLA_MEM_RTA_SELECT: ejecutar_instruccion_devolucion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_INSERT:
+	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_CREATE:
+	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_DESCRIBE:
+	case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_DROP:
+	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_JOURNAL:
+	case CONSOLA_KRN_JOURNAL: ejecutar_instruccion_journal(instruccion, conexionReceptor); break;
+	default: break;
+	}
+}
 
-		for(int i=0; actual != NULL; i++)
-		{
-			switch(i){
-			case 0: comando = strdup(actual); break;
-			case 1: param1 = actual != NULL? strdup(actual): actual; break;
-			case 2: param2 = actual != NULL? strdup(actual): actual; break;
-			case 3: param3 = actual != NULL? strdup(actual): actual; break;
-			case 4: param4 = actual != NULL? strdup(actual): actual; break;
-			}
+void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor){
+		puts("Ejecutando instruccion Select");
+		int seEncontro = 0; //No cambiar hasta que se implemente conexionKERNEL
+		sleep(1);//Buscar
+		if(seEncontro){
+			t_list * listaParam = list_create();
+			list_add(listaParam, "Se encontro Tabla1 | 3 | MmMmMMMm");
+			enviar_a_quien_corresponda(CODIGO_EXITO, instruccion, listaParam, conexionReceptor); //Seria conexionKERNEL, Falta implementar
 
-			if(i==2 && strcmp(comando, "INSERT")==0){
-				actual = strtok (NULL, "");
-				param3 = strdup(actual);
-				break;
-			}
-
-			actual = strtok (NULL, " ");
+		}
+		else{
+			puts("La tabla no se encontro en Memoria. Consultando al FS");
+			enviar_request(instruccion, conexionReceptor);
 		}
 
-		free(request);
-
-		reconocerRequest(comando, param1, param2, param3, param4);
-		comando = param1 = param2 = param3 = param4 = NULL;
-
-		request = readline("> ");
-	}
-
-	free(request);
 }
 
-void reconocerRequest(char* comando, char* param1, char* param2, char* param3, char* param4) {
 
-	if (strcmp(comando, "SELECT")==0) {
-		printf ("Se detecto comando 'SELECT'\n");
-		crearInstruccion(CODIGO_SELECT, param1, param2, param3, param4);
-	}
-	else if (strcmp(comando, "INSERT")==0) {
-		printf ("Se detecto comando 'INSERT'\n");
-		crearInstruccion(CODIGO_INSERT, param1, param2, param3, param4);
-	}
-	else if (strcmp(comando, "CREATE")==0) {
-		printf ("Se detecto comando 'CREATE'\n");
-		crearInstruccion(CODIGO_CREATE, param1, param2, param3, param4);
-	}
-	else if (strcmp(comando, "DESCRIBE")==0) {
-		printf ("Se detecto comando 'DESCRIBE'\n");
-		crearInstruccion(CODIGO_DESCRIBE, param1, param2, param3, param4);
-	}
-	else if (strcmp(comando, "DROP")==0) {
-		printf ("Se detecto comando 'DROP'\n");
-		crearInstruccion(CODIGO_DROP, param1, param2, param3, param4);
-	}
-	else if (strcmp(comando, "JOURNAL")==0) {
-		printf ("Se detecto comando 'JOURNAL'\n");
-		crearInstruccion(CODIGO_JOURNAL, param1, param2, param3, param4);
-	}
-	else
-		printf ("Comando invalido\n\n");
+void ejecutar_instruccion_devolucion_select(instr_t* instruccion, int conexionReceptor){
+	puts("Select realizado en FS, se guardo la siguiente tabla en la memoria:");
+	print_instruccion(instruccion);
+	t_list * listaParam = list_create();
+	char cadena [400];
+	sprintf(cadena, "%s%s%s%s%s%s%s%u","Se encontro ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
+	list_add(listaParam, cadena);
+	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,  listaParam, conexionReceptor);
 }
 
-instr_t *crearInstruccion(int codigoRequest, char* p1, char* p2, char* p3, char* p4) {
-	time_t nuevoTSmp = obtener_tiempo();
-
-	instr_t instruccionCreada ={
-		.timestamp = nuevoTSmp,
-		.codigoInstruccion = codigoRequest,
-		.param1 = p1 != NULL? strdup(p1): p1,
-		.param2 = p2 != NULL? strdup(p2): p2,
-		.param3 = p3 != NULL? strdup(p3): p3,
-		.param4 = p4 != NULL? strdup(p4): p4
-	};
-
-	instr_t *miInstr = malloc(sizeof(instruccionCreada));
-
-	memcpy(miInstr, &instruccionCreada, sizeof(instruccionCreada));
-
-	print_instruccion(miInstr);
-
-	return miInstr;
+void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor){
+	puts("Ejecutando instruccion Insert");
 }
 
-void print_instruccion(instr_t* instruccion){
-	printf("timestamp: %lld\n", (long long)instruccion->timestamp);
-	printf("codigoInstruccion: %d\n", instruccion->codigoInstruccion);
-	printf("param1: %s\n", instruccion->param1);
-	printf("param2: %s\n", instruccion->param2);
-	printf("param3: %s\n", instruccion->param3);
-	printf("param4: %s\n\n", instruccion->param4);
+
+void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor){
+	puts("Ejecutando instruccion Create");
 }
 
-*/
+
+void ejecutar_instruccion_describe(instr_t* instruccion, int conexionReceptor){
+	puts("Ejecutando instruccion Describe");
+}
+
+
+void ejecutar_instruccion_drop(instr_t* instruccion, int conexionReceptor){
+	puts("Ejecutando instruccion Drop");
+}
+
+
+void ejecutar_instruccion_journal(instr_t* instruccion, int conexionReceptor){
+	puts("Ejecutando instruccion Journal");
+}
+
+void ejecutar_instruccion_exito(instr_t* instruccion, int conexionReceptor){
+	puts("Instruccion exitosa:");
+	print_instruccion(instruccion);
+}
+
+
+
+void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, int conexionReceptor){
+	instr_t * miInstruccion;
+	switch(quienEnvio(instruccion)){
+	case CONSOLA_KERNEL:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
+		puts("Esto se debio mandar al Kernel:");
+		print_instruccion(miInstruccion);
+//		enviar_request(miInstruccion, conexionReceptor);
+		break;
+	default:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion , listaParam);
+			if(codigoOperacion == CODIGO_EXITO) loggear_exito(miInstruccion);
+			if(codigoOperacion > BASE_COD_ERROR) loggear_error(miInstruccion);
+		break;
+	}
+
+}
+
 
 
 

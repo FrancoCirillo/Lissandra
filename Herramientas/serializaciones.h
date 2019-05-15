@@ -18,7 +18,7 @@
 
 void* serializar_paquete(t_paquete*, int);
 void crear_buffer(t_paquete*);
-t_paquete* crear_paquete(int, time_t);
+t_paquete* crear_paquete(cod_op nuevoCodOp, mseg_t nuevoTimestamp);
 void eliminar_paquete(t_paquete*);
 void agregar_a_paquete(t_paquete*, void*, int);
 void* recibir_buffer(int*, int);
@@ -29,17 +29,13 @@ int recibir_operacion(int, cod_op*);
 t_paquete* instruccion_a_paquete(instr_t* instruccionAEnviar);
 void* serializar_request(instr_t* instruccionAEnviar, int* tamanio);
 int enviar_request(instr_t* instruccionAEnviar, int socket_cliente);
+instr_t* crear_instruccion(time_t timestampNuevo, cod_op codInstNuevo, t_list* listaParamNueva);
+instr_t* leer_a_instruccion(char* request, int enviadoPorConsola);
+cod_op reconocer_comando(char* comando);
 void print_instruccion(instr_t* instruccion);
-
-/*
-void * serializar_instruccion(instr_t *instruccion, int* tamanioTotalInstruccion);
-instr_t* deserializar_instruccion(void* instruccion_a_parsear);
-t_list* recibir_paquete(int socket_cliente);
-void eliminar_instruccion(instr_t* instruccion);
-void print_instruccion(instr_t* instruccion);
-void reconocerRequest(char* comando, char* param1, char* param2, char* param3, char* param4);
-instr_t *crearInstruccion(int codigoRequest, char* p1, char* p2, char* p3, char* p4);
-void enviar_instruccion_socket(instr_t* instruccion, int socket_cliente);
-*/
+cod_op quienEnvio(instr_t * instruccion);
+void imprimir_registro(instr_t* instruccion);
+void loggear_exito(instr_t* miInstruccion);
+void loggear_error(instr_t* miInstruccion);
 
 #endif /* SERIALIZACIONES_H_ */

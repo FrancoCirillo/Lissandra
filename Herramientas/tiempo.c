@@ -2,8 +2,6 @@
 
 #include "tiempo.h"
 
-
-
 //Ejemplo Pthread
 /*
 #include <pthread.h>
@@ -47,27 +45,28 @@ void* funcion(void* numero){
 }
 */
 
-char* obtener_tiempo_cadena(){
-	time_t tiempo=time(NULL);
-	return ctime(&tiempo);
-}
-time_t obtener_tiempo(){
-	return time(NULL);
-}
-double segundos_entre(time_t tiempo1,time_t tiempo2){
-	return difftime(tiempo1,tiempo2);
-}
-int get_timestamp(){
+mseg_t obtener_ts(){
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;   // retorna en mili segundos.
-				//timeval tiene 2 atributos que son en segundos y en microsegundos. Por eso el pasaje.
+			//El pasaje es porque timeval tiene 2 atributos que son en segundos y en microsegundos.
 }
 
-int dif_timestamps(int t1, int t2){
-	return t1 - t2;
+
+mseg_t dif_timestamps(mseg_t tiempo1, mseg_t tiempo2){
+	return abs(tiempo1 - tiempo2);
 }
-int max_timestamp(int t1, int t2){
-	return t1>t2? t1: t2;
+
+
+mseg_t max_timestamp(mseg_t tiempo1, mseg_t tiempo2){
+	return tiempo1>tiempo2? tiempo1: tiempo2;
 }
+
+/*
+char* obtener_tiempo_cadena(){
+	time_t tiempo = time(NULL);
+	return ctime(&tiempo);
+}
+*/
+
 

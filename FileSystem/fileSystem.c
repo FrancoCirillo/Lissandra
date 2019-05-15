@@ -1,3 +1,5 @@
+//-------fileSystem.c-------
+
 #include "fileSystem.h"
 
 int main() {
@@ -49,6 +51,7 @@ int main() {
 
 	//Esto va dentro del create, pero estoy probando.
 
+
 //	crear_directorio("Tabla A");
 //	FILE* f = crear_archivo("Part_1", "Tabla A", ".tmp");
 //	archivo_inicializar(f);
@@ -58,6 +61,7 @@ int main() {
 //	//crear_metadata("Tabla A", "SC", 10, 333666999);
 //	crear_bloques();
 //	crear_particiones("Tabla A");
+
 
 	/*
 	//HARDCODEO
