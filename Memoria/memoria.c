@@ -15,7 +15,7 @@ int main() {
 
 	int listenner = iniciar_servidor(IP_MEMORIA, configuracion.PUERTO);
 
-	vigilar_conexiones_entrantes(listenner, conexConocidas, callbackHandshake, CONSOLA_MEMORIA);
+	vigilar_conexiones_entrantes(listenner, callback, conexConocidas, callbackHandshake, CONSOLA_MEMORIA);
 
 	//config_destroy(g_config);
 
@@ -108,6 +108,9 @@ void ejecutar_instruccion_devolucion_select(instr_t* instruccion, t_dictionary* 
 	char cadena [400];
 	sprintf(cadena, "%s%s%s%s%s%s%s%u","Se encontro ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
 	list_add(listaParam, cadena);
+	identificador* idsFS = (identificador *) dictionary_get(conexionesActuales, "FileSystem");
+	int conexionReceptor = idsFS->fd_out;
+
 	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,  listaParam, conexionReceptor);
 }
 
@@ -160,7 +163,7 @@ void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 }
 
-void responderHandshake(identificador idsConexionEntrante){
+void responderHandshake(identificador* idsConexionEntrante){
 	t_list * listaParam = list_create();
 	list_add(listaParam, "Memoria_1"); //Tabla
 	list_add(listaParam, IP_MEMORIA); //Key

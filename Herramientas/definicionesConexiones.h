@@ -88,7 +88,7 @@ typedef enum cod_op{
 	CONSOLA_KRN_RUN = BASE_CONSOLA_KERNEL + CODIGO_RUN,
 	CONSOLA_KRN_METRICS = BASE_CONSOLA_KERNEL + CODIGO_METRICS,
 
-	CODIGO_HANDSHAKE = 2000
+	CODIGO_HANDSHAKE = 11
 }cod_op;
 
 typedef struct instr_t{
@@ -119,7 +119,7 @@ typedef struct t_paquete{
 }t_paquete;
 
 //para usar con diccionario {<Nombre>:{fd_out, fd_in,puerto, IP}}
-typedef struct Identificadores{
+typedef struct identificador{
 	int fd_out;
 	int fd_in;
 	char* puerto;
