@@ -122,8 +122,8 @@ typedef struct t_paquete{
 typedef struct identificador{
 	int fd_out;
 	int fd_in;
-	char* puerto;
-	char* ip_proceso; //"000.000.000.000\n"
+	char puerto[8];
+	char ip_proceso[17]; //"000.000.000.000\n"
 }identificador;
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */

@@ -58,7 +58,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 	char bufferLeido[100];
 	int i;
-	identificador* idsNuevaConexion;
+	identificador* idsNuevaConexion = malloc(sizeof(identificador));
 	FD_ZERO(&master); //los vaciamos
 	FD_ZERO(&read_fds);
 
@@ -97,18 +97,23 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							instr_t * instruccion_handshake;
 							recibir_request(newfd, &instruccion_handshake);
 
-
+							puts("recibio el handshake");
 							char* quienEs = (char*) list_get(instruccion_handshake->parametros, 0); //El nombre
 							char* suIP = (char*) list_get(instruccion_handshake->parametros, 1); //Su IP
 							char* suPuerto = (char*) list_get(instruccion_handshake->parametros, 2); //Su Puerto
-
+							puts("deserializo el handshake");
 							idsNuevaConexion->fd_in = newfd;
+							puts("lleno fd_in");
 							strcpy(idsNuevaConexion->puerto, suPuerto);
+							puts("linea104: lleno puerto");
 							strcpy(idsNuevaConexion->ip_proceso, suIP);
+							puts("linea104: lleno ip_proceso");
 							idsNuevaConexion->fd_out = 0;
-
+							puts("guardo los datos del handshake");
 							dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
+							puts("guardo en el diccionario");
 							list_add_in_index(auxiliarEntrantes, newfd, quienEs);
+							puts("guardo en la lista");
 							}
 					}
 					else if(i == 0){
