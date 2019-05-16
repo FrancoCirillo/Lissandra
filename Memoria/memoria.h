@@ -41,7 +41,7 @@ typedef struct config{
 config configuracion;
 
 
-void (*callback) (instr_t* instruccion, int conexionReceptor, char* ipCliente);
+void (*callback) (instr_t* instruccion, int fdEntrante, t_dictionary* conexionesActuales);
 void (*callbackHandshake) (identificador* ids);
 
 void responderHandshake(identificador* idsConexionEntrante);
@@ -49,7 +49,6 @@ void responderHandshake(identificador* idsConexionEntrante);
 void inicializar_configuracion();
 void loggear(char* valor);
 char* obtener_por_clave(char* ruta, char* clave);
-
 void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor, t_dictionary* conexionesActuales);
 void ejecutar_instruccion_select(instr_t* instruccion, t_dictionary* conexionesActuales);
 void ejecutar_instruccion_devolucion_select(instr_t* instruccion, t_dictionary* conexionesActuales);
@@ -59,7 +58,8 @@ void ejecutar_instruccion_describe(instr_t* instruccion, t_dictionary* conexione
 void ejecutar_instruccion_drop(instr_t* instruccion, t_dictionary* conexionesActuales);
 void ejecutar_instruccion_journal(instr_t* instruccion, t_dictionary* conexionesActuales);
 void ejecutar_instruccion_exito(instr_t* instruccion, t_dictionary* conexionesActuales);
-void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, int conexionKernel);
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam,  t_dictionary* conexionesActuales);
 void responderHandshake(identificador* idsConexionEntrante);
+int obtener_fd_out(char* proceso,t_dictionary* conexionesActuales);
 
 #endif /* MEMORIA_MEMORIA_H_ */

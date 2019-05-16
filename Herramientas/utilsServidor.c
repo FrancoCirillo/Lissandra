@@ -68,6 +68,8 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 	// mantener cual es el fd mas grande (lo pide el seelct())
 	fdmax = listener; // por ahora es este
 
+	t_list * auxiliarEntrantes = list_create();
+
 	while(1) {
 		read_fds = master;
 		printf("\n" COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
@@ -98,15 +100,15 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 							char* quienEs = (char*) list_get(instruccion_handshake->parametros, 0); //El nombre
 							char* suIP = (char*) list_get(instruccion_handshake->parametros, 1); //Su IP
-							char* suPuerto = (char*) list_get(instruccion_handshake->parametros, 2); //Su IP
+							char* suPuerto = (char*) list_get(instruccion_handshake->parametros, 2); //Su Puerto
 
 							idsNuevaConexion->fd_in = newfd;
 							strcpy(idsNuevaConexion->puerto, suPuerto);
 							strcpy(idsNuevaConexion->ip_proceso, suIP);
-							responderHandshake(idsNuevaConexion);
+							idsNuevaConexion->fd_out = 0;
 
 							dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
-
+							list_add_in_index(auxiliarEntrantes, newfd, quienEs);
 							}
 					}
 					else if(i == 0){
@@ -119,18 +121,18 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 					else { // Ya se había hecho accept en el fd
 							 //recibir los mensajes
-							instr_t * instrcuccion_recibida;
-							int recibo = recibir_request(i, &instrcuccion_recibida);
-							if (recibo == 0) {
-								printf(COLOR_ANSI_ROJO "El cliente se desconecto" COLOR_ANSI_RESET "\n"); //TODO: Agregar logger
-								perror("recv");
-								FD_CLR(i, &master);
-							} else {
+						//si no existia la conexion saliente la crea
+						instr_t * instrcuccion_recibida;
+						int recibo = recibir_request(i, &instrcuccion_recibida);
+						if (recibo == 0) {
+							printf(COLOR_ANSI_ROJO "El cliente se desconecto" COLOR_ANSI_RESET "\n"); //TODO: Agregar logger
+							perror("recv");
+							FD_CLR(i, &master);
+						} else {
 //								puts("Recibi la siguiente instruccion: ");
 //								print_instruccion(instrcuccion_recibida);
-								//printf voy a ejecutar el request de el fd al cliente aa
-								ejecutar_requestRecibido(instrcuccion_recibida, i, conexionesConocidas);
-							}
+							ejecutar_requestRecibido(instrcuccion_recibida, i, conexionesConocidas);
+						}
 					} // END recibir los mensajes
 				} // END tenemos una nueva conexion entrante
 			} // END recorriendo los fd

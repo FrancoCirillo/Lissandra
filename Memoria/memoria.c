@@ -11,7 +11,14 @@ int main() {
 
 	inicializar_configuracion();
 
+	t_list * listaParam = list_create();
+	list_add(listaParam, "Memoria_1"); //Tabla
+	list_add(listaParam, IP_MEMORIA); //Key
+	list_add(listaParam, configuracion.PUERTO);
+	instr_t * miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+
 	int conexion_con_fs =  crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, IP_MEMORIA);
+	enviar_request(miInstruccion, conexion_con_fs);
 
 	int listenner = iniciar_servidor(IP_MEMORIA, configuracion.PUERTO);
 
@@ -84,18 +91,19 @@ void ejecutar_instruccion_select(instr_t* instruccion, t_dictionary* conexionesA
 		int seEncontro = 0; //No cambiar hasta que se implemente conexionKERNEL
 		sleep(1);//Buscar
 		if(seEncontro){
+			//Directo para el Kernel
 			t_list * listaParam = list_create();
-			list_add(listaParam, "Se encontro Tabla1 | 3 | MmMmMMMm");
-			identificador* idsKernel = (identificador *) dictionary_get(conexionesActuales, "Kernel");
-			int conexionReceptor = idsKernel->fd_out;
-			enviar_a_quien_corresponda(CODIGO_EXITO, instruccion, listaParam, conexionReceptor);
+			char cadena [400];
+			sprintf(cadena, "%s%s%s%s%s%s%s%u","Se encontro ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
+			list_add(listaParam, cadena);
+
+			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, conexionesActuales);
 
 		}
 		else{
 			puts("La tabla no se encontro en Memoria. Consultando al FS");
-			identificador* idsFS = (identificador *) dictionary_get(conexionesActuales, "FileSystem");
-			int conexionReceptor = idsFS->fd_out;
-			enviar_request(instruccion, conexionReceptor);
+			int conexionFS= obtener_fd_out("FileSystem", conexionesActuales);
+			enviar_request(instruccion, conexionFS);
 		}
 
 }
@@ -108,10 +116,7 @@ void ejecutar_instruccion_devolucion_select(instr_t* instruccion, t_dictionary* 
 	char cadena [400];
 	sprintf(cadena, "%s%s%s%s%s%s%s%u","Se encontro ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
 	list_add(listaParam, cadena);
-	identificador* idsFS = (identificador *) dictionary_get(conexionesActuales, "FileSystem");
-	int conexionReceptor = idsFS->fd_out;
-
-	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,  listaParam, conexionReceptor);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,  listaParam, conexionesActuales);
 }
 
 void ejecutar_instruccion_insert(instr_t* instruccion, t_dictionary* conexionesActuales){
@@ -143,16 +148,13 @@ void ejecutar_instruccion_exito(instr_t* instruccion, t_dictionary* conexionesAc
 	print_instruccion(instruccion);
 }
 
-
-
-void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, int conexionKernel){
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam,  t_dictionary* conexionesActuales){
 	instr_t * miInstruccion;
 	switch(quienEnvio(instruccion)){
 	case CONSOLA_KERNEL:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
-		puts("Esto se debio mandar al Kernel:");
-		print_instruccion(miInstruccion);
-//		enviar_request(miInstruccion, conexionReceptor);
+		int conexionKernel = obtener_fd_out("Kernel", conexionesActuales);
+		enviar_request(miInstruccion, conexionKernel);
 		break;
 	default:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion , listaParam);
@@ -163,6 +165,7 @@ void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 }
 
+//hace el connect!!
 void responderHandshake(identificador* idsConexionEntrante){
 	t_list * listaParam = list_create();
 	list_add(listaParam, "Memoria_1"); //Tabla
@@ -176,4 +179,10 @@ void responderHandshake(identificador* idsConexionEntrante){
 
 }
 
-
+int obtener_fd_out(char* proceso,t_dictionary* conexionesActuales){
+	identificador* idsProceso = (identificador *) dictionary_get(conexionesActuales, proceso);
+	if(idsProceso->fd_out==0){
+		responderHandshake(idsProceso);
+	}
+	return idsProceso->fd_out;
+}
