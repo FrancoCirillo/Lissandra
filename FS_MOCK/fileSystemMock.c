@@ -5,44 +5,43 @@
 int main() {
 	printf(COLOR_ANSI_AMARILLO"	PROCESO FILESYSTEM"COLOR_ANSI_RESET"\n");
 
-	t_dictionary * conexConocidas = dictionary_create();
+	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
-	callbackHandshake = responderHandshake;
 
 	//	inicializar_configuracion();
 
 
 	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexConocidas, CONSOLA_FS);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS);
 
 	return 0;
 }
 
-void ejecutar_instruccion(instr_t* instruccion, int fdEntrante, t_dictionary* conexionesActuales){
+void ejecutar_instruccion(instr_t* instruccion, int fdEntrante){
 	switch(instruccion->codigo_operacion){
 		case CONSOLA_FS_SELECT:
 		case CONSOLA_MEM_SELECT:
-		case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, conexionesActuales); break;
+		case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion); break;
 		case CONSOLA_FS_INSERT:
 		case CONSOLA_MEM_INSERT:
-		case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, conexionesActuales); break;
+		case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion); break;
 		case CONSOLA_FS_CREATE:
 		case CONSOLA_MEM_CREATE:
-		case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, conexionesActuales); break;
+		case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion); break;
 		case CONSOLA_FS_DESCRIBE:
 		case CONSOLA_MEM_DESCRIBE:
-		case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionesActuales); break;
+		case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion); break;
 		case CONSOLA_FS_DROP:
 		case CONSOLA_MEM_DROP:
-		case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, conexionesActuales); break;
+		case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion); break;
 		default: break;
 		}
 }
 
 
 
-void ejecutar_instruccion_select(instr_t* instruccion, t_dictionary* conexionesActuales){
+void ejecutar_instruccion_select(instr_t* instruccion){
 	puts("Ejecutando instruccion Select");
 	sleep(1);
 	int tablaPreexistente = 1;
@@ -51,74 +50,74 @@ void ejecutar_instruccion_select(instr_t* instruccion, t_dictionary* conexionesA
 		list_add(listaParam, (char*) list_get(instruccion->parametros, 0)); //Tabla
 		list_add(listaParam, (char*) list_get(instruccion->parametros, 1)); //Key
 		list_add(listaParam, "Buenas soy un value"); //Value
-		imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion,listaParam, conexionesActuales);
+		imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion,listaParam);
 	}
 	else{
 		t_list * listaParam = list_create();
 		char cadena [400];
 		sprintf(cadena, "%s%s", (char*) list_get(instruccion->parametros, 0), "No existe");
 		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(ERROR_SELECT, instruccion,listaParam, conexionesActuales);
+		imprimir_donde_corresponda(ERROR_SELECT, instruccion,listaParam);
 	}
 }
 
 
-void ejecutar_instruccion_insert(instr_t* instruccion, t_dictionary* conexionesActuales){
+void ejecutar_instruccion_insert(instr_t* instruccion){
 	puts("Ejecutando instruccion Insert");
 	sleep(1);
 	t_list * listaParam = list_create();
 
 	list_add(listaParam, "Se inserto TABLA1 | 3 | Joya | 150515789");
 
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam, conexionesActuales);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 
 }
 
 
-void ejecutar_instruccion_create(instr_t* instruccion, t_dictionary* conexionesActuales){
+void ejecutar_instruccion_create(instr_t* instruccion){
 	puts("Ejecutando instruccion Create");
 
 	t_list * listaParam = list_create();
 
 	list_add(listaParam, "Se creo TABLA2");
 
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam, conexionesActuales);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 
 }
 
 
-void ejecutar_instruccion_describe(instr_t* instruccion, t_dictionary* conexionesActuales){
+void ejecutar_instruccion_describe(instr_t* instruccion){
 	puts("Ejecutando instruccion Describe");
 	t_list * listaParam = list_create();
 
 	list_add(listaParam, "Metadata Tabla3:	Tipo de consistencia: SC	Numero de Particiones: 4	Tiempo entre compactaciones: 60000");
 
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam, conexionesActuales);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 
 }
 
 
-void ejecutar_instruccion_drop(instr_t* instruccion, t_dictionary* conexionesActuales){
+void ejecutar_instruccion_drop(instr_t* instruccion){
 	puts("Ejecutando instruccion Drop");
 	t_list * listaParam = list_create();
 
 	list_add(listaParam, "Se borro la Tabla 3");
 
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam, conexionesActuales);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 }
 
-void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam,  t_dictionary* conexionesActuales){
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam){
 	instr_t * miInstruccion;
 	switch(quienEnvio(instruccion)){
 
 	case CONSOLA_KERNEL:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
-		int conexionReceptor1 = obtener_fd_out("Memoria_1", conexionesActuales);
+		int conexionReceptor1 = obtener_fd_out("Memoria_1");
 		enviar_request(miInstruccion, conexionReceptor1);
 		break;
 	case CONSOLA_MEMORIA:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_MEMORIA, listaParam);
-		int conexionReceptor2 = obtener_fd_out("Memoria_1", conexionesActuales);
+		int conexionReceptor2 = obtener_fd_out("Memoria_1");
 		enviar_request(miInstruccion, conexionReceptor2);
 		break;
 	default:
@@ -178,9 +177,10 @@ void responderHandshake(identificador* idsConexionEntrante){
 
 }
 
-int obtener_fd_out(char* proceso,t_dictionary* conexionesActuales){
+int obtener_fd_out(char* proceso){
 	identificador* idsProceso = (identificador *) dictionary_get(conexionesActuales, proceso);
 	if(idsProceso->fd_out==0){
+		printf("Es la primera vez que se le quiere enviar algo a %s\n", proceso);
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;

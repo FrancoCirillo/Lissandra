@@ -45,7 +45,7 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
 	return socket_servidor;
 }
 
-int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t* instruccionAEjecutar, int fdRemitentem,t_dictionary* conexionesActuales), t_dictionary* conexionesConocidas, int queConsola){
+int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t* instruccionAEjecutar, int fdRemitentem), t_dictionary* conexionesConocidas, int queConsola){
 
 	//Gracias a la guia de Beej:
 	fd_set master;    // lista 'master' de file descriptors
@@ -64,6 +64,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 	FD_SET(listener, &master); // agregamos a los fds que vigila select()
 	FD_SET(0, &master); // 0 es el fd de la consola
+	idsNuevaConexion->fd_out = 0;
 
 	// mantener cual es el fd mas grande (lo pide el seelct())
 	fdmax = listener; // por ahora es este
@@ -103,7 +104,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							idsNuevaConexion->fd_in = newfd;
 							strcpy(idsNuevaConexion->puerto, suPuerto);
 							strcpy(idsNuevaConexion->ip_proceso, suIP);
-							idsNuevaConexion->fd_out = 0;
+
 							dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
 							list_add_in_index(auxiliarEntrantes, newfd, quienEs);
 							}
@@ -111,7 +112,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 					else if(i == 0){ //Recibido desde la consola
 						fgets(bufferLeido, 100, stdin);
 						instr_t * request_recibida = leer_a_instruccion(bufferLeido, queConsola);
-						ejecutar_requestRecibido(request_recibida, 0, conexionesConocidas);
+						ejecutar_requestRecibido(request_recibida, 0);
 					}
 
 					else { // Ya se había hecho accept en el fd
@@ -124,7 +125,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						}
 
 						else { //Por fin:
-							ejecutar_requestRecibido(instrcuccion_recibida, i, conexionesConocidas);
+							ejecutar_requestRecibido(instrcuccion_recibida, i);
 						}
 
 					} // END recibir los mensajes
