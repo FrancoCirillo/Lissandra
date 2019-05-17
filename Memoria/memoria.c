@@ -7,7 +7,6 @@ int main() {
 	printf(COLOR_ANSI_CYAN"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
 	t_dictionary * conexConocidas = dictionary_create();
 	callback = ejecutar_instruccion;
-	callbackHandshake = responderHandshake;
 
 	identificador* idsNuevasConexiones = malloc(sizeof(identificador));
 
@@ -29,7 +28,7 @@ int main() {
 
 	int listenner = iniciar_servidor(IP_MEMORIA, configuracion.PUERTO);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexConocidas, callbackHandshake, CONSOLA_MEMORIA);
+	vigilar_conexiones_entrantes(listenner, callback, conexConocidas, CONSOLA_MEMORIA);
 
 	//config_destroy(g_config);
 
@@ -111,7 +110,7 @@ void ejecutar_instruccion_select(instr_t* instruccion, t_dictionary* conexionesA
 			puts("La tabla no se encontro en Memoria. Consultando al FS");
 			if(dictionary_is_empty(conexionesActuales)) puts("Dicc vacio");
 			else puts("Diccio lleno");
-			int conexionFS= obtener_fd_out("FileSystem", conexionesActuales);
+			int conexionFS= obtener_fd_out("4", conexionesActuales);
 			puts("Se tiene el fd_out");
 			enviar_request(instruccion, conexionFS);
 		}
@@ -192,6 +191,7 @@ void responderHandshake(identificador* idsConexionEntrante){
 int obtener_fd_out(char* proceso,t_dictionary* conexionesActuales){
 	identificador* idsProceso = (identificador *) dictionary_get(conexionesActuales, proceso);
 	if(idsProceso->fd_out==0){
+		printf("Es la primera vez que se le quiere enviar algo a %s\n", proceso);
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;

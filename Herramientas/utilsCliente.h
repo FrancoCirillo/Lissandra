@@ -15,7 +15,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-int conectar_con_proceso(cod_proceso procesoServidor, cod_proceso procesoCliente);
 int crear_conexion(char *ip, char* puerto, char* miIP);
 
 #endif /* UTILS_CLIENTE_ */

@@ -9,13 +9,12 @@ int main() {
 	callback = ejecutar_instruccion;
 	callbackHandshake = responderHandshake;
 
-//	inicializar_configuracion();
+	//	inicializar_configuracion();
 
-	//	int conexion_con_memoria = conectar_con_proceso(MEMORIA, FILESYSTEM);
 
 	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexConocidas, callbackHandshake, CONSOLA_FS);
+	vigilar_conexiones_entrantes(listenner, callback, conexConocidas, CONSOLA_FS);
 
 	return 0;
 }

@@ -42,7 +42,6 @@ config configuracion;
 
 
 void (*callback) (instr_t* instruccion, int fdEntrante, t_dictionary* conexionesActuales);
-void (*callbackHandshake) (identificador* ids);
 
 void responderHandshake(identificador* idsConexionEntrante);
 
