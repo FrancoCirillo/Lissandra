@@ -124,9 +124,16 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		break;
 	default:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
+		//Se pidio desde la consola de FS
 		if(codigoOperacion == DEVOLUCION_SELECT){
 			imprimir_registro(miInstruccion);
 		}
+		if(codigoOperacion == CODIGO_EXITO){
+					loggear_exito(miInstruccion);
+				}
+		if(codigoOperacion > BASE_CONSOLA_FS){ //Es error
+					loggear_error(miInstruccion);
+				}
 		break;
 	}
 

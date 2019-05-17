@@ -9,6 +9,8 @@ int main() {
 	callback = ejecutar_instruccion;
 	callbackHandshake = responderHandshake;
 
+	identificador* idsNuevasConexiones = malloc(sizeof(identificador));
+
 	inicializar_configuracion();
 
 	t_list * listaParam = list_create();
@@ -19,6 +21,11 @@ int main() {
 
 	int conexion_con_fs =  crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, IP_MEMORIA);
 	enviar_request(miInstruccion, conexion_con_fs);
+	idsNuevasConexiones->fd_in = 0; //Por las moscas
+	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_FS);
+	strcpy(idsNuevasConexiones->ip_proceso, configuracion.IP_FS);
+	idsNuevasConexiones->fd_out = conexion_con_fs;
+	dictionary_put(conexConocidas, "FileSystem", idsNuevasConexiones);
 
 	int listenner = iniciar_servidor(IP_MEMORIA, configuracion.PUERTO);
 
@@ -102,7 +109,10 @@ void ejecutar_instruccion_select(instr_t* instruccion, t_dictionary* conexionesA
 		}
 		else{
 			puts("La tabla no se encontro en Memoria. Consultando al FS");
+			if(dictionary_is_empty(conexionesActuales)) puts("Dicc vacio");
+			else puts("Diccio lleno");
 			int conexionFS= obtener_fd_out("FileSystem", conexionesActuales);
+			puts("Se tiene el fd_out");
 			enviar_request(instruccion, conexionFS);
 		}
 

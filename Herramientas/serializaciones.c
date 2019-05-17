@@ -316,6 +316,7 @@ void imprimir_registro(instr_t* instruccion){
 
 }
 
+//Todo: usar logger
 void loggear_error(instr_t* miInstruccion){
 	printf(COLOR_ANSI_ROJO"%s\n"COLOR_ANSI_RESET, (char*) list_get(miInstruccion->parametros, 0));
 }
