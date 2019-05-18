@@ -6,15 +6,14 @@ int main() {
 
 	printf("PROCESO FILESYSTEM\n");
 
+	// Empezar a loggear
 
 	inicializar_memtable();
 
 
 
 
-
-
-
+	/*PRUEBAS*/
 
 	//	CREATE
 	//[TABLA]
@@ -22,28 +21,52 @@ int main() {
 	//[NUMERO_PARTICIONES]
 	//[COMPACTION_TIME]
 
+	instr_t* instr=malloc(sizeof(instr_t));
+	instr->timestamp = obtener_ts();
+	instr->codigo_operacion = CODIGO_CREATE;
+	instr->parametros = list_create();
 
+	list_add(instr->parametros,"Tabla A" );
+	list_add(instr->parametros,"SC" );
+	list_add(instr->parametros,"5" );
+	list_add(instr->parametros,"60000" );
 
-	instr_t* instruccion;
-	instruccion->timestamp = obtener_ts();
-	instruccion->codigo_operacion = CODIGO_CREATE;
-	instruccion->parametros = list_create();
-
-	list_add(instruccion->parametros,"Tabla A" );
-	list_add(instruccion->parametros,"SC" );
-	list_add(instruccion->parametros,"5" );
-	list_add(instruccion->parametros,"60000" );
-
-	remitente_t* remi;
+	remitente_t* remi=malloc(sizeof(remitente_t));
 	remi->ip = IP_MEMORIA;
 	remi->puerto = PORT;
 
-	remitente_instr_t* mensaje;
-	mensaje->instruccion = instruccion;
+	remitente_instr_t* mensaje = malloc(sizeof(remitente_instr_t));
+	mensaje->instruccion = instr;
 	mensaje->remitente = remi;
 
 	evaluar_instruccion(mensaje);
 
+	printf("\nTIMESTAMP: %ld \n",mensaje->instruccion->timestamp );
+
+	char * a= obtener_parametro(mensaje->instruccion, 0);
+	char * b= obtener_parametro(mensaje->instruccion, 1);
+	char * c= obtener_parametro(mensaje->instruccion, 2);
+	char * d= obtener_parametro(mensaje->instruccion, 3);
+
+	//Pruebas de lectura nomas..
+	printf("cod_op: %d\n",mensaje->instruccion->codigo_operacion);
+	printf("tabla: %s\n",a);
+	printf("consistencia: %s\n",b);
+	printf("part: %s\n",c);
+	printf("t_dump: %s\n",d);
+
+	printf("\n");
+	printf("------\n");
+
+	contestar(mensaje);  //Libera memoria del mje
+
+	printf("------\n");
+	printf("Se libero la memoria\n");
+
+
+
+
+	//////////////////////////////////////////////
 
 
 
@@ -141,26 +164,27 @@ int main() {
 void inicializar_memtable(){
 	memtable = list_create();
 
+
 }
 
-int execute_insert(instr_t* i){
-
-	char* tabla = obtener_parametro(i,0);
-	if(!existe_tabla(tabla)){
-		return ERROR_INSERT;
-	}
-	if(mem_existe_tabla(tabla)){
-		mem_agregar_reg(i);
-	}
-
-	else {
-
-		mem_agregar_tabla(tabla);
-		mem_agregar_reg(i);
-
-	}
-	return CODIGO_EXITO;
-}
+//int execute_insert(instr_t* i){
+//
+//	char* tabla = obtener_parametro(i,0);
+//	if(!existe_tabla(tabla)){
+//		return ERROR_INSERT;
+//	}
+//	if(mem_existe_tabla(tabla)){
+//		mem_agregar_reg(i);
+//	}
+//
+//	else {
+//
+//		mem_agregar_tabla(tabla);
+//		mem_agregar_reg(i);
+//
+//	}
+//	return CODIGO_EXITO;
+//}
 
 void mem_agregar_tabla(){
 	t_list* t = list_create();
@@ -176,66 +200,49 @@ void mem_agregar_reg(){
 
 
 
-
-/*
-instr_t* create(instr_t * instruccion){
-
-	char* nombre_tabla = instruccion->param1;
-	instr_t* respuesta;
-	string_to_upper(nombre_tabla);
-	char *nota;
-
-	if(!existe_Tabla(nombre_tabla)){
-		execute_create(instruccion);
-		respuesta->codigoInstruccion = 0;	//EXITO
-		nota = concat3("La tabla ",instruccion->param1," se creó correctamente.\n");
-		loggear_FS(nota);
-	}
-
-	else{
-		respuesta->codigoInstruccion = ERROR_CREATE;
-		nota = concat3("La tabla ",instruccion->param1," ya existe en el File System.\n");
-		loggear_FS(nota);
-	}
-
-	respuesta->param1=nota; //El mje para enviar se guarda en el param 1.
-	respuesta->timestamp=instruccion->timestamp;  //convencion: se responde con una instruccion con el timestamp propio, asi sabe el que lo recibe de instruccion se trata.
-	return respuesta;
-}
-
- */
-
-p_create* instruccion_a_create(instr_t* instr){
-	p_create* param;
-
-	param->tabla= instr->parametros ;
-
-	return
-
-}
-
 void dumpeo(){
 	int tiempo_dump;
 	while(1){
 
 		actualizar_configuracion(); //con semaforos
-		sem_wait(&mutex_tiempo_dump);
+		//sem_wait(&mutex_tiempo_dump);
 		tiempo_dump=config_FS.tiempo_dump;//Primero guardar variables y despues bloquearlas, y usarlas.
-		sem_post(&mutex_tiempo_dump);
+		//sem_post(&mutex_tiempo_dump);
 		sleep(tiempo_dump);
 
-		dumpear();
+	//	dumpear();
 	}
 
 }
 
+int execute_create(instr_t* instr){
+	char* tabla=obtener_parametro(instr,0);
+	if(!existe_Tabla(tabla)){     //existe_tabla esta hardcodeado
+		if(!crear_directorio(tabla))
+			return ERROR_CREATE;
+		if(!crear_metadata(instr))
+			return ERROR_CREATE;
+
+		//crear_particiones(tabla);
+		printf("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
+		return CODIGO_EXITO;   //Hardcodeo exito.
+	}
+	else{
+		printf("Error al crear la tabla, la tabla ya existe\n");
+		return ERROR_CREATE;
+	}
+}
+
+char* obtener_parametro(instr_t * i,int index){
+	return (char*)list_get(i->parametros,index);
+}
 
 
-//ver si es puntero o pasado por valor.
+
+
 void evaluar_instruccion(remitente_instr_t* mensaje){
 
-	int respuesta;
-	//respuesta->codigo_operacion = 0;
+	int respuesta= 0;
 	printf("Me llego la instruccion: ");  //Todo se debe loggear.
 
 	switch(mensaje->instruccion->codigo_operacion){
@@ -246,7 +253,7 @@ void evaluar_instruccion(remitente_instr_t* mensaje){
 
 	case CODIGO_INSERT:
 		printf("INSERT\n\n");
-		respuesta=execute_insert(mensaje->instruccion);
+		//respuesta=execute_insert(mensaje->instruccion);
 		break;
 
 	case CODIGO_CREATE:
@@ -268,55 +275,34 @@ void evaluar_instruccion(remitente_instr_t* mensaje){
 		printf("No es una instruccion valida dentro del File System.\n\n");
 	}
 
-	mensaje->instruccion->codigo_operacion = respuesta;  //Esto pisa el parametro 1 con el mensaje a enviarle a memoria.
-	//y el codigo de instr es el codigo de la respuesta. (0 es exito, o el num neg es el error que corresponde)
+	mensaje->instruccion->codigo_operacion = respuesta;  //Esto pisa el codigo de operacion del mensaje para enviarle a memoria.
 
-
-	contestar(mensaje);
-
+	/*
+	contestar(mensaje);   ESTO SI VA ACA. Pero para pruebas lo comento.
+		//este hace los free de la instruccion completa.
+	*/
 
 	printf("Finalizo la instruccion.\n");
-	//ver de hacer un free al mensaje si es necesario, o ver donde.
 
 
-
-	//ESTO
 }
 
 
 void contestar(remitente_instr_t * i){
-	//usa responder()
-	//se contestar
-	printf("Se contesta al remitente %s con %d \n",i->remitente->puerto,i->instruccion->codigo_operacion);;
-	list_iterate(i->instruccion->parametros, free);
-	free(i->instruccion->codigo_operacion);
-	free(i->instruccion->timestamp);
-	free(i->remitente->ip);
-	free(i->remitente->puerto);
- //terminar de entender como liberar esto o cuando..
+	//usa responder()  Lo hacen los chicos
+	//se contesta
+	printf("Se contesta al remitente %s con %d \n",i->remitente->ip,i->instruccion->codigo_operacion);
+	list_clean(i->instruccion->parametros);
+	free(i->instruccion->parametros);
+	free(i->remitente);
+	free(i->instruccion);
+	free(i);
 
 }
 
 
 
 
-int execute_create(instr_t* instr){
-	char* tabla=obtener_parametro(instr,0);
-	if(!existe_Tabla(tabla)){
-		crear_directorio(tabla);
-		crear_metadata(instr);
-		crear_particiones(tabla);
-		printf("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
-		return CODIGO_EXITO;   //Hardcodeo exito.
-	}
-	else{
-		printf("Error al crear la tabla");
-		return ERROR_CREATE;
-	}
-}
-char* obtener_parametro(instr_t * i,int index){
-	return (char*)list_get(i->parametros,index);
-}
 
 //Crea un directorio unicamente en TABLAS.
 

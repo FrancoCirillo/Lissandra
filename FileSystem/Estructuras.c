@@ -11,15 +11,37 @@ int existe_Tabla(char * nombre_tabla){
 	return 0;    //hardcodeado. ver como implementar.
 }
 
-void crear_directorio(char * nomb){
+//Todo
+/*
+ * eliminar carpeta
+ * eliminar directorio
+ * metadata_modificar_size();	//escribir nuevo numero en el archivo.
+ * metadata_agregar_bloque();    //en el array
+ * metadata_liberar_bloque();	//en el array
+ * bloque disponible (bits arrays)
+ * archivo de config, actualizar.
+ * semaforos!
+ *
+ * */
 
-	char* ruta= malloc(sizeof(char)*(strlen(nomb) + strlen(RUTA_TABLAS)) +1);
-	ruta = concat(RUTA_TABLAS, nomb);
-	mkdir(ruta, S_IRWXU);
-	printf("Se creó la carpeta: %s \n", nomb);
-	free(ruta);
 
+int crear_directorio(char * nomb){
+
+	//string_to_upper(nomb);   No me funciona (??)
+	char*ruta = concat(RUTA_TABLAS, nomb);
+	if(!mkdir(ruta, S_IRWXU)){
+		printf("Se creó correctamente la carpeta: %s \n", nomb);
+		free(ruta);
+		return 1;
+	}
+	else{
+		printf("No se pudo crear la carpeta: %s \n", nomb);
+		free(ruta);
+		return 0;
+	}
+	 //Concat hace un malloc. Aca tiene que haber un free
 }
+
 
 
 FILE* crear_archivo(char * nombre, char* tabla, char * ext){
@@ -61,13 +83,6 @@ void crear_bloques(){    //Los bloques van a partir del numero 1. Tener presente
 	printf("Se crearon los bloques del 1 al %d\n", cantidad);
 }
 
-//TODO:
-/*metadata_modificar_size();	//escribir nuevo numero en el archivo.
- * metadata_agregar_bloque();    //en el array
- * metadata_liberar_bloque();	//en el array
- * */
-
-
 
 //TODO: asignar un bloque disponible!! Hardcodeado. Crear luego de ver los bitarrays.
 
@@ -85,19 +100,32 @@ void archivo_inicializar(FILE* f){
 	printf("Se inicializó el archivo.\n");
 }
 
-void crear_metadata(char * tabla,char * consistency, char* particiones,char* timestamp){
+int crear_metadata(instr_t* i){
+	char* tabla=obtener_parametro(i,0);
 	FILE* f = crear_archivo("Metadata", tabla, "");
-	metadata_inicializar(f, consistency, particiones, timestamp);
+	metadata_inicializar(f, i);
 	fclose(f);
 	printf("Se creó el metadata en la tabla %s. \n", tabla);
+
+	return 1;  //Ver si hay que validar algo mas aca.. donde puede fallar?
 }
 
-void metadata_inicializar(FILE* f, char * consist, char* part,char* time){
-	char* cadena = malloc(sizeof(char)*(50+strlen(consist) + strlen(part) + strlen(time))+1);
+
+void metadata_inicializar(FILE* f, instr_t* i){
+	char* consist= obtener_parametro(i,1);
+	char* part= obtener_parametro(i,2);
+	char* time= obtener_parametro(i,3);
+	char* cadena=malloc(sizeof(char)*(50+strlen(consist) + strlen(part) + strlen(time))+1);
 	sprintf(cadena, "%s%s%s%s%s%s%s","CONSISTENCY = ",consist, "\nPARTITIONS = ", part, "\nCOMPACTATION_TIME = ", time, "\n");
 	fwrite(cadena, sizeof(char), strlen(cadena)+1,f);
 	free(cadena);
 }
+
+//Lo viejo
+//char* cadena = malloc(sizeof(char)*(50+strlen(consist) + strlen(part) + strlen(time))+1);
+//sprintf(cadena, "%s%s%s%s%s%s%s","CONSISTENCY = ",consist, "\nPARTITIONS = ", part, "\nCOMPACTATION_TIME = ", time, "\n");
+//fwrite(cadena, sizeof(char), strlen(cadena)+1,f);
+//free(cadena);
 
 
 
@@ -128,22 +156,23 @@ void inicializarConfig(void){
 	config_FS.retardo = config_get_int_value(g_config, "RETARDO");
 	config_FS.tiempo_dump = config_get_int_value(g_config, "TIEMPO_DUMP");
 }
+
 void actualizar_configuracion(){
 
 	g_config = config_create("Lissandra.config");
 
-	sem_wait(&mutex_tiempo_retardo);
+	//sem_wait(&mutex_tiempo_retardo);
 	config_FS.retardo = config_get_int_value(g_config, "RETARDO");
-	sem_post(&mutex_tiempo_retardo);
+	//sem_post(&mutex_tiempo_retardo);
 
-	sem_wait(&mutex_tiempo_dump);
+	//sem_wait(&mutex_tiempo_dump);
 	config_FS.tiempo_dump = config_get_int_value(g_config, "TIEMPO_DUMP");
-	sem_post(&mutex_tiempo_dump);
+	//sem_post(&mutex_tiempo_dump);
 	//Hacer
 	//tener cuidado con los memory leaks, cuando reemplazo strings.
 }
-void iniciar_semaforos(){
-	sem_init(&mutex_tiempo_dump,0,1);
-	sem_init(&mutex_tiempo_retardo,0,1);
-}
+//void iniciar_semaforos(){
+//	sem_init(&mutex_tiempo_dump,0,1);
+//	sem_init(&mutex_tiempo_retardo,0,1);
+//}
 

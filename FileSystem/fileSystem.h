@@ -43,19 +43,20 @@ typedef long int mseg_t;
 
 /*STRUCTS*/
 
-typedef struct p_insert{  //ver si esto esta bueno..
-	char* tabla;
-	int key;  //u_int16
-	char* value;
-	mseg_t ts;
-}p_insert;
-
-typedef struct p_create{
-	char* tabla;
-	char* consistency;
-	int particiones;  //u_int16
-	mseg_t compactation_time;
-}p_create;
+//
+//typedef struct p_insert{  //ver si esto esta bueno..
+//	char* tabla;
+//	int key;  //u_int16
+//	char* value;
+//	mseg_t ts;
+//}p_insert;
+//
+//typedef struct p_create{
+//	char* tabla;
+//	char* consistency;
+//	int particiones;  //u_int16
+//	mseg_t compactation_time;
+//}p_create;
 
 
 
@@ -107,18 +108,13 @@ t_config* g_config;
 
 void evaluar_instruccion(remitente_instr_t*);
 int execute_create(instr_t*);
-void execute_insert(instr_t*);
-void execute_select(instr_t*);
-void execute_describe(instr_t*);
-void execute_drop(instr_t*);
+int execute_insert(instr_t*);
+int execute_select(instr_t*);
+int execute_describe(instr_t*);
+int execute_drop(instr_t*);
 
-p_create* instruccion_a_create(instr_t*);
+char* obtener_parametro(instr_t* ,int );
 
-//instr_t* i_create(instr_t *);
-//instr_t* i_insert(instr_t *);
-//instr_t* i_select(instr_t *);
-//instr_t* i_describe(instr_t *);
-//instr_t* i_drop(instr_t *);
 
 							/*MANEJO DE CADENAS*/
 
@@ -126,7 +122,9 @@ char* concat(char*, char*);
 char* concat3( char* , char*, char*);
 
 							/*Comunicación*/
-void response(remitente_t*);
+//eliminar
+//void response(remitente_t*);
+void contestar(remitente_instr_t * );
 
 							/*Compactación*/
 void* compactar(instr_t*);

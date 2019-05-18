@@ -18,26 +18,26 @@ char* leer_config(char* );
 
 char* leerMetadata_FS();		//es un único archivo
 
-void  crear_directorio(char *);
+int  crear_directorio(char *);
 FILE* crear_archivo(char*, char*, char*);
 void  crear_particiones(char*);
 void  crear_bloque(char*);
 void  crear_bloques();
-void  crear_metadata(char*, char*, char*, char*);
+int  crear_metadata(instr_t*);
 
 int existe_Tabla(char * );
 
 void archivo_inicializar(FILE *);
-void metadata_inicializar(FILE*, char*, char*, char*);
+void metadata_inicializar(FILE*, instr_t*);
 
 //semaforos
 
-sem_t mutex_config;
-sem_t mutex_tiempo_dump;
-sem_t mutex_memtable;
-sem_t mutex_archivo;
-sem_t mutex_bitmap;
-sem_t mutex_
+//sem_t mutex_config;
+//sem_t mutex_tiempo_dump;
+//sem_t mutex_memtable;
+//sem_t mutex_archivo;
+//sem_t mutex_bitmap;
+//sem_t mutex_
 
 
 #endif /* ESTRUCTURAS_H_ */
