@@ -8,7 +8,7 @@ int main() {
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
 
-	//	inicializar_configuracion();
+	inicializar_configuracion();
 
 
 	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
@@ -90,7 +90,7 @@ void ejecutar_instruccion_describe(instr_t* instruccion){
 	puts("Ejecutando instruccion Describe");
 	t_list * listaParam = list_create();
 
-	list_add(listaParam, "Metadata Tabla3:	Tipo de consistencia: SC	Numero de Particiones: 4	Tiempo entre compactaciones: 60000");
+	list_add(listaParam, "Metadata Tabla3:\n	Tipo de consistencia: SC\n	Numero de Particiones: 4\n	Tiempo entre compactaciones: 60000");
 
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 
@@ -141,6 +141,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 void inicializar_configuracion() {
 	puts("Configuracion:");
 	char* rutaConfig = "fsMock.config";
+	puts("Config accedido.");
 	configuracion.PUERTO_ESCUCHA = obtener_por_clave(rutaConfig, "PUERTO_ESCUCHA");
 	configuracion.TAMANIO_VALUE = atoi(obtener_por_clave(rutaConfig, "TAMANIO_VALUE"));
 	configuracion.TIEMPO_DUMP= atoi(obtener_por_clave(rutaConfig, "TIEMPO_DUMP"));
