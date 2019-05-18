@@ -201,7 +201,7 @@ instr_t* leer_a_instruccion(char* request, int queConsola){
 		valor = strdup(actual);
 		list_add(listaParam, valor);
 
-		if(i==1 && strcmp(comando, "INSERT")==0){
+		if(i==2 && strcmp(comando, "INSERT")==0){
 			actual = strtok (NULL, "");
 			valor = strdup(actual);
 			list_add(listaParam, valor);
@@ -316,6 +316,7 @@ void imprimir_registro(instr_t* instruccion){
 
 }
 
+//Todo: usar logger
 void loggear_error(instr_t* miInstruccion){
 	printf(COLOR_ANSI_ROJO"%s\n"COLOR_ANSI_RESET, (char*) list_get(miInstruccion->parametros, 0));
 }

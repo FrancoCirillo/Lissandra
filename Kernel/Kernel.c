@@ -7,11 +7,38 @@ pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
 // declaring mutex
 pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
 sem_t mutex_cantidad_hilos;
-
-int done = 1;
-
+sem_t mutex_log;
+void ejemplo_procesos();
 int main() {
 	inicializarConfiguracion();
+	//RUN("test.lql");
+
+	ejemplo_procesos();
+	sleep(100);
+	loggear("FIN");
+
+	//	pthread_t un_hilo;
+	//	pthread_attr_t attr;
+	//	pthread_create(&un_hilo,&attr,consola,NULL);
+	//	pthread_join(un_hilo,NULL);
+	return 0;
+}
+void RUN(char *nombre_archivo){
+
+	FILE *f=fopen(nombre_archivo,"r");
+	char line[64];
+	proceso p;
+	instr_t *nueva_instruccion;
+	while(fgets(line,sizeof(line),f)){
+		nueva_instruccion=leer_a_instruccion(line);
+		//encolo en proceso
+	}
+	fclose(f);
+	//encolo proceso
+//TODO: Cambiar tipo de instrucciones y utilizar print instruccion
+
+}
+void ejemplo_procesos(){
 	instruccion_t i1={
 			1,
 			obtener_ts(),
@@ -121,16 +148,6 @@ int main() {
 	encolar_proceso(&p3);
 	loggear("\n\n ENCOLADOS!\n\n");
 
-
-
-	sleep(100);
-	loggear("FIN");
-
-	//	pthread_t un_hilo;
-	//	pthread_attr_t attr;
-	//	pthread_create(&un_hilo,&attr,consola,NULL);
-	//	pthread_join(un_hilo,NULL);
-	return 0;
 }
 void* consola(void* param){
 	while(1==1){
@@ -164,8 +181,10 @@ int ejecutar(){
 		sleep(1);
 		loggear("Espera finalizada");
 		loggear("Ejecutando");
-
-		while(hilos_disponibles()&&cola_ready!=NULL){//Se puede procesar
+		sem_wait(&semaforo_procesos_ready);
+		int hay_procesos=cola_ready!=NULL;
+		sem_post(&semaforo_procesos_ready);
+		while(hilos_disponibles()&&hay_procesos){//Se puede procesar
 
 			loggear("Hay hilos y procesos!! Ejecutando...\n");
 			p=obtener_sig_proceso();
@@ -258,6 +277,7 @@ void encolar_o_finalizar_proceso(proceso* p){
 
 }
 void finalizar_proceso(proceso* p){
+	free(p);
 	loggear("Se finalizo correctamente un proceso !!. Se libera su memoria");
 	continuar_ejecucion();
 }
@@ -326,9 +346,11 @@ memoria obtenerMemoria(instruccion_t* instr) {
 	return m;
 }
 void loggear(char *valor) {
+	sem_wait(&mutex_log);
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
 	log_destroy(g_logger);
+	sem_post(&mutex_log);
 }
 char* obtener_por_clave(char* ruta, char* key) {
 	char* valor;
@@ -342,6 +364,7 @@ void inicializarMetricas() {
 	loggear("Metricas inicializadas");
 }
 void inicializar_semaforos(){
+	sem_init(&mutex_log,0,1);
 	sem_init(&semaforo_procesos_ready,0,1);
 	sem_init(&mutex_cantidad_hilos,0,1);
 	loggear("Semaforos inicializados");

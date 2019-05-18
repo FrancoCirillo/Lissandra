@@ -86,8 +86,9 @@ typedef enum cod_op{
 	CONSOLA_KRN_JOURNAL =BASE_CONSOLA_KERNEL + CODIGO_JOURNAL,
 	CONSOLA_KRN_ADD =BASE_CONSOLA_KERNEL + CODIGO_ADD,
 	CONSOLA_KRN_RUN = BASE_CONSOLA_KERNEL + CODIGO_RUN,
-	CONSOLA_KRN_METRICS = BASE_CONSOLA_KERNEL + CODIGO_METRICS
+	CONSOLA_KRN_METRICS = BASE_CONSOLA_KERNEL + CODIGO_METRICS,
 
+	CODIGO_HANDSHAKE = 11
 }cod_op;
 
 typedef struct instr_t{
@@ -117,5 +118,12 @@ typedef struct t_paquete{
 	t_buffer* buffer;
 }t_paquete;
 
+//para usar con diccionario {<Nombre>:{fd_out, fd_in,puerto, IP}}
+typedef struct identificador{
+	int fd_out;
+	int fd_in;
+	char puerto[8];
+	char ip_proceso[17]; //"000.000.000.000\n"
+}identificador;
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */

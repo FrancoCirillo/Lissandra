@@ -4,31 +4,19 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../hilos.c \
-../serializaciones.c \
-../tiempo.c \
-../utilsCliente.c \
-../utilsServidor.c 
+../krnlMock.c 
 
 OBJS += \
-./hilos.o \
-./serializaciones.o \
-./tiempo.o \
-./utilsCliente.o \
-./utilsServidor.o 
+./krnlMock.o 
 
 C_DEPS += \
-./hilos.d \
-./serializaciones.d \
-./tiempo.d \
-./utilsCliente.d \
-./utilsServidor.d 
+./krnlMock.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 %.o: ../%.c
 	@echo 'Building file: $<'
-	@echo 'Invoking: GCC C Compiler'
+	@echo 'Invoking: Cross GCC Compiler'
 	gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
