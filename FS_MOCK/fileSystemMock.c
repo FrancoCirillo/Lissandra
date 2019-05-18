@@ -66,9 +66,9 @@ void ejecutar_instruccion_insert(instr_t* instruccion){
 	puts("Ejecutando instruccion Insert");
 	sleep(1);
 	t_list * listaParam = list_create();
-
-	list_add(listaParam, "Se inserto TABLA1 | 3 | Joya | 150515789");
-
+	char cadena [400];
+	sprintf(cadena, "%s%s%s%s%s%s%s%u","Se inserto ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
+	list_add(listaParam, cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 
 }
@@ -78,8 +78,9 @@ void ejecutar_instruccion_create(instr_t* instruccion){
 	puts("Ejecutando instruccion Create");
 
 	t_list * listaParam = list_create();
-
-	list_add(listaParam, "Se creo TABLA2");
+	char cadena [400];
+	sprintf(cadena, "%s%s%s%s%s%s%s%s","Se creo la tabla", (char*) list_get(instruccion->parametros, 0), " con tipo de consistencia ",(char*) list_get(instruccion->parametros, 1), ", tiene ", (char*) list_get(instruccion->parametros, 2)," particiones y un tiempo de compactacion de ",(char*) list_get(instruccion->parametros, 3));
+	list_add(listaParam, cadena);
 
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 
@@ -89,8 +90,9 @@ void ejecutar_instruccion_create(instr_t* instruccion){
 void ejecutar_instruccion_describe(instr_t* instruccion){
 	puts("Ejecutando instruccion Describe");
 	t_list * listaParam = list_create();
-
-	list_add(listaParam, "Metadata Tabla3:\n	Tipo de consistencia: SC\n	Numero de Particiones: 4\n	Tiempo entre compactaciones: 60000");
+	char cadena [400];
+	sprintf(cadena, "%s%s%s","Metadata ",(char*) list_get(instruccion->parametros, 0),":\n	Tipo de consistencia: \n	Numero de Particiones: 4\n	Tiempo entre compactaciones: 60000");
+	list_add(listaParam, cadena);
 
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 
@@ -100,8 +102,9 @@ void ejecutar_instruccion_describe(instr_t* instruccion){
 void ejecutar_instruccion_drop(instr_t* instruccion){
 	puts("Ejecutando instruccion Drop");
 	t_list * listaParam = list_create();
-
-	list_add(listaParam, "Se borro la Tabla 3");
+	char cadena [400];
+	sprintf(cadena, "%s%s","Se borro la ",(char*) list_get(instruccion->parametros, 0));
+	list_add(listaParam, cadena);
 
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam);
 }
