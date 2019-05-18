@@ -4,7 +4,7 @@
 
 int main() {
 
-	printf(COLOR_ANSI_CYAN"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
+	printf(COLOR_ANSI_VERDE"	PROCESO KERNEL"COLOR_ANSI_RESET"\n");
 
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
@@ -164,6 +164,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 	case CONSOLA_KERNEL:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
+		puts("Enviando rta al kernel");
 		enviar_request(miInstruccion, conexionKernel);
 		break;
 	default:
