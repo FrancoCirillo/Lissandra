@@ -1,5 +1,5 @@
 # **Como PCs en el agua.**
-## _Lisandra - TP 1er cuatrimestre 2019_
+## _Lissandra - TP 1er cuatrimestre 2019_
 
 ### Integrantes: 
 * Cirillo Franco
