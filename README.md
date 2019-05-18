@@ -6,7 +6,7 @@
 * Diaz Mariano
 * Diaz Rodrigo
 * Maidana Daiana
-* Oviedo Facundo
+* Luquet Azul
 
 ------------
 #### Como usar:
