@@ -64,7 +64,6 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 	FD_SET(listener, &master); // agregamos a los fds que vigila select()
 	FD_SET(0, &master); // 0 es el fd de la consola
-	idsNuevaConexion->fd_out = 0;
 
 	// mantener cual es el fd mas grande (lo pide el seelct())
 	fdmax = listener; // por ahora es este
@@ -104,7 +103,13 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							idsNuevaConexion->fd_in = newfd;
 							strcpy(idsNuevaConexion->puerto, suPuerto);
 							strcpy(idsNuevaConexion->ip_proceso, suIP);
-
+							if(dictionary_get(conexionesConocidas, quienEs)==NULL){
+								idsNuevaConexion->fd_out = 0;
+							}
+							else {
+								identificador* miIdentificador = (identificador*) dictionary_get(conexionesConocidas, quienEs);
+								idsNuevaConexion->fd_out = miIdentificador->fd_out;
+							}
 							dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
 							list_add_in_index(auxiliarEntrantes, newfd, quienEs);
 							}
