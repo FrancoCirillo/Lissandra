@@ -10,12 +10,12 @@ int main() {
 
 	iniciar_log();
 
-	//iniciar_ejecutador();
+	iniciar_ejecutador();
 
 	RUN_FILE("p1.lql");
-	//RUN_FILE("p2.lql");
-	//RUN_FILE("p3.lql");
-	loggear("sleep 20");
+	RUN_FILE("p2.lql");
+	RUN_FILE("p3.lql");
+
 	sleep(20);
 	loggear("FIN");
 
@@ -42,7 +42,6 @@ void iniciar_consola(){
 void RUN_FILE(char *nombre_archivo){
 	loggear("RUN FILE!");
 	FILE *f=fopen(nombre_archivo,"r");
-
 	char line[64];
 	t_list* instrucciones = list_create();
 	proceso* p=malloc(sizeof(proceso));
@@ -51,21 +50,18 @@ void RUN_FILE(char *nombre_archivo){
 	p->instrucciones=instrucciones;
 	p->sig=NULL;
 	instr_t* nueva_instruccion;
-
 	loggear("Se ejecuto RUN, leyendo archivo!");
+
 	while(fgets(line,sizeof(line),f)){
-		//loggear("Leyendo instruccion!");
 		nueva_instruccion=leer_a_instruccion(line);
-		//loggear("Cargando instruccion");
 		list_add(p->instrucciones,nueva_instruccion);
-		//loggear("Instruccion agregada!");
 		p->size++;
 		loggear("Se agrego una instruccion!");
 		print_instruccion(nueva_instruccion);
 	}
 	fclose(f);
 	//encolo proceso
-	//TODO: Cambiar tipo de instrucciones y utilizar print instruccion
+	encolar_proceso(p);
 
 }
 void* consola(void* param){
@@ -79,8 +75,8 @@ void* consola(void* param){
 }
 
 void continuar_ejecucion(){
-	loggear("Enviando senial en 2 segundos");
-	sleep(2);
+	loggear("Enviando senial en 1 segundo");
+	sleep(1);
 	pthread_mutex_lock(&lock_ejecutar);
 	pthread_cond_signal(&cond_ejecutar);
 	pthread_mutex_unlock(&lock_ejecutar);
@@ -150,7 +146,7 @@ void* ejecutar_proceso(void* un_proceso){
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear("Se ejecuto correctamente la instruccion!, Respuesta=");
-				loggear(obtener_parametroN(respuesta,0));
+				loggear(obtener_parametroN(respuesta,1));
 				loggear("Fin de instruccion");
 			}else{
 
@@ -166,6 +162,8 @@ void* ejecutar_proceso(void* un_proceso){
 			sem_post(&mutex_cantidad_hilos);
 			return NULL;
 		}
+		printf("\n Fin de instruccion. Quantum restante: %d, Nro de instr: %d, Quantum: %d\n",configuracion.quantum-i,i,configuracion.quantum);
+
 	}
 	loggear("Fin de quantum, encolando o finalizando");
 
@@ -188,12 +186,12 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	return respuesta;
 }
 instr_t* enviar_i(instr_t* i){
-	loggear("ENVIANDO INSTRUCCION FAKE");
+	loggear("ENVIANDO INSTRUCCION FAKE ");
 	i->codigo_operacion=0;
 	i->timestamp=obtener_ts();
-	printf("\n ##### \n Instruccion enviada");
+	printf("##### \nInstruccion enviada");
 	print_instruccion(i);
-	printf("###########");
+	printf("####\n");
 	return i;
 }
 void encolar_o_finalizar_proceso(proceso* p){
@@ -245,9 +243,11 @@ proceso* obtener_sig_proceso(){
 instr_t* obtener_instruccion(proceso* p){
 	if(p->current==p->size){
 		return NULL;
+	}else{
+		instr_t* actual=(instr_t*)list_get(p->instrucciones,p->current);
+		p->current++;
+		return actual;
 	}
-	p->current++;
-	return (instr_t*)list_get(p->instrucciones,p->current);
 }
 
 int hilos_disponibles(){
