@@ -4,7 +4,7 @@
 
 int main() {
 
-	printf(COLOR_ANSI_VERDE"	PROCESO KERNEL"COLOR_ANSI_RESET"\n");
+	printf(COLOR_ANSI_VERDE"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
 
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
@@ -14,8 +14,8 @@ int main() {
 	inicializar_configuracion();
 
 	t_list * listaParam = list_create();
-	list_add(listaParam, "Memoria_1"); //Tabla
-	list_add(listaParam, IP_MEMORIA); //Key
+	list_add(listaParam, "Memoria_1");
+	list_add(listaParam, IP_MEMORIA);
 	list_add(listaParam, configuracion.PUERTO);
 	instr_t * miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
@@ -109,10 +109,7 @@ void ejecutar_instruccion_select(instr_t* instruccion){
 		}
 		else{
 			puts("La tabla no se encontro en Memoria. Consultando al FS");
-			if(dictionary_is_empty(conexionesActuales)) puts("Dicc vacio");
-			else puts("Diccio lleno");
 			int conexionFS= obtener_fd_out("FileSystem");
-			puts("Se tiene el fd_out");
 			enviar_request(instruccion, conexionFS);
 		}
 
@@ -164,7 +161,6 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 	case CONSOLA_KERNEL:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
-		puts("Enviando rta al kernel");
 		enviar_request(miInstruccion, conexionKernel);
 		break;
 	default:
@@ -187,18 +183,14 @@ void responderHandshake(identificador* idsConexionEntrante){
 	int fd_saliente =  crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_MEMORIA);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
-
 }
 
 int obtener_fd_out(char* proceso){
 	identificador* idsProceso = (identificador *) dictionary_get(conexionesActuales, proceso);
-	printf("IP %s\n", idsProceso->ip_proceso);
-	printf("Puerto %s\n", idsProceso->puerto);
-	printf("fd_out %d\n", idsProceso->fd_out);
-	printf("fd_in %d\n", idsProceso->fd_in);
-	if(idsProceso->fd_out==0){
-		printf("Es la primera vez que se le quiere enviar algo a %s\n", proceso);
+	if(idsProceso->fd_out==0){ //Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);
+		return idsProceso->fd_out;
 	}
+//	La conexion en el fd_out %d ya existia
 	return idsProceso->fd_out;
 }

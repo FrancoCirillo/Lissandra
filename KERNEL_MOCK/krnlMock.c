@@ -9,7 +9,7 @@
 
 int main() {
 
-	printf(COLOR_ANSI_CYAN"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
+	printf(COLOR_ANSI_CYAN"	PROCESO KERNEL"COLOR_ANSI_RESET"\n");
 
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
@@ -26,6 +26,7 @@ int main() {
 
 	int conexion_con_memoria =  crear_conexion(configuracion.MEMORIA_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL);
 	enviar_request(miInstruccion, conexion_con_memoria);
+
 	idsNuevasConexiones->fd_in = 0; //Por las moscas
 	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
 	strcpy(idsNuevasConexiones->ip_proceso, configuracion.MEMORIA_IP);
@@ -45,6 +46,7 @@ int main() {
 void ejecutar_instruccion(instr_t* instruccion, int fdEntrante){
 
 	switch(instruccion->codigo_operacion){
+	case CONSOLA_KRN_EXITO: ejecutar_instruccion_exito(instruccion); break;
 	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion); break;
 	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion); break;
 	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion); break;
@@ -88,10 +90,7 @@ void ejecutar_instruccion_exito(instr_t* instruccion){
 void ejecutar_instruccion_select(instr_t* instruccion){
 		puts("Ejecutando instruccion Select");
 		sleep(1);//Buscar
-		if(dictionary_is_empty(conexionesActuales)) puts("Dicc vacio");
-		else puts("Diccio lleno");
 		int conexionMemoria= obtener_fd_out("Memoria_1");
-		puts("Se tiene el fd_out");
 		enviar_request(instruccion, conexionMemoria);
 
 }
