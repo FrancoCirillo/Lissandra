@@ -12,6 +12,7 @@
 #include <sys/socket.h>
 #include <commons/log.h>
 #include <readline/readline.h>
+#include <commons/collections/dictionary.h>
 #include "tiempo.h"
 #include "definicionesConexiones.h"
 
@@ -37,5 +38,7 @@ cod_op quienEnvio(instr_t * instruccion);
 void imprimir_registro(instr_t* instruccion);
 void loggear_exito(instr_t* miInstruccion);
 void loggear_error(instr_t* miInstruccion);
+
+void imprimirConexiones(t_dictionary *);
 
 #endif /* SERIALIZACIONES_H_ */

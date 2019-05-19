@@ -4,7 +4,7 @@
 
 int main() {
 
-	printf(COLOR_ANSI_VERDE"	PROCESO KERNEL"COLOR_ANSI_RESET"\n");
+	printf(COLOR_ANSI_VERDE"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
 
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
@@ -110,7 +110,6 @@ void ejecutar_instruccion_select(instr_t* instruccion){
 		else{
 			puts("La tabla no se encontro en Memoria. Consultando al FS");
 			if(dictionary_is_empty(conexionesActuales)) puts("Dicc vacio");
-			else puts("Diccio lleno");
 			int conexionFS= obtener_fd_out("FileSystem");
 			puts("Se tiene el fd_out");
 			enviar_request(instruccion, conexionFS);
@@ -187,10 +186,12 @@ void responderHandshake(identificador* idsConexionEntrante){
 	int fd_saliente =  crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_MEMORIA);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
+	printf("En la siguiente línea debería decir %d\n", fd_saliente);
 
 }
 
 int obtener_fd_out(char* proceso){
+	printf("Proceso: %s\n", proceso);
 	identificador* idsProceso = (identificador *) dictionary_get(conexionesActuales, proceso);
 	printf("IP %s\n", idsProceso->ip_proceso);
 	printf("Puerto %s\n", idsProceso->puerto);
@@ -199,6 +200,9 @@ int obtener_fd_out(char* proceso){
 	if(idsProceso->fd_out==0){
 		printf("Es la primera vez que se le quiere enviar algo a %s\n", proceso);
 		responderHandshake(idsProceso);
+		printf("Por lo tanto el nuevo fd_out es %d\n", idsProceso->fd_out);
+		return idsProceso->fd_out;
 	}
+	printf("La conexion en el fd_out %d ya existia\n", idsProceso->fd_out);
 	return idsProceso->fd_out;
 }

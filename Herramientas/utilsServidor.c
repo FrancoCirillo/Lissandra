@@ -87,7 +87,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						newfd = accept(listener, (struct sockaddr *) &remoteaddr, &addrlen);
 						if (newfd == -1) {
 							perror("accept");
-						} else {
+						} else{
 							char* ipCliente = ip_cliente(remoteaddr);
 							printf( "\nConexion al file desctiptor '%d' aceptada!, el accept() creo el nuevo fd '%d'.\n"
 									"El IP del conectado es %s\n", i, newfd, ipCliente);
@@ -98,21 +98,32 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							recibir_request(newfd, &instruccion_handshake);
 
 							char* quienEs = (char*) list_get(instruccion_handshake->parametros, 0); //El nombre
-							char* suIP = (char*) list_get(instruccion_handshake->parametros, 1); //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
-							char* suPuerto = (char*) list_get(instruccion_handshake->parametros, 2); //Su Puerto
-							idsNuevaConexion->fd_in = newfd;
-							strcpy(idsNuevaConexion->puerto, suPuerto);
-							strcpy(idsNuevaConexion->ip_proceso, suIP);
-							if(dictionary_get(conexionesConocidas, quienEs)==NULL){
-								idsNuevaConexion->fd_out = 0;
-							}
-							else {
+							printf("quienEs: %s\n", quienEs);
+
+							if(dictionary_get(conexionesConocidas, quienEs)!=NULL){ //Ya lo conocia, no tenia su fd_in
+								puts("Ya estaba en el diccionario (Pero creo que no tenia su fd_in)");
 								identificador* miIdentificador = (identificador*) dictionary_get(conexionesConocidas, quienEs);
-								idsNuevaConexion->fd_out = miIdentificador->fd_out;
+								miIdentificador->fd_in = newfd;
+								dictionary_put(conexionesConocidas, quienEs, miIdentificador);//Hace falta? O al cambiar lo apuntado por el puntero ya esta?
+								printf("Se agrego %s al diccionario.\n", quienEs);
 							}
-							dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
+							else{
+								puts("No se lo conocía; se puso su fd_out en 0");
+								char* suIP = (char*) list_get(instruccion_handshake->parametros, 1); //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
+								char* suPuerto = (char*) list_get(instruccion_handshake->parametros, 2); //Su Puerto
+								printf("suIP:%s\nsuPuerto:%s\nfd_in:%d\n",suIP, suPuerto, newfd);
+
+								strcpy(idsNuevaConexion->puerto, suPuerto);
+								strcpy(idsNuevaConexion->ip_proceso, suIP);
+								idsNuevaConexion->fd_in = newfd;
+								idsNuevaConexion->fd_out = 0;
+								dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
+
+								printf("Se agrego %s al diccionario.\n", quienEs);
+							}
+							imprimirConexiones(conexionesConocidas);
 							list_add_in_index(auxiliarEntrantes, newfd, quienEs);
-							}
+						}
 					}
 					else if(i == 0){ //Recibido desde la consola
 						fgets(bufferLeido, 100, stdin);
@@ -130,6 +141,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						}
 
 						else { //Por fin:
+							//char* quienLoEnvia = list_get(auxiliarEntrantes, i);
 							ejecutar_requestRecibido(instrcuccion_recibida, i);
 						}
 

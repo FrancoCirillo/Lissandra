@@ -324,4 +324,14 @@ void loggear_exito(instr_t* miInstruccion){
 	printf("%s\n", (char*) list_get(miInstruccion->parametros, 0));
 }
 
-
+void imprimirConexiones(t_dictionary * conexAc){
+	puts("Conexiones conocidas:");
+	void iterator(char* key, identificador* idsProceso){
+		printf("Proceso: %s\n", key);
+		printf("IP %s\n", idsProceso->ip_proceso);
+		printf("Puerto %s\n", idsProceso->puerto);
+		printf("fd_out %d\n", idsProceso->fd_out);
+		printf("fd_in %d\n", idsProceso->fd_in);
+	}
+	dictionary_iterator(conexAc, (void*) iterator);
+}
