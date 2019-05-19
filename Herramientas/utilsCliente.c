@@ -2,47 +2,6 @@
 
 #include "utilsCliente.h"
 
-int conectar_con_proceso(cod_proceso proceso, cod_proceso procesoCliente){
-	char* ip_proceso; //IP del Servidor
-	char* ip_cliente;
-	//	char* puerto_proceso; TODO
-
-		switch (proceso) {
-		case (KERNEL):
-			ip_proceso = strdup(IP_KERNEL);
-			break;
-		case(FILESYSTEM):
-			ip_proceso = strdup(IP_FILESYSTEM);
-			break;
-		case(MEMORIA):
-			ip_proceso = strdup(IP_MEMORIA);
-			break;
-		default:
-	//TODO	log_warning(logger, "ERROR!");
-			puts("EL CODIGO DEL PROCESO NO ES CORRECTO");
-			break;
-		}
-		switch (procesoCliente) {
-		case (KERNEL):
-			ip_cliente = strdup(IP_KERNEL);
-			break;
-		case(FILESYSTEM):
-			ip_cliente = strdup(IP_FILESYSTEM);
-			break;
-		case(MEMORIA):
-			ip_cliente = strdup(IP_MEMORIA);
-			break;
-		default:
-	//TODO	log_warning(logger, "ERROR!");
-			puts("EL CODIGO DEL PROCESO NO ES CORRECTO");
-			break;
-		}
-
-		puts("Creando conexion...");
-
-		//conexion es el socket_cliente
-		return crear_conexion(ip_proceso, PORT, ip_cliente);
-}
 //Conecta el socket_cliente con el Servidor con ip ip y puerto puerto.
 int crear_conexion(char *ip, char* puerto, char* miIP)
 {
@@ -79,13 +38,13 @@ int crear_conexion(char *ip, char* puerto, char* miIP)
 	bind(socket_cliente, (struct sockaddr *)&localaddr, sizeof(localaddr));
 
 	//ai_addr contiene el puerto e ip del servidor
-	while(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1){
-		puts("Error: no se pudo conectar con el Servidor, reintentando...");
-		sleep(2); //TODO: log de error
+	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1){
+		puts("El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n");
+		while(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1);
 	}
 	freeaddrinfo(server_info);
 
-	puts("Conectado como Cliente");
+//	printf("Ya se pueden enviar instrucciones a %s\n", ip); //Debug
 	//una vez conectado, se pueden enviar cosas a traves del socket_cliente
 	return socket_cliente;
 }

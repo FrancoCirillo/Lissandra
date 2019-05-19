@@ -4,13 +4,22 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../fileSystem.c 
+../Estructuras.c \
+../compactador.c \
+../fileSystem.c \
+../memtable.c 
 
 OBJS += \
-./fileSystem.o 
+./Estructuras.o \
+./compactador.o \
+./fileSystem.o \
+./memtable.o 
 
 C_DEPS += \
-./fileSystem.d 
+./Estructuras.d \
+./compactador.d \
+./fileSystem.d \
+./memtable.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -2,20 +2,48 @@
 
 #include "memoria.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
-	printf(COLOR_ANSI_CYAN"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
 
+	if(argc<2 || strcmp(argv[1], "4")==0 || strcmp(argv[1], "2")==0){
+		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
+		puts("Tampoco se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
+		puts("Tampoco se puede elegir el numero 2 porque es el IP que (Por el momento, testing) usa el FS");
+
+		exit(0);
+	}
+	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
+
+	idsNuevasConexiones = malloc(sizeof(identificador));
 
 	inicializar_configuracion();
 
+	t_list * listaParam = list_create();
 
-	int listenner = iniciar_servidor(IP_MEMORIA, PORT);
+	sprintf(nombreDeMemoria,"Memoria_%s", argv[1]);
 
-	int conexion_con_fs = conectar_con_proceso(FILESYSTEM, MEMORIA);
-	vigilar_conexiones_entrantes(listenner, callback, conexion_con_fs, CONSOLA_MEMORIA);
+	printf(COLOR_ANSI_VERDE"	PROCESO %s\n"COLOR_ANSI_RESET, nombreDeMemoria);
 
+	sprintf(miIPMemoria,"127.0.0.%s", argv[1]);
+	printf("IP Memoria: %s.\n", miIPMemoria);
+
+	list_add(listaParam, nombreDeMemoria);
+	list_add(listaParam, miIPMemoria);
+	list_add(listaParam, configuracion.PUERTO);
+	instr_t * miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+
+	int conexion_con_fs =  crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria);
+	enviar_request(miInstruccion, conexion_con_fs);
+	idsNuevasConexiones->fd_in = 0; //Por las moscas
+	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_FS);
+	strcpy(idsNuevasConexiones->ip_proceso, configuracion.IP_FS);
+	idsNuevasConexiones->fd_out = conexion_con_fs;
+	dictionary_put(conexionesActuales, "FileSystem", idsNuevasConexiones);
+
+	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO);
+
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
 
 	//config_destroy(g_config);
 
@@ -58,94 +86,96 @@ char* obtener_por_clave(char* ruta, char* clave) {
 }
 
 
-void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion(instr_t* instruccion, char* remitente){
 
 	switch(instruccion->codigo_operacion){
 	case CONSOLA_MEM_SELECT:
-	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion); break;
 	case CONSOLA_KRN_RTA_SELECT:
-	case CONSOLA_MEM_RTA_SELECT: ejecutar_instruccion_devolucion_select(instruccion, conexionReceptor); break;
+	case CONSOLA_MEM_RTA_SELECT: ejecutar_instruccion_devolucion_select(instruccion); break;
 	case CONSOLA_MEM_INSERT:
-	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion); break;
 	case CONSOLA_MEM_CREATE:
-	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion); break;
 	case CONSOLA_MEM_DESCRIBE:
-	case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion); break;
 	case CONSOLA_MEM_DROP:
-	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion); break;
 	case CONSOLA_MEM_JOURNAL:
-	case CONSOLA_KRN_JOURNAL: ejecutar_instruccion_journal(instruccion, conexionReceptor); break;
+	case CONSOLA_KRN_JOURNAL: ejecutar_instruccion_journal(instruccion); break;
 	default: break;
 	}
 }
 
-void ejecutar_instruccion_select(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion_select(instr_t* instruccion){
 		puts("Ejecutando instruccion Select");
 		int seEncontro = 0; //No cambiar hasta que se implemente conexionKERNEL
 		sleep(1);//Buscar
 		if(seEncontro){
+			//Directo para el Kernel
 			t_list * listaParam = list_create();
-			list_add(listaParam, "Se encontro Tabla1 | 3 | MmMmMMMm");
-			enviar_a_quien_corresponda(CODIGO_EXITO, instruccion, listaParam, conexionReceptor); //Seria conexionKERNEL, Falta implementar
+			char cadena [400];
+			sprintf(cadena, "%s%s%s%s%s%s%s%u","Se encontro ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
+			list_add(listaParam, cadena);
+
+			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 
 		}
 		else{
 			puts("La tabla no se encontro en Memoria. Consultando al FS");
-			enviar_request(instruccion, conexionReceptor);
+			int conexionFS= obtener_fd_out("FileSystem");
+			enviar_request(instruccion, conexionFS);
 		}
 
 }
 
 
-void ejecutar_instruccion_devolucion_select(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion_devolucion_select(instr_t* instruccion){
 	puts("Select realizado en FS, se guardo la siguiente tabla en la memoria:");
 	print_instruccion(instruccion);
 	t_list * listaParam = list_create();
 	char cadena [400];
 	sprintf(cadena, "%s%s%s%s%s%s%s%u","Se encontro ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
 	list_add(listaParam, cadena);
-	enviar_a_quien_corresponda(CODIGO_EXITO, instruccion,  listaParam, conexionReceptor);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,  listaParam);
 }
 
-void ejecutar_instruccion_insert(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion_insert(instr_t* instruccion){
 	puts("Ejecutando instruccion Insert");
 }
 
 
-void ejecutar_instruccion_create(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion_create(instr_t* instruccion){
 	puts("Ejecutando instruccion Create");
 }
 
 
-void ejecutar_instruccion_describe(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion_describe(instr_t* instruccion){
 	puts("Ejecutando instruccion Describe");
 }
 
 
-void ejecutar_instruccion_drop(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion_drop(instr_t* instruccion){
 	puts("Ejecutando instruccion Drop");
 }
 
 
-void ejecutar_instruccion_journal(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion_journal(instr_t* instruccion){
 	puts("Ejecutando instruccion Journal");
 }
 
-void ejecutar_instruccion_exito(instr_t* instruccion, int conexionReceptor){
+void ejecutar_instruccion_exito(instr_t* instruccion){
 	puts("Instruccion exitosa:");
 	print_instruccion(instruccion);
 }
 
-
-
-void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, int conexionReceptor){
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam){
 	instr_t * miInstruccion;
 	switch(quienEnvio(instruccion)){
 	case CONSOLA_KERNEL:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
-		puts("Esto se debio mandar al Kernel:");
-		print_instruccion(miInstruccion);
-//		enviar_request(miInstruccion, conexionReceptor);
+		int conexionKernel = obtener_fd_out("Kernel");
+		enviar_request(miInstruccion, conexionKernel);
 		break;
 	default:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion , listaParam);
@@ -156,7 +186,25 @@ void enviar_a_quien_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 }
 
+//hace el connect!!
+void responderHandshake(identificador* idsConexionEntrante){
+	t_list * listaParam = list_create();
+	list_add(listaParam, nombreDeMemoria);
+	list_add(listaParam, miIPMemoria);
+	list_add(listaParam, configuracion.PUERTO);
+	instr_t * miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
+	int fd_saliente =  crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPMemoria);
+	enviar_request(miInstruccion, fd_saliente);
+	idsConexionEntrante->fd_out = fd_saliente;
+}
 
-
-
+int obtener_fd_out(char* proceso){
+	identificador* idsProceso = (identificador *) dictionary_get(conexionesActuales, proceso);
+	if(idsProceso->fd_out==0){ //Es la primera vez que se le quiere enviar algo a proceso
+		responderHandshake(idsProceso);
+		return idsProceso->fd_out;
+	}
+//	La conexion en el fd_out %d ya existia
+	return idsProceso->fd_out;
+}

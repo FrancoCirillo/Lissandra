@@ -16,16 +16,21 @@
 #include <commons/string.h>
 #include <readline/readline.h>
 #include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/hilos.h"
+#include "Estructuras.h"
+#include "compactador.h"
+#include "memtable.h"
 
 //ORDEN PARAMETROS
 
 //SELECT [NOMBRE_TABLA] [KEY]
-//INSERT [NOMBRE_TABLA] [KEY] “[VALUE]” [Timestamp]     <- opcional el timestamp?
+//INSERT [NOMBRE_TABLA] [KEY] “[VALUE]” [Timestamp]
 //CREATE [NOMBRE_TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
-//DESCRIBE [NOMBRE_TABLA]    <- opcional el param.
+//DESCRIBE [NOMBRE_TABLA]
 //DROP [NOMBRE_TABLA]
 
 
@@ -33,18 +38,22 @@
 #define RUTA_BLOQUES "mnj/Lissandra_FS/Bloques/"
 #define RUTA_PUNTO_MONTAJE "mnj/Lissandra_FS/"
 
-
-t_log* g_logger;
-t_config* g_config;
-
 typedef long int mseg_t;
+
+/*SEMAFOROS*/
+sem_t mutex_tiempo_dump_config;
+sem_t mutex_tiempo_retardo_config;
+sem_t mutex_memtable;
+sem_t mutex_log;
 
 
 /*STRUCTS*/
+
 typedef struct archivo_t{
 	int size;
 	int blocks[];
 }archivo_t;
+
 
 typedef struct metadata_t{
 char * consistency;
@@ -52,68 +61,46 @@ char * partitions;
 mseg_t compactation_time;
 }metadata_t;
 
-typedef struct archivo_config_FS_t{
+
+typedef struct config_FS_t{
 char* puerto_escucha;
 char* punto_montaje;
 int tamanio_value;
 mseg_t retardo;
 mseg_t tiempo_dump;
-}archivo_config_FS_t;
-//Recordar que los ultimos 2 son modificables. Inotify()    No creo que sea necesario el struct.
-//Grabar valores correctos. y poder leerlos.
+}config_FS_t;
 
-
-
-typedef struct registro_t{
-	//u_int16 key;			//TODO ver este tipo.
-	char* value;
-	mseg_t timestamp;
-}registro;
 
 typedef struct metadata_FS_t{
 	int block_size;
 	int blocks;
 	char* magic_number;
-}tabla;
+}metadata_FS_t;
 
 
-archivo_config_FS_t config_FS;
+config_FS_t config_FS;
+metadata_FS_t Metadata_FS;
+
 t_log* g_logger;
 t_config* g_config;
-							/*ARCHIVOS*/
+t_config* meta_config;
 
-void loggear_FS(char*);
-void inicializarConfig(void);
-void crear_config();
-char* obtener_clave(char* ruta, char* key);
+void inicializar_FS();
+void finalizar_FS();
+void iniciar_semaforos();
 
-char* leerMetadata_FS();		//TODO hacer, es un único archivo
-
-void  crear_directorio(char *);
-FILE* crear_archivo(char*, char*, char*);
-void  crear_particiones(char*);
-void  crear_bloque(char*);
-void  crear_bloques();
-void  crear_metadata(char*, char*, char*, char*);
-
-int existe_Tabla(char * );
-
-void archivo_inicializar(FILE *);
-void metadata_inicializar(FILE*, char*, char*, char*);
 
 							/*MANEJO INTRUCCIONES*/
 
 void evaluar_instruccion(remitente_instr_t*);
-void execute_create(instr_t*);
-void execute_insert(instr_t*);
-void execute_select(instr_t*);
-void execute_describe(instr_t*);
-void execute_drop(instr_t*);
-instr_t* i_create(instr_t *);
-instr_t* i_insert(instr_t *);
-instr_t* i_select(instr_t *);
-instr_t* i_describe(instr_t *);
-instr_t* i_drop(instr_t *);
+int execute_create(instr_t*);
+int execute_insert(instr_t*);
+int execute_select(instr_t*);
+int execute_describe(instr_t*);
+int execute_drop(instr_t*);
+
+char* obtener_parametro(instr_t* ,int );
+
 
 							/*MANEJO DE CADENAS*/
 
@@ -121,11 +108,9 @@ char* concat(char*, char*);
 char* concat3( char* , char*, char*);
 
 							/*Comunicación*/
-void response(remitente_t*);
-
-							/*Compactación*/
-void* compactar(instr_t*);
-void compactation(char*);
+//eliminar
+//void response(remitente_t*);
+void contestar(remitente_instr_t * );
 
 
 #endif /* FILE_SYSTEM_H */
