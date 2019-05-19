@@ -45,9 +45,17 @@ int existe_Tabla(char * nombre_tabla){
 
 
 
+
+
+
+
+//*****************************************************************
+//De aca para abajo estan corregidos y funcionan sin memory leaks.
+//*****************************************************************
+
+
 int crear_particiones(char * tabla, int cantidad){
 	FILE* f;
-	//int cantidad = 10;   //Esto lo debe leer del metadata de ESA TABLA.
 	char * nomb_part ;
 	for(int i = 1; i <= cantidad; i++){
 		char* num=string_itoa(i);
@@ -70,11 +78,6 @@ int crear_particiones(char * tabla, int cantidad){
 	return 1;
 }
 
-
-
-//*****************************************************************
-//De aca para abajo estan corregidos y funcionan sin memory leaks.
-//*****************************************************************
 
 int crear_metadata(instr_t* i){
 	char* tabla=obtener_parametro(i,0);

@@ -9,20 +9,17 @@ int main() {
 
 
 
-
-
-	//	CREATE
+	//CREATE
 	//[TABLA]
 	//[TIPO_CONSISTENCIA]
 	//[NUMERO_PARTICIONES]
 	//[COMPACTION_TIME]
+
 	loggear_FS("Ejecutamos Instruccion CREATE");
 	instr_t* instr=malloc(sizeof(instr_t));
 	instr->timestamp = obtener_ts();
 	instr->codigo_operacion = CODIGO_CREATE;
 	instr->parametros = list_create();
-
-
 
 	list_add(instr->parametros,"Una Tablita chica" );
 	list_add(instr->parametros,"SC" );
@@ -277,7 +274,4 @@ char* concat3( char *s1, char *s2, char * s3){
 	strcat(result, s3);
 	return result;
 }
-
-
-
 
