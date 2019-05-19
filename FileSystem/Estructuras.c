@@ -13,30 +13,31 @@ int existe_Tabla(char * nombre_tabla){
 
 //Todo
 /*
+ * existe tabla
  * eliminar carpeta
  * eliminar directorio
- * metadata_modificar_size();	//escribir nuevo numero en el archivo.
- * metadata_agregar_bloque();    //en el array
- * metadata_liberar_bloque();	//en el array
+ * copiar archivo (para los tmpc)
+ * archivo_modificar_size();	//escribir nuevo numero en el archivo.
+ * archivo_agregar_bloque();    //en el array de un archivo
+ * archivo_liberar_bloque();	//en el array de un archivo
  * bloque disponible (bits arrays)
- * archivo de config, actualizar.
  * semaforos!
  *
  * */
 
 
-int crear_directorio(char * nomb){
+int crear_directorio(char* ruta,char * nomb){
 
 	//string_to_upper(nomb);   No me funciona (??)
-	char*ruta = concat(RUTA_TABLAS, nomb);
-	if(!mkdir(ruta, S_IRWXU)){
-		printf("Se creó correctamente la carpeta: %s \n", nomb);
-		free(ruta);
+	char*ruta_dir = concat(ruta, nomb);
+	if(!mkdir(ruta_dir, S_IRWXU)){
+		printf("Se creó correctamente la carpeta %s en el directorio %s\n", nomb, ruta);
+		free(ruta_dir);
 		return 1;
 	}
 	else{
 		printf("No se pudo crear la carpeta: %s \n", nomb);
-		free(ruta);
+		free(ruta_dir);
 		return 0;
 	}
 	 //Concat hace un malloc. Aca tiene que haber un free
@@ -58,6 +59,7 @@ void crear_particiones(char * tabla){
 	FILE* f;
 	int cantidad = 10;   //Esto lo debe leer del metadata de ESA TABLA.
 	for(int i = 1; i <= cantidad; i++){
+		//creo que este char de abajo esta mal, hace memory leak en cada iteracion.. arreglar.
 		char * nomb_part = concat("Part_", string_itoa(i));
 		f = crear_archivo(nomb_part, tabla, ".bin");
 		archivo_inicializar(f);
@@ -93,7 +95,7 @@ void archivo_inicializar(FILE* f){
 
 	char* bloque_num_s = string_itoa(bloque_num);
 	char* cadena = malloc(sizeof(char)*(20+strlen(bloque_num_s))+1);
-	sprintf(cadena, "%s%s%s%s%s","SIZE = ",string_itoa(5), "\nBlocks = [", bloque_num_s, "]\n");
+	sprintf(cadena, "%s%s%s%s%s","SIZE = ",string_itoa(0), "\nBlocks = [", bloque_num_s, "]\n");
 	fwrite(cadena, sizeof(char), strlen(cadena)+1,f);
 	free(cadena);
 	free(bloque_num_s);
@@ -121,13 +123,6 @@ void metadata_inicializar(FILE* f, instr_t* i){
 	free(cadena);
 }
 
-//Lo viejo
-//char* cadena = malloc(sizeof(char)*(50+strlen(consist) + strlen(part) + strlen(time))+1);
-//sprintf(cadena, "%s%s%s%s%s%s%s","CONSISTENCY = ",consist, "\nPARTITIONS = ", part, "\nCOMPACTATION_TIME = ", time, "\n");
-//fwrite(cadena, sizeof(char), strlen(cadena)+1,f);
-//free(cadena);
-
-
 
 // poner semaforos
 void loggear_FS(char *valor) {
@@ -138,17 +133,17 @@ void loggear_FS(char *valor) {
 	log_destroy(g_logger);
 }
 
-char* leer_config(char* clave) {
+
+char* obtener_por_clave(char* ruta, char* clave) {
 	char* valor;
-	g_config = config_create("Lissandra.config");
+	//g_config = config_create(ruta); // ya esta creado el archivo de config.
 	valor = config_get_string_value(g_config, clave);
-	config_destroy(g_config);
+
 	return valor;
 }
 
-
-//TODO FALTA Terminarlo bien. Dejarlo listo.
-void inicializarConfig(void){
+//ver tipo de dato TS
+void inicializar_configuracion(void){
 	g_config = config_create("Lissandra.config");
 	config_FS.punto_montaje = config_get_string_value(g_config, "PUNTO_MONTAJE");
 	config_FS.puerto_escucha = config_get_string_value(g_config, "PUERTO_ESCUCHA");
@@ -157,22 +152,46 @@ void inicializarConfig(void){
 	config_FS.tiempo_dump = config_get_int_value(g_config, "TIEMPO_DUMP");
 }
 
-void actualizar_configuracion(){
 
-	g_config = config_create("Lissandra.config");
+void actualizar_tiempo_dump_config(char* value){
 
-	//sem_wait(&mutex_tiempo_retardo);
-	config_FS.retardo = config_get_int_value(g_config, "RETARDO");
-	//sem_post(&mutex_tiempo_retardo);
-
-	//sem_wait(&mutex_tiempo_dump);
+	config_set_value(g_config, "TIEMPO_DUMP", value);
+	sem_wait(&mutex_tiempo_dump_config);
 	config_FS.tiempo_dump = config_get_int_value(g_config, "TIEMPO_DUMP");
-	//sem_post(&mutex_tiempo_dump);
-	//Hacer
-	//tener cuidado con los memory leaks, cuando reemplazo strings.
+	sem_post(&mutex_tiempo_dump_config);
+
 }
-//void iniciar_semaforos(){
-//	sem_init(&mutex_tiempo_dump,0,1);
-//	sem_init(&mutex_tiempo_retardo,0,1);
-//}
+
+void actualizar_tiempo_retardo_config(char* value){
+
+	config_set_value(g_config, "TIEMPO_RETARDO", value);
+	sem_wait(&mutex_tiempo_retardo_config);
+	config_FS.retardo = config_get_int_value(g_config, "RETARDO");
+	sem_post(&mutex_tiempo_retardo_config);
+
+}
+
+
+void inicializar_directorios(){
+
+	crear_directorio("mnj/Lissandra_FS/","Tablas");
+	crear_directorio("mnj/Lissandra_FS/","Bloques"); //vacias
+	leer_metadata_FS();
+
+}
+
+void leer_metadata_FS(){
+
+	char*ruta= "mnj/Lissandra_FS/Metadata/Metadata.bin";
+	meta_config = config_create(ruta);
+	Metadata_FS.block_size= config_get_int_value(meta_config, "BLOCK_SIZE");
+	Metadata_FS.blocks= config_get_int_value(meta_config, "BLOCKS");
+	Metadata_FS.magic_number= config_get_string_value(meta_config, "MAGIC_NUMBER");
+
+}
+
+
+int obtener_tiempo_dump_config(){
+	return config_FS.tiempo_dump *1000;
+}
 

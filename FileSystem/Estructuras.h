@@ -13,12 +13,17 @@
 							/*ARCHIVOS*/
 
 void loggear_FS(char*);
-void inicializarConfig(void);
-char* leer_config(char* );
+void inicializar_configuracion(void);
+void inicializar_directorios(void);
+void actualizar_tiempo_retardo_config(char*);
+void actualizar_tiempo_dump_config(char*);
+char* obtener_por_clave(char* , char* );
+int obtener_tiempo_dump_config();
 
-char* leerMetadata_FS();		//es un único archivo
 
-int  crear_directorio(char *);
+void leer_metadata_FS();		//es un único archivo
+
+int  crear_directorio(char *,char *);
 FILE* crear_archivo(char*, char*, char*);
 void  crear_particiones(char*);
 void  crear_bloque(char*);
