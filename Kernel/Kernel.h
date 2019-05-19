@@ -26,7 +26,6 @@ typedef long int mseg_t;
 
 
 typedef struct proceso{
-
 	int current;
 	int size;
 	t_list* instrucciones;

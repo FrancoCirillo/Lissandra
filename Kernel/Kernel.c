@@ -10,11 +10,12 @@ int main() {
 
 	iniciar_log();
 
-	iniciar_ejecutador();
-	RUN_FILE("p1.lql");
-	RUN_FILE("p2.lql");
-	RUN_FILE("p3.lql");
+	//iniciar_ejecutador();
 
+	RUN_FILE("p1.lql");
+	//RUN_FILE("p2.lql");
+	//RUN_FILE("p3.lql");
+	loggear("sleep 20");
 	sleep(20);
 	loggear("FIN");
 
@@ -24,11 +25,13 @@ int main() {
 	return 0;
 }
 void iniciar_ejecutador(){
+	loggear("Se inicia ejecutador");
 	pthread_t hilo_ejecutador;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador,&attr,ejecutar,NULL);
 	pthread_detach(hilo_ejecutador);
+	loggear("Ejecutador iniciado");
 }
 void iniciar_consola(){
 	pthread_t un_hilo;
@@ -37,18 +40,27 @@ void iniciar_consola(){
 	pthread_join(un_hilo,NULL);
 }
 void RUN_FILE(char *nombre_archivo){
-
+	loggear("RUN FILE!");
 	FILE *f=fopen(nombre_archivo,"r");
+
 	char line[64];
-	proceso* p;
+	t_list* instrucciones = list_create();
+	proceso* p=malloc(sizeof(proceso));
 	p->current=0;
 	p->size=0;
+	p->instrucciones=instrucciones;
+	p->sig=NULL;
 	instr_t* nueva_instruccion;
+
+	loggear("Se ejecuto RUN, leyendo archivo!");
 	while(fgets(line,sizeof(line),f)){
+		//loggear("Leyendo instruccion!");
 		nueva_instruccion=leer_a_instruccion(line);
+		//loggear("Cargando instruccion");
 		list_add(p->instrucciones,nueva_instruccion);
+		//loggear("Instruccion agregada!");
 		p->size++;
-		loggear("Se agrega una instruccion...");
+		loggear("Se agrego una instruccion!");
 		print_instruccion(nueva_instruccion);
 	}
 	fclose(f);
@@ -280,7 +292,7 @@ char* obtener_por_clave(char* ruta, char* key) {
 	char* valor;
 	g_config = config_create(ruta);
 	valor = config_get_string_value(g_config, key);
-	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------",key,valor);
+	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------\n",key,valor);
 	//config_destroy(g_config);
 	return valor;
 }
