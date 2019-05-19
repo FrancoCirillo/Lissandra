@@ -2,10 +2,16 @@
 
 #include "memoria.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
-	printf(COLOR_ANSI_VERDE"	PROCESO MEMORIA"COLOR_ANSI_RESET"\n");
 
+	if(argc<2 || strcmp(argv[1], "4")==0 || strcmp(argv[1], "2")==0){
+		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
+		puts("Tampoco se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
+		puts("Tampoco se puede elegir el numero 2 porque es el IP que (Por el momento, testing) usa el FS");
+
+		exit(0);
+	}
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
 
@@ -14,12 +20,20 @@ int main() {
 	inicializar_configuracion();
 
 	t_list * listaParam = list_create();
-	list_add(listaParam, "Memoria_1");
-	list_add(listaParam, IP_MEMORIA);
+
+	sprintf(nombreDeMemoria,"Memoria_%s", argv[1]);
+
+	printf(COLOR_ANSI_VERDE"	PROCESO %s\n"COLOR_ANSI_RESET, nombreDeMemoria);
+
+	sprintf(miIPMemoria,"127.0.0.%s", argv[1]);
+	printf("IP Memoria: %s.\n", miIPMemoria);
+
+	list_add(listaParam, nombreDeMemoria);
+	list_add(listaParam, miIPMemoria);
 	list_add(listaParam, configuracion.PUERTO);
 	instr_t * miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int conexion_con_fs =  crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, IP_MEMORIA);
+	int conexion_con_fs =  crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria);
 	enviar_request(miInstruccion, conexion_con_fs);
 	idsNuevasConexiones->fd_in = 0; //Por las moscas
 	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_FS);
@@ -27,7 +41,7 @@ int main() {
 	idsNuevasConexiones->fd_out = conexion_con_fs;
 	dictionary_put(conexionesActuales, "FileSystem", idsNuevasConexiones);
 
-	int listenner = iniciar_servidor(IP_MEMORIA, configuracion.PUERTO);
+	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO);
 
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
 
@@ -72,7 +86,7 @@ char* obtener_por_clave(char* ruta, char* clave) {
 }
 
 
-void ejecutar_instruccion(instr_t* instruccion, int fdEntrante){
+void ejecutar_instruccion(instr_t* instruccion, char* remitente){
 
 	switch(instruccion->codigo_operacion){
 	case CONSOLA_MEM_SELECT:
@@ -89,6 +103,9 @@ void ejecutar_instruccion(instr_t* instruccion, int fdEntrante){
 	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion); break;
 	case CONSOLA_MEM_JOURNAL:
 	case CONSOLA_KRN_JOURNAL: ejecutar_instruccion_journal(instruccion); break;
+	case CONSOLA_MEM_EXITO:
+	case CONSOLA_KRN_EXITO: ejecutar_instruccion_exito(instruccion); break;
+
 	default: break;
 	}
 }
@@ -138,6 +155,9 @@ void ejecutar_instruccion_create(instr_t* instruccion){
 
 void ejecutar_instruccion_describe(instr_t* instruccion){
 	puts("Ejecutando instruccion Describe");
+	puts("La tabla no se encontro en Memoria. Consultando al FS");
+	int conexionFS= obtener_fd_out("FileSystem");
+	enviar_request(instruccion, conexionFS);
 }
 
 
@@ -151,8 +171,7 @@ void ejecutar_instruccion_journal(instr_t* instruccion){
 }
 
 void ejecutar_instruccion_exito(instr_t* instruccion){
-	puts("Instruccion exitosa:");
-	print_instruccion(instruccion);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, instruccion->parametros);
 }
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam){
@@ -175,12 +194,12 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 //hace el connect!!
 void responderHandshake(identificador* idsConexionEntrante){
 	t_list * listaParam = list_create();
-	list_add(listaParam, "Memoria_1"); //Tabla
-	list_add(listaParam, IP_MEMORIA); //Key
+	list_add(listaParam, nombreDeMemoria);
+	list_add(listaParam, miIPMemoria);
 	list_add(listaParam, configuracion.PUERTO);
 	instr_t * miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente =  crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_MEMORIA);
+	int fd_saliente =  crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPMemoria);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }

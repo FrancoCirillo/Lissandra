@@ -39,12 +39,12 @@ int crear_conexion(char *ip, char* puerto, char* miIP)
 
 	//ai_addr contiene el puerto e ip del servidor
 	if(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1){
-		puts("\n El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n");
+		puts("El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n");
 		while(connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1);
 	}
 	freeaddrinfo(server_info);
 
-	printf("Ya se pueden enviar instrucciones a %s\n", ip);
+//	printf("Ya se pueden enviar instrucciones a %s\n", ip); //Debug
 	//una vez conectado, se pueden enviar cosas a traves del socket_cliente
 	return socket_cliente;
 }

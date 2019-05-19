@@ -1,172 +1,114 @@
 //---------kernel.c---------
 
 #include "Kernel.h"
-void* consola(void *param);
-// Declaration of thread condition variable
-pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
-// declaring mutex
-pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
-sem_t mutex_cantidad_hilos;
-sem_t mutex_log;
-void ejemplo_procesos();
+
 int main() {
-	inicializarConfiguracion();
-	//RUN("test.lql");
 
-	ejemplo_procesos();
-	sleep(100);
-	loggear("FIN");
-
-	//	pthread_t un_hilo;
-	//	pthread_attr_t attr;
-	//	pthread_create(&un_hilo,&attr,consola,NULL);
-	//	pthread_join(un_hilo,NULL);
-	return 0;
-}
-void RUN(char *nombre_archivo){
-
-	FILE *f=fopen(nombre_archivo,"r");
-	char line[64];
-	proceso p;
-	instr_t *nueva_instruccion;
-	while(fgets(line,sizeof(line),f)){
-		nueva_instruccion=leer_a_instruccion(line);
-		//encolo en proceso
-	}
-	fclose(f);
-	//encolo proceso
-//TODO: Cambiar tipo de instrucciones y utilizar print instruccion
-
-}
-void ejemplo_procesos(){
-	instruccion_t i1={
-			1,
-			obtener_ts(),
-			"Hilo 1 instr 1",
-			"Param2",
-			"Param3",
-			"Param4",
-			NULL
-	};
-
-	instruccion_t i2={
-			2,
-			obtener_ts(),
-			"Hilo 1 instr 2",
-			"Manzana",
-			"Pera",
-			"Limon",
-			NULL
-	};
-
-	i1.sig=&i2;
-
-	instruccion_t i3={
-			3,
-			obtener_ts(),
-			"Hilo 1 instr 3",
-			"Soy un parametro",
-			"YO tambien",
-			"Yo puede ser",
-			NULL
-	};
-
-	i2.sig=&i3;
-
-	proceso p1={
-			&i1,
-			&i1,
-			NULL
-	};
-
-	instruccion_t i_1={
-			1,
-			obtener_ts(),
-			"Hilo 2 instr 1",
-			"Param2",
-			"Param3",
-			"Param4",
-			NULL
-	};
-
-	instruccion_t i_2={
-			2,
-			obtener_ts(),
-			"Hilo 2 instr2",
-			"Manzana",
-			"Pera",
-			"Limon",
-			NULL
-	};
-	i_1.sig=&i_2;
-	proceso p2={
-			&i_1,
-			&i_1,
-			NULL
-	};
-
-	instruccion_t i__1={
-			1,
-			obtener_ts(),
-			"Hilo 3 instr 1",
-			"Param2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-			"Param3",
-			"Param4",
-			NULL
-	};
-
-	instruccion_t i__2={
-			2,
-			obtener_ts(),
-			"Hilo 3 instr2",
-			"Manzana",
-			"Pera",
-			"Limon",
-			NULL
-	};
-	i__1.sig=&i__2;
-	proceso p3={
-			&i__1,
-			&i__1,
-			NULL
-	};
-
-
-	loggear("Iniciando....");
 	inicializar_semaforos();
 
+	inicializarConfiguracion();
 
+	iniciar_log();
+
+	iniciar_ejecutador();
+
+	//kernel_run("p1.lql");
+	//kernel_run("p2.lql");
+	//kernel_run("p3.lql");
+
+	iniciar_consola();
+	loggear("### KERNEL FINALIZADO ###");
+	return 0;
+}
+void iniciar_consola(){
+	sleep(1);
+	loggear("Se inicia consola");
+	pthread_t hilo_consola;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_consola,&attr,consola,NULL);
+	pthread_join(hilo_consola,NULL);
+
+}
+void* consola(void* c){
+	char* instruccion;
+	while(1){
+		instruccion=readline("\n>>");
+		if(strcmp(instruccion,"close")==0){
+			loggear("##### FINALIZANDO KERNEL.... ###### \n");
+			return NULL;
+		}
+
+		printf("Procesando instruccion:: %s \n",instruccion);
+		procesar_instruccion_consola(instruccion);
+
+	}
+}
+void procesar_instruccion_consola(char *instruccion){
+	loggear("Generando instruccion unitaria");
+	t_list* instrucciones = list_create();
+	proceso* p=malloc(sizeof(proceso));
+	p->current=0;
+	p->size=0;
+	p->instrucciones=instrucciones;
+	p->sig=NULL;
+	instr_t* nueva_instruccion=leer_a_instruccion(instruccion);
+	list_add(p->instrucciones,nueva_instruccion);
+	p->size++;
+	loggear("Instruccion generada, encolando proceso...");
+	encolar_proceso(p);
+
+}
+void iniciar_ejecutador(){
+	loggear("Se inicia ejecutador");
 	pthread_t hilo_ejecutador;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador,&attr,ejecutar,NULL);
 	pthread_detach(hilo_ejecutador);
-
-
-	encolar_proceso(&p1);
-	encolar_proceso(&p2);
-	encolar_proceso(&p3);
-	loggear("\n\n ENCOLADOS!\n\n");
-
+	loggear("Ejecutador iniciado");
 }
-void* consola(void* param){
-	while(1==1){
-		sleep(1);
-		char * cosa=readline(">");
-		printf("La cosa es %s",cosa);
-		return NULL;
+void kernel_run(char *nombre_archivo){
+	loggear("RUN FILE!");
+	FILE *f=fopen(nombre_archivo,"r");
+	char line[64];
+	t_list* instrucciones = list_create();
+	proceso* p=malloc(sizeof(proceso));
+	p->current=0;
+	p->size=0;
+	p->instrucciones=instrucciones;
+	p->sig=NULL;
+	instr_t* nueva_instruccion;
+	loggear("Se ejecuto RUN, leyendo archivo!");
+
+	while(fgets(line,sizeof(line),f)){
+		nueva_instruccion=leer_a_instruccion(line);
+		list_add(p->instrucciones,nueva_instruccion);
+		p->size++;
+		loggear("Se agrego una instruccion!");
+		print_instruccion(nueva_instruccion);
 	}
+	fclose(f);
+
+	encolar_proceso(p);
 
 }
+
 
 void continuar_ejecucion(){
-	loggear("Enviando senial en 2 segundos");
-	sleep(2);
+	loggear("Enviando senial en 1 segundo");
+	sleep(1);
 	pthread_mutex_lock(&lock_ejecutar);
 	pthread_cond_signal(&cond_ejecutar);
 	pthread_mutex_unlock(&lock_ejecutar);
 
 	loggear("Senial enviada!");
+}
+int hay_procesos(){
+	sem_wait(&semaforo_procesos_ready);
+	int hay=cola_ready!=NULL;
+	sem_post(&semaforo_procesos_ready);
+	return hay;
 }
 int ejecutar(){
 	proceso *p;
@@ -181,10 +123,8 @@ int ejecutar(){
 		sleep(1);
 		loggear("Espera finalizada");
 		loggear("Ejecutando");
-		sem_wait(&semaforo_procesos_ready);
-		int hay_procesos=cola_ready!=NULL;
-		sem_post(&semaforo_procesos_ready);
-		while(hilos_disponibles()&&hay_procesos){//Se puede procesar
+
+		while(hilos_disponibles()&&hay_procesos()){//Se puede procesar
 
 			loggear("Hay hilos y procesos!! Ejecutando...\n");
 			p=obtener_sig_proceso();
@@ -195,7 +135,6 @@ int ejecutar(){
 			pthread_attr_init(&attr);
 			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
 			loggear("Se creo un hilo para atender la solicitud!");
-			//loggear(p->current->param1);
 
 			sem_wait(&mutex_cantidad_hilos);
 			total_hilos++;
@@ -214,25 +153,24 @@ int ejecutar(){
 void* ejecutar_proceso(void* un_proceso){
 	loggear("Ejecutando proceso....");
 	proceso* p=(proceso*)un_proceso;
-	instruccion_t* instruccion_obtenida;
-	//sleep(1);
+	instr_t* instruccion_obtenida;
 	for(int i=0;i<configuracion.quantum;i++){
 		loggear("Hay quantum!");
 		instruccion_obtenida=obtener_instruccion(p);
 		//no se pudo obtener
 		if(instruccion_obtenida!=NULL){
 
-			instruccion_t* respuesta=ejecutar_instruccion(instruccion_obtenida);
+			instr_t* respuesta=ejecutar_instruccion(instruccion_obtenida);
 
-			if(!respuesta->codigo_instruccion){//Codigo 0-> OK, Codigo !=0 Error
+			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear("Se ejecuto correctamente la instruccion!, Respuesta=");
-				loggear(respuesta->param1);
+				loggear(obtener_parametroN(respuesta,1));
 				loggear("Fin de instruccion");
 			}else{
 
 				loggear("ERROR al ejecutar la instruccion, Codigo=");
-				printf("\n\n %d MENSAJE=%s",respuesta->codigo_instruccion,respuesta->param1);
+				printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
 			}
 		}else{
 
@@ -243,6 +181,8 @@ void* ejecutar_proceso(void* un_proceso){
 			sem_post(&mutex_cantidad_hilos);
 			return NULL;
 		}
+		printf("\n Fin de instruccion. Quantum restante: %d, Nro de instr: %d, Quantum: %d\n",configuracion.quantum-i,i,configuracion.quantum);
+
 	}
 	loggear("Fin de quantum, encolando o finalizando");
 
@@ -255,29 +195,80 @@ void* ejecutar_proceso(void* un_proceso){
 
 	return NULL;
 }
-instruccion_t* ejecutar_instruccion(instruccion_t* i){
+char* obtener_parametroN(instr_t* i,int index){
+	return (char*)list_get(i->parametros,index);
+}
+instr_t* ejecutar_instruccion(instr_t* i){
 	loggear("Se ejecuta una instruccion");
 	//	sleep(1);
-	instruccion_t* respuesta=enviar_i(i);
+	if(i->codigo_operacion==CODIGO_RUN){
+		kernel_run(obtener_parametroN(i,0));
+	}
+	instr_t* respuesta=enviar_i(i);
 	return respuesta;
 }
-instruccion_t* enviar_i(instruccion_t* i){
-	loggear("ENVIANDO INSTRUCCION FAKE");
-	i->codigo_instruccion=0;
-	i->timestamp=obtener_ts();
-	printf("\n ##### \n Instruccion enviada %d, %s, %s, %s, %s\n",i->codigo_instruccion,i->param1,i->param2,i->param3,i->param4);
-	return i;
+instr_t* enviar_i(instr_t* i){
+
+//	loggear("ENVIANDO INSTRUCCION FAKE ");
+//	print_instruccion(i);
+//
+//	i->codigo_operacion=0;
+//	i->timestamp=obtener_ts();
+	loggear("ENVIANDO INSTRUCCION FAKE ");
+	print_instruccion(i);
+	printf("##### \nInstruccion enviada, esperando respuesta###\n");
+
+
+	hilo_enviado* h=malloc(sizeof(hilo_enviado));
+	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	h->cond_t=cond;
+	h->mutex_t=mutex;
+	loggear("Agrego a diccionario");
+	sem_wait(&mutex_diccionario_enviados);
+	dictionary_put(diccionario_enviados,i->timestamp,h);
+	sem_post(&mutex_diccionario_enviados);
+	loggear("Me bloqueo!");
+	pthread_mutex_lock(&cond);
+	pthread_cond_wait(&cond_ejecutar,&mutex);
+	pthread_mutex_unlock(&cond);
+	loggear("Recibi respuesta!");
+
+
+	return h->respuesta;
+}
+
+void recibi_respuesta(instr_t* respuesta){
+	loggear("Instruccion recibida: ");
+	print_instruccion(respuesta);
+
+	sem_wait(&mutex_diccionario_enviados);
+	hilo_enviado* h=dictionary_get(diccionario_enviados,respuesta->timestamp);
+	dictionary_remove(diccionario_enviados,respuesta->timestamp);
+	sem_post(&mutex_diccionario_enviados);
+	loggear("Asigno respuesta y revivo hilo");
+	h->respuesta=respuesta;
+	pthread_mutex_lock(&h->mutex_t);
+	pthread_cond_signal(&h->cond_t);
+	pthread_mutex_unlock(&h->mutex_t);
+
 }
 void encolar_o_finalizar_proceso(proceso* p){
-	if(p->current==NULL){//Pudo justo haber quedado parado al final
+	if(p->current==p->size){//Pudo justo haber quedado parado al final
 		finalizar_proceso(p);
 	}else{
 		encolar_proceso(p);
 	}
 
 }
+
 void finalizar_proceso(proceso* p){
-	free(p);
+	//	instruccion_t* aux;
+	//	loggear("finalizando");
+	//	while((aux=p->instrucciones)!=NULL){
+	//		p->instrucciones=p->instrucciones->sig;
+	//		free(&aux);
+	//	}
 	loggear("Se finalizo correctamente un proceso !!. Se libera su memoria");
 	continuar_ejecucion();
 }
@@ -309,19 +300,22 @@ proceso* obtener_sig_proceso(){
 	sem_post(&semaforo_procesos_ready);
 	return aux;
 }
-instruccion_t* obtener_instruccion(proceso* p){
-	instruccion_t* actual=p->current;
-	if(actual!=NULL){
-		p->current=p->current->sig;
+instr_t* obtener_instruccion(proceso* p){
+	if(p->current==p->size){
+		return NULL;
 	}else{
-		loggear("No hay mas instrucciones");
+		instr_t* actual=(instr_t*)list_get(p->instrucciones,p->current);
+		p->current++;
+		return actual;
 	}
-	return actual;
 }
 
 int hilos_disponibles(){
+	sem_wait(&mutex_cantidad_hilos);
 	//Compara el total de config con la cantidad creada;
-	return configuracion.gradoMultiprocesamiento>total_hilos;
+	int hay=configuracion.gradoMultiprocesamiento>total_hilos;
+	sem_post(&mutex_cantidad_hilos);
+	return hay;
 }
 void inicializarMemorias() {
 	loggear("Memorias inicializadas");
@@ -341,22 +335,24 @@ void actualizar_configuracion(){
 	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave(rutaConfiguracion, "gradoMultiprocesamiento"));
 
 }
-memoria obtenerMemoria(instruccion_t* instr) {
+memoria obtenerMemoria(instr_t* instr) {
 	memoria m;
 	return m;
 }
+void iniciar_log(){
+	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
+
+}
 void loggear(char *valor) {
 	sem_wait(&mutex_log);
-	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
-	log_destroy(g_logger);
 	sem_post(&mutex_log);
 }
 char* obtener_por_clave(char* ruta, char* key) {
 	char* valor;
 	g_config = config_create(ruta);
 	valor = config_get_string_value(g_config, key);
-	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------",key,valor);
+	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------\n",key,valor);
 	//config_destroy(g_config);
 	return valor;
 }
@@ -367,108 +363,9 @@ void inicializar_semaforos(){
 	sem_init(&mutex_log,0,1);
 	sem_init(&semaforo_procesos_ready,0,1);
 	sem_init(&mutex_cantidad_hilos,0,1);
-	loggear("Semaforos inicializados");
+	sem_init(&mutex_diccionario_enviados,0,1);
+	diccionario_enviados=dictionary_create();
+	puts("Semaforos inicializados");
 }
-/*void sem_wait(sem_t *semaforo){
-	int n=sem_wait(semaforo);
-	if(n!=0){
-		loggear("Error al hacer wait");
-	}
-}
-void sem_post(sem_t *semaforo){
-	int n=sem_post(semaforo);
-	if(n!=0){
-		loggear("Error al hacer signal");
-	}
-}*/
-
-/*
-instruccion* obtenerInstruccion(proceso *unProceso) {
-	listaInstruccion* aux = unProceso->listaInstrucciones;
-	if (aux == NULL) {
-		unProceso->estadoActual = EXIT;
-		unProceso->current++;
-		return NULL;
-	}
-	for (int i = 0; i < unProceso->current; i++) {
-		if (aux->sig != NULL) {
-			aux = aux->sig;
-		} else {
-			unProceso->estadoActual = EXIT;
-			unProceso->current++;
-		}
-	}
-	return &aux->instruccion;
-
-}
- */
-
-/*
-void escucharYEncolarProcesos() {
-	//va recibiendo y encolando al final procesos estado new;
-
-}
-void informarMetricas() {
-	loggear("Metricas informadas");
-	//logueo
-	//reinicio valores
-}
-void leerProcesosDesdeConsola() {
-	loggear("Leyendo desde consola");
-	//leo creo nuevo proceso y agrego a lista
-}
-int realizar_proceso(proceso *unProceso) {
-	response* response;
-	instruccion* instruccion;
-	unProceso->estadoActual=EXEC;
-	for (int i = 0; i < configuracion.quantum; i++) {
-
-		//Se asume que todos tienen por lo menos 1 instruccion
-
-		instruccion = obtenerInstruccion(unProceso);
-
-		instruccion->tiempoEnvio = clock();
-
-		response = enviar_instruccion(instruccion);	//responde con el tipo de instruccion enviada
-
-		instruccion->tiempoRespuesta = instruccion->tiempoEnvio - clock();
-
-		if (response->tipoEnviado == configuracion.codigoInsert) {
-			m.cantidadInsert++;
-			metricarInsert(instruccion->tiempoRespuesta);
-		}
-		if (response->codigoRespuesta == configuracion.codigoError) {
-			loggear("ERRROR:");
-			loggear(response->codigoRespuesta);
-			//0 si pincha
-			return 0;
-		}
-		if (unProceso->estadoActual == EXIT) {
-			return 1;
-		}
-
-	}
-	return 1;
-}*/
 
 
-
-/*
-void encolar_hilo(hilos_t *cola,hilos_t* nuevo){
-	hilos_t* aux=cola;
-	if(cola==NULL){
-		cola=nuevo;
-	}else{
-		while(aux->sig!=NULL){
-			aux=aux->sig;
-		}
-		aux->sig=nuevo;
-		nuevo->sig=NULL;
-	}
-}
-hilos_t* obtener_hilo(hilos_t *cola){
-	hilos_t* aux=cola;
-	cola=cola->sig;
-	aux->sig=NULL;
-	return aux;
-}*/

@@ -45,7 +45,7 @@ int iniciar_servidor(char* ip_proceso, char* puerto_a_abrir) {
 	return socket_servidor;
 }
 
-int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t* instruccionAEjecutar, int fdRemitentem), t_dictionary* conexionesConocidas, int queConsola){
+int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t* instruccionAEjecutar, char* remitente), t_dictionary* conexionesConocidas, int queConsola){
 
 	//Gracias a la guia de Beej:
 	fd_set master;    // lista 'master' de file descriptors
@@ -58,7 +58,6 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 	char bufferLeido[100];
 	int i;
-	identificador* idsNuevaConexion = malloc(sizeof(identificador));
 	FD_ZERO(&master); //los vaciamos
 	FD_ZERO(&read_fds);
 
@@ -67,8 +66,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 	// mantener cual es el fd mas grande (lo pide el seelct())
 	fdmax = listener; // por ahora es este
-
-	t_list * auxiliarEntrantes = list_create();
+	t_dictionary* auxiliarConexiones = dictionary_create();
 
 	while(1) {
 		read_fds = master;
@@ -88,7 +86,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						if (newfd == -1) {
 							perror("accept");
 						} else{
-							char* ipCliente = ip_cliente(remoteaddr);
+//							char* ipCliente = ip_cliente(remoteaddr);
 							FD_SET(newfd, &master); // se agrega al set master
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande
 
@@ -106,13 +104,17 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							else{
 								char* suIP = (char*) list_get(instruccion_handshake->parametros, 1); //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
 								char* suPuerto = (char*) list_get(instruccion_handshake->parametros, 2); //Su Puerto
+								identificador* idsNuevaConexion = malloc(sizeof(identificador));
 								strcpy(idsNuevaConexion->puerto, suPuerto);
 								strcpy(idsNuevaConexion->ip_proceso, suIP);
 								idsNuevaConexion->fd_in = newfd;
 								idsNuevaConexion->fd_out = 0;
 								dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
 							}
-							list_add_in_index(auxiliarEntrantes, newfd, quienEs);
+							char auxFd[4];
+							sprintf(auxFd, "%d", newfd); //Para poder usarlo como key en el diccionario
+							dictionary_put(auxiliarConexiones, auxFd, quienEs);
+//							imprimirConexiones(conexionesConocidas); //Debug
 						}
 					}
 					else if(i == 0){ //Recibido desde la consola
@@ -131,8 +133,10 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						}
 
 						else { //Por fin:
-							//char* quienLoEnvia = list_get(auxiliarEntrantes, i);
-							ejecutar_requestRecibido(instrcuccion_recibida, i);
+							char auxFd[4];
+							sprintf(auxFd, "%d", i);
+							char* quienLoEnvia = dictionary_get(auxiliarConexiones, auxFd);
+							ejecutar_requestRecibido(instrcuccion_recibida, quienLoEnvia);
 						}
 
 					} // END recibir los mensajes
