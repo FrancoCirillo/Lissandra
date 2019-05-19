@@ -103,6 +103,9 @@ void ejecutar_instruccion(instr_t* instruccion, char* remitente){
 	case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion); break;
 	case CONSOLA_MEM_JOURNAL:
 	case CONSOLA_KRN_JOURNAL: ejecutar_instruccion_journal(instruccion); break;
+	case CONSOLA_MEM_EXITO:
+	case CONSOLA_KRN_EXITO: ejecutar_instruccion_exito(instruccion); break;
+
 	default: break;
 	}
 }
@@ -152,6 +155,9 @@ void ejecutar_instruccion_create(instr_t* instruccion){
 
 void ejecutar_instruccion_describe(instr_t* instruccion){
 	puts("Ejecutando instruccion Describe");
+	puts("La tabla no se encontro en Memoria. Consultando al FS");
+	int conexionFS= obtener_fd_out("FileSystem");
+	enviar_request(instruccion, conexionFS);
 }
 
 
@@ -165,8 +171,7 @@ void ejecutar_instruccion_journal(instr_t* instruccion){
 }
 
 void ejecutar_instruccion_exito(instr_t* instruccion){
-	puts("Instruccion exitosa:");
-	print_instruccion(instruccion);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, instruccion->parametros);
 }
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam){
