@@ -25,14 +25,14 @@ void leer_metadata_FS();		//es un único archivo
 
 int  crear_directorio(char *,char *);
 FILE* crear_archivo(char*, char*, char*);
-void  crear_particiones(char*);
+int  crear_particiones(char*, int);
 void  crear_bloque(char*);
 void  crear_bloques();
 int  crear_metadata(instr_t*);
 
 int existe_Tabla(char * );
 
-void archivo_inicializar(FILE *);
+int archivo_inicializar(FILE *);
 void metadata_inicializar(FILE*, instr_t*);
 
 //semaforos

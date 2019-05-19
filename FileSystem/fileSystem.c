@@ -7,34 +7,26 @@ int main() {
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	inicializar_FS();
 
-	//Funciona
-	//actualizar_tiempo_retardo_config(600);
-	//printf("El valor es: %d.",(int)config_FS.retardo);
-	//Joyita.
 
 
-	//printf("%ld",config_FS.tiempo_dump);
-	//actualizar_tiempo_retardo_config();
 
-	//obtener_por_clave("Lissandra.config", "TIEMPO_DUMP");
-	/*PRUEBAS*/
 
 	//	CREATE
 	//[TABLA]
 	//[TIPO_CONSISTENCIA]
 	//[NUMERO_PARTICIONES]
 	//[COMPACTION_TIME]
-/*
+	loggear_FS("Ejecutamos Instruccion CREATE");
 	instr_t* instr=malloc(sizeof(instr_t));
 	instr->timestamp = obtener_ts();
 	instr->codigo_operacion = CODIGO_CREATE;
 	instr->parametros = list_create();
 
-	loggear_FS("");
 
-	list_add(instr->parametros,"Tabla A" );
+
+	list_add(instr->parametros,"Una Tablita chica" );
 	list_add(instr->parametros,"SC" );
-	list_add(instr->parametros,"5" );
+	list_add(instr->parametros,"7" );
 	list_add(instr->parametros,"60000" );
 
 	remitente_t* remi=malloc(sizeof(remitente_t));
@@ -64,6 +56,15 @@ int main() {
 	printf("\n");
 	printf("------\n");
 
+	crear_metadata(instr);
+	int cc= atoi(c);
+	int p = crear_particiones(a,cc);
+		if(p>0){
+				puts("exito en las particiones");
+		}
+		else puts("fallaron");
+
+
 	contestar(mensaje);  //Libera memoria del mje
 
 	printf("------\n");
@@ -82,17 +83,34 @@ int main() {
 
 	//Esto va dentro del create, pero estoy probando.
 
-	//	crear_directorio("Tabla A");
-	//	FILE* f = crear_archivo("Part_1", "Tabla A", ".tmp");
-	//	archivo_inicializar(f);
-	//	fclose(f);
-	//	crear_metadata("OtraTabla", "SC", "5", string_itoa(obtener_tiempo()));      //No me funciona el obtener_tiempo, debo tener algo mal.
-	//	//Todo lo paso a int para probar que funcione el crear_Metadata.
-	//	//crear_metadata("Tabla A", "SC", 10, 333666999);
-	//	crear_bloques();
-	//	crear_particiones("Tabla A");
 
-*/
+	//////////////////////////////////////
+	//FUNCIONA.
+//		crear_directorio(RUTA_TABLAS,"Tablota");
+//		FILE* f = crear_archivo("Part_3", "Tablota", ".bin");
+//		int i= archivo_inicializar(f);
+//		if(i>0){
+//			puts("exito");
+//		}
+//		else puts("fallo");
+	//////////////////////////////////////
+
+
+	//Funciona
+	//actualizar_tiempo_retardo_config(600);
+	//printf("El valor es: %d.",(int)config_FS.retardo);
+	//Joyita.
+	//printf("%ld",config_FS.tiempo_dump);
+	//actualizar_tiempo_retardo_config();
+
+	//////////////////////////////////////
+
+
+
+
+
+
+
 	finalizar_FS();
 	return 0;
 
@@ -215,11 +233,12 @@ void contestar(remitente_instr_t * i){
 void inicializar_FS(){
 
 	iniciar_semaforos();
+	loggear_FS("-----------INICIO PROCESO-----------");
 	inicializar_configuracion();
 	inicializar_memtable();
 	inicializar_directorios();
 	crear_bloques();
-
+	loggear_FS("-----------Fin inicialización LFS-----------");
 
 }
 
@@ -230,6 +249,7 @@ void finalizar_FS(){
 
 	finalizar_memtable();// Liberar memoria
 
+	loggear_FS("-----------FIN PROCESO-----------");
 }
 
 

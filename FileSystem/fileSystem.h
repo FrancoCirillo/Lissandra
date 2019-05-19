@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/hilos.h"
 #include "Estructuras.h"
 #include "compactador.h"
 #include "memtable.h"

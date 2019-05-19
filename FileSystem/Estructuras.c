@@ -7,9 +7,6 @@
 
 #include "Estructuras.h"
 
-int existe_Tabla(char * nombre_tabla){
-	return 0;    //hardcodeado. ver como implementar.
-}
 
 //Todo
 /*
@@ -24,78 +21,110 @@ int existe_Tabla(char * nombre_tabla){
  * semaforos!
  *
  *NO FUNCIONA: string_to_upper(nomb);   //ver como hacer en crear_directorio().
- * */
+ * ver actualizacion RETARDO del Archivo de config. Se actualiza en cada fin de instruccion?
+ * \*/
+
+//Pendientes Dai:
+//1) Ver si el g_logger global no hace problemas..
+//	 Si se crea una vez sola o ahi en el loggear_FS esta bien.
+//2) Ver TS. Tipo de dato??
+//3) chequear semaforizacion de todo esto..
+//4) Ver validaciones de errores.. tests?
+//5) validaciones de errores, aca o en las funciones en las que lo llaman?
+
+
+
 
 int obtener_tiempo_dump_config(){
 	return (int)config_FS.tiempo_dump *1000;
 }
 
-
-
-FILE* crear_archivo(char * nombre, char* tabla, char * ext){
-	char* ruta= malloc(sizeof(char)*(strlen(RUTA_TABLAS) + strlen(nombre) + strlen(tabla)) +1+1+strlen(ext));
-	sprintf(ruta, "%s%s%s%s%s", RUTA_TABLAS, tabla, "/", nombre, ext);
-	FILE* f = fopen(ruta, "w");
-	printf("Se creó el archivo %s%s en la tabla %s.\n", nombre, ext, tabla);
-	free(ruta);
-	return f;
+int existe_Tabla(char * nombre_tabla){
+	return 0;    //hardcodeado. ver como implementar.
 }
 
 
-void crear_particiones(char * tabla){
+
+int crear_particiones(char * tabla, int cantidad){
 	FILE* f;
-	int cantidad = 10;   //Esto lo debe leer del metadata de ESA TABLA.
+	//int cantidad = 10;   //Esto lo debe leer del metadata de ESA TABLA.
+	char * nomb_part ;
 	for(int i = 1; i <= cantidad; i++){
-		//creo que este char de abajo esta mal, hace memory leak en cada iteracion.. arreglar.
-		char * nomb_part = concat("Part_", string_itoa(i));
+		char* num=string_itoa(i);
+		nomb_part = concat("Part_", num);
 		f = crear_archivo(nomb_part, tabla, ".bin");
-		archivo_inicializar(f);
+
+		if(archivo_inicializar(f) < 0){
+			free(nomb_part);
+			free(num);
+			fclose(f);
+			loggear_FS("Error al crear las particiones. No hay suficientes bloques disponibles,");
+			return 0;
+		}
+		free(nomb_part);
+		free(num);
+		fclose(f);
 	}
-	fclose(f);
+
+	loggear_FS("Se crearon las particiones de la tabla correctamente.");
+	return 1;
 }
 
 
-//TODO: asignar un bloque disponible!! Hardcodeado. Crear luego de ver los bitarrays.
 
-//Inicializa con size = 0, y el array de Blocks con un bloque asignado.
-void archivo_inicializar(FILE* f){
-	int bloque_num = 1;     //  int bloque_num = bloque_disponible(); Devuelve un bloque libre.
-	//TODO VALIDAR esto si no llega a haber un bloque disponible.
-
-	char* bloque_num_s = string_itoa(bloque_num);
-	char* cadena = malloc(sizeof(char)*(20+strlen(bloque_num_s))+1);
-	sprintf(cadena, "%s%s%s%s%s","SIZE = ",string_itoa(0), "\nBlocks = [", bloque_num_s, "]\n");
-	fwrite(cadena, sizeof(char), strlen(cadena)+1,f);
-	free(cadena);
-	free(bloque_num_s);
-	printf("Se inicializó el archivo.\n");
-}
+//*****************************************************************
+//De aca para abajo estan corregidos y funcionan sin memory leaks.
+//*****************************************************************
 
 int crear_metadata(instr_t* i){
 	char* tabla=obtener_parametro(i,0);
 	FILE* f = crear_archivo("Metadata", tabla, "");
 	metadata_inicializar(f, i);
 	fclose(f);
-	printf("Se creó el metadata en la tabla %s. \n", tabla);
+	printf("Se creó el metadata en la tabla \"%s\".", tabla);
 
 	return 1;  //Ver si hay que validar algo mas aca.. donde puede fallar?
 }
-
 
 void metadata_inicializar(FILE* f, instr_t* i){
 	char* consist= obtener_parametro(i,1);
 	char* part= obtener_parametro(i,2);
 	char* time= obtener_parametro(i,3);
-	char* cadena=malloc(sizeof(char)*(50+strlen(consist) + strlen(part) + strlen(time))+1);
-	sprintf(cadena, "%s%s%s%s%s%s%s","CONSISTENCY = ",consist, "\nPARTITIONS = ", part, "\nCOMPACTATION_TIME = ", time, "\n");
-	fwrite(cadena, sizeof(char), strlen(cadena)+1,f);
-	free(cadena);
+	fprintf(f, "%s%s%s%s%s%s%s","CONSISTENCY = ",consist, "\nPARTITIONS = ", part, "\nCOMPACTATION_TIME = ", time, "\n");
+
+}
+
+//Inicializa con size = 0, y el array de Blocks con un bloque asignado.
+int archivo_inicializar(FILE* f){
+	int bloque_num = 1;     //  int bloque_num = bloque_disponible(); Devuelve un bloque libre.
+
+	if(bloque_num>0){
+
+		fprintf(f, "%s%d%s%d%s","SIZE = ",0, "\nBlocks = [", bloque_num, "]\n");
+		loggear_FS("Se inicializó el archivo correctamente con un bloque disponible.");
+	}
+
+	else{
+		loggear_FS("No hay un bloque disponible para asignar.");
+	}
+	return bloque_num;   //Validar error en la funcion que lo llame.
+// No hace el fclose(f);
 }
 
 
-//*****************************************************************
-//De aca para abajo estan corregidos y funcionan sin memory leaks.
-//*****************************************************************
+FILE* crear_archivo(char * nombre, char* tabla, char * ext){
+	char* ruta= malloc(sizeof(char)*(strlen(RUTA_TABLAS) + strlen(nombre) + strlen(tabla)) +1+1+strlen(ext));
+	sprintf(ruta, "%s%s%s%s%s", RUTA_TABLAS, tabla, "/", nombre, ext);
+	FILE* f = fopen(ruta, "w+");  //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
+
+	char* mje = malloc(sizeof(char)*(strlen(nombre)+strlen(tabla)+50));
+	sprintf(mje,"Se creó el archivo %s%s en la tabla \"%s\".", nombre, ext, tabla);
+	loggear_FS(mje);
+	free(mje);
+	free(ruta);
+	return f;
+}
+
 
 int crear_directorio(char* ruta,char * nomb){
 
@@ -120,7 +149,7 @@ int crear_directorio(char* ruta,char * nomb){
 }
 
 
-void crear_bloques(){  //Los bloques van a partir del numero 1. Tener presente.
+void crear_bloques(){  //Los bloques van a partir del numero 1.
 
 	int cantidad = Metadata_FS.blocks;
 	char* num;
@@ -129,13 +158,13 @@ void crear_bloques(){  //Los bloques van a partir del numero 1. Tener presente.
 		crear_bloque(num);
 		free(num);
 	}
-	loggear_FS("Se crearon los bloques File System.");
+	loggear_FS("Se crearon los bloques del File System.");
 }
 
 void crear_bloque(char * nombre){
 	char* ruta= malloc(sizeof(char)*(strlen(RUTA_BLOQUES) + strlen(nombre) + strlen(".bin"))+1);
 	sprintf(ruta, "%s%s%s", RUTA_BLOQUES, nombre, ".bin");
-	FILE* f = fopen(ruta, "w");
+	FILE* f = fopen(ruta, "w+");
 	free(ruta);
 	fclose(f);
 }
@@ -232,7 +261,7 @@ void leer_metadata_FS(){  //esto se lee una vez.
 
 	char* mje=malloc(sizeof(char)*200);
 	sprintf(mje,"%s%s%d%s%d%s%s",
-			"Metadata leído. Los datos son:\n\n" ,
+			"Metadata leído. Los datos son:\n" ,
 			"BLOCK_SIZE = ",
 			Metadata_FS.block_size,
 			"\nBLOCKS = ",
