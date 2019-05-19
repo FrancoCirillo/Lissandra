@@ -16,17 +16,21 @@
 #include <commons/string.h>
 #include <readline/readline.h>
 #include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/hilos.h"
 #include "Estructuras.h"
+#include "compactador.h"
+#include "memtable.h"
 
 //ORDEN PARAMETROS
 
 //SELECT [NOMBRE_TABLA] [KEY]
-//INSERT [NOMBRE_TABLA] [KEY] “[VALUE]” [Timestamp]     <- opcional el timestamp?
+//INSERT [NOMBRE_TABLA] [KEY] “[VALUE]” [Timestamp]
 //CREATE [NOMBRE_TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
-//DESCRIBE [NOMBRE_TABLA]    <- opcional el param.
+//DESCRIBE [NOMBRE_TABLA]
 //DROP [NOMBRE_TABLA]
 
 
@@ -34,31 +38,14 @@
 #define RUTA_BLOQUES "mnj/Lissandra_FS/Bloques/"
 #define RUTA_PUNTO_MONTAJE "mnj/Lissandra_FS/"
 
-
-t_log* g_logger;
-t_config* g_config;
-
 typedef long int mseg_t;
 
+/*SEMAFOROS*/
+sem_t mutex_tiempo_dump_config;
+sem_t mutex_tiempo_retardo_config;
+sem_t mutex_memtable;
 
 /*STRUCTS*/
-
-//
-//typedef struct p_insert{  //ver si esto esta bueno..
-//	char* tabla;
-//	int key;  //u_int16
-//	char* value;
-//	mseg_t ts;
-//}p_insert;
-//
-//typedef struct p_create{
-//	char* tabla;
-//	char* consistency;
-//	int particiones;  //u_int16
-//	mseg_t compactation_time;
-//}p_create;
-
-
 
 typedef struct archivo_t{
 	int size;
@@ -73,35 +60,32 @@ mseg_t compactation_time;
 }metadata_t;
 
 
-typedef struct archivo_config_FS_t{
+typedef struct config_FS_t{
 char* puerto_escucha;
 char* punto_montaje;
 int tamanio_value;
 mseg_t retardo;
 mseg_t tiempo_dump;
-}archivo_config_FS_t;
-//Recordar que los ultimos 2 son modificables. Inotify()    No creo que sea necesario el struct.
-//Grabar valores correctos. y poder leerlos.
+}config_FS_t;
 
-
-
-typedef struct registro_t{
-	int key;
-	//u_int16 key;			//TODO ver este tipo. int es provisorio.
-	char* value;
-	mseg_t timestamp;
-}registro;
 
 typedef struct metadata_FS_t{
 	int block_size;
 	int blocks;
 	char* magic_number;
-}tabla;
+}metadata_FS_t;
 
 
-archivo_config_FS_t config_FS;
+config_FS_t config_FS;
+metadata_FS_t Metadata_FS;
+
 t_log* g_logger;
 t_config* g_config;
+t_config* meta_config;
+
+void inicializar_FS();
+void finalizar_FS();
+void iniciar_semaforos();
 
 
 							/*MANEJO INTRUCCIONES*/
@@ -125,16 +109,6 @@ char* concat3( char* , char*, char*);
 //eliminar
 //void response(remitente_t*);
 void contestar(remitente_instr_t * );
-
-							/*Compactación*/
-void* compactar(instr_t*);
-void compactation(char*);
-
-							/*MEMTABLE*/
-t_list* memtable;
-
-void inicializar_memtable();
-void mem_insert();
 
 
 #endif /* FILE_SYSTEM_H */

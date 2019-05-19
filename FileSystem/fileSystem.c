@@ -6,11 +6,7 @@ int main() {
 
 	printf("PROCESO FILESYSTEM\n");
 
-	// Empezar a loggear
-
-	inicializar_memtable();
-
-
+	inicializar_FS();
 
 
 	/*PRUEBAS*/
@@ -65,49 +61,16 @@ int main() {
 
 
 
-
 	//////////////////////////////////////////////
-
-
-
-
-	//DIVIDIR ESTOS PROCESOS EN HILOS.
-
-	//inicializarConfig();    //Tenerlo listo y borrar esto.
-	//printf("%s\n\n" ,config_FS.puerto_escucha);
-	//printf("%d\n\n" ,config_FS.tamanio_value);
-
-
-	//config_destroy(g_config);
 
 
 	//	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
 
 	//	vigilar_conexiones_entrantes(listenner);
 
-
-
-
-
-
-	//	inicializar_Metadata_FS();		//Tenerlo listo y borrar.
-
-	//	inicializar_directorios();
-	/* Esto lee el arch de config,
-	 * el metadata del FS,
-	 * inicializa los bloques con sus respectivos tamaños y la cantidad que sean.
-	 * bitarrays en cero.
-	 */
-
-	//	inicializar_memtable();
-	/* Lista de colas con datos a dumpear, vacia.
-	 	 	 	   iniciar cronometro del DUMP (iterativamente, siempre que tenga al menos un dato.)
-	 	 	 	   es un nodo por tabla.
-	 	 	  	   al hacer dumpeo, se toma una tabla y se guarda los datos en el .tmp de la tabla.
-	 */
+	//////////////////////////////////////////////
 
 	//Esto va dentro del create, pero estoy probando.
-
 
 	//	crear_directorio("Tabla A");
 	//	FILE* f = crear_archivo("Part_1", "Tabla A", ".tmp");
@@ -119,53 +82,12 @@ int main() {
 	//	crear_bloques();
 	//	crear_particiones("Tabla A");
 
-
-	/*
-	//HARDCODEO
-	loggear_FS("Arrancamos\n");
-	//EJEMPLO CREATE;
-
-	remitente_instr_t* mensaje;
-	instr_t* instruccion_m;
-	remitente_t* remitente_m;
-
-	instruccion_m->timestamp= obtenertiempo();
-	instruccion_m->codigoInstruccion = 5;
-	instruccion_m->param1 = "TablaABC";
-	instruccion_m->param2 = "SC" ;
-	instruccion_m->param3 = "5";
-	instruccion_m->param4 = "60000";
-
-	mensaje->instruccion = instruccion_m;
-
-	remitente_m->ip = IP_MEMORIA;
-	remitente_m->puerto = PORT;
-
-	mensaje->remitente = remitente_m;
-	printf("Se creo la estructura correctamente.\n");
-
-	evaluar_instruccion(mensaje);
-
-	//	CREATE [TABLA] [TIPO_CONSISTENCIA] [NUMERO_PARTICIONES] [COMPACTION_TIME]
-
-			//Ver bien qué me llega, qué devuelvo.
-
-	//Acá iria un hilo para cada instruccion que va llegando
-
-	//evaluarInstruccion(mensaje);
-
-	 */
+	finalizar_FS();
 	return 0;
 
 }
 
-
-
-void inicializar_memtable(){
-	memtable = list_create();
-
-
-}
+		// este es el que va.
 
 //int execute_insert(instr_t* i){
 //
@@ -186,39 +108,16 @@ void inicializar_memtable(){
 //	return CODIGO_EXITO;
 //}
 
-void mem_agregar_tabla(){
-	t_list* t = list_create();
-	list_add(memtable, t);
-
-}
-
-void mem_agregar_reg(){
-
-
-}
 
 
 
 
-void dumpeo(){
-	int tiempo_dump;
-	while(1){
 
-		actualizar_configuracion(); //con semaforos
-		//sem_wait(&mutex_tiempo_dump);
-		tiempo_dump=config_FS.tiempo_dump;//Primero guardar variables y despues bloquearlas, y usarlas.
-		//sem_post(&mutex_tiempo_dump);
-		sleep(tiempo_dump);
-
-	//	dumpear();
-	}
-
-}
 
 int execute_create(instr_t* instr){
 	char* tabla=obtener_parametro(instr,0);
 	if(!existe_Tabla(tabla)){     //existe_tabla esta hardcodeado
-		if(!crear_directorio(tabla))
+		if(!crear_directorio(RUTA_TABLAS,tabla))
 			return ERROR_CREATE;
 		if(!crear_metadata(instr))
 			return ERROR_CREATE;
@@ -236,7 +135,6 @@ int execute_create(instr_t* instr){
 char* obtener_parametro(instr_t * i,int index){
 	return (char*)list_get(i->parametros,index);
 }
-
 
 
 
@@ -303,21 +201,30 @@ void contestar(remitente_instr_t * i){
 
 
 
+void inicializar_FS(){
 
-//Crea un directorio unicamente en TABLAS.
+	inicializar_configuracion();
+	inicializar_memtable();
+	inicializar_directorios();
+	iniciar_semaforos();
 
-/*
-void* compactar(instr_t* i){
-	while(existe_tabla(i->param1)){
-		sleep(atoi(i->param2));
-		compactation(i->param1);
-	}
-	return NULL;
 }
- */
+
+void finalizar_FS(){
+
+	config_destroy(g_config);
+	config_destroy(meta_config);
+
+	finalizar_memtable();// Liberar memoria
+
+}
 
 
-
+void iniciar_semaforos(){
+	sem_init(&mutex_tiempo_dump_config,0,1);
+	sem_init(&mutex_tiempo_retardo_config,0,1);
+	sem_init(&mutex_memtable,0,1);
+}
 
 
 
