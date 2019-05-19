@@ -6,6 +6,7 @@
 
 #include "fileSystem.h"
 
+
 typedef struct mem_tabla_t{
 	t_list* registros;
 	char* tabla;

@@ -4,11 +4,19 @@
 
 int main() {
 
-	printf("PROCESO FILESYSTEM\n");
-
+	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	inicializar_FS();
 
+	//Funciona
+	//actualizar_tiempo_retardo_config(600);
+	//printf("El valor es: %d.",(int)config_FS.retardo);
+	//Joyita.
 
+
+	//printf("%ld",config_FS.tiempo_dump);
+	//actualizar_tiempo_retardo_config();
+
+	//obtener_por_clave("Lissandra.config", "TIEMPO_DUMP");
 	/*PRUEBAS*/
 
 	//	CREATE
@@ -16,11 +24,13 @@ int main() {
 	//[TIPO_CONSISTENCIA]
 	//[NUMERO_PARTICIONES]
 	//[COMPACTION_TIME]
-
+/*
 	instr_t* instr=malloc(sizeof(instr_t));
 	instr->timestamp = obtener_ts();
 	instr->codigo_operacion = CODIGO_CREATE;
 	instr->parametros = list_create();
+
+	loggear_FS("");
 
 	list_add(instr->parametros,"Tabla A" );
 	list_add(instr->parametros,"SC" );
@@ -82,6 +92,7 @@ int main() {
 	//	crear_bloques();
 	//	crear_particiones("Tabla A");
 
+*/
 	finalizar_FS();
 	return 0;
 
@@ -203,10 +214,12 @@ void contestar(remitente_instr_t * i){
 
 void inicializar_FS(){
 
+	iniciar_semaforos();
 	inicializar_configuracion();
 	inicializar_memtable();
 	inicializar_directorios();
-	iniciar_semaforos();
+	crear_bloques();
+
 
 }
 
@@ -224,6 +237,8 @@ void iniciar_semaforos(){
 	sem_init(&mutex_tiempo_dump_config,0,1);
 	sem_init(&mutex_tiempo_retardo_config,0,1);
 	sem_init(&mutex_memtable,0,1);
+	sem_init(&mutex_log,0,1);
+
 }
 
 

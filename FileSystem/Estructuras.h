@@ -9,14 +9,14 @@
 #define ESTRUCTURAS_H_
 
 #include "fileSystem.h"
-#include <pthread.h>
+
 							/*ARCHIVOS*/
 
 void loggear_FS(char*);
 void inicializar_configuracion(void);
 void inicializar_directorios(void);
-void actualizar_tiempo_retardo_config(char*);
-void actualizar_tiempo_dump_config(char*);
+void actualizar_tiempo_retardo_config(mseg_t);   //ver si le llega mseg_t o un char*
+void actualizar_tiempo_dump_config(mseg_t);		//ver si le llega mseg_t o un char*
 char* obtener_por_clave(char* , char* );
 int obtener_tiempo_dump_config();
 

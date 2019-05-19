@@ -23,24 +23,11 @@ int existe_Tabla(char * nombre_tabla){
  * bloque disponible (bits arrays)
  * semaforos!
  *
+ *NO FUNCIONA: string_to_upper(nomb);   //ver como hacer en crear_directorio().
  * */
 
-
-int crear_directorio(char* ruta,char * nomb){
-
-	//string_to_upper(nomb);   No me funciona (??)
-	char*ruta_dir = concat(ruta, nomb);
-	if(!mkdir(ruta_dir, S_IRWXU)){
-		printf("Se creó correctamente la carpeta %s en el directorio %s\n", nomb, ruta);
-		free(ruta_dir);
-		return 1;
-	}
-	else{
-		printf("No se pudo crear la carpeta: %s \n", nomb);
-		free(ruta_dir);
-		return 0;
-	}
-	 //Concat hace un malloc. Aca tiene que haber un free
+int obtener_tiempo_dump_config(){
+	return (int)config_FS.tiempo_dump *1000;
 }
 
 
@@ -65,24 +52,6 @@ void crear_particiones(char * tabla){
 		archivo_inicializar(f);
 	}
 	fclose(f);
-}
-
-void crear_bloque(char * nombre){
-	char* ruta= malloc(sizeof(char)*(strlen(RUTA_BLOQUES) + strlen(nombre) + strlen(".bin"))+1);
-	sprintf(ruta, "%s%s%s", RUTA_BLOQUES, nombre, ".bin");
-	FILE* f = fopen(ruta, "w");
-	free(ruta);
-	fclose(f);
-}
-
-void crear_bloques(){    //Los bloques van a partir del numero 1. Tener presente.
-	int cantidad = 10; //leer del metadata del FS, la cantidad que sean.
-	char* num;
-	for(int i = 1; i<= cantidad; i++){
-		num = string_itoa(i);
-		crear_bloque(num);
-	}
-	printf("Se crearon los bloques del 1 al %d\n", cantidad);
 }
 
 
@@ -124,23 +93,75 @@ void metadata_inicializar(FILE* f, instr_t* i){
 }
 
 
-// poner semaforos
+//*****************************************************************
+//De aca para abajo estan corregidos y funcionan sin memory leaks.
+//*****************************************************************
+
+int crear_directorio(char* ruta,char * nomb){
+
+	//string_to_upper(nomb);   //No me funciona (??)
+	char*ruta_dir = concat(ruta, nomb);
+	char* mje= malloc(sizeof(char)*(60+strlen(ruta_dir)));
+	if(!mkdir(ruta_dir, S_IRWXU)){
+		sprintf(mje,"Se creó correctamente la carpeta \"%s\" en el directorio %s", nomb, ruta);
+		loggear_FS(mje);
+		free(ruta_dir);
+		free(mje);
+		return 1;
+	}
+	else{
+		sprintf(mje,"No se creó la carpeta \"%s\". Ya existe.", nomb);
+		loggear_FS(mje);
+		free(ruta_dir);
+		free(mje);
+		return 0;
+	}
+	 //Concat hace un malloc. Aca tiene que haber un free
+}
+
+
+void crear_bloques(){  //Los bloques van a partir del numero 1. Tener presente.
+
+	int cantidad = Metadata_FS.blocks;
+	char* num;
+	for(int i = 1; i<= cantidad; i++){
+		num = string_itoa(i);
+		crear_bloque(num);
+		free(num);
+	}
+	loggear_FS("Se crearon los bloques File System.");
+}
+
+void crear_bloque(char * nombre){
+	char* ruta= malloc(sizeof(char)*(strlen(RUTA_BLOQUES) + strlen(nombre) + strlen(".bin"))+1);
+	sprintf(ruta, "%s%s%s", RUTA_BLOQUES, nombre, ".bin");
+	FILE* f = fopen(ruta, "w");
+	free(ruta);
+	fclose(f);
+}
+
+
 void loggear_FS(char *valor) {
 	g_logger = log_create("Lissandra.log","File System", 1, LOG_LEVEL_INFO);
 
+	sem_wait(&mutex_log);
 	log_info(g_logger, valor);
+	sem_post(&mutex_log);
+
+	printf("--------------\n");
 
 	log_destroy(g_logger);
 }
 
 
 char* obtener_por_clave(char* ruta, char* clave) {
+	t_config* c= config_create(ruta);
 	char* valor;
-	//g_config = config_create(ruta); // ya esta creado el archivo de config.
-	valor = config_get_string_value(g_config, clave);
-
+	valor = config_get_string_value(c, clave);
+	config_destroy(c);
 	return valor;
 }
+
 
 //ver tipo de dato TS
 void inicializar_configuracion(void){
@@ -150,37 +171,58 @@ void inicializar_configuracion(void){
 	config_FS.tamanio_value = config_get_int_value(g_config, "TAMANIO_VALUE");
 	config_FS.retardo = config_get_int_value(g_config, "RETARDO");
 	config_FS.tiempo_dump = config_get_int_value(g_config, "TIEMPO_DUMP");
+
+	loggear_FS("Se leyó el archivo de configuración");
 }
 
 
-void actualizar_tiempo_dump_config(char* value){
+void actualizar_tiempo_dump_config(mseg_t value){
 
-	config_set_value(g_config, "TIEMPO_DUMP", value);
+	char* val= string_itoa((int)value);
+
 	sem_wait(&mutex_tiempo_dump_config);
-	config_FS.tiempo_dump = config_get_int_value(g_config, "TIEMPO_DUMP");
+	config_set_value(g_config, "TIEMPO_DUMP", val);
 	sem_post(&mutex_tiempo_dump_config);
 
+	config_save(g_config);
+
+	char* mje =	concat("Se actualizo el tiempo de dumpeo en el archivo de configuracion. Nuevo valor: ",val);
+	loggear_FS(mje);
+	free(mje);
+	free(val);
 }
 
-void actualizar_tiempo_retardo_config(char* value){
 
-	config_set_value(g_config, "TIEMPO_RETARDO", value);
+
+void actualizar_tiempo_retardo_config(mseg_t value){
+
+	char* val= string_itoa((int)value);
+
 	sem_wait(&mutex_tiempo_retardo_config);
-	config_FS.retardo = config_get_int_value(g_config, "RETARDO");
+	config_set_value(g_config, "TIEMPO_RETARDO", val);
 	sem_post(&mutex_tiempo_retardo_config);
 
-}
+	config_save(g_config);
 
+	char* mje =	concat("Se actualizo el tiempo de retardo en el archivo de configuracion. Nuevo valor: ",val);
+	loggear_FS(mje);
+	free(mje);
+	free(val);
+
+}
 
 void inicializar_directorios(){
 
 	crear_directorio("mnj/Lissandra_FS/","Tablas");
 	crear_directorio("mnj/Lissandra_FS/","Bloques"); //vacias
+
+	loggear_FS("Directorios listos.");
+
 	leer_metadata_FS();
 
 }
 
-void leer_metadata_FS(){
+void leer_metadata_FS(){  //esto se lee una vez.
 
 	char*ruta= "mnj/Lissandra_FS/Metadata/Metadata.bin";
 	meta_config = config_create(ruta);
@@ -188,10 +230,17 @@ void leer_metadata_FS(){
 	Metadata_FS.blocks= config_get_int_value(meta_config, "BLOCKS");
 	Metadata_FS.magic_number= config_get_string_value(meta_config, "MAGIC_NUMBER");
 
-}
+	char* mje=malloc(sizeof(char)*200);
+	sprintf(mje,"%s%s%d%s%d%s%s",
+			"Metadata leído. Los datos son:\n\n" ,
+			"BLOCK_SIZE = ",
+			Metadata_FS.block_size,
+			"\nBLOCKS = ",
+			Metadata_FS.blocks,
+			"\nMAGIC_NUMBER = ",
+			Metadata_FS.magic_number);
 
-
-int obtener_tiempo_dump_config(){
-	return config_FS.tiempo_dump *1000;
+	loggear_FS(mje);
+	free(mje);
 }
 
