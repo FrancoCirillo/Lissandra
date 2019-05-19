@@ -1,16 +1,7 @@
 //---------kernel.c---------
 
 #include "Kernel.h"
-void* consola(void *param);
-// Declaration of thread condition variable
-pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
-// declaring mutex
-pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
-sem_t mutex_cantidad_hilos;
-sem_t mutex_log;
 
-void ejemplo_procesos();
-void iniciar_log();
 int main() {
 	inicializar_semaforos();
 

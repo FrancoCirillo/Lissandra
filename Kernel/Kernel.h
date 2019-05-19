@@ -13,8 +13,6 @@
 #include <commons/string.h>
 #include <readline/readline.h>
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
-//#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
-//#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
 #include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
 
 #include <pthread.h>
@@ -81,11 +79,17 @@ typedef struct hilos_t{
 
 
 metricas m;
-sem_t semaforo_procesos_ready;
 proceso* cola_ready=NULL;
 config_t configuracion;
 int total_hilos=0;
 
+
+//Semaforos mutex y lock
+pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
+sem_t mutex_cantidad_hilos;
+sem_t mutex_log;
+sem_t semaforo_procesos_ready;
 
 
 //Proceso principal
@@ -95,6 +99,7 @@ instruccion_t* ejecutar_instruccion(instruccion_t* instruccion);
 instruccion_t* enviar_i(instruccion_t* i);
 void finalizar_proceso(proceso* p);
 void encolar_o_finalizar_proceso(proceso* p);
+void* consola(void *param);
 
 //Getter y setters
 instruccion_t *obtener_instruccion(proceso* p);
@@ -112,21 +117,8 @@ void loggear(char* mensaje);
 void informarMetricas();
 void actualizar_configuracion();
 void inicializar_semaforos();
-void semaforo_signal(sem_t *semaforo);
-void semaforo_wait(sem_t *semaforo);
+void ejemplo_procesos();
+void iniciar_log();
 
-/*
-proceso* popProceso();
-void escucharYEncolarProcesos();
 
-void leerProcesosDesdeConsola();
-int realizar_proceso(proceso *unProceso );
-instruccion* obtenerInstruccion(proceso *unProceso);
-response* mandar_instruccion(instruccion *i);
-
-char* getByKey(char* ruta, char* buscado);
-void informarMetricas();
-void inicializarMemorias();
-void inicializarMetricas();
-*/
 #endif /* kernel.h */
