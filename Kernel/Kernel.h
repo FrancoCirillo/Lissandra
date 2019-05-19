@@ -24,20 +24,12 @@ typedef long int mseg_t;
 
 //typedef enum {NEW,READY,EXEC,EXIT}estado;
 
-typedef struct instruccion_t{
-	int codigo_instruccion;
-	mseg_t timestamp;
-	char* param1;
-	char* param2;
-	char* param3;
-	char* param4;
-	struct instruccion_t* sig;
-}instruccion_t;
-
 
 typedef struct proceso{
-	instruccion_t* current;
-	instruccion_t *instrucciones;
+
+	int current;
+	int size;
+	t_list* instrucciones;
 	struct proceso* sig;
 }proceso;
 
@@ -52,12 +44,6 @@ typedef struct config{
 
 }config_t;
 
-typedef struct response{
-	int codigoRespuesta;
-	char* descripcion;
-	int tipoEnviado;
-
-}response;
 
 typedef struct metricas{
 	int cantidadInsert;
@@ -71,11 +57,6 @@ typedef struct memoria{
 	int puerto;
 }memoria;
 
-typedef struct hilos_t{
-	pthread_t *hilo;
-	pthread_attr_t *attr;
-	struct hilos_t *sig;
-}hilos_t;
 
 
 metricas m;
@@ -95,20 +76,22 @@ sem_t semaforo_procesos_ready;
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
-instruccion_t* ejecutar_instruccion(instruccion_t* instruccion);
-instruccion_t* enviar_i(instruccion_t* i);
+instr_t* ejecutar_instruccion(instr_t* instruccion);
+instr_t* enviar_i(instr_t* i);
 void finalizar_proceso(proceso* p);
 void encolar_o_finalizar_proceso(proceso* p);
 void* consola(void *param);
+void iniciar_ejecutador();
+void iniciar_consola();
+void RUN_FILE(char *nombre_archivo);
 
 //Getter y setters
-instruccion_t *obtener_instruccion(proceso* p);
+instr_t *obtener_instruccion(proceso* p);
 proceso* obtener_sig_proceso();
-memoria obtenerMemoria(instruccion_t* instr);
+memoria obtenerMemoria(instr_t* instr);
 char* obtener_por_clave(char* ruta, char* key);
 void encolar_proceso(proceso *p);
-hilos_t* obtener_hilo(hilos_t *cola);
-void encolar_hilo(hilos_t *cola,hilos_t* nuevo);
+
 
 //Herramientas
 int hilos_disponibles();
@@ -119,6 +102,6 @@ void actualizar_configuracion();
 void inicializar_semaforos();
 void ejemplo_procesos();
 void iniciar_log();
-
+char* obtener_parametroN(instr_t* i,int index);
 
 #endif /* kernel.h */
