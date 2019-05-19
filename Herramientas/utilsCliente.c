@@ -44,7 +44,7 @@ int crear_conexion(char *ip, char* puerto, char* miIP)
 	}
 	freeaddrinfo(server_info);
 
-	printf("Ya se pueden enviar instrucciones a %s.", ip);
+	printf("Ya se pueden enviar instrucciones a %s\n", ip);
 	//una vez conectado, se pueden enviar cosas a traves del socket_cliente
 	return socket_cliente;
 }

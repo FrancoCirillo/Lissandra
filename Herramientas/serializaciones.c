@@ -199,7 +199,6 @@ instr_t* leer_a_instruccion(char* request, int queConsola){
 
 	for(int i=1; actual != NULL; i++){
 		valor = strdup(actual);
-		printf("El valor es %s.\n", actual);
 		list_add(listaParam, valor);
 
 		if(i==2 && strcmp(comando, "INSERT")==0){

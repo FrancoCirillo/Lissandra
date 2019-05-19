@@ -90,10 +90,7 @@ void ejecutar_instruccion_exito(instr_t* instruccion){
 void ejecutar_instruccion_select(instr_t* instruccion){
 		puts("Ejecutando instruccion Select");
 		sleep(1);//Buscar
-		if(dictionary_is_empty(conexionesActuales)) puts("Dicc vacio");
-		else puts("Diccio lleno");
 		int conexionMemoria= obtener_fd_out("Memoria_1");
-		puts("Se tiene el fd_out");
 		enviar_request(instruccion, conexionMemoria);
 
 }
