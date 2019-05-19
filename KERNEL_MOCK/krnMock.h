@@ -21,19 +21,34 @@
 #include <commons/collections/list.h>
 #include <sys/stat.h>
 
+
+//Cambiar para testear con las memorias que se quiera
+#define RECEPTOR_SELECT 3
+#define RECEPTOR_INSERT 8
+#define RECEPTOR_CREATE 8
+#define RECEPTOR_DESCRIBE 8
+#define RECEPTOR_DROP 9
+#define RECEPTOR_JOURNAL 3
+
+
 t_log* g_logger;
 t_config* g_config;
+//Testing
+int conexion_con_memoria_3;
+int conexion_con_memoria_8;
+int conexion_con_memoria_9;
 
 typedef long int mseg_t;
 
 typedef struct config{
 	char* PUERTO_MEMORIA;
-	char* MEMORIA_IP;
+	char* MEMORIA_3_IP;
+	char* MEMORIA_8_IP;
+	char* MEMORIA_9_IP;
 	char* RUTA_LOG;
 }config;
 
 config configuracion;
-identificador* idsNuevasConexiones;
 t_dictionary * conexionesActuales;
 
 void (*callback) (instr_t* instruccion, char* remitente);
