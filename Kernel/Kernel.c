@@ -15,6 +15,7 @@ int main() {
 	//kernel_run("p1.lql");
 	//kernel_run("p2.lql");
 	//kernel_run("p3.lql");
+
 	iniciar_consola();
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
@@ -134,7 +135,6 @@ int ejecutar(){
 			pthread_attr_init(&attr);
 			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
 			loggear("Se creo un hilo para atender la solicitud!");
-			//loggear(p->current->param1);
 
 			sem_wait(&mutex_cantidad_hilos);
 			total_hilos++;
@@ -154,7 +154,6 @@ void* ejecutar_proceso(void* un_proceso){
 	loggear("Ejecutando proceso....");
 	proceso* p=(proceso*)un_proceso;
 	instr_t* instruccion_obtenida;
-	//sleep(1);
 	for(int i=0;i<configuracion.quantum;i++){
 		loggear("Hay quantum!");
 		instruccion_obtenida=obtener_instruccion(p);
@@ -209,13 +208,50 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	return respuesta;
 }
 instr_t* enviar_i(instr_t* i){
+
+//	loggear("ENVIANDO INSTRUCCION FAKE ");
+//	print_instruccion(i);
+//
+//	i->codigo_operacion=0;
+//	i->timestamp=obtener_ts();
 	loggear("ENVIANDO INSTRUCCION FAKE ");
-	i->codigo_operacion=0;
-	i->timestamp=obtener_ts();
-	printf("##### \nInstruccion enviada");
 	print_instruccion(i);
-	printf("####\n");
-	return i;
+	printf("##### \nInstruccion enviada, esperando respuesta###\n");
+
+
+	hilo_enviado* h=malloc(sizeof(hilo_enviado));
+	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	h->cond_t=cond;
+	h->mutex_t=mutex;
+	loggear("Agrego a diccionario");
+	sem_wait(&mutex_diccionario_enviados);
+	dictionary_put(diccionario_enviados,i->timestamp,h);
+	sem_post(&mutex_diccionario_enviados);
+	loggear("Me bloqueo!");
+	pthread_mutex_lock(&cond);
+	pthread_cond_wait(&cond_ejecutar,&mutex);
+	pthread_mutex_unlock(&cond);
+	loggear("Recibi respuesta!");
+
+
+	return h->respuesta;
+}
+
+void recibi_respuesta(instr_t* respuesta){
+	loggear("Instruccion recibida: ");
+	print_instruccion(respuesta);
+
+	sem_wait(&mutex_diccionario_enviados);
+	hilo_enviado* h=dictionary_get(diccionario_enviados,respuesta->timestamp);
+	dictionary_remove(diccionario_enviados,respuesta->timestamp);
+	sem_post(&mutex_diccionario_enviados);
+	loggear("Asigno respuesta y revivo hilo");
+	h->respuesta=respuesta;
+	pthread_mutex_lock(&h->mutex_t);
+	pthread_cond_signal(&h->cond_t);
+	pthread_mutex_unlock(&h->mutex_t);
+
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
@@ -225,6 +261,7 @@ void encolar_o_finalizar_proceso(proceso* p){
 	}
 
 }
+
 void finalizar_proceso(proceso* p){
 	//	instruccion_t* aux;
 	//	loggear("finalizando");
@@ -326,6 +363,8 @@ void inicializar_semaforos(){
 	sem_init(&mutex_log,0,1);
 	sem_init(&semaforo_procesos_ready,0,1);
 	sem_init(&mutex_cantidad_hilos,0,1);
+	sem_init(&mutex_diccionario_enviados,0,1);
+	diccionario_enviados=dictionary_create();
 	puts("Semaforos inicializados");
 }
 

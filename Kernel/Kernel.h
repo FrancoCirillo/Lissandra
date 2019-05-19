@@ -56,13 +56,17 @@ typedef struct memoria{
 	int puerto;
 }memoria;
 
-
+typedef struct hilo_enviado{
+	pthread_cond_t cond_t;
+	pthread_mutex_t mutex_t;
+	instr_t* respuesta;
+}hilo_enviado;
 
 metricas m;
 proceso* cola_ready=NULL;
 config_t configuracion;
 int total_hilos=0;
-
+t_dictionary * diccionario_enviados;
 
 //Semaforos mutex y lock
 pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
@@ -70,7 +74,7 @@ pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
 sem_t mutex_cantidad_hilos;
 sem_t mutex_log;
 sem_t semaforo_procesos_ready;
-
+sem_t mutex_diccionario_enviados;
 
 //Proceso principal
 int ejecutar();
