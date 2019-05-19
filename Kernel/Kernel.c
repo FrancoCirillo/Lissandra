@@ -8,14 +8,20 @@ pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
 sem_t mutex_cantidad_hilos;
 sem_t mutex_log;
+
 void ejemplo_procesos();
+void iniciar_log();
 int main() {
+	inicializar_semaforos();
+
 	inicializarConfiguracion();
 	//RUN("test.lql");
-
+	iniciar_log();
 	ejemplo_procesos();
-	sleep(100);
+	sleep(20);
 	loggear("FIN");
+
+
 
 	//	pthread_t un_hilo;
 	//	pthread_attr_t attr;
@@ -133,7 +139,6 @@ void ejemplo_procesos(){
 
 
 	loggear("Iniciando....");
-	inicializar_semaforos();
 
 
 	pthread_t hilo_ejecutador;
@@ -168,6 +173,12 @@ void continuar_ejecucion(){
 
 	loggear("Senial enviada!");
 }
+int hay_procesos(){
+	sem_wait(&semaforo_procesos_ready);
+	int hay=cola_ready!=NULL;
+	sem_post(&semaforo_procesos_ready);
+	return hay;
+}
 int ejecutar(){
 	proceso *p;
 
@@ -181,10 +192,8 @@ int ejecutar(){
 		sleep(1);
 		loggear("Espera finalizada");
 		loggear("Ejecutando");
-		sem_wait(&semaforo_procesos_ready);
-		int hay_procesos=cola_ready!=NULL;
-		sem_post(&semaforo_procesos_ready);
-		while(hilos_disponibles()&&hay_procesos){//Se puede procesar
+
+		while(hilos_disponibles()&&hay_procesos()){//Se puede procesar
 
 			loggear("Hay hilos y procesos!! Ejecutando...\n");
 			p=obtener_sig_proceso();
@@ -277,7 +286,12 @@ void encolar_o_finalizar_proceso(proceso* p){
 
 }
 void finalizar_proceso(proceso* p){
-	free(p);
+	instruccion_t* aux;
+//	loggear("finalizando");
+//	while((aux=p->instrucciones)!=NULL){
+//		p->instrucciones=p->instrucciones->sig;
+//		free(&aux);
+//	}
 	loggear("Se finalizo correctamente un proceso !!. Se libera su memoria");
 	continuar_ejecucion();
 }
@@ -320,8 +334,11 @@ instruccion_t* obtener_instruccion(proceso* p){
 }
 
 int hilos_disponibles(){
+	sem_wait(&mutex_cantidad_hilos);
 	//Compara el total de config con la cantidad creada;
-	return configuracion.gradoMultiprocesamiento>total_hilos;
+	int hay=configuracion.gradoMultiprocesamiento>total_hilos;
+	sem_post(&mutex_cantidad_hilos);
+	return hay;
 }
 void inicializarMemorias() {
 	loggear("Memorias inicializadas");
@@ -345,11 +362,13 @@ memoria obtenerMemoria(instruccion_t* instr) {
 	memoria m;
 	return m;
 }
+void iniciar_log(){
+	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
+
+}
 void loggear(char *valor) {
 	sem_wait(&mutex_log);
-	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
-	log_destroy(g_logger);
 	sem_post(&mutex_log);
 }
 char* obtener_por_clave(char* ruta, char* key) {
@@ -367,7 +386,7 @@ void inicializar_semaforos(){
 	sem_init(&mutex_log,0,1);
 	sem_init(&semaforo_procesos_ready,0,1);
 	sem_init(&mutex_cantidad_hilos,0,1);
-	loggear("Semaforos inicializados");
+	puts("Semaforos inicializados");
 }
 /*void sem_wait(sem_t *semaforo){
 	int n=sem_wait(semaforo);
