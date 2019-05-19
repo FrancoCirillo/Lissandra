@@ -45,6 +45,7 @@ void dumpear(t_list* mem){
 
 void inicializar_memtable(){
 	memtable = list_create();
+	loggear_FS("Se inicializó la memtable.");
 }
 
 void mem_agregar_tabla(char* tabla){

@@ -44,6 +44,8 @@ typedef long int mseg_t;
 sem_t mutex_tiempo_dump_config;
 sem_t mutex_tiempo_retardo_config;
 sem_t mutex_memtable;
+sem_t mutex_log;
+
 
 /*STRUCTS*/
 
