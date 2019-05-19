@@ -82,7 +82,7 @@ void encolar_o_finalizar_proceso(proceso* p);
 void* consola(void *param);
 void iniciar_ejecutador();
 void iniciar_consola();
-void RUN_FILE(char *nombre_archivo);
+void kernel_run(char *nombre_archivo);
 
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
@@ -102,5 +102,6 @@ void inicializar_semaforos();
 void ejemplo_procesos();
 void iniciar_log();
 char* obtener_parametroN(instr_t* i,int index);
+void procesar_instruccion_consola(char *instruccion);
 
 #endif /* kernel.h */

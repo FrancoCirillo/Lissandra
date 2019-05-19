@@ -12,17 +12,51 @@ int main() {
 
 	iniciar_ejecutador();
 
-	RUN_FILE("p1.lql");
-	RUN_FILE("p2.lql");
-	RUN_FILE("p3.lql");
-
-	sleep(20);
-	loggear("FIN");
-
-
-
-
+	//kernel_run("p1.lql");
+	//kernel_run("p2.lql");
+	//kernel_run("p3.lql");
+	iniciar_consola();
+	loggear("### KERNEL FINALIZADO ###");
 	return 0;
+}
+void iniciar_consola(){
+	sleep(1);
+	loggear("Se inicia consola");
+	pthread_t hilo_consola;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_consola,&attr,consola,NULL);
+	pthread_join(hilo_consola,NULL);
+
+}
+void* consola(void* c){
+	char* instruccion;
+	while(1){
+		instruccion=readline("\n>>");
+		if(strcmp(instruccion,"close")==0){
+			loggear("##### FINALIZANDO KERNEL.... ###### \n");
+			return NULL;
+		}
+
+		printf("Procesando instruccion:: %s \n",instruccion);
+		procesar_instruccion_consola(instruccion);
+
+	}
+}
+void procesar_instruccion_consola(char *instruccion){
+	loggear("Generando instruccion unitaria");
+	t_list* instrucciones = list_create();
+	proceso* p=malloc(sizeof(proceso));
+	p->current=0;
+	p->size=0;
+	p->instrucciones=instrucciones;
+	p->sig=NULL;
+	instr_t* nueva_instruccion=leer_a_instruccion(instruccion);
+	list_add(p->instrucciones,nueva_instruccion);
+	p->size++;
+	loggear("Instruccion generada, encolando proceso...");
+	encolar_proceso(p);
+
 }
 void iniciar_ejecutador(){
 	loggear("Se inicia ejecutador");
@@ -33,13 +67,7 @@ void iniciar_ejecutador(){
 	pthread_detach(hilo_ejecutador);
 	loggear("Ejecutador iniciado");
 }
-void iniciar_consola(){
-	pthread_t un_hilo;
-	pthread_attr_t attr;
-	pthread_create(&un_hilo,&attr,consola,NULL);
-	pthread_join(un_hilo,NULL);
-}
-void RUN_FILE(char *nombre_archivo){
+void kernel_run(char *nombre_archivo){
 	loggear("RUN FILE!");
 	FILE *f=fopen(nombre_archivo,"r");
 	char line[64];
@@ -60,19 +88,11 @@ void RUN_FILE(char *nombre_archivo){
 		print_instruccion(nueva_instruccion);
 	}
 	fclose(f);
-	//encolo proceso
+
 	encolar_proceso(p);
 
 }
-void* consola(void* param){
-	while(1==1){
-		sleep(1);
-		char * cosa=readline(">");
-		printf("La cosa es %s",cosa);
-		return NULL;
-	}
 
-}
 
 void continuar_ejecucion(){
 	loggear("Enviando senial en 1 segundo");
@@ -182,6 +202,9 @@ char* obtener_parametroN(instr_t* i,int index){
 instr_t* ejecutar_instruccion(instr_t* i){
 	loggear("Se ejecuta una instruccion");
 	//	sleep(1);
+	if(i->codigo_operacion==CODIGO_RUN){
+		kernel_run(obtener_parametroN(i,0));
+	}
 	instr_t* respuesta=enviar_i(i);
 	return respuesta;
 }
