@@ -43,7 +43,7 @@ int main() {
 }
 
 
-void ejecutar_instruccion(instr_t* instruccion, int fdEntrante){
+void ejecutar_instruccion(instr_t* instruccion, char* remitente){
 
 	switch(instruccion->codigo_operacion){
 	case CONSOLA_KRN_EXITO: ejecutar_instruccion_exito(instruccion); break;

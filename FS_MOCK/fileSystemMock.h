@@ -41,17 +41,17 @@ void loggear(char* valor);
 void inicializar_configuracion();
 char* obtener_por_clave(char* ruta, char* clave);
 
-void (*callback) (instr_t* instruccion, int fdEntrante);
+void (*callback) (instr_t* instruccion, char* remitente);
 
 void responderHandshake(identificador* idsConexionEntrante);
 
-void ejecutar_instruccion(instr_t* instruccion, int conexionReceptor);
-void ejecutar_instruccion_select(instr_t* instruccion);
-void ejecutar_instruccion_insert(instr_t* instruccion);
-void ejecutar_instruccion_create(instr_t* instruccion);
-void ejecutar_instruccion_describe(instr_t* instruccion);
-void ejecutar_instruccion_drop(instr_t* instruccion);
-void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam);
+void ejecutar_instruccion(instr_t* instruccion, char* remitente);
+void ejecutar_instruccion_select(instr_t* instruccion, char* remitente);
+void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente);
+void ejecutar_instruccion_create(instr_t* instruccion, char* remitente);
+void ejecutar_instruccion_describe(instr_t* instruccion, char* remitente);
+void ejecutar_instruccion_drop(instr_t* instruccion, char* remitente);
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, char* remitente);
 int obtener_fd_out(char* proceso);
 
 #endif /* FILE_SYSTEM_H */

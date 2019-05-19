@@ -72,7 +72,7 @@ char* obtener_por_clave(char* ruta, char* clave) {
 }
 
 
-void ejecutar_instruccion(instr_t* instruccion, int fdEntrante){
+void ejecutar_instruccion(instr_t* instruccion, char* remitente){
 
 	switch(instruccion->codigo_operacion){
 	case CONSOLA_MEM_SELECT:
