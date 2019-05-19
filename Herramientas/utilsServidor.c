@@ -58,7 +58,6 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 
 	char bufferLeido[100];
 	int i;
-	identificador* idsNuevaConexion = malloc(sizeof(identificador));
 	FD_ZERO(&master); //los vaciamos
 	FD_ZERO(&read_fds);
 
@@ -105,16 +104,17 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							else{
 								char* suIP = (char*) list_get(instruccion_handshake->parametros, 1); //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
 								char* suPuerto = (char*) list_get(instruccion_handshake->parametros, 2); //Su Puerto
+								identificador* idsNuevaConexion = malloc(sizeof(identificador));
 								strcpy(idsNuevaConexion->puerto, suPuerto);
 								strcpy(idsNuevaConexion->ip_proceso, suIP);
 								idsNuevaConexion->fd_in = newfd;
 								idsNuevaConexion->fd_out = 0;
 								dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
 							}
-							printf("Se agrego %s en %d\n", quienEs, newfd);
 							char auxFd[4];
 							sprintf(auxFd, "%d", newfd); //Para poder usarlo como key en el diccionario
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
+//							imprimirConexiones(conexionesConocidas); //Debug
 						}
 					}
 					else if(i == 0){ //Recibido desde la consola
@@ -136,7 +136,6 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							char auxFd[4];
 							sprintf(auxFd, "%d", i);
 							char* quienLoEnvia = dictionary_get(auxiliarConexiones, auxFd);
-							printf("Lo envia %s\n", quienLoEnvia);
 							ejecutar_requestRecibido(instrcuccion_recibida, quienLoEnvia);
 						}
 

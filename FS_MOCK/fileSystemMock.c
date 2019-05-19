@@ -153,7 +153,7 @@ void inicializar_configuracion() {
 
 
 void loggear(char* valor) {
-	g_logger = log_create(configuracion.RUTA_LOG, "memoria", 1, LOG_LEVEL_INFO);
+	g_logger = log_create(configuracion.RUTA_LOG, "fs", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
 	log_destroy(g_logger);
 }
@@ -183,8 +183,7 @@ void responderHandshake(identificador* idsConexionEntrante){
 
 int obtener_fd_out(char* proceso){
 	identificador* idsProceso = (identificador *) dictionary_get(conexionesActuales, proceso);
-	if(idsProceso->fd_out==0){
-		printf("Es la primera vez que se le quiere enviar algo a %s\n", proceso);
+	if(idsProceso->fd_out==0){//Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;

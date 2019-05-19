@@ -40,6 +40,8 @@ typedef struct config{
 config configuracion;
 identificador* idsNuevasConexiones;
 t_dictionary * conexionesActuales;
+char nombreDeMemoria[12];
+char miIPMemoria[18];
 
 void (*callback) (instr_t* instruccion, char* remitente);
 
