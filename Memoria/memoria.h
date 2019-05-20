@@ -12,11 +12,11 @@
 #include <commons/collections/list.h>
 #include <commons/collections/dictionary.h>
 #include <readline/readline.h>
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/serializaciones.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
+#include "../Herramientas/serializaciones.h"
+#include "../Herramientas/definicionesConexiones.h"
+#include "../Herramientas/utilsServidor.h"
+#include "../Herramientas/utilsCliente.h"
+#include "../Herramientas/tiempo.h"
 t_log* g_logger;
 t_config* g_config;
 

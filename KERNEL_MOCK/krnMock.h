@@ -8,10 +8,6 @@
 #ifndef KRNMOCK_H_
 #define KRNMOCK_H_
 
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,6 +16,10 @@
 #include <commons/string.h>
 #include <commons/collections/list.h>
 #include <sys/stat.h>
+#include "../Herramientas/definicionesConexiones.h"
+#include "../Herramientas/utilsServidor.h"
+#include "../Herramientas/utilsCliente.h"
+#include "../Herramientas/tiempo.h"
 
 
 //Cambiar para testear con las memorias que se quiera

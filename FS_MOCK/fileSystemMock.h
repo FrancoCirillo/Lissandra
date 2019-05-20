@@ -3,10 +3,10 @@
 #ifndef FILE_SYSTEM_H
 #define FILE_SYSTEM_H
 
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsCliente.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/utilsServidor.h"
+#include "../Herramientas/tiempo.h"
+#include "../Herramientas/definicionesConexiones.h"
+#include "../Herramientas/utilsCliente.h"
+#include "../Herramientas/utilsServidor.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
