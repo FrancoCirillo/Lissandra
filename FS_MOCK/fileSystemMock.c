@@ -2,14 +2,14 @@
 
 #include "fileSystemMock.h"
 
-int main() {
-	printf(COLOR_ANSI_AMARILLO"	PROCESO FILESYSTEM"COLOR_ANSI_RESET"\n");
+int main()
+{
+	printf(COLOR_ANSI_AMARILLO "	PROCESO FILESYSTEM" COLOR_ANSI_RESET "\n");
 
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
 
 	inicializar_configuracion();
-
 
 	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
 
@@ -18,100 +18,113 @@ int main() {
 	return 0;
 }
 
-void ejecutar_instruccion(instr_t* instruccion, char* remitente){
-	switch(instruccion->codigo_operacion){
-		case CONSOLA_FS_SELECT:
-		case CONSOLA_MEM_SELECT:
-		case CONSOLA_KRN_SELECT: ejecutar_instruccion_select(instruccion, remitente); break;
-		case CONSOLA_FS_INSERT:
-		case CONSOLA_MEM_INSERT:
-		case CONSOLA_KRN_INSERT: ejecutar_instruccion_insert(instruccion, remitente); break;
-		case CONSOLA_FS_CREATE:
-		case CONSOLA_MEM_CREATE:
-		case CONSOLA_KRN_CREATE: ejecutar_instruccion_create(instruccion, remitente); break;
-		case CONSOLA_FS_DESCRIBE:
-		case CONSOLA_MEM_DESCRIBE:
-		case CONSOLA_KRN_DESCRIBE: ejecutar_instruccion_describe(instruccion, remitente); break;
-		case CONSOLA_FS_DROP:
-		case CONSOLA_MEM_DROP:
-		case CONSOLA_KRN_DROP: ejecutar_instruccion_drop(instruccion, remitente); break;
-		default: break;
-		}
+void ejecutar_instruccion(instr_t *instruccion, char *remitente)
+{
+	switch (instruccion->codigo_operacion)
+	{
+	case CONSOLA_FS_SELECT:
+	case CONSOLA_MEM_SELECT:
+	case CONSOLA_KRN_SELECT:
+		ejecutar_instruccion_select(instruccion, remitente);
+		break;
+	case CONSOLA_FS_INSERT:
+	case CONSOLA_MEM_INSERT:
+	case CONSOLA_KRN_INSERT:
+		ejecutar_instruccion_insert(instruccion, remitente);
+		break;
+	case CONSOLA_FS_CREATE:
+	case CONSOLA_MEM_CREATE:
+	case CONSOLA_KRN_CREATE:
+		ejecutar_instruccion_create(instruccion, remitente);
+		break;
+	case CONSOLA_FS_DESCRIBE:
+	case CONSOLA_MEM_DESCRIBE:
+	case CONSOLA_KRN_DESCRIBE:
+		ejecutar_instruccion_describe(instruccion, remitente);
+		break;
+	case CONSOLA_FS_DROP:
+	case CONSOLA_MEM_DROP:
+	case CONSOLA_KRN_DROP:
+		ejecutar_instruccion_drop(instruccion, remitente);
+		break;
+	default:
+		break;
+	}
 }
 
-
-
-void ejecutar_instruccion_select(instr_t* instruccion, char* remitente){
+void ejecutar_instruccion_select(instr_t *instruccion, char *remitente)
+{
 	puts("Ejecutando instruccion Select");
 	sleep(1);
 	int tablaPreexistente = 1;
-	if(tablaPreexistente){
-		t_list * listaParam = list_create();
-		list_add(listaParam, (char*) list_get(instruccion->parametros, 0)); //Tabla
-		list_add(listaParam, (char*) list_get(instruccion->parametros, 1)); //Key
-		list_add(listaParam, "Buenas soy un value"); //Value
-		imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion,listaParam, remitente);
+	if (tablaPreexistente)
+	{
+		t_list *listaParam = list_create();
+		list_add(listaParam, (char *)list_get(instruccion->parametros, 0)); //Tabla
+		list_add(listaParam, (char *)list_get(instruccion->parametros, 1)); //Key
+		list_add(listaParam, "Buenas soy un value");						//Value
+		imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
 	}
-	else{
-		t_list * listaParam = list_create();
-		char cadena [400];
-		sprintf(cadena, "%s%s", (char*) list_get(instruccion->parametros, 0), "No existe");
+	else
+	{
+		t_list *listaParam = list_create();
+		char cadena[400];
+		sprintf(cadena, "%s%s", (char *)list_get(instruccion->parametros, 0), "No existe");
 		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(ERROR_SELECT, instruccion,listaParam, remitente);
+		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 	}
 }
 
-
-void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
+void ejecutar_instruccion_insert(instr_t *instruccion, char *remitente)
+{
 	puts("Ejecutando instruccion Insert");
 	sleep(1);
-	t_list * listaParam = list_create();
-	char cadena [400];
-	sprintf(cadena, "%s%s%s%s%s%s%s%u","Se inserto ", (char*) list_get(instruccion->parametros, 0), " | ",(char*) list_get(instruccion->parametros, 1), " | ", (char*) list_get(instruccion->parametros, 2)," | ",(unsigned int)instruccion->timestamp);
+	t_list *listaParam = list_create();
+	char cadena[400];
+	sprintf(cadena, "%s%s%s%s%s%s%s%u", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (unsigned int)instruccion->timestamp);
 	list_add(listaParam, cadena);
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam, remitente);
-
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 }
 
-
-void ejecutar_instruccion_create(instr_t* instruccion, char* remitente){
+void ejecutar_instruccion_create(instr_t *instruccion, char *remitente)
+{
 	puts("Ejecutando instruccion Create");
 
-	t_list * listaParam = list_create();
-	char cadena [400];
-	sprintf(cadena, "%s%s%s%s%s%s%s%s","Se creo la tabla", (char*) list_get(instruccion->parametros, 0), " con tipo de consistencia ",(char*) list_get(instruccion->parametros, 1), ", tiene ", (char*) list_get(instruccion->parametros, 2)," particiones y un tiempo de compactacion de ",(char*) list_get(instruccion->parametros, 3));
+	t_list *listaParam = list_create();
+	char cadena[400];
+	sprintf(cadena, "%s%s%s%s%s%s%s%s", "Se creo la tabla", (char *)list_get(instruccion->parametros, 0), " con tipo de consistencia ", (char *)list_get(instruccion->parametros, 1), ", tiene ", (char *)list_get(instruccion->parametros, 2), " particiones y un tiempo de compactacion de ", (char *)list_get(instruccion->parametros, 3));
 	list_add(listaParam, cadena);
 
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam, remitente);
-
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 }
 
-
-void ejecutar_instruccion_describe(instr_t* instruccion, char* remitente){
+void ejecutar_instruccion_describe(instr_t *instruccion, char *remitente)
+{
 	puts("Ejecutando instruccion Describe");
-	t_list * listaParam = list_create();
-	char cadena [400];
-	sprintf(cadena, "%s%s%s","Metadata ",(char*) list_get(instruccion->parametros, 0),":\n	Tipo de consistencia: \n	Numero de Particiones: 4\n	Tiempo entre compactaciones: 60000");
+	t_list *listaParam = list_create();
+	char cadena[400];
+	sprintf(cadena, "%s%s%s", "Metadata ", (char *)list_get(instruccion->parametros, 0), ":\n	Tipo de consistencia: \n	Numero de Particiones: 4\n	Tiempo entre compactaciones: 60000");
 	list_add(listaParam, cadena);
 
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam, remitente);
-
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 }
 
-
-void ejecutar_instruccion_drop(instr_t* instruccion, char* remitente){
+void ejecutar_instruccion_drop(instr_t *instruccion, char *remitente)
+{
 	puts("Ejecutando instruccion Drop");
-	t_list * listaParam = list_create();
-	char cadena [400];
-	sprintf(cadena, "%s%s","Se borro la ",(char*) list_get(instruccion->parametros, 0));
+	t_list *listaParam = list_create();
+	char cadena[400];
+	sprintf(cadena, "%s%s", "Se borro la ", (char *)list_get(instruccion->parametros, 0));
 	list_add(listaParam, cadena);
 
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion,listaParam, remitente);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 }
 
-void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, char* remitente){
-	instr_t * miInstruccion;
-	switch(quienEnvio(instruccion)){
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente)
+{
+	instr_t *miInstruccion;
+	switch (quienEnvio(instruccion))
+	{
 
 	case CONSOLA_KERNEL:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
@@ -126,41 +139,43 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 	default:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		//Se pidio desde la consola de FS
-		if(codigoOperacion == DEVOLUCION_SELECT){
+		if (codigoOperacion == DEVOLUCION_SELECT)
+		{
 			imprimir_registro(miInstruccion);
 		}
-		if(codigoOperacion == CODIGO_EXITO){
-					loggear_exito(miInstruccion);
-				}
-		if(codigoOperacion > BASE_CONSOLA_FS){ //Es error
-					loggear_error(miInstruccion);
-				}
+		if (codigoOperacion == CODIGO_EXITO)
+		{
+			loggear_exito(miInstruccion);
+		}
+		if (codigoOperacion > BASE_CONSOLA_FS)
+		{ //Es error
+			loggear_error(miInstruccion);
+		}
 		break;
 	}
-
 }
 
-
-void inicializar_configuracion() {
+void inicializar_configuracion()
+{
 	puts("Configuracion:");
-	char* rutaConfig = "fsMock.config";
+	char *rutaConfig = "fsMock.config";
 	puts("Config accedido.");
 	configuracion.PUERTO_ESCUCHA = obtener_por_clave(rutaConfig, "PUERTO_ESCUCHA");
 	configuracion.TAMANIO_VALUE = atoi(obtener_por_clave(rutaConfig, "TAMANIO_VALUE"));
-	configuracion.TIEMPO_DUMP= atoi(obtener_por_clave(rutaConfig, "TIEMPO_DUMP"));
+	configuracion.TIEMPO_DUMP = atoi(obtener_por_clave(rutaConfig, "TIEMPO_DUMP"));
 	configuracion.RUTA_LOG = obtener_por_clave(rutaConfig, "RUTA_LOG");
 }
 
-
-void loggear(char* valor) {
+void loggear(char *valor)
+{
 	g_logger = log_create(configuracion.RUTA_LOG, "fs", 1, LOG_LEVEL_INFO);
 	log_info(g_logger, valor);
 	log_destroy(g_logger);
 }
 
-
-char* obtener_por_clave(char* ruta, char* clave) {
-	char* valor;
+char *obtener_por_clave(char *ruta, char *clave)
+{
+	char *valor;
 	g_config = config_create(ruta);
 	valor = config_get_string_value(g_config, clave);
 	printf(" %s: %s \n", clave, valor);
@@ -168,22 +183,24 @@ char* obtener_por_clave(char* ruta, char* clave) {
 	return valor;
 }
 
-void responderHandshake(identificador* idsConexionEntrante){
-	t_list * listaParam = list_create();
+void responderHandshake(identificador *idsConexionEntrante)
+{
+	t_list *listaParam = list_create();
 	list_add(listaParam, "FileSystem");
 	list_add(listaParam, IP_FILESYSTEM);
 	list_add(listaParam, PORT); //TODO configuracion.PUERTO
-	instr_t * miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente =  crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_FILESYSTEM);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_FILESYSTEM);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
-
 }
 
-int obtener_fd_out(char* proceso){
-	identificador* idsProceso = (identificador *) dictionary_get(conexionesActuales, proceso);
-	if(idsProceso->fd_out==0){//Es la primera vez que se le quiere enviar algo a proceso
+int obtener_fd_out(char *proceso)
+{
+	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if (idsProceso->fd_out == 0)
+	{ //Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;

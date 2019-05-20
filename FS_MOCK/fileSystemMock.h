@@ -24,34 +24,35 @@
 //DESCRIBE [NOMBRE_TABLA]
 //DROP [NOMBRE_TABLA]
 
-t_log* g_logger;
-t_config* g_config;
-t_dictionary * conexionesActuales;
+t_log *g_logger;
+t_config *g_config;
+t_dictionary *conexionesActuales;
 
-typedef struct config{
-	char* PUERTO_ESCUCHA;
+typedef struct config
+{
+	char *PUERTO_ESCUCHA;
 	char TAMANIO_VALUE;
 	char TIEMPO_DUMP;
-	char* RUTA_LOG;
-}config;
+	char *RUTA_LOG;
+} config;
 
 config configuracion;
 
-void loggear(char* valor);
+void loggear(char *valor);
 void inicializar_configuracion();
-char* obtener_por_clave(char* ruta, char* clave);
+char *obtener_por_clave(char *ruta, char *clave);
 
-void (*callback) (instr_t* instruccion, char* remitente);
+void (*callback)(instr_t *instruccion, char *remitente);
 
-void responderHandshake(identificador* idsConexionEntrante);
+void responderHandshake(identificador *idsConexionEntrante);
 
-void ejecutar_instruccion(instr_t* instruccion, char* remitente);
-void ejecutar_instruccion_select(instr_t* instruccion, char* remitente);
-void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente);
-void ejecutar_instruccion_create(instr_t* instruccion, char* remitente);
-void ejecutar_instruccion_describe(instr_t* instruccion, char* remitente);
-void ejecutar_instruccion_drop(instr_t* instruccion, char* remitente);
-void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list * listaParam, char* remitente);
-int obtener_fd_out(char* proceso);
+void ejecutar_instruccion(instr_t *instruccion, char *remitente);
+void ejecutar_instruccion_select(instr_t *instruccion, char *remitente);
+void ejecutar_instruccion_insert(instr_t *instruccion, char *remitente);
+void ejecutar_instruccion_create(instr_t *instruccion, char *remitente);
+void ejecutar_instruccion_describe(instr_t *instruccion, char *remitente);
+void ejecutar_instruccion_drop(instr_t *instruccion, char *remitente);
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
+int obtener_fd_out(char *proceso);
 
 #endif /* FILE_SYSTEM_H */

@@ -14,11 +14,11 @@
 
 #define COLOR_ANSI_ROJO "\x1b[31m"
 #define COLOR_ANSI_VERDE "\x1b[32m"
-#define COLOR_ANSI_AMARILLO  "\x1b[33m"
+#define COLOR_ANSI_AMARILLO "\x1b[33m"
 #define COLOR_ANSI_AZUL "\x1b[34m"
 #define COLOR_ANSI_MAGENTA "\x1b[35m"
-#define COLOR_ANSI_CYAN    "\x1b[36m"
-#define COLOR_ANSI_RESET   "\x1b[0m"
+#define COLOR_ANSI_CYAN "\x1b[36m"
+#define COLOR_ANSI_RESET "\x1b[0m"
 
 #define CONSOLA_KERNEL 0
 #define CONSOLA_MEMORIA 1
@@ -29,13 +29,13 @@
 #define BASE_CONSOLA_FS 200
 #define BASE_COD_ERROR 1000
 
-typedef enum cod_proceso{
+typedef enum cod_proceso {
 	KERNEL,
 	MEMORIA,
 	FILESYSTEM
-}cod_proceso;
+} cod_proceso;
 
-typedef enum cod_op{
+typedef enum cod_op {
 	CODIGO_EXITO = 0,
 	CODIGO_SELECT = 1,
 	CODIGO_INSERT = 2,
@@ -79,51 +79,57 @@ typedef enum cod_op{
 
 	CONSOLA_KRN_SELECT = BASE_CONSOLA_KERNEL + CODIGO_SELECT,
 	CONSOLA_KRN_RTA_SELECT = BASE_CONSOLA_KERNEL + DEVOLUCION_SELECT,
-	CONSOLA_KRN_INSERT =BASE_CONSOLA_KERNEL + CODIGO_INSERT,
-	CONSOLA_KRN_CREATE =BASE_CONSOLA_KERNEL + CODIGO_CREATE,
-	CONSOLA_KRN_DESCRIBE =BASE_CONSOLA_KERNEL + CODIGO_DESCRIBE,
-	CONSOLA_KRN_DROP =BASE_CONSOLA_KERNEL + CODIGO_DROP,
-	CONSOLA_KRN_JOURNAL =BASE_CONSOLA_KERNEL + CODIGO_JOURNAL,
-	CONSOLA_KRN_ADD =BASE_CONSOLA_KERNEL + CODIGO_ADD,
+	CONSOLA_KRN_INSERT = BASE_CONSOLA_KERNEL + CODIGO_INSERT,
+	CONSOLA_KRN_CREATE = BASE_CONSOLA_KERNEL + CODIGO_CREATE,
+	CONSOLA_KRN_DESCRIBE = BASE_CONSOLA_KERNEL + CODIGO_DESCRIBE,
+	CONSOLA_KRN_DROP = BASE_CONSOLA_KERNEL + CODIGO_DROP,
+	CONSOLA_KRN_JOURNAL = BASE_CONSOLA_KERNEL + CODIGO_JOURNAL,
+	CONSOLA_KRN_ADD = BASE_CONSOLA_KERNEL + CODIGO_ADD,
 	CONSOLA_KRN_RUN = BASE_CONSOLA_KERNEL + CODIGO_RUN,
 	CONSOLA_KRN_METRICS = BASE_CONSOLA_KERNEL + CODIGO_METRICS,
 
 	CODIGO_HANDSHAKE = 11
-}cod_op;
+} cod_op;
 
-typedef struct instr_t{
+typedef struct instr_t
+{
 	mseg_t timestamp;
 	cod_op codigo_operacion;
-	t_list* parametros;
-}instr_t;
+	t_list *parametros;
+} instr_t;
 
-typedef struct remitente_t{
-	char* ip;
-	char* puerto;
-}remitente_t;
+typedef struct remitente_t
+{
+	char *ip;
+	char *puerto;
+} remitente_t;
 
-typedef struct remitente_instr_t{
+typedef struct remitente_instr_t
+{
 	instr_t *instruccion;
 	remitente_t *remitente;
-}remitente_instr_t;
+} remitente_instr_t;
 
-typedef struct t_buffer{
+typedef struct t_buffer
+{
 	int size;
-	void* stream;
-}t_buffer;
+	void *stream;
+} t_buffer;
 
-typedef struct t_paquete{
+typedef struct t_paquete
+{
 	mseg_t timestamp;
 	cod_op codigo_operacion;
-	t_buffer* buffer;
-}t_paquete;
+	t_buffer *buffer;
+} t_paquete;
 
 //para usar con diccionario {<Nombre>:{fd_out, fd_in,puerto, IP}}
-typedef struct identificador{
+typedef struct identificador
+{
 	int fd_out;
 	int fd_in;
 	char puerto[8];
 	char ip_proceso[17]; //"000.000.000.000\n"
-}identificador;
+} identificador;
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */
