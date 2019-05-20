@@ -7,65 +7,8 @@ int main() {
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	inicializar_FS();
 
-
-
-	//CREATE
-	//[TABLA]
-	//[TIPO_CONSISTENCIA]
-	//[NUMERO_PARTICIONES]
-	//[COMPACTION_TIME]
-
-	loggear_FS("Ejecutamos Instruccion CREATE");
-	instr_t* instr=malloc(sizeof(instr_t));
-	instr->timestamp = obtener_ts();
-	instr->codigo_operacion = CODIGO_CREATE;
-	instr->parametros = list_create();
-
-	list_add(instr->parametros,"Una Tablita chica" );
-	list_add(instr->parametros,"SC" );
-	list_add(instr->parametros,"7" );
-	list_add(instr->parametros,"60000" );
-
-	remitente_t* remi=malloc(sizeof(remitente_t));
-	remi->ip = IP_MEMORIA;
-	remi->puerto = PORT;
-
-	remitente_instr_t* mensaje = malloc(sizeof(remitente_instr_t));
-	mensaje->instruccion = instr;
-	mensaje->remitente = remi;
-
-	evaluar_instruccion(mensaje);
-
-	printf("\nTIMESTAMP: %ld \n",mensaje->instruccion->timestamp );
-
-	char * a= obtener_parametro(mensaje->instruccion, 0);
-	char * b= obtener_parametro(mensaje->instruccion, 1);
-	char * c= obtener_parametro(mensaje->instruccion, 2);
-	char * d= obtener_parametro(mensaje->instruccion, 3);
-
-	//Pruebas de lectura nomas..
-	printf("cod_op: %d\n",mensaje->instruccion->codigo_operacion);
-	printf("tabla: %s\n",a);
-	printf("consistencia: %s\n",b);
-	printf("part: %s\n",c);
-	printf("t_dump: %s\n",d);
-
-	printf("\n");
-	printf("------\n");
-
-	crear_metadata(instr);
-	int cc= atoi(c);
-	int p = crear_particiones(a,cc);
-		if(p>0){
-				puts("exito en las particiones");
-		}
-		else puts("fallaron");
-
-
-	contestar(mensaje);  //Libera memoria del mje
-
-	printf("------\n");
-	printf("Se libero la memoria\n");
+	//testeo
+	ejemplo_instr_create();
 
 
 
@@ -103,18 +46,13 @@ int main() {
 	//////////////////////////////////////
 
 
-
-
-
-
-
 	finalizar_FS();
 	return 0;
 
 }
 
 		// este es el que va.
-
+//No esta chequeado.
 //int execute_insert(instr_t* i){
 //
 //	char* tabla = obtener_parametro(i,0);
@@ -135,7 +73,47 @@ int main() {
 //}
 
 
+void ejemplo_instr_create(){
 
+	//CREATE
+		//[TABLA]
+		//[TIPO_CONSISTENCIA]
+		//[NUMERO_PARTICIONES]
+		//[COMPACTION_TIME]
+
+
+	loggear_FS("Ejecutamos Instruccion CREATE");
+	instr_t* instr=malloc(sizeof(instr_t));
+	instr->timestamp = obtener_ts();
+	instr->codigo_operacion = CODIGO_CREATE;
+	instr->parametros = list_create();
+
+	list_add(instr->parametros,"Una Tablita chica" );
+	list_add(instr->parametros,"SC" );
+	list_add(instr->parametros,"7" );
+	list_add(instr->parametros,"60000" );
+
+	evaluar_instruccion(instr);
+
+
+
+	//testeo
+//	crear_metadata(instr);
+//	int cc= atoi(c);
+//	int p = crear_particiones(a,cc);
+//		if(p>0){
+//			puts("exito en las particiones");
+//			}
+//			else puts("fallaron");
+
+
+	contestar(instr);  //Libera memoria del mje
+
+	printf("------\n");
+	printf("Se libero la memoria\n");
+
+
+}
 
 
 
@@ -164,62 +142,58 @@ char* obtener_parametro(instr_t * i,int index){
 
 
 
-void evaluar_instruccion(remitente_instr_t* mensaje){
+void evaluar_instruccion(instr_t* i){
 
 	int respuesta= 0;
-	printf("Me llego la instruccion: ");  //Todo se debe loggear.
+	loggear_FS("Me llego la instruccion: ");  //Todo se debe loggear.
 
-	switch(mensaje->instruccion->codigo_operacion){
+	switch(i->codigo_operacion){
 
 	case CODIGO_SELECT:
-		printf("SELECT\n\n");
+		loggear_FS("Me llego una instruccion SELECT.");
 		break;
 
 	case CODIGO_INSERT:
-		printf("INSERT\n\n");
+		loggear_FS("Me llego una instruccion INSERT.");
 		//respuesta=execute_insert(mensaje->instruccion);
 		break;
 
 	case CODIGO_CREATE:
-		printf("CREATE\n\n");
-		respuesta = execute_create(mensaje->instruccion);					//todos tienen que devolver un valor,
+		loggear_FS("Me llego una instruccion CREATE.");
+		respuesta = execute_create(i);					//todos tienen que devolver un valor,
 
 		break;
 
 	case CODIGO_DESCRIBE:
-		printf("DESCRIBE\n\n");
+		loggear_FS("Me llego una instruccion DESCRIBE.");
 		break;
 
 	case CODIGO_DROP:
-		printf("DROP\n\n");
+		loggear_FS("Me llego una instruccion DROP.");
 		break;
 
 	default:
 		//verrrr
-		printf("No es una instruccion valida dentro del File System.\n\n");
+		loggear_FS("Me llego una instruccion invalida dentro del File System.");
 	}
 
-	mensaje->instruccion->codigo_operacion = respuesta;  //Esto pisa el codigo de operacion del mensaje para enviarle a memoria.
+	i->codigo_operacion = respuesta;  //Esto pisa el codigo de operacion del mensaje para enviarle a memoria.
 
 	/*
 	contestar(mensaje);   ESTO SI VA ACA. Pero para pruebas lo comento.
 		//este hace los free de la instruccion completa.
 	*/
 
-	printf("Finalizo la instruccion.\n");
+	loggear_FS("Finalizó la ejecución de la instrucción.");
 
 
 }
 
 
-void contestar(remitente_instr_t * i){
+void contestar(instr_t * i){
 	//usa responder()  Lo hacen los chicos
-	//se contesta
-	printf("Se contesta al remitente %s con %d \n",i->remitente->ip,i->instruccion->codigo_operacion);
-	list_clean(i->instruccion->parametros);
-	free(i->instruccion->parametros);
-	free(i->remitente);
-	free(i->instruccion);
+	list_clean(i->parametros);
+	free(i->parametros);
 	free(i);
 
 }

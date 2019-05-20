@@ -84,8 +84,11 @@ int crear_metadata(instr_t* i){
 	FILE* f = crear_archivo("Metadata", tabla, "");
 	metadata_inicializar(f, i);
 	fclose(f);
-	printf("Se creó el metadata en la tabla \"%s\".", tabla);
+	char* mje = malloc(sizeof(char)* (40+ strlen(tabla) ));
 
+	sprintf(mje,"Se creó el metadata en la tabla \"%s\".", tabla);
+	loggear_FS(mje);
+	free(mje);
 	return 1;  //Ver si hay que validar algo mas aca.. donde puede fallar?
 }
 

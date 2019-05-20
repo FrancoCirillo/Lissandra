@@ -91,7 +91,7 @@ void iniciar_semaforos();
 
 							/*MANEJO INTRUCCIONES*/
 
-void evaluar_instruccion(remitente_instr_t*);
+void evaluar_instruccion(instr_t*);
 int execute_create(instr_t*);
 int execute_insert(instr_t*);
 int execute_select(instr_t*);
@@ -100,6 +100,13 @@ int execute_drop(instr_t*);
 
 char* obtener_parametro(instr_t* ,int );
 
+				/*EJEMPLO INTRUCCIONES*///para testeo
+
+void ejemplo_instr_create();
+void ejemplo_instr_insert();
+void ejemplo_instr_select();
+void ejemplo_instr_describe();
+void ejemplo_instr_drop();
 
 							/*MANEJO DE CADENAS*/
 
