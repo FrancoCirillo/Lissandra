@@ -147,8 +147,6 @@ int recibir_request(int socket_cliente, instr_t **instruccion)
 
 	listaParam = recibir_paquete(socket_cliente); //del TP0
 
-	//Fijarse si el "(*instruccion) -> algo" funciona
-
 	(*instruccion) = malloc(sizeof(mseg_t) * sizeof(cod_op) + sizeof(listaParam));
 	(*instruccion)->timestamp = nuevoTimestamp;
 	(*instruccion)->codigo_operacion = nuevoCodOp;
@@ -157,6 +155,7 @@ int recibir_request(int socket_cliente, instr_t **instruccion)
 	return 1;
 }
 
+//TODO: usar logger
 int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp)
 {
 	int r = recv(socket_cliente, nuevoTimestamp, sizeof(mseg_t), MSG_WAITALL);

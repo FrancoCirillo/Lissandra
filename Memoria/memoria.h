@@ -11,16 +11,15 @@
 #include <commons/string.h>
 #include <commons/collections/list.h>
 #include <commons/collections/dictionary.h>
-#include <readline/readline.h>
 #include "../Herramientas/serializaciones.h"
 #include "../Herramientas/definicionesConexiones.h"
 #include "../Herramientas/utilsServidor.h"
 #include "../Herramientas/utilsCliente.h"
 #include "../Herramientas/tiempo.h"
+#include "componentes.h"
+
 t_log *g_logger;
 t_config *g_config;
-
-typedef long int mseg_t;
 
 typedef struct config
 {

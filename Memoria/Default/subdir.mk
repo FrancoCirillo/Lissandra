@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../componentes.c \
 ../memoria.c 
 
 OBJS += \
+./componentes.o \
 ./memoria.o 
 
 C_DEPS += \
+./componentes.d \
 ./memoria.d 
 
 

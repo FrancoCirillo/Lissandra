@@ -45,6 +45,20 @@ int main(int argc, char *argv[])
 
 	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO);
 
+	//recibir el tamanio del Value
+
+	int tamanioValue = 32;
+
+	RegistroMem *unRegistro = malloc(sizeof(RegistroMem) + sizeof(char)*tamanioValue);
+
+	unRegistro->timestamp = obtener_ts();
+	unRegistro->key = 22;
+	strcpy(unRegistro->value, "Mi value");
+
+	printf("Timestamp: %u \n", unRegistro->timestamp);
+	printf("Key: %d\n",unRegistro->key = 22);
+	printf("Value: %s\n",unRegistro->value);
+
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
 
 	//config_destroy(g_config);

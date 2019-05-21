@@ -36,8 +36,6 @@ int conexion_con_memoria_3;
 int conexion_con_memoria_8;
 int conexion_con_memoria_9;
 
-typedef long int mseg_t;
-
 typedef struct config
 {
 	char *PUERTO_MEMORIA;

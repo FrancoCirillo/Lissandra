@@ -112,6 +112,15 @@ typedef struct remitente_instr_t
 	remitente_t *remitente;
 } remitente_instr_t;
 
+/*
+ * En stream se guardan los valores y los tamanios de los valores de manera consecutiva
+ * Size indica el tamanio total del buffer, esto es en tamanio de los valores + n*int
+ *
+ * Ej:
+ * 		buffer: unValor7otroValor9
+ * 		size: 7+9+(2*sizeof(int))
+ *
+ */
 typedef struct t_buffer
 {
 	int size;

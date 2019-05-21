@@ -153,7 +153,8 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							FD_CLR(i, &master);
 							char auxFd[4];
 							sprintf(auxFd, "%d", newfd); //Para poder usarlo como key en el diccionario
-							dictionary_remove(conexionesConocidas, auxFd);
+							char* desconectado = dictionary_get(auxiliarConexiones, auxFd);
+							dictionary_remove(conexionesConocidas, desconectado);
 						}
 
 						else
