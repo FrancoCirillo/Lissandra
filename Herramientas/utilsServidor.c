@@ -61,7 +61,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 	struct sockaddr_storage remoteaddr; // direccion del cliente
 	socklen_t addrlen;
 
-	char bufferLeido[100];
+	char bufferLeido[TAMANIO_MAX_INPUT_CONSOLA];
 	int i;
 	FD_ZERO(&master); //los vaciamos
 	FD_ZERO(&read_fds);
@@ -138,11 +138,12 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 					{ //Recibido desde la consola
 						fgets(bufferLeido, 100, stdin);
 						instr_t *request_recibida = leer_a_instruccion(bufferLeido, queConsola);
-						ejecutar_requestRecibido(request_recibida, 0);
+						if (request_recibida != NULL)
+							ejecutar_requestRecibido(request_recibida, 0);
 					}
 
 					else
-					{   // Ya se había hecho accept en el fd
+					{ // Ya se había hecho accept en el fd
 						//recibir los mensajes
 						instr_t *instrcuccion_recibida;
 						int recibo = recibir_request(i, &instrcuccion_recibida);
@@ -150,6 +151,9 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						{
 							printf(COLOR_ANSI_ROJO "El cliente se desconecto" COLOR_ANSI_RESET "\n"); //TODO: Agregar logger
 							FD_CLR(i, &master);
+							char auxFd[4];
+							sprintf(auxFd, "%d", newfd); //Para poder usarlo como key en el diccionario
+							dictionary_remove(conexionesConocidas, auxFd);
 						}
 
 						else

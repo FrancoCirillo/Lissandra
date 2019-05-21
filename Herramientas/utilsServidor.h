@@ -17,6 +17,7 @@
 #include "serializaciones.h"
 #include "utilsCliente.h"
 
+#define TAMANIO_MAX_INPUT_CONSOLA 100
 t_log *logger;
 instr_t *request;
 int server_fd;

@@ -41,8 +41,7 @@ int crear_conexion(char *ip, char *puerto, char *miIP)
 	if (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
 	{
 		puts("El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n");
-		while (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
-			;
+		while (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1);
 	}
 	freeaddrinfo(server_info);
 

@@ -139,7 +139,9 @@ void ejecutar_instruccion_drop(instr_t *instruccion)
 	sleep(1);
 	char aQuienEnviar[12];
 	sprintf(aQuienEnviar, "Memoria_%d", RECEPTOR_DROP); //Para poder elegir en el .h a qué memoria enviarle (Para testearlo mas facil)
+	printf("Se envia la instruccion a %s\n", aQuienEnviar);
 	int conexionMemoria = obtener_fd_out(aQuienEnviar);
+	puts("Se tiene el fd_out");
 	enviar_request(instruccion, conexionMemoria);
 }
 
@@ -155,8 +157,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 void ejecutar_instruccion_exito(instr_t *instruccion)
 {
-	puts("Instruccion exitosa:");
-	print_instruccion(instruccion);
+	loggear_exito(instruccion);
 }
 
 void ejecutar_instruccion_select(instr_t *instruccion)

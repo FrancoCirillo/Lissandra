@@ -126,6 +126,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 		break;
 
 	default:
+		puts("El comando no pertenece a la Memoria");
 		break;
 	}
 }
@@ -167,11 +168,15 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 void ejecutar_instruccion_insert(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Insert");
+	int conexionFS = obtener_fd_out("FileSystem");
+	enviar_request(instruccion, conexionFS);
 }
 
 void ejecutar_instruccion_create(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Create");
+	int conexionFS = obtener_fd_out("FileSystem");
+	enviar_request(instruccion, conexionFS);
 }
 
 void ejecutar_instruccion_describe(instr_t *instruccion)
@@ -185,11 +190,15 @@ void ejecutar_instruccion_describe(instr_t *instruccion)
 void ejecutar_instruccion_drop(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Drop");
+	int conexionFS = obtener_fd_out("FileSystem");
+	enviar_request(instruccion, conexionFS);
 }
 
 void ejecutar_instruccion_journal(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Journal");
+	int conexionFS = obtener_fd_out("FileSystem");
+	enviar_request(instruccion, conexionFS);
 }
 
 void ejecutar_instruccion_exito(instr_t *instruccion)

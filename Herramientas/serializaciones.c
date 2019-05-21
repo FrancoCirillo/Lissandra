@@ -199,9 +199,9 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		exit(0);
 	}
 
-	actual = strtok(requestCopy, " ");
+	actual = strtok(requestCopy, " \n");
 	comando = strdup(actual);
-	actual = strtok(NULL, " ");
+	actual = strtok(NULL, " \n");
 
 	for (int i = 1; actual != NULL; i++)
 	{
@@ -219,20 +219,29 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	}
 	free(requestCopy);
 
-	switch (queConsola)
+	cod_op comandoReconocido = reconocer_comando(comando);
+	if (esComandoValido(comandoReconocido, listaParam) != 0)
 	{
-	case CONSOLA_KERNEL:
-		return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam);
-		break;
-	case CONSOLA_MEMORIA:
-		return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_MEMORIA, listaParam);
-		break;
-	case CONSOLA_FS:
-		return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_FS, listaParam);
-		break;
-	default:
-		return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam);
-		break;
+		switch (queConsola)
+		{
+		case CONSOLA_KERNEL:
+			return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam);
+			break;
+		case CONSOLA_MEMORIA:
+			return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_MEMORIA, listaParam);
+			break;
+		case CONSOLA_FS:
+			return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_FS, listaParam);
+			break;
+		default:
+			return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam);
+			break;
+		}
+	}
+	else
+	{
+		puts("Input invalido");
+		return NULL;
 	}
 }
 
@@ -305,9 +314,8 @@ cod_op reconocer_comando(char *comando)
 		return CODIGO_METRICS;
 	}
 	else
-	{ //TODO: Borrar. Está por si los que codeamos nos comemos alguna letra.
-		puts("NO se reconoció el comando'\n");
-		return CODIGO_DESCRIBE;
+	{
+		return INPUT_ERROR;
 	}
 }
 
@@ -367,4 +375,47 @@ void imprimirConexiones(t_dictionary *conexAc)
 		printf("fd_in %d\n", idsProceso->fd_in);
 	}
 	dictionary_iterator(conexAc, (void *)iterator);
+}
+
+int esComandoValido(cod_op comando, t_list *listaParam)
+{
+	int cantParam = list_size(listaParam); 
+	switch (comando)
+	{
+	case CODIGO_SELECT:
+		return cantParam == CANT_PARAM_SELECT;
+		break;
+	case CODIGO_INSERT:
+		return (cantParam == CANT_PARAM_ISNERT || cantParam == CANT_PARAM_ISNERT_COMPLETO);
+		break;
+	case CODIGO_CREATE:
+		return cantParam == CANT_PARAM_CREATE;
+		break;
+	case CODIGO_DESCRIBE:
+		return cantParam == CANT_PARAM_DESCRIBE;
+		break;
+	case CODIGO_DROP:
+		return cantParam == CANT_PARAM_DROP;
+		break;
+	case CODIGO_JOURNAL:
+		return cantParam == CANT_PARAM_JOURNAL;
+		break;
+	case CODIGO_ADD:
+		return cantParam == CANT_PARAM_ADD;
+		break;
+	case CODIGO_METRICS:
+		return cantParam == CANT_PARAM_METRICS;
+		break;
+	case CODIGO_RUN:
+		return cantParam == CANT_PARAM_RUN;
+		break;
+
+	case INPUT_ERROR:
+		return 0;
+		break;
+
+	default:
+		return 0;
+		break;
+	}
 }

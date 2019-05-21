@@ -1,4 +1,5 @@
 unset LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"../Herramientas/Debug/"
 cd KERNEL_MOCK
-Debug/KERNEL_MOCK 3 8 9
+read -p "Introduzca los numeros de las Memorias: " numerosMemoria
+Debug/KERNEL_MOCK $numerosMemoria

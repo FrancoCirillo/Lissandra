@@ -15,6 +15,18 @@
 #include <commons/collections/dictionary.h>
 #include "tiempo.h"
 #include "definicionesConexiones.h"
+enum cantidadParametros{
+    CANT_PARAM_SELECT = 2,
+    CANT_PARAM_ISNERT = 3, 
+    CANT_PARAM_ISNERT_COMPLETO = 4,
+    CANT_PARAM_CREATE = 4,
+    CANT_PARAM_DESCRIBE = 1, 
+    CANT_PARAM_DROP = 1,
+    CANT_PARAM_JOURNAL = 0, 
+    CANT_PARAM_ADD = 4,
+    CANT_PARAM_METRICS = 0, 
+    CANT_PARAM_RUN = 1 
+};
 
 void *serializar_paquete(t_paquete *, int);
 void crear_buffer(t_paquete *);
@@ -30,14 +42,18 @@ t_paquete *instruccion_a_paquete(instr_t *instruccionAEnviar);
 void *serializar_request(instr_t *instruccionAEnviar, int *tamanio);
 int enviar_request(instr_t *instruccionAEnviar, int socket_cliente);
 instr_t *crear_instruccion(time_t timestampNuevo, cod_op codInstNuevo, t_list *listaParamNueva);
+/*
+*
+*/
 instr_t *leer_a_instruccion(char *request, int enviadoPorConsola);
+
 cod_op reconocer_comando(char *comando);
 void print_instruccion(instr_t *instruccion);
 cod_op quienEnvio(instr_t *instruccion);
 void imprimir_registro(instr_t *instruccion);
 void loggear_exito(instr_t *miInstruccion);
 void loggear_error(instr_t *miInstruccion);
-
+int esComandoValido(cod_op comando, t_list *listaParam);
 void imprimirConexiones(t_dictionary *);
 
 #endif /* SERIALIZACIONES_H_ */

@@ -1,6 +1,6 @@
 .PHONY: default all clean
 all: default
-debug: HerramientasMake FileSystemMockMake KernelMockMake
+debug: HerramientasMake MemoriaMake FileSystemMockMake KernelMockMake
 
 default: HerramientasMake KernelMake MemoriaMake FileSystemMake
 
