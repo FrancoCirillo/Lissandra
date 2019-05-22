@@ -32,7 +32,6 @@
 //DESCRIBE [NOMBRE_TABLA]
 //DROP [NOMBRE_TABLA]
 
-
 #define RUTA_TABLAS "mnj/Lissandra_FS/Tablas/"
 #define RUTA_BLOQUES "mnj/Lissandra_FS/Bloques/"
 #define RUTA_PUNTO_MONTAJE "mnj/Lissandra_FS/"
@@ -45,37 +44,32 @@ sem_t mutex_tiempo_retardo_config;
 sem_t mutex_memtable;
 sem_t mutex_log;
 
-
 /*STRUCTS*/
 
-typedef struct archivo_t{
+typedef struct archivo_t {
 	int size;
 	int blocks[];
-}archivo_t;
+} archivo_t;
 
+typedef struct metadata_t {
+	char* consistency;
+	char* partitions;
+	mseg_t compactation_time;
+} metadata_t;
 
-typedef struct metadata_t{
-char * consistency;
-char * partitions;
-mseg_t compactation_time;
-}metadata_t;
+typedef struct config_FS_t {
+	char* puerto_escucha;
+	char* punto_montaje;
+	int tamanio_value;
+	mseg_t retardo;
+	mseg_t tiempo_dump;
+} config_FS_t;
 
-
-typedef struct config_FS_t{
-char* puerto_escucha;
-char* punto_montaje;
-int tamanio_value;
-mseg_t retardo;
-mseg_t tiempo_dump;
-}config_FS_t;
-
-
-typedef struct metadata_FS_t{
+typedef struct metadata_FS_t {
 	int block_size;
 	int blocks;
 	char* magic_number;
-}metadata_FS_t;
-
+} metadata_FS_t;
 
 config_FS_t config_FS;
 metadata_FS_t Metadata_FS;
@@ -88,8 +82,7 @@ void inicializar_FS();
 void finalizar_FS();
 void iniciar_semaforos();
 
-
-							/*MANEJO INTRUCCIONES*/
+/*MANEJO INTRUCCIONES*/
 
 void evaluar_instruccion(instr_t*);
 int execute_create(instr_t*);
@@ -98,25 +91,23 @@ int execute_select(instr_t*);
 int execute_describe(instr_t*);
 int execute_drop(instr_t*);
 
-char* obtener_parametro(instr_t* ,int );
+char* obtener_parametro(instr_t*, int);
 
-				/*EJEMPLO INTRUCCIONES*///para testeo
-
+/*EJEMPLO INTRUCCIONES*/ //para testeo
 void ejemplo_instr_create();
 void ejemplo_instr_insert();
 void ejemplo_instr_select();
 void ejemplo_instr_describe();
 void ejemplo_instr_drop();
 
-							/*MANEJO DE CADENAS*/
+/*MANEJO DE CADENAS*/
 
 char* concat(char*, char*);
-char* concat3( char* , char*, char*);
+char* concat3(char*, char*, char*);
 
-							/*Comunicación*/
+/*Comunicación*/
 //eliminar
 //void response(remitente_t*);
-void contestar(remitente_instr_t * );
-
+void contestar(remitente_instr_t *);
 
 #endif /* FILE_SYSTEM_H */

@@ -29,8 +29,9 @@ int  crear_particiones(char*, int);
 void  crear_bloque(char*);
 void  crear_bloques();
 int  crear_metadata(instr_t*);
+//leer_metadata_tabla(???) TODO definir esta funcion
 
-int existe_Tabla(char * );
+int existe_tabla(char * );
 
 int archivo_inicializar(FILE *);
 void metadata_inicializar(FILE*, instr_t*);
