@@ -292,6 +292,49 @@ cod_op reconocer_comando(char *comando)
 		return INPUT_ERROR;
 }
 
+int esComandoValido(cod_op comando, t_list *listaParam)
+{
+	int cantParam = list_size(listaParam);
+	switch (comando)
+	{
+	case CODIGO_SELECT:
+		return cantParam == CANT_PARAM_SELECT;
+		break;
+	case CODIGO_INSERT:
+		return (cantParam == CANT_PARAM_INSERT || cantParam == CANT_PARAM_INSERT_COMPLETO);
+		break;
+	case CODIGO_CREATE:
+		return cantParam == CANT_PARAM_CREATE;
+		break;
+	case CODIGO_DESCRIBE:
+		return (cantParam == CANT_PARAM_DESCRIBE || cantParam == CANT_PARAM_DESCRIBE_COMPLETO);
+		break;
+	case CODIGO_DROP:
+		return cantParam == CANT_PARAM_DROP;
+		break;
+	case CODIGO_JOURNAL:
+		return cantParam == CANT_PARAM_JOURNAL;
+		break;
+	case CODIGO_ADD:
+		return cantParam == CANT_PARAM_ADD;
+		break;
+	case CODIGO_METRICS:
+		return cantParam == CANT_PARAM_METRICS;
+		break;
+	case CODIGO_RUN:
+		return cantParam == CANT_PARAM_RUN;
+		break;
+
+	case INPUT_ERROR:
+		return 0;
+		break;
+
+	default:
+		return 0;
+		break;
+	}
+}
+
 instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *listaParamNueva)
 {
 
@@ -309,8 +352,7 @@ instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *l
 void print_instruccion(instr_t *instruccion)
 {
 
-	void iterator(char *value)
-	{
+	void iterator(char *value){
 		printf("%s\n", value);
 	}
 
@@ -364,45 +406,5 @@ void imprimirConexiones(t_dictionary *conexAc)
 	dictionary_iterator(conexAc, (void *)iterator);
 }
 
-int esComandoValido(cod_op comando, t_list *listaParam)
-{
-	int cantParam = list_size(listaParam); 
-	switch (comando)
-	{
-	case CODIGO_SELECT:
-		return cantParam == CANT_PARAM_SELECT;
-		break;
-	case CODIGO_INSERT:
-		return (cantParam == CANT_PARAM_INSERT || cantParam == CANT_PARAM_INSERT_COMPLETO);
-		break;
-	case CODIGO_CREATE:
-		return cantParam == CANT_PARAM_CREATE;
-		break;
-	case CODIGO_DESCRIBE:
-		return cantParam == CANT_PARAM_DESCRIBE;
-		break;
-	case CODIGO_DROP:
-		return cantParam == CANT_PARAM_DROP;
-		break;
-	case CODIGO_JOURNAL:
-		return cantParam == CANT_PARAM_JOURNAL;
-		break;
-	case CODIGO_ADD:
-		return cantParam == CANT_PARAM_ADD;
-		break;
-	case CODIGO_METRICS:
-		return cantParam == CANT_PARAM_METRICS;
-		break;
-	case CODIGO_RUN:
-		return cantParam == CANT_PARAM_RUN;
-		break;
 
-	case INPUT_ERROR:
-		return 0;
-		break;
 
-	default:
-		return 0;
-		break;
-	}
-}
