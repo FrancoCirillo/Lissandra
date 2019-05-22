@@ -18,8 +18,8 @@
 
 enum cantidadParametros{
     CANT_PARAM_SELECT = 2,
-    CANT_PARAM_ISNERT = 3, 
-    CANT_PARAM_ISNERT_COMPLETO = 4,
+    CANT_PARAM_INSERT = 3,
+    CANT_PARAM_INSERT_COMPLETO = 4,
     CANT_PARAM_CREATE = 4,
     CANT_PARAM_DESCRIBE = 1, 
     CANT_PARAM_DROP = 1,
@@ -34,7 +34,7 @@ enum cantidadParametros{
  */
 
 /*
- * Crea un t_paquete con los campos timestamp = nuevoTimestap y codigo_operacion = nuevoCodOp
+ * Crea un t_paquete con los campos timestamp = nuevoTimestamp y codigo_operacion = nuevoCodOp
  * Llama a crear_buffer para el campo buffer
  */
 t_paquete *crear_paquete(cod_op nuevoCodOp, mseg_t nuevoTimestamp);
@@ -49,7 +49,7 @@ void crear_buffer(t_paquete *paquete);
 /*
  * Hace free de todos los campos del paquete
  */
-void eliminar_paquete(t_paquete *);
+void eliminar_paquete(t_paquete *paquete);
 
 
 /*
@@ -64,7 +64,7 @@ void eliminar_paquete(t_paquete *);
  * 		size: 7+9+(2*sizeof(int))
  *
  */
-void agregar_a_paquete(t_paquete * paquete, void *valor, int tamanio);
+void agregar_a_paquete(t_paquete *paquete, void *valor, int tamanio);
 
 
 /*
@@ -112,7 +112,7 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente);
  * Si hay un error al recibir el ts o la operación devuelve el el código de error
  * Devuelve 1 en exito
  */
-int recibir_request(int socket_cliente, instr_t ** instruccion);
+int recibir_request(int socket_cliente, instr_t **instruccion);
 
 
 /*
@@ -214,5 +214,6 @@ void loggear_error(instr_t *miInstruccion);
  * Imprime un diccionario de conexiones
  */
 void imprimirConexiones(t_dictionary *diccionario);
+
 
 #endif /* SERIALIZACIONES_H_ */

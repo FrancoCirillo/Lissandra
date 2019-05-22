@@ -1,3 +1,5 @@
+//--------componentes.h--------
+
 #ifndef COMPONENTES_H_
 #define COMPONENTES_H_
 
@@ -10,6 +12,7 @@
 #include <commons/collections/dictionary.h>
 #include "../Herramientas/tiempo.h"
 
+
 typedef struct RegistroMem
 {
 	 mseg_t timestamp;
@@ -17,6 +20,8 @@ typedef struct RegistroMem
 	 char value[];
 } RegistroMem;
 
+
 int gran_malloc_inicial(int tamanioMemoria);
+
 
 #endif //COMPONENTES_H

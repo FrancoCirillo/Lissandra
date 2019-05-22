@@ -8,7 +8,7 @@
 //#include <time.h>
 #include <sys/time.h>
 
-typedef long int mseg_t;
+typedef unsigned long int mseg_t;
 
 mseg_t obtener_ts();
 mseg_t dif_timestamps(mseg_t tiempo1, mseg_t tiempo2);

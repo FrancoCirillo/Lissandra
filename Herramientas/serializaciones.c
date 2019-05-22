@@ -198,6 +198,8 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		exit(0);
 	}
 
+	mseg_t timestampRequest = obtener_ts();
+
 	actual = strtok(requestCopy, " \n");
 	comando = strdup(actual);
 	actual = strtok(NULL, " \n");
@@ -207,11 +209,21 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		valor = strdup(actual);
 		list_add(listaParam, valor);
 
-		if (i == 2 && strcmp(comando, "INSERT") == 0)
+		if(i == 2 && strcmp(comando, "INSERT") == 0)
 		{
-			actual = strtok(NULL, "");
+			actual = strtok (NULL, "\"\"");
 			valor = strdup(actual);
 			list_add(listaParam, valor);
+			actual = strtok (NULL, " ");
+
+			if(actual != NULL)
+			{
+				valor = strdup(actual);
+				list_add(listaParam, valor);
+				char* ptr;
+				timestampRequest = strtoul(valor, &ptr, 10);
+			}
+
 			break;
 		}
 		actual = strtok(NULL, " \n");
@@ -224,16 +236,16 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		switch (queConsola)
 		{
 		case CONSOLA_KERNEL:
-			return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam);
+			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
 			break;
 		case CONSOLA_MEMORIA:
-			return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_MEMORIA, listaParam);
+			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_MEMORIA, listaParam);
 			break;
 		case CONSOLA_FS:
-			return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_FS, listaParam);
+			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_FS, listaParam);
 			break;
 		default:
-			return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam);
+			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
 			break;
 		}
 	}
@@ -242,6 +254,42 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		puts("Input invalido");
 		return NULL;
 	}
+}
+
+cod_op reconocer_comando(char *comando)
+{
+	if (strcmp(comando, "SELECT") == 0)
+		return CODIGO_SELECT;
+
+	else if (strcmp(comando, "DEVOLUCION_SELECT") == 0)
+		return DEVOLUCION_SELECT;
+
+	else if (strcmp(comando, "INSERT") == 0)
+		return CODIGO_INSERT;
+
+	else if (strcmp(comando, "CREATE") == 0)
+		return CODIGO_CREATE;
+
+	else if (strcmp(comando, "DESCRIBE") == 0)
+		return CODIGO_DESCRIBE;
+
+	else if (strcmp(comando, "DROP") == 0)
+		return CODIGO_DROP;
+
+	else if (strcmp(comando, "JOURNAL") == 0)
+		return CODIGO_JOURNAL;
+
+	else if (strcmp(comando, "ADD") == 0)
+		return CODIGO_ADD;
+
+	else if (strcmp(comando, "RUN") == 0)
+		return CODIGO_RUN;
+
+	else if (strcmp(comando, "METRICS") == 0)
+		return CODIGO_METRICS;
+
+	else
+		return INPUT_ERROR;
 }
 
 instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *listaParamNueva)
@@ -258,66 +306,6 @@ instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *l
 	return miInstr;
 }
 
-cod_op reconocer_comando(char *comando)
-{
-	if (strcmp(comando, "SELECT") == 0)
-	{
-		//		puts("Se detecto comando 'SELECT'\n");
-		return CODIGO_SELECT;
-	}
-	if (strcmp(comando, "DEVOLUCION_SELECT") == 0)
-	{
-		//		puts("Se detecto comando 'SELECT'\n");
-		return DEVOLUCION_SELECT;
-	}
-	else if (strcmp(comando, "INSERT") == 0)
-	{
-		//		puts("Se detecto comando 'INSERT'\n");
-		return CODIGO_INSERT;
-	}
-	else if (strcmp(comando, "CREATE") == 0)
-	{
-		//		puts("Se detecto comando 'CREATE'\n");
-		return CODIGO_CREATE;
-	}
-	else if (strcmp(comando, "DESCRIBE") == 0)
-	{
-		//		puts("Se detecto comando 'DESCRIBE'\n");
-		return CODIGO_DESCRIBE;
-	}
-	else if (strcmp(comando, "DROP") == 0)
-	{
-		//		puts("Se detecto comando 'DROP'\n");
-		return CODIGO_DROP;
-	}
-	else if (strcmp(comando, "JOURNAL") == 0)
-	{
-		//		puts("Se detecto comando 'JOURNAL'\n");
-		return CODIGO_JOURNAL;
-	}
-	else if (strcmp(comando, "ADD") == 0)
-	{
-		//		puts("Se detecto comando 'JOURNAL'\n");
-		return CODIGO_ADD;
-	}
-
-	else if (strcmp(comando, "RUN") == 0)
-	{
-		//		puts("Se detecto comando 'JOURNAL'\n");
-		return CODIGO_RUN;
-	}
-
-	else if (strcmp(comando, "METRICS") == 0)
-	{
-		//		puts("Se detecto comando 'JOURNAL'\n");
-		return CODIGO_METRICS;
-	}
-	else
-	{
-		return INPUT_ERROR;
-	}
-}
-
 void print_instruccion(instr_t *instruccion)
 {
 
@@ -326,10 +314,11 @@ void print_instruccion(instr_t *instruccion)
 		printf("%s\n", value);
 	}
 
-	printf("Timestamp: %u \n", (unsigned int)instruccion->timestamp);
+	printf("Timestamp: %lu \n", instruccion->timestamp);
 	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
 	printf("Parametros:\n");
 	list_iterate(instruccion->parametros, (void *)iterator);
+	puts("");
 }
 
 cod_op quienEnvio(instr_t *instruccion)
@@ -346,10 +335,9 @@ cod_op quienEnvio(instr_t *instruccion)
 
 void imprimir_registro(instr_t *instruccion)
 {
-
 	printf("Key %s\n", (char *)list_get(instruccion->parametros, 1));
 	printf("Value %s\n", (char *)list_get(instruccion->parametros, 2));
-	printf("Timestamp: %u \n", (unsigned int)instruccion->timestamp);
+	printf("Timestamp: %lu \n", instruccion->timestamp);
 }
 
 //Todo: usar logger
@@ -385,7 +373,7 @@ int esComandoValido(cod_op comando, t_list *listaParam)
 		return cantParam == CANT_PARAM_SELECT;
 		break;
 	case CODIGO_INSERT:
-		return (cantParam == CANT_PARAM_ISNERT || cantParam == CANT_PARAM_ISNERT_COMPLETO);
+		return (cantParam == CANT_PARAM_INSERT || cantParam == CANT_PARAM_INSERT_COMPLETO);
 		break;
 	case CODIGO_CREATE:
 		return cantParam == CANT_PARAM_CREATE;

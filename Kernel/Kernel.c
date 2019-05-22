@@ -52,7 +52,7 @@ void procesar_instruccion_consola(char *instruccion){
 	p->size=0;
 	p->instrucciones=instrucciones;
 	p->sig=NULL;
-	instr_t* nueva_instruccion=leer_a_instruccion(instruccion);
+	instr_t* nueva_instruccion=leer_a_instruccion(instruccion,0);
 	list_add(p->instrucciones,nueva_instruccion);
 	p->size++;
 	loggear("Instruccion generada, encolando proceso...");
@@ -82,7 +82,7 @@ void kernel_run(char *nombre_archivo){
 	loggear("Se ejecuto RUN, leyendo archivo!");
 
 	while(fgets(line,sizeof(line),f)){
-		nueva_instruccion=leer_a_instruccion(line);
+		nueva_instruccion=leer_a_instruccion(line,0);
 		list_add(p->instrucciones,nueva_instruccion);
 		p->size++;
 		loggear("Se agrego una instruccion!");

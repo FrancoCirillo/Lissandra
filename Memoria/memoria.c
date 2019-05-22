@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	unRegistro->key = 22;
 	strcpy(unRegistro->value, "Mi value");
 
-	printf("Timestamp: %u \n", unRegistro->timestamp);
+	printf("Timestamp: %lu \n", unRegistro->timestamp);
 	printf("Key: %d\n",unRegistro->key = 22);
 	printf("Value: %s\n",unRegistro->value);
 
@@ -174,7 +174,11 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	print_instruccion(instruccion);
 	t_list *listaParam = list_create();
 	char cadena[400];
-	sprintf(cadena, "%s%s%s%s%s%s%s%u", "Se encontro ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (unsigned int)instruccion->timestamp);
+	sprintf(cadena, "%s%s%s%s%s%s%s%u", "Se encontro ",
+										(char *)list_get(instruccion->parametros, 0), " | ",
+										(char *)list_get(instruccion->parametros, 1), " | ",
+										(char *)list_get(instruccion->parametros, 2), " | ",
+										(unsigned int)instruccion->timestamp);
 	list_add(listaParam, cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 }

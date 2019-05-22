@@ -12,15 +12,15 @@
 #include <commons/config.h>
 #include <commons/string.h>
 #include <readline/readline.h>
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/tiempo.h"
-#include "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/definicionesConexiones.h"
+#include "../Herramientas/tiempo.h"
+#include "../Herramientas/serializaciones.h"
+#include "../Herramientas/definicionesConexiones.h"
 
 #include <pthread.h>
 
 t_log* g_logger;
 t_config* g_config;
 
-typedef long int mseg_t;
 
 //typedef enum {NEW,READY,EXEC,EXIT}estado;
 
