@@ -53,9 +53,14 @@ dkms.conf
 *.log
 
 #Programas
-FileSystem
-Memoria
-Kernel
+FileSystem/Default/FileSystem
+Memoria/Default/Memoria
+Kernel/Default/Kernel
+KERNEL_MOCK/Debug/KERNEL_MOCK
+FS_MOCK/Debug/FS_MOCK
 
 #Biblioteca Herramientas
-libHerramientas.so
+Herramientas/Debug/libHerramientas.so
+
+#VStudio
+.vscode/

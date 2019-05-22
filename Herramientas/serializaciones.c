@@ -2,34 +2,36 @@
 
 #include "serializaciones.h"
 
-t_paquete* instruccion_a_paquete(instr_t* instruccionAEnviar){
+t_paquete *instruccion_a_paquete(instr_t *instruccionAEnviar)
+{
 
-	t_paquete* paqueteAEnviar = crear_paquete(instruccionAEnviar->codigo_operacion, instruccionAEnviar->timestamp);
-	int tamanioTotal=0;
-	void iterator(void* valor){
-		int tamanio = strlen((char*)valor)+1;
+	t_paquete *paqueteAEnviar = crear_paquete(instruccionAEnviar->codigo_operacion, instruccionAEnviar->timestamp);
+	int tamanioTotal = 0;
+	void iterator(void *valor)
+	{
+		int tamanio = strlen((char *)valor) + 1;
 		agregar_a_paquete(paqueteAEnviar, valor, tamanio);
-		tamanioTotal+=tamanio;
+		tamanioTotal += tamanio;
 	}
-	list_iterate(instruccionAEnviar->parametros, (void*) iterator);
+	list_iterate(instruccionAEnviar->parametros, (void *)iterator);
 	return paqueteAEnviar;
 }
 
-
 //Para agregar los parametros al paquete
-void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio) {
+void agregar_a_paquete(t_paquete *paquete, void *valor, int tamanio)
+{
 
-	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));//el tamanio del valor y el valor en si
+	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int)); //el tamanio del valor y el valor en si
 
 	memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio, sizeof(int));
 	memcpy(paquete->buffer->stream + paquete->buffer->size + sizeof(int), valor, tamanio);
 
 	paquete->buffer->size += tamanio + sizeof(int);
-
 }
 
-void* serializar_paquete(t_paquete* paquete, int bytes) {
-	void * magic = malloc(bytes);
+void *serializar_paquete(t_paquete *paquete, int bytes)
+{
+	void *magic = malloc(bytes);
 
 	int desplazamiento = 0;
 	memcpy(magic + desplazamiento, &(paquete->timestamp), sizeof(mseg_t));
@@ -47,57 +49,55 @@ void* serializar_paquete(t_paquete* paquete, int bytes) {
 	return magic;
 }
 
+void *serializar_request(instr_t *instruccionAEnviar, int *tamanio)
+{
 
-void* serializar_request(instr_t* instruccionAEnviar, int* tamanio){
+	t_paquete *paqueteAEnviar = instruccion_a_paquete(instruccionAEnviar);
 
-	t_paquete* paqueteAEnviar = instruccion_a_paquete(instruccionAEnviar);
-
-	int bytes = paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op)+ sizeof(mseg_t);
-	void* paqueteSerializado = serializar_paquete(paqueteAEnviar, bytes);
+	int bytes = paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op) + sizeof(mseg_t);
+	void *paqueteSerializado = serializar_paquete(paqueteAEnviar, bytes);
 	*tamanio = bytes;
 	return paqueteSerializado;
 }
 
-
-int enviar_request(instr_t* instruccionAEnviar, int socket_cliente){
+int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
+{
 	int tamanio;
-	void* a_enviar = serializar_request(instruccionAEnviar, &tamanio);
+	void *a_enviar = serializar_request(instruccionAEnviar, &tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, 0);
-	free (a_enviar);
+	free(a_enviar);
 	return s;
 }
 
-
 //Hay que crear un buffer para los parametros
-void crear_buffer(t_paquete* paquete) {
+void crear_buffer(t_paquete *paquete)
+{
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = 0;
 	paquete->buffer->stream = NULL;
 }
 
-
-t_paquete* crear_paquete(cod_op nuevoCodOp, mseg_t nuevoTimestamp) {
-	t_paquete* paquete = malloc(sizeof(t_paquete));
+t_paquete *crear_paquete(cod_op nuevoCodOp, mseg_t nuevoTimestamp)
+{
+	t_paquete *paquete = malloc(sizeof(t_paquete));
 	paquete->timestamp = nuevoTimestamp;
 	paquete->codigo_operacion = nuevoCodOp;
 	crear_buffer(paquete);
 	return paquete;
 }
 
-
-void eliminar_paquete(t_paquete* paquete) {
+void eliminar_paquete(t_paquete *paquete)
+{
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
 	free(paquete);
 }
 
-
-
-
 //Deserializacion
 
-void* recibir_buffer(int* size, int socket_cliente) {
-	void * buffer;
+void *recibir_buffer(int *size, int socket_cliente)
+{
+	void *buffer;
 
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
 	buffer = malloc(*size);
@@ -106,22 +106,23 @@ void* recibir_buffer(int* size, int socket_cliente) {
 	return buffer;
 }
 
-
-t_list* recibir_paquete(int socket_cliente) {
+t_list *recibir_paquete(int socket_cliente)
+{
 	int size;
 	int desplazamiento = 0;
-	void * buffer;
-	t_list* valores = list_create();
+	void *buffer;
+	t_list *valores = list_create();
 	int tamanio;
 	int i = 0; //debug
 
 	buffer = recibir_buffer(&size, socket_cliente);
-	while(desplazamiento < size){
+	while (desplazamiento < size)
+	{
 		i++;
-		memcpy(&tamanio, buffer+desplazamiento, sizeof(int));
+		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 		desplazamiento += sizeof(int);
-		char* valor = malloc(tamanio);
-		memcpy(valor, buffer+desplazamiento, tamanio);
+		char *valor = malloc(tamanio);
+		memcpy(valor, buffer + desplazamiento, tamanio);
 		desplazamiento += tamanio;
 		list_add(valores, valor);
 	}
@@ -130,208 +131,278 @@ t_list* recibir_paquete(int socket_cliente) {
 	return NULL;
 }
 
-
-int recibir_request(int socket_cliente, instr_t** instruccion) {
+int recibir_request(int socket_cliente, instr_t **instruccion)
+{
 	mseg_t nuevoTimestamp;
 	cod_op nuevoCodOp;
-	t_list* listaParam;
+	t_list *listaParam;
 
-	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp);    //return en error
-	if(t<=0)
+	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp); //return en error
+	if (t <= 0)
 		return t;
 
 	t = recibir_operacion(socket_cliente, &nuevoCodOp);
-	if(t<=0)
+	if (t <= 0)
 		return t;
 
-	listaParam = recibir_paquete(socket_cliente);      //del TP0
+	listaParam = recibir_paquete(socket_cliente); //del TP0
 
-	//Fijarse si el "(*instruccion) -> algo" funciona
-
-	(*instruccion) = malloc( sizeof(mseg_t) * sizeof(cod_op) + sizeof(listaParam) );
-	(*instruccion) -> timestamp = nuevoTimestamp;
-	(*instruccion) -> codigo_operacion = nuevoCodOp;
-	(*instruccion) -> parametros = listaParam;
+	(*instruccion) = malloc(sizeof(mseg_t) * sizeof(cod_op) + sizeof(listaParam));
+	(*instruccion)->timestamp = nuevoTimestamp;
+	(*instruccion)->codigo_operacion = nuevoCodOp;
+	(*instruccion)->parametros = listaParam;
 
 	return 1;
 }
 
-
-int recibir_timestamp(int socket_cliente, mseg_t* nuevoTimestamp) {
+//TODO: usar logger
+int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp)
+{
 	int r = recv(socket_cliente, nuevoTimestamp, sizeof(mseg_t), MSG_WAITALL);
-	if(r == 0){
+	if (r == 0)
+	{
 		perror("El cliente se desconecto: ");
 	}
-	if(r < 0){
-			perror("Error en el recv: ");
-		}
+	if (r < 0)
+	{
+		perror("Error en el recv: ");
+	}
 	return r;
 }
 
-
-int recibir_operacion(int socket_cliente, cod_op* nuevaOperacion) {
+int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion)
+{
 	int r = recv(socket_cliente, nuevaOperacion, sizeof(cod_op), MSG_WAITALL);
-	if(r == 0){
+	if (r == 0)
+	{
 		perror("El cliente se desconecto: ");
 	}
-	if(r < 0){
-			perror("Error en el recv: ");
-		}
+	if (r < 0)
+	{
+		perror("Error en el recv: ");
+	}
 	return r;
 }
 
-
-instr_t* leer_a_instruccion(char* request, int queConsola){
-	char* requestCopy = strdup(request);
+instr_t *leer_a_instruccion(char *request, int queConsola)
+{
+	char *requestCopy = strdup(request);
 	char *actual, *comando, *valor;
 	comando = NULL;
 	valor = malloc(sizeof(int));
-	t_list* listaParam = list_create();
+	t_list *listaParam = list_create();
 
-	if(strcmp(requestCopy, "CERRAR\n")==0){
-		printf(COLOR_ANSI_CYAN"Gracias por usar Lissandra FS!\n"COLOR_ANSI_RESET"cerrando...\n");
+	if (strcmp(requestCopy, "CERRAR\n") == 0)
+	{
+		printf(COLOR_ANSI_CYAN "Gracias por usar Lissandra FS!\n" COLOR_ANSI_RESET "cerrando...\n");
 		exit(0);
 	}
 
-	actual = strtok (requestCopy, " ");
-	comando = strdup(actual);
-	actual = strtok (NULL, " ");
+	mseg_t timestampRequest = obtener_ts();
 
-	for(int i=1; actual != NULL; i++){
+	actual = strtok(requestCopy, " \n");
+	comando = strdup(actual);
+	actual = strtok(NULL, " \n");
+
+	for (int i = 1; actual != NULL; i++)
+	{
 		valor = strdup(actual);
 		list_add(listaParam, valor);
 
-		if(i==2 && strcmp(comando, "INSERT")==0){
-			actual = strtok (NULL, "");
+		if(i == 2 && strcmp(comando, "INSERT") == 0)
+		{
+			actual = strtok (NULL, "\"\"");
 			valor = strdup(actual);
 			list_add(listaParam, valor);
+			actual = strtok (NULL, " ");
+
+			if(actual != NULL)
+			{
+				valor = strdup(actual);
+				list_add(listaParam, valor);
+				char* ptr;
+				timestampRequest = strtoul(valor, &ptr, 10);
+			}
+
 			break;
 		}
-		actual = strtok (NULL, " \n");
+		actual = strtok(NULL, " \n");
 	}
 	free(requestCopy);
 
-	switch(queConsola){
-	case CONSOLA_KERNEL: return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam); break;
-	case CONSOLA_MEMORIA:return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_MEMORIA, listaParam);break;
-	case CONSOLA_FS:return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_FS, listaParam);break;
-	default: return crear_instruccion(obtener_ts(), reconocer_comando(comando) + BASE_CONSOLA_KERNEL, listaParam); break;
+	cod_op comandoReconocido = reconocer_comando(comando);
+	if (esComandoValido(comandoReconocido, listaParam) != 0)
+	{
+		switch (queConsola)
+		{
+		case CONSOLA_KERNEL:
+			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			break;
+		case CONSOLA_MEMORIA:
+			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_MEMORIA, listaParam);
+			break;
+		case CONSOLA_FS:
+			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_FS, listaParam);
+			break;
+		default:
+			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			break;
+		}
 	}
-
+	else
+	{
+		puts("Input invalido");
+		return NULL;
+	}
 }
 
+cod_op reconocer_comando(char *comando)
+{
+	if (strcmp(comando, "SELECT") == 0)
+		return CODIGO_SELECT;
 
-instr_t* crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list* listaParamNueva){
+	else if (strcmp(comando, "DEVOLUCION_SELECT") == 0)
+		return DEVOLUCION_SELECT;
 
-	instr_t instruccionCreada ={
+	else if (strcmp(comando, "INSERT") == 0)
+		return CODIGO_INSERT;
+
+	else if (strcmp(comando, "CREATE") == 0)
+		return CODIGO_CREATE;
+
+	else if (strcmp(comando, "DESCRIBE") == 0)
+		return CODIGO_DESCRIBE;
+
+	else if (strcmp(comando, "DROP") == 0)
+		return CODIGO_DROP;
+
+	else if (strcmp(comando, "JOURNAL") == 0)
+		return CODIGO_JOURNAL;
+
+	else if (strcmp(comando, "ADD") == 0)
+		return CODIGO_ADD;
+
+	else if (strcmp(comando, "RUN") == 0)
+		return CODIGO_RUN;
+
+	else if (strcmp(comando, "METRICS") == 0)
+		return CODIGO_METRICS;
+
+	else
+		return INPUT_ERROR;
+}
+
+instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *listaParamNueva)
+{
+
+	instr_t instruccionCreada = {
 		.timestamp = timestampNuevo,
 		.codigo_operacion = codInstNuevo,
-		.parametros = listaParamNueva
-	};
+		.parametros = listaParamNueva};
 
-	instr_t* miInstr = malloc(sizeof(instruccionCreada));
+	instr_t *miInstr = malloc(sizeof(instruccionCreada));
 	memcpy(miInstr, &instruccionCreada, sizeof(instruccionCreada));
 
 	return miInstr;
 }
 
+void print_instruccion(instr_t *instruccion)
+{
 
-cod_op reconocer_comando(char* comando){
-	if (strcmp(comando, "SELECT")==0) {
-//		puts("Se detecto comando 'SELECT'\n");
-		return CODIGO_SELECT;
-	}
-	if (strcmp(comando, "DEVOLUCION_SELECT")==0) {
-//		puts("Se detecto comando 'SELECT'\n");
-		return DEVOLUCION_SELECT;
-	}
-	else if (strcmp(comando, "INSERT")==0) {
-//		puts("Se detecto comando 'INSERT'\n");
-		return CODIGO_INSERT;
-	}
-	else if (strcmp(comando, "CREATE")==0) {
-//		puts("Se detecto comando 'CREATE'\n");
-		return CODIGO_CREATE;
-	}
-	else if (strcmp(comando, "DESCRIBE")==0) {
-//		puts("Se detecto comando 'DESCRIBE'\n");
-		return CODIGO_DESCRIBE;
-	}
-	else if (strcmp(comando, "DROP")==0) {
-//		puts("Se detecto comando 'DROP'\n");
-		return CODIGO_DROP;
-	}
-	else if (strcmp(comando, "JOURNAL")==0){
-//		puts("Se detecto comando 'JOURNAL'\n");
-		return CODIGO_JOURNAL;
-	}
-	else if (strcmp(comando, "ADD")==0){
-//		puts("Se detecto comando 'JOURNAL'\n");
-		return CODIGO_ADD;
-	}
-
-	else if (strcmp(comando, "RUN")==0){
-//		puts("Se detecto comando 'JOURNAL'\n");
-		return CODIGO_RUN;
-	}
-
-	else if (strcmp(comando, "METRICS")==0){
-//		puts("Se detecto comando 'JOURNAL'\n");
-		return CODIGO_METRICS;
-	}
-	else{ //TODO: Borrar. Está por si los que codeamos nos comemos alguna letra.
-		puts("NO se reconoció el comando'\n");
-		return CODIGO_DESCRIBE;
-	}
-
-}
-
-void print_instruccion(instr_t* instruccion){
-
-	void iterator(char* value){
+	void iterator(char *value)
+	{
 		printf("%s\n", value);
 	}
 
-	printf("Timestamp: %u \n", (unsigned int)instruccion->timestamp);
+	printf("Timestamp: %lu \n", instruccion->timestamp);
 	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
 	printf("Parametros:\n");
-	list_iterate(instruccion->parametros, (void*) iterator);
+	list_iterate(instruccion->parametros, (void *)iterator);
+	puts("");
 }
 
-
-cod_op quienEnvio(instr_t * instruccion){
+cod_op quienEnvio(instr_t *instruccion)
+{
 	int codigoAnalizado = instruccion->codigo_operacion;
-	if (codigoAnalizado > BASE_COD_ERROR) codigoAnalizado -= BASE_COD_ERROR;
-	if (codigoAnalizado < BASE_CONSOLA_MEMORIA) return CONSOLA_KERNEL;
-	if (codigoAnalizado < BASE_CONSOLA_FS) return CONSOLA_MEMORIA;
+	if (codigoAnalizado > BASE_COD_ERROR)
+		codigoAnalizado -= BASE_COD_ERROR;
+	if (codigoAnalizado < BASE_CONSOLA_MEMORIA)
+		return CONSOLA_KERNEL;
+	if (codigoAnalizado < BASE_CONSOLA_FS)
+		return CONSOLA_MEMORIA;
 	return CONSOLA_FS;
 }
 
-
-void imprimir_registro(instr_t* instruccion){
-
-	printf("Key %s\n", (char*) list_get(instruccion->parametros, 1));
-	printf("Value %s\n", (char*) list_get(instruccion->parametros, 2));
-	printf("Timestamp: %u \n", (unsigned int)instruccion->timestamp);
-
+void imprimir_registro(instr_t *instruccion)
+{
+	printf("Key %s\n", (char *)list_get(instruccion->parametros, 1));
+	printf("Value %s\n", (char *)list_get(instruccion->parametros, 2));
+	printf("Timestamp: %lu \n", instruccion->timestamp);
 }
 
 //Todo: usar logger
-void loggear_error(instr_t* miInstruccion){
-	printf(COLOR_ANSI_ROJO"%s\n"COLOR_ANSI_RESET, (char*) list_get(miInstruccion->parametros, 0));
+void loggear_error(instr_t *miInstruccion)
+{
+	printf(COLOR_ANSI_ROJO "%s\n" COLOR_ANSI_RESET, (char *)list_get(miInstruccion->parametros, 0));
 }
-void loggear_exito(instr_t* miInstruccion){
-	printf("%s\n", (char*) list_get(miInstruccion->parametros, 0));
+void loggear_exito(instr_t *miInstruccion)
+{
+	printf("%s\n", (char *)list_get(miInstruccion->parametros, 0));
 }
 
-void imprimirConexiones(t_dictionary * conexAc){
+void imprimirConexiones(t_dictionary *conexAc)
+{
 	puts("Conexiones conocidas:");
-	void iterator(char* key, identificador* idsProceso){
+	void iterator(char *key, identificador *idsProceso)
+	{
 		printf("Proceso: %s\n", key);
 		printf("IP %s\n", idsProceso->ip_proceso);
 		printf("Puerto %s\n", idsProceso->puerto);
 		printf("fd_out %d\n", idsProceso->fd_out);
 		printf("fd_in %d\n", idsProceso->fd_in);
 	}
-	dictionary_iterator(conexAc, (void*) iterator);
+	dictionary_iterator(conexAc, (void *)iterator);
+}
+
+int esComandoValido(cod_op comando, t_list *listaParam)
+{
+	int cantParam = list_size(listaParam); 
+	switch (comando)
+	{
+	case CODIGO_SELECT:
+		return cantParam == CANT_PARAM_SELECT;
+		break;
+	case CODIGO_INSERT:
+		return (cantParam == CANT_PARAM_INSERT || cantParam == CANT_PARAM_INSERT_COMPLETO);
+		break;
+	case CODIGO_CREATE:
+		return cantParam == CANT_PARAM_CREATE;
+		break;
+	case CODIGO_DESCRIBE:
+		return cantParam == CANT_PARAM_DESCRIBE;
+		break;
+	case CODIGO_DROP:
+		return cantParam == CANT_PARAM_DROP;
+		break;
+	case CODIGO_JOURNAL:
+		return cantParam == CANT_PARAM_JOURNAL;
+		break;
+	case CODIGO_ADD:
+		return cantParam == CANT_PARAM_ADD;
+		break;
+	case CODIGO_METRICS:
+		return cantParam == CANT_PARAM_METRICS;
+		break;
+	case CODIGO_RUN:
+		return cantParam == CANT_PARAM_RUN;
+		break;
+
+	case INPUT_ERROR:
+		return 0;
+		break;
+
+	default:
+		return 0;
+		break;
+	}
 }

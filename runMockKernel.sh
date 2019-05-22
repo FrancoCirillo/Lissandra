@@ -1,4 +1,5 @@
 unset LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"../Herramientas/Debug/"
 cd KERNEL_MOCK
-Debug/KERNEL_MOCK
+read -p "Introduzca los numeros de las Memorias: " numerosMemoria
+Debug/KERNEL_MOCK $numerosMemoria
