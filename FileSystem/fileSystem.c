@@ -180,12 +180,12 @@ void evaluar_instruccion(instr_t* instr) {
 	loggear_FS("Finalizó la ejecución de la instrucción.");
 }
 
-//void contestar(instr_t * instr) {
-//	//usa responder()  Lo hacen los chicos
-//	list_clean(instr->parametros);
-//	free(instr->parametros);
-//	free(instr);
-//}
+void contestar(instr_t * instr) { //remitente_instr_t*
+	//usa responder()  Lo hacen los chicos
+	list_clean(instr->parametros);
+	free(instr->parametros);
+	free(instr);
+}
 
 void inicializar_FS() {
 
