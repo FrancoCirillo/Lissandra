@@ -13,14 +13,6 @@
 #include "../Herramientas/tiempo.h"
 
 
-typedef struct RegistroMem
-{
-	 mseg_t timestamp;
-	 uint16_t key;
-	 char value[];
-} RegistroMem;
-
-
 int gran_malloc_inicial(int tamanioMemoria);
 
 

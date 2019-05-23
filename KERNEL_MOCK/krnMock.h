@@ -63,6 +63,11 @@ void ejecutar_instruccion_create(instr_t *instruccion);
 void ejecutar_instruccion_describe(instr_t *instruccion);
 void ejecutar_instruccion_drop(instr_t *instruccion);
 void ejecutar_instruccion_journal(instr_t *instruccion);
+void ejecutar_instruccion_add(instr_t *instruccion);
+void ejecutar_instruccion_metrics(instr_t *instruccion);
+void ejecutar_instruccion_run(instr_t *instruccion);
+
+
 void ejecutar_instruccion_exito(instr_t *instruccion);
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam);
 void responderHandshake(identificador *idsConexionEntrante);

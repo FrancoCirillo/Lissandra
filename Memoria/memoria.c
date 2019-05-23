@@ -5,62 +5,26 @@
 int main(int argc, char *argv[])
 {
 
-	if (argc < 2 || strcmp(argv[1], "4") == 0 || strcmp(argv[1], "2") == 0)
-	{
-		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
-		puts("<NUMERERO-DE-MEMORIA> Funcionales por el momento: 3, 8, 9");
-		puts("Tampoco se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
-		puts("Tampoco se puede elegir el numero 2 porque es el IP que (Por el momento, testing) usa el FS");
-
-		exit(0);
-	}
-	conexionesActuales = dictionary_create();
-	callback = ejecutar_instruccion;
-
-	idsNuevasConexiones = malloc(sizeof(identificador));
-
+	check_inicial(argc, argv);
 	inicializar_configuracion();
 
-	t_list *listaParam = list_create();
+	conexionesActuales = dictionary_create();
+	idsNuevasConexiones = malloc(sizeof(identificador));
 
-	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
+	callback = ejecutar_instruccion;
 
-	printf(COLOR_ANSI_VERDE "	PROCESO %s\n" COLOR_ANSI_RESET, nombreDeMemoria);
 
-	sprintf(miIPMemoria, "127.0.0.%s", argv[1]);
-	printf("IP Memoria: %s.\n", miIPMemoria);
+	enviar_datos_a_FS(argv);
 
-	list_add(listaParam, nombreDeMemoria);
-	list_add(listaParam, miIPMemoria);
-	list_add(listaParam, configuracion.PUERTO);
-	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
-
-	int conexion_con_fs = crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria);
-	enviar_request(miInstruccion, conexion_con_fs);
-	idsNuevasConexiones->fd_in = 0; //Por las moscas
-	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_FS);
-	strcpy(idsNuevasConexiones->ip_proceso, configuracion.IP_FS);
-	idsNuevasConexiones->fd_out = conexion_con_fs;
-	dictionary_put(conexionesActuales, "FileSystem", idsNuevasConexiones);
 
 	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO);
 
 	//recibir el tamanio del Value
 
 	int tamanioValue = 32;
-
-	RegistroMem *unRegistro = malloc(sizeof(RegistroMem) + sizeof(char)*tamanioValue);
-
-	unRegistro->timestamp = obtener_ts();
-	unRegistro->key = 22;
-	strcpy(unRegistro->value, "Mi value");
-
-	printf("Timestamp: %lu \n", unRegistro->timestamp);
-	printf("Key: %d\n",unRegistro->key = 22);
-	printf("Value: %s\n",unRegistro->value);
+	printf("int = %d, cod_op = %d, mseg_t = %d\n",sizeof(int), sizeof(cod_op) , sizeof(mseg_t));
 
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
-
 	//config_destroy(g_config);
 
 	return 0;
@@ -202,7 +166,9 @@ void ejecutar_instruccion_describe(instr_t *instruccion)
 	puts("Ejecutando instruccion Describe");
 	puts("La tabla no se encontro en Memoria. Consultando al FS");
 	int conexionFS = obtener_fd_out("FileSystem");
-	enviar_request(instruccion, conexionFS);
+	puts("Se tiene el fd_out");
+	if(enviar_request(instruccion, conexionFS)==-1) puts("No se envio");
+	puts("Se envio al FS");
 }
 
 void ejecutar_instruccion_drop(instr_t *instruccion)
@@ -263,9 +229,53 @@ int obtener_fd_out(char *proceso)
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
+		puts("Es la primera vez que se le quiere enviar algo a proceso\n");
 		responderHandshake(idsProceso);
 		return idsProceso->fd_out;
 	}
 	//	La conexion en el fd_out %d ya existia
+	puts("La conexion en el fd_out %d ya existia");
 	return idsProceso->fd_out;
 }
+
+void check_inicial(int argc, char* argv[])
+{
+
+	if (argc < 2 || strcmp(argv[1], "4") == 0 || strcmp(argv[1], "2") == 0)
+	{
+		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
+		puts("<NUMERERO-DE-MEMORIA> Funcionales por el momento: 3, 8, 9");
+		puts("Tampoco se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
+		puts("Tampoco se puede elegir el numero 2 porque es el IP que (Por el momento, testing) usa el FS");
+
+		exit(0);
+	}
+
+}
+
+//TODO: Cambiar para usar un IP decente (esta con argv para testing)
+void enviar_datos_a_FS(char *argv[])
+{
+		t_list *listaParam = list_create();
+
+		sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
+		printf(COLOR_ANSI_VERDE "	PROCESO %s\n" COLOR_ANSI_RESET, nombreDeMemoria);
+
+		sprintf(miIPMemoria, "127.0.0.%s", argv[1]);
+		printf("IP Memoria: %s.\n", miIPMemoria);
+
+		list_add(listaParam, nombreDeMemoria);
+		list_add(listaParam, miIPMemoria);
+		list_add(listaParam, configuracion.PUERTO);
+		instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+
+		int conexion_con_fs = crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria);
+		enviar_request(miInstruccion, conexion_con_fs);
+
+		idsNuevasConexiones->fd_in = 0; //Ojo
+		strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_FS);
+		strcpy(idsNuevasConexiones->ip_proceso, configuracion.IP_FS);
+		idsNuevasConexiones->fd_out = conexion_con_fs;
+		dictionary_put(conexionesActuales, "FileSystem", idsNuevasConexiones);
+}
+

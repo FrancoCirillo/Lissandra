@@ -98,7 +98,16 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 	case CONSOLA_KRN_JOURNAL:
 		ejecutar_instruccion_journal(instruccion);
 		break;
-	default:
+	case CONSOLA_KRN_ADD:
+		ejecutar_instruccion_add(instruccion);
+		break;
+	case CONSOLA_KRN_METRICS:
+		ejecutar_instruccion_metrics(instruccion);
+		break;
+	case CONSOLA_KRN_RUN:
+		ejecutar_instruccion_run(instruccion);
+		break;
+	default: //Si entra aca significa que hay un error en el código
 		break;
 	}
 }
@@ -169,6 +178,30 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 	int conexionMemoria = obtener_fd_out(aQuienEnviar);
 	enviar_request(instruccion, conexionMemoria);
 }
+
+void ejecutar_instruccion_add(instr_t *instruccion)
+{
+	puts("Ejecutando instruccion Add");
+	sleep(1);
+	printf("La memoria %s se agrego correctamente al criterio %s\n",(char *)list_get(instruccion->parametros, 1), (char *)list_get(instruccion->parametros, 3));
+}
+
+void ejecutar_instruccion_metrics(instr_t *instruccion)
+{
+	puts("Ejecutando instruccion Metrics");
+	sleep(1);
+	puts("Todo bien");
+//	free(instruccion);
+}
+
+void ejecutar_instruccion_run(instr_t *instruccion)
+{
+	puts("Ejecutando instruccion Run");
+	char* archivo = (char *)list_get(instruccion->parametros, 0);
+	printf("El archivo %s no se pudo abrir.", archivo);
+}
+
+
 void inicializar_configuracion()
 {
 	puts("Configuracion:");

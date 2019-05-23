@@ -74,6 +74,10 @@ void ejecutar_instruccion_exito(instr_t *instruccion);
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam);
 void responderHandshake(identificador *idsConexionEntrante);
 int obtener_fd_out(char *proceso);
+void enviar_datos_a_FS(char *argv[]);
 
+	/* TESTING */
+
+void check_inicial(int argc, char* argv[]);
 
 #endif /* MEMORIA_MEMORIA_H_ */

@@ -19,7 +19,7 @@ int main()
 }
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
-{
+{	puts("Ejecutando...");
 	switch (instruccion->codigo_operacion)
 	{
 	case CONSOLA_FS_SELECT:
@@ -48,6 +48,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 		ejecutar_instruccion_drop(instruccion, remitente);
 		break;
 	default:
+		puts("El comando no pertenece al FileSystem");
 		break;
 	}
 }
