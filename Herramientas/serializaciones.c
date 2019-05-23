@@ -51,10 +51,11 @@ void *serializar_paquete(t_paquete *paquete, int bytes)
 
 void *serializar_request(instr_t *instruccionAEnviar, int *tamanio)
 {
-
 	t_paquete *paqueteAEnviar = instruccion_a_paquete(instruccionAEnviar);
-
-	int bytes = paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op) + sizeof(mseg_t);
+	if(paqueteAEnviar->buffer->size<0){ //Pasa si una instruccion no tiene parametros
+		paqueteAEnviar->buffer->size = 0;
+	}
+	int bytes =  paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op) + sizeof(mseg_t);
 	void *paqueteSerializado = serializar_paquete(paqueteAEnviar, bytes);
 	*tamanio = bytes;
 	return paqueteSerializado;
@@ -64,7 +65,8 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 {
 	int tamanio;
 	void *a_enviar = serializar_request(instruccionAEnviar, &tamanio);
-	int s = send(socket_cliente, a_enviar, tamanio, 0);
+	printf("El tamanio de lo enviado es %d\n", tamanio);
+	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
 	free(a_enviar);
 	return s;
 }
@@ -201,9 +203,11 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	mseg_t timestampRequest = obtener_ts();
 
 	actual = strtok(requestCopy, " \n");
+	if (actual == NULL)
+		return NULL;
+
 	comando = strdup(actual);
 	actual = strtok(NULL, " \n");
-
 	for (int i = 1; actual != NULL; i++)
 	{
 		valor = strdup(actual);
@@ -231,7 +235,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	free(requestCopy);
 
 	cod_op comandoReconocido = reconocer_comando(comando);
-	if (esComandoValido(comandoReconocido, listaParam) != 0)
+	if (esComandoValido(comandoReconocido, listaParam) > 0)
 	{
 		switch (queConsola)
 		{
@@ -326,11 +330,11 @@ int esComandoValido(cod_op comando, t_list *listaParam)
 		break;
 
 	case INPUT_ERROR:
-		return 0;
+		return -1;
 		break;
 
 	default:
-		return 0;
+		return -1;
 		break;
 	}
 }
