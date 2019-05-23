@@ -65,7 +65,6 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 {
 	int tamanio;
 	void *a_enviar = serializar_request(instruccionAEnviar, &tamanio);
-	printf("El tamanio de lo enviado es %d\n", tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
 	free(a_enviar);
 	return s;
@@ -103,8 +102,7 @@ void *recibir_buffer(int *size, int socket_cliente)
 
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
 	buffer = malloc(*size);
-	recv(socket_cliente, buffer, *size, MSG_WAITALL);
-
+	if(*size !=0) recv(socket_cliente, buffer, *size, MSG_WAITALL); //Pasa cuando recibimos las requests sin parametros
 	return buffer;
 }
 

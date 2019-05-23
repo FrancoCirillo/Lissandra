@@ -229,12 +229,12 @@ int obtener_fd_out(char *proceso)
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
-		puts("Es la primera vez que se le quiere enviar algo a proceso\n");
+//		puts("Es la primera vez que se le quiere enviar algo a proceso\n"); //Para debug
 		responderHandshake(idsProceso);
 		return idsProceso->fd_out;
 	}
 	//	La conexion en el fd_out %d ya existia
-	puts("La conexion en el fd_out %d ya existia");
+//	puts("La conexion en el fd_out ya existia"); //Para debug
 	return idsProceso->fd_out;
 }
 

@@ -17,17 +17,18 @@ int crear_conexion(char *ip, char *puerto, char *miIP)
 	hints.ai_flags = AI_PASSIVE;	 //Rellena la IP por nosotros TODO:Chequear si queremos esto. Creo que igual no importa xq llenamos el primer argumento de getaddrinfo con ip
 
 	//Rellena la estructura server_info con la info del Servidor (En realidad es un addrinfo**)
-	getaddrinfo(ip, puerto, &hints, &server_info);
-	//TODO: Chqeuear los errores de getaddrinfo()
+	int addr= getaddrinfo(ip, puerto, &hints, &server_info);
+	if(addr!=0) return addr;
 
 	//Crea el socket_cliente
 	//TODO: recorrer la lista "server_info" en vez de asumir que el primero funciona (Beeje's)
+
 	if ((socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol)) < 0)
 	{
 		printf("Error al crear el socket cliente \n");
 		//		log_error(logger, "Error al crear el socket cliente");
 		close(socket_cliente);
-		return -1; //
+		return socket_cliente; //
 	}
 
 	//Para especificar mi IP como cliente

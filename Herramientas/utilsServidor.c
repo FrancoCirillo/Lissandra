@@ -89,7 +89,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 			for (i = 0; i <= fdmax; i++)
 			{
 				if (FD_ISSET(i, &read_fds))
-				{ // tenemos una nueva conexion entrante
+				{
 					if (i == listener)
 					{
 						// manejo de conexiones nuevas:
@@ -143,10 +143,11 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 					}
 
 					else
-					{ // Ya se había hecho accept en el fd
+					{// Ya se había hecho accept en el fd
 						//recibir los mensajes
 						instr_t *instrcuccion_recibida;
 						int recibo = recibir_request(i, &instrcuccion_recibida);
+
 						if (recibo == 0)
 						{
 							printf(COLOR_ANSI_ROJO "El cliente se desconecto" COLOR_ANSI_RESET "\n"); //TODO: Agregar logger
@@ -158,7 +159,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						}
 
 						else
-						{ //Por fin:
+						{ //Se recibio una instruccion desde otro proceso
 							char auxFd[4];
 							sprintf(auxFd, "%d", i);
 							char *quienLoEnvia = dictionary_get(auxiliarConexiones, auxFd);
