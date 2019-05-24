@@ -214,19 +214,16 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		if(i == 2 && strcmp(comando, "INSERT") == 0)
 		{
 			actual = strtok (NULL, "\"\"");
-			valor = strdup(actual);
-			list_add(listaParam, valor);
-			actual = strtok (NULL, " ");
-
 			if(actual != NULL)
 			{
+				valor = strdup(actual);
+				list_add(listaParam, valor);
+				actual = strtok (NULL, " ");
 				valor = strdup(actual);
 				list_add(listaParam, valor);
 				char* ptr;
 				timestampRequest = strtoul(valor, &ptr, 10);
 			}
-
-			break;
 		}
 		actual = strtok(NULL, " \n");
 	}
