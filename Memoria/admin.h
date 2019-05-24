@@ -3,11 +3,22 @@
 
 #include <commons/log.h>
 #include <commons/config.h>
+#include "../Herramientas/tiempo.h"
+#include "../Herramientas/definicionesConexiones.h"
+#include <inttypes.h>
+#include <stdbool.h>
 
 extern t_log *g_logger;
 extern t_config *g_config;
 extern int tamanioValue;
+extern int tamanioRegistro;
 extern char nombreDeMemoria[12];
+extern bool* sectorOcupado;
+extern int cantidadDeSectores;
+extern t_dictionary *conexionesActuales;
+extern char miIPMemoria[18];
+extern char nombreDeMemoria[12];
+extern identificador *idsNuevasConexiones;
 
 typedef struct config
 {
@@ -24,6 +35,13 @@ typedef struct config
 	int MEMORY_NUMBER;
 	char *RUTA_LOG;
 } config;
+
+typedef struct registro
+{
+	mseg_t timestamp;
+	uint16_t key;
+	char* value;
+} registro;
 
 extern config configuracion;
 

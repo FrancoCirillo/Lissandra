@@ -26,6 +26,9 @@ t_dictionary *conexionesActuales;
 char miIPMemoria[18];
 char nombreDeMemoria[12];
 int tamanioValue;
+int tamanioRegistro;
+bool* sectorOcupado;
+int cantidadDeSectores;
 
 	/* CONFIG Y LOG */
 
@@ -51,13 +54,7 @@ void ejecutar_instruccion_insert(instr_t *instruccion);
 void ejecutar_instruccion_create(instr_t *instruccion);
 void ejecutar_instruccion_describe(instr_t *instruccion);
 void ejecutar_instruccion_drop(instr_t *instruccion);
-void ejecutar_instruccion_journal(instr_t *instruccion);
 void ejecutar_instruccion_exito(instr_t *instruccion);
-
-void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam);
-void responderHandshake(identificador *idsConexionEntrante);
-int obtener_fd_out(char *proceso);
-void enviar_datos_a_FS(char *argv[]);
 
 	/* TESTING */
 
