@@ -214,16 +214,20 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		if(i == 2 && strcmp(comando, "INSERT") == 0)
 		{
 			actual = strtok (NULL, "\"\"");
-			if(actual != NULL)
+			if(actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
 			{
 				valor = strdup(actual);
 				list_add(listaParam, valor);
-				actual = strtok (NULL, " ");
-				valor = strdup(actual);
-				list_add(listaParam, valor);
-				char* ptr;
-				timestampRequest = strtoul(valor, &ptr, 10);
+				actual = strtok (NULL, " \n");
+				if(actual != NULL) //Si es NULL no se introdujo el timestamp opcional
+				{
+					valor = strdup(actual);
+					list_add(listaParam, valor);
+					char* ptr;
+					timestampRequest = strtoul(valor, &ptr, 10);
+				}
 			}
+
 		}
 		actual = strtok(NULL, " \n");
 	}
