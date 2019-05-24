@@ -6,8 +6,9 @@ int main(int argc, char *argv[])
 {
 
 	check_inicial(argc, argv);
+	iniciar_log();
+	iniciar_config();
 	inicializar_configuracion();
-
 	conexionesActuales = dictionary_create();
 	idsNuevasConexiones = malloc(sizeof(identificador));
 
@@ -21,8 +22,8 @@ int main(int argc, char *argv[])
 
 	//recibir el tamanio del Value
 
-	int tamanioValue = 32;
-	printf("int = %d, cod_op = %d, mseg_t = %d\n",sizeof(int), sizeof(cod_op) , sizeof(mseg_t));
+
+	memoriaPrincipal = gran_malloc_inicial();
 
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
 	//config_destroy(g_config);
@@ -48,17 +49,21 @@ void inicializar_configuracion()
 	configuracion.RUTA_LOG = obtener_por_clave(rutaConfig, "RUTA_LOG");
 }
 
-void loggear(char *valor)
+
+void iniciar_log()
 {
-	g_logger = log_create(configuracion.RUTA_LOG, "memoria", 1, LOG_LEVEL_INFO);
-	log_info(g_logger, valor);
-	log_destroy(g_logger);
+	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_INFO);
+
+}
+
+void iniciar_config()
+{
+	g_config = config_create("memoria.config");
 }
 
 char *obtener_por_clave(char *ruta, char *clave)
 {
 	char *valor;
-	g_config = config_create(ruta);
 	valor = config_get_string_value(g_config, clave);
 	printf(" %s: %s \n", clave, valor);
 
@@ -150,8 +155,20 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 void ejecutar_instruccion_insert(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Insert");
+	if(0)
+	{
 	int conexionFS = obtener_fd_out("FileSystem");
 	enviar_request(instruccion, conexionFS);
+	}
+	else
+	{
+		t_list *listaParam = list_create();
+		char cadena[400];
+		sprintf(cadena, "%s%s%s%s%s%s%s%u", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (unsigned int)instruccion->timestamp);
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+
+	}
 }
 
 void ejecutar_instruccion_create(instr_t *instruccion)
@@ -250,6 +267,7 @@ void check_inicial(int argc, char* argv[])
 
 		exit(0);
 	}
+	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
 
 }
 
@@ -258,7 +276,6 @@ void enviar_datos_a_FS(char *argv[])
 {
 		t_list *listaParam = list_create();
 
-		sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
 		printf(COLOR_ANSI_VERDE "	PROCESO %s\n" COLOR_ANSI_RESET, nombreDeMemoria);
 
 		sprintf(miIPMemoria, "127.0.0.%s", argv[1]);

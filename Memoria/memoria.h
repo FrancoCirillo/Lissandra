@@ -17,39 +17,22 @@
 #include "../Herramientas/utilsCliente.h"
 #include "../Herramientas/tiempo.h"
 #include "componentes.h"
-
-
-		/* LOGGER Y CONFIG */
-
-t_log *g_logger;
-t_config *g_config;
-
-typedef struct config
-{
-	char *PUERTO;
-	char *IP_FS;
-	char *PUERTO_FS;
-	char *IP_SEEDS;
-	char *PUERTO_SEEDS;
-	int RETARDO_MEMORIA;
-	int RETARDO_FS;
-	int TAMANIO_MEMORIA;
-	int RETARDO_JOURNAL;
-	int RETARDO_GOSSIPING;
-	int MEMORY_NUMBER;
-	char *RUTA_LOG;
-} config;
-
-config configuracion;
-
+#include "admin.h"
 
 		/* CONEXIONES */
 
 identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
-char nombreDeMemoria[12];
 char miIPMemoria[18];
 
+	/* CONFIG Y LOG */
+
+t_log *g_logger;
+t_config *g_config;
+config configuracion;
+void inicializar_configuracion();
+void iniciar_log();
+void iniciar_config();
 
 		/* DECLARACION DE FUNCIONES */
 
@@ -57,8 +40,6 @@ void (*callback)(instr_t *instruccion, char *remitente);
 
 void responderHandshake(identificador *idsConexionEntrante);
 
-void inicializar_configuracion();
-void loggear(char *valor);
 char *obtener_por_clave(char *ruta, char *clave);
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente);

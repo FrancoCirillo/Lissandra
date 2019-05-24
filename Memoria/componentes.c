@@ -2,9 +2,14 @@
 
 #include "componentes.h"
 
-int gran_malloc_inicial(int tamanioMemoria)
+void *gran_malloc_inicial()
 {
-	return 0;
+	int tamanioMemoria = configuracion.TAMANIO_MEMORIA;
+	void* memoria = malloc(tamanioMemoria);
+	if (memoria==NULL) log_error(g_logger, "No se pudo reservar espacio para la memoria principal");
+	log_info(g_logger, "Espacio para la memoria principal reservada");
+	return memoria;
 }
+
 
 
