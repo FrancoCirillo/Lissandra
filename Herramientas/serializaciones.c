@@ -213,7 +213,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 
 		if(i == 2 && strcmp(comando, "INSERT") == 0)
 		{
-			actual = strtok (NULL, "\"\"");
+			actual = strtok (NULL, "\"\n");
 			if(actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
 			{
 				valor = strdup(actual);
@@ -409,5 +409,15 @@ void imprimirConexiones(t_dictionary *conexAc)
 	dictionary_iterator(conexAc, (void *)iterator);
 }
 
-
+bool str_to_uint16(char *str, uint16_t *res)
+{
+    char *end;
+//    errno = 0;
+    long val = strtol(str, &end, 10);
+//    if (errno || end == str || *end != '\0' || val < 0 || val >= 0x10000) {
+//        return false;
+//    }
+    *res = (uint16_t)val;
+    return true;
+}
 

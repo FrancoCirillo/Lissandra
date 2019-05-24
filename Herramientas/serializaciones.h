@@ -216,5 +216,11 @@ void loggear_error(instr_t *miInstruccion);
  */
 void imprimirConexiones(t_dictionary *diccionario);
 
+/*
+ * Conversion de char* a uint_t
+ * Sirve para poder usar el parametro Key
+ *
+ */
+bool str_to_uint16(char *str, uint16_t *res);
 
 #endif /* SERIALIZACIONES_H_ */
