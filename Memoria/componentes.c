@@ -63,10 +63,3 @@ int get_proximo_sector_disponible()
 	}
 	return -1;
 }
-
-void ejecutar_instruccion_journal(instr_t *instruccion)
-{
-	puts("Ejecutando instruccion Journal");
-	//int conexionFS = obtener_fd_out("FileSystem");
-	//enviar_request(instruccion, conexionFS);
-}

@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/string.h>
@@ -18,7 +17,8 @@
 #include "../Herramientas/tiempo.h"
 #include "componentes.h"
 #include "admin.h"
-
+#include "misConexiones.h"
+#include "instrucciones.h"
 		/* CONEXIONES */
 
 identificador *idsNuevasConexiones;
@@ -43,18 +43,10 @@ void iniciar_config();
 
 void (*callback)(instr_t *instruccion, char *remitente);
 
-void responderHandshake(identificador *idsConexionEntrante);
-
 char *obtener_por_clave(char *ruta, char *clave);
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente);
-void ejecutar_instruccion_select(instr_t *instruccion);
-void ejecutar_instruccion_devolucion_select(instr_t *instruccion);
-void ejecutar_instruccion_insert(instr_t *instruccion);
-void ejecutar_instruccion_create(instr_t *instruccion);
-void ejecutar_instruccion_describe(instr_t *instruccion);
-void ejecutar_instruccion_drop(instr_t *instruccion);
-void ejecutar_instruccion_exito(instr_t *instruccion);
+
 
 	/* TESTING */
 
