@@ -24,6 +24,8 @@
 identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
 char miIPMemoria[18];
+char nombreDeMemoria[12];
+int tamanioValue;
 
 	/* CONFIG Y LOG */
 

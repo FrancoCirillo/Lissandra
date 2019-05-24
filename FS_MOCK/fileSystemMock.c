@@ -82,7 +82,7 @@ void ejecutar_instruccion_insert(instr_t *instruccion, char *remitente)
 	sleep(1);
 	t_list *listaParam = list_create();
 	char cadena[400];
-	sprintf(cadena, "%s%s%s%s%s%s%s%u", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (unsigned int)instruccion->timestamp);
+	sprintf(cadena, "%s%s%s%s%s%s%s%lu", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
 	list_add(listaParam, cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 }

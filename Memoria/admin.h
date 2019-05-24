@@ -6,7 +6,8 @@
 
 extern t_log *g_logger;
 extern t_config *g_config;
-char nombreDeMemoria[12];
+extern int tamanioValue;
+extern char nombreDeMemoria[12];
 
 typedef struct config
 {

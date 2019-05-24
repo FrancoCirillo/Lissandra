@@ -14,16 +14,16 @@ int main(int argc, char *argv[])
 
 	callback = ejecutar_instruccion;
 
-
 	enviar_datos_a_FS(argv);
-
 
 	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO);
 
 	//recibir el tamanio del Value
 
 
-	memoriaPrincipal = gran_malloc_inicial();
+	gran_malloc_inicial();
+
+	tamanioValue = 32;
 
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
 	//config_destroy(g_config);
@@ -124,7 +124,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		//Directo para el Kernel
 		t_list *listaParam = list_create();
 		char cadena[400];
-		sprintf(cadena, "%s%s%s%s%s%s%s%u", "Se encontro ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (unsigned int)instruccion->timestamp);
+		sprintf(cadena, "%s%s%s%s%s%s%s%lu", "Se encontro ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
 		list_add(listaParam, cadena);
 
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
@@ -162,9 +162,11 @@ void ejecutar_instruccion_insert(instr_t *instruccion)
 	}
 	else
 	{
+		insertar_instruccion(instruccion);
+
 		t_list *listaParam = list_create();
 		char cadena[400];
-		sprintf(cadena, "%s%s%s%s%s%s%s%u", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (unsigned int)instruccion->timestamp);
+		sprintf(cadena, "%s%s%s%s%s%s%s%lu", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 
