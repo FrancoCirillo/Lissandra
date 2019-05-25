@@ -97,7 +97,7 @@ void kernel_run(char *nombre_archivo){
 		list_add(p->instrucciones,nueva_instruccion);
 		p->size++;
 		loggear("Se agrego una instruccion!");
-		print_instruccion(nueva_instruccion);
+//		print_instruccion(nueva_instruccion);
 	}
 	fclose(f);
 
@@ -176,7 +176,7 @@ void* ejecutar_proceso(void* un_proceso){
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear("Se ejecuto correctamente la instruccion!, Respuesta=");
-				loggear(obtener_parametroN(respuesta,1));
+				loggear(obtener_parametroN(respuesta,0));
 				loggear("Fin de instruccion");
 			}else{
 
@@ -227,28 +227,35 @@ instr_t* enviar_i(instr_t* i){
 //	i->timestamp=obtener_ts();
 	loggear("ENVIANDO INSTRUCCION FAKE ");
 	print_instruccion(i);
-	printf("##### \nInstruccion enviada, esperando respuesta###\n");
+	printf("##### Instruccion enviada, esperando respuesta###\n");
 
 
 	hilo_enviado* h=malloc(sizeof(hilo_enviado));
 	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-	h->cond_t=cond;
-	h->mutex_t=mutex;
+	pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+	h->cond_t=&cond;
+	h->mutex_t=&lock;
 
 	loggear("Seteo time falso");
 	i->timestamp=timeFalso;
 
 	loggear("Agrego a diccionario");
+
 	sem_wait(&mutex_diccionario_enviados);
-	dictionary_put(diccionario_enviados,i->timestamp,h);
+	loggear("Dentro mutex");
+	char buffer[10];
+	sprintf(buffer,"%lu",i->timestamp);
+	dictionary_put(diccionario_enviados,buffer,h);
 	sem_post(&mutex_diccionario_enviados);
 
 	loggear("Me bloqueo!");
-	pthread_mutex_lock(&cond);
-	pthread_cond_wait(&cond_ejecutar,&mutex);
-	pthread_mutex_unlock(&cond);
-	loggear("Recibi respuesta!");
+	pthread_mutex_lock(h->mutex_t);
+	loggear("Entre en lock!");
+	pthread_cond_wait(h->cond_t,h->mutex_t);
+	loggear("Sali del lock!");
+	pthread_mutex_unlock(h->mutex_t);
+
+	loggear("ME DESPERTE!   ");
 
 
 	return h->respuesta;
@@ -261,22 +268,35 @@ void recibi_respuesta_fake(){
 	rta->codigo_operacion=0;
 	list_add(params,frase);
 	rta->parametros=params;
+
 	recibi_respuesta(rta);
 }
 void recibi_respuesta(instr_t* respuesta){
 	loggear("Instruccion recibida: ");
 	print_instruccion(respuesta);
 
+
 	sem_wait(&mutex_diccionario_enviados);
-	hilo_enviado* h=dictionary_get(diccionario_enviados,respuesta->timestamp);
-	dictionary_remove(diccionario_enviados,respuesta->timestamp);
+	char buffer[10];
+	sprintf(buffer,"%lu",respuesta->timestamp);
+	loggear("Obteniendo hilo!");
+	hilo_enviado* h=dictionary_remove(diccionario_enviados,buffer);
+	loggear("Hilo obtenido y removido del diccionario!");
+
 	sem_post(&mutex_diccionario_enviados);
+
 	loggear("Asigno respuesta y revivo hilo");
 	h->respuesta=respuesta;
-	pthread_mutex_lock(&h->mutex_t);
-	pthread_cond_signal(&h->cond_t);
-	pthread_mutex_unlock(&h->mutex_t);
-
+	loggear("Respuesta asignada!");
+	print_instruccion(h->respuesta);
+	pthread_mutex_lock(h->mutex_t);
+	loggear("Entre en lock!");
+	pthread_cond_signal(h->cond_t);
+	//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
+	//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
+	loggear("Sali del lock!");
+	pthread_mutex_unlock(h->mutex_t);
+	loggear("HILO REVIVIDO!");
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
