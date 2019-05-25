@@ -98,7 +98,7 @@ void iniciar_ejecutador();
 void iniciar_consola();
 void kernel_run(char *nombre_archivo);
 void recibi_respuesta(instr_t* respuesta);
-
+void inicializar_kernel();
 
 
 
