@@ -75,40 +75,45 @@ int main(int argc, char *argv[])
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
 
-	switch (instruccion->codigo_operacion)
-	{
-	case CONSOLA_KRN_EXITO:
-		ejecutar_instruccion_exito(instruccion);
-		break;
-	case CONSOLA_KRN_SELECT:
-		ejecutar_instruccion_select(instruccion);
-		break;
-	case CONSOLA_KRN_INSERT:
-		ejecutar_instruccion_insert(instruccion);
-		break;
-	case CONSOLA_KRN_CREATE:
-		ejecutar_instruccion_create(instruccion);
-		break;
-	case CONSOLA_KRN_DESCRIBE:
-		ejecutar_instruccion_describe(instruccion);
-		break;
-	case CONSOLA_KRN_DROP:
-		ejecutar_instruccion_drop(instruccion);
-		break;
-	case CONSOLA_KRN_JOURNAL:
-		ejecutar_instruccion_journal(instruccion);
-		break;
-	case CONSOLA_KRN_ADD:
-		ejecutar_instruccion_add(instruccion);
-		break;
-	case CONSOLA_KRN_METRICS:
-		ejecutar_instruccion_metrics(instruccion);
-		break;
-	case CONSOLA_KRN_RUN:
-		ejecutar_instruccion_run(instruccion);
-		break;
-	default: //Si entra aca significa que hay un error en el código
-		break;
+	if(instruccion->codigo_operacion > BASE_COD_ERROR){
+			ejecutar_instruccion_error(instruccion);
+	}
+	else{
+		switch (instruccion->codigo_operacion)
+		{
+		case CONSOLA_KRN_EXITO:
+			ejecutar_instruccion_exito(instruccion);
+			break;
+		case CONSOLA_KRN_SELECT:
+			ejecutar_instruccion_select(instruccion);
+			break;
+		case CONSOLA_KRN_INSERT:
+			ejecutar_instruccion_insert(instruccion);
+			break;
+		case CONSOLA_KRN_CREATE:
+			ejecutar_instruccion_create(instruccion);
+			break;
+		case CONSOLA_KRN_DESCRIBE:
+			ejecutar_instruccion_describe(instruccion);
+			break;
+		case CONSOLA_KRN_DROP:
+			ejecutar_instruccion_drop(instruccion);
+			break;
+		case CONSOLA_KRN_JOURNAL:
+			ejecutar_instruccion_journal(instruccion);
+			break;
+		case CONSOLA_KRN_ADD:
+			ejecutar_instruccion_add(instruccion);
+			break;
+		case CONSOLA_KRN_METRICS:
+			ejecutar_instruccion_metrics(instruccion);
+			break;
+		case CONSOLA_KRN_RUN:
+			ejecutar_instruccion_run(instruccion);
+			break;
+		default: //Si entra aca significa que hay un error en el código
+			break;
+		}
 	}
 }
 
@@ -201,6 +206,11 @@ void ejecutar_instruccion_run(instr_t *instruccion)
 	printf("El archivo %s no se pudo abrir.", archivo);
 }
 
+void ejecutar_instruccion_error(instr_t * instruccion)
+{
+	loggear_error(instruccion);
+}
+
 
 void inicializar_configuracion()
 {
@@ -229,6 +239,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 int obtener_fd_out(char *proceso)
 {
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if(idsProceso == NULL) puts("Se trato de enviar algo a una memoria desconocida (cuando arranquemos con gossiping se soluciona)");
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);

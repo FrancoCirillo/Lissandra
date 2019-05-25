@@ -113,18 +113,22 @@ void ejecutar_instruccion_describe(instr_t *instruccion, char *remitente)
 void ejecutar_instruccion_drop(instr_t *instruccion, char *remitente)
 {
 	puts("Ejecutando instruccion Drop");
+//	t_list *listaParam = list_create();
+//	char cadena[400];
+//	sprintf(cadena, "%s%s", "Se borro la ", (char *)list_get(instruccion->parametros, 0));
+//	list_add(listaParam, cadena);
+//	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+	char cadena[500];
 	t_list *listaParam = list_create();
-	char cadena[400];
-	sprintf(cadena, "%s%s", "Se borro la ", (char *)list_get(instruccion->parametros, 0));
+	sprintf(cadena, "No se pudo borrar la tabla del FS");
 	list_add(listaParam, cadena);
-
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+	imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
 }
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente)
 {
 	instr_t *miInstruccion;
-	switch (quienEnvio(instruccion))
+	switch (quienPidio(instruccion))
 	{
 
 	case CONSOLA_KERNEL:
@@ -148,8 +152,8 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		{
 			loggear_exito(miInstruccion);
 		}
-		if (codigoOperacion > BASE_CONSOLA_FS)
-		{ //Es error
+		if (codigoOperacion > BASE_COD_ERROR)
+		{
 			loggear_error(miInstruccion);
 		}
 		break;

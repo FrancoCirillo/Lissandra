@@ -366,7 +366,7 @@ void print_instruccion(instr_t *instruccion)
 	puts("");
 }
 
-cod_op quienEnvio(instr_t *instruccion)
+cod_op quienPidio(instr_t *instruccion)
 {
 	int codigoAnalizado = instruccion->codigo_operacion;
 	if (codigoAnalizado > BASE_COD_ERROR)
@@ -409,6 +409,7 @@ void imprimirConexiones(t_dictionary *conexAc)
 	dictionary_iterator(conexAc, (void *)iterator);
 }
 
+//TODO: cambiar
 bool str_to_uint16(char *str, uint16_t *res)
 {
     char *end;

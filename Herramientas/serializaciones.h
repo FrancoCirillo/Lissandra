@@ -191,7 +191,7 @@ void print_instruccion(instr_t *instruccion);
  * Usado con las otras funciones devuelve qué consola fue la que realizó el input,
  * por lo tanto sirve para saber en qué consola imprimir la instruccion
  */
-cod_op quienEnvio(instr_t *instruccion);
+cod_op quienPidio(instr_t *instruccion);
 
 
 /*

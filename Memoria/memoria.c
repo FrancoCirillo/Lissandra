@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
 
 	//recibir el tamanio del Value
 
-
 	gran_malloc_inicial();
+	inicializar_tabla_segmentos();
 
 	tamanioValue = 32;
 	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue;
@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
 	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool));
+
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
 	//config_destroy(g_config);
 
@@ -79,45 +80,43 @@ char *obtener_por_clave(char *ruta, char *clave)
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
+	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
+	if(instruccion->codigo_operacion > BASE_COD_ERROR){
+		puts("Me llego un codigo de error");
+		ejecutar_instruccion_error(instruccion);
+	}
+	else{
+		switch (codigoNeto)
+		{
+		case CODIGO_SELECT:
+			ejecutar_instruccion_select(instruccion);
+			break;
+		case DEVOLUCION_SELECT:
+			ejecutar_instruccion_devolucion_select(instruccion);
+			break;
+		case CODIGO_INSERT:
+			ejecutar_instruccion_insert(instruccion, true);
+			break;
+		case CODIGO_CREATE:
+			ejecutar_instruccion_create(instruccion);
+			break;
+		case CODIGO_DESCRIBE:
+			ejecutar_instruccion_describe(instruccion);
+			break;
+		case CODIGO_DROP:
+			ejecutar_instruccion_drop(instruccion);
+			break;
+		case CODIGO_JOURNAL:
+			ejecutar_instruccion_journal(instruccion);
+			break;
+		case CODIGO_EXITO:
+			ejecutar_instruccion_exito(instruccion);
+			break;
 
-	switch (instruccion->codigo_operacion)
-	{
-	case CONSOLA_MEM_SELECT:
-	case CONSOLA_KRN_SELECT:
-		ejecutar_instruccion_select(instruccion);
-		break;
-	case CONSOLA_KRN_RTA_SELECT:
-	case CONSOLA_MEM_RTA_SELECT:
-		ejecutar_instruccion_devolucion_select(instruccion);
-		break;
-	case CONSOLA_MEM_INSERT:
-	case CONSOLA_KRN_INSERT:
-		ejecutar_instruccion_insert(instruccion);
-		break;
-	case CONSOLA_MEM_CREATE:
-	case CONSOLA_KRN_CREATE:
-		ejecutar_instruccion_create(instruccion);
-		break;
-	case CONSOLA_MEM_DESCRIBE:
-	case CONSOLA_KRN_DESCRIBE:
-		ejecutar_instruccion_describe(instruccion);
-		break;
-	case CONSOLA_MEM_DROP:
-	case CONSOLA_KRN_DROP:
-		ejecutar_instruccion_drop(instruccion);
-		break;
-	case CONSOLA_MEM_JOURNAL:
-	case CONSOLA_KRN_JOURNAL:
-		ejecutar_instruccion_journal(instruccion);
-		break;
-	case CONSOLA_MEM_EXITO:
-	case CONSOLA_KRN_EXITO:
-		ejecutar_instruccion_exito(instruccion);
-		break;
-
-	default:
-		puts("El comando no pertenece a la Memoria");
-		break;
+		default:
+			puts("El comando no pertenece a la Memoria");
+			break;
+		}
 	}
 }
 
