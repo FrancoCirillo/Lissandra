@@ -44,18 +44,38 @@ void ejecutar_instruccion_insert(instr_t *instruccion)
 	puts("Ejecutando instruccion Insert");
 	if(0)
 	{
-	int conexionFS = obtener_fd_out("FileSystem");
-	enviar_request(instruccion, conexionFS);
+		int conexionFS = obtener_fd_out("FileSystem");
+		enviar_request(instruccion, conexionFS);
 	}
 	else
 	{
-		insertar_instruccion(instruccion);
+		void *paginaAgregada = insertar_instruccion_en_memoria(instruccion);
+//		puts("Se agrego la pagina a la memoria principal");
+		printf("\nPagina agregada: %s\n", pagina_a_str(paginaAgregada));
+		t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0));
+		if(suTablaDePaginas == NULL){
+			suTablaDePaginas = nueva_tabla_de_paginas();
+//			puts("Se creo una nueva tabla de paginas");
+			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
+			printf("Se agrego %s al diccionario\n", (char *)list_get(instruccion->parametros, 0));
+			agregar_fila_tabla(suTablaDePaginas, 1, paginaAgregada, 1);
+			puts("Tabla de paginas actual: (New)");
+			imprimir_tabla_de_paginas(suTablaDePaginas);
+		}
+		else{
+			agregar_fila_tabla(suTablaDePaginas, 1, paginaAgregada, 1);
+			puts("Tabla de paginas actual: ");
+			imprimir_tabla_de_paginas(suTablaDePaginas);
+		}
+//		puts("Se agrego una nueba fila a la tabla de paginas");
 
-		t_list *listaParam = list_create();
-		char cadena[400];
-		sprintf(cadena, "%s%s%s%s%s%s%s%lu", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
-		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+
+
+//		char cadena[500];
+//		t_list *listaParam = list_create();
+//		sprintf(cadena, "%s%s%s%s%s%s%s%lu", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
+//		list_add(listaParam, cadena);
+//		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 
 	}
 }

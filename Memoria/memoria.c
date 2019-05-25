@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
 
 	//recibir el tamanio del Value
 
-
 	gran_malloc_inicial();
+	inicializar_tabla_segmentos();
 
 	tamanioValue = 32;
 	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue;
@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
 	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool));
+
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
 	//config_destroy(g_config);
 

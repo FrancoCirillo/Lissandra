@@ -20,6 +20,8 @@ extern char miIPMemoria[18];
 extern char nombreDeMemoria[12];
 extern identificador *idsNuevasConexiones;
 
+extern t_dictionary *tablaDeSegmentos;
+
 typedef struct config
 {
 	char *PUERTO;
@@ -42,6 +44,15 @@ typedef struct registro
 	uint16_t key;
 	char* value;
 } registro;
+
+
+typedef struct tabPags
+{
+	int numerosDePaginas;
+	void *ptrsPaginas;
+	bool flagsModificado;
+}filaTabPags;
+
 
 extern config configuracion;
 
