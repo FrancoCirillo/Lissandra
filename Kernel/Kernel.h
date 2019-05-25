@@ -15,6 +15,7 @@
 #include "../Herramientas/tiempo.h"
 #include "../Herramientas/serializaciones.h"
 #include "../Herramientas/definicionesConexiones.h"
+#include "../Herramientas/utilsServidor.h"
 
 #include <pthread.h>
 
@@ -66,7 +67,7 @@ typedef struct criterio{
 	int codigo_criterio;
 	t_list * lista_memorias;
 	sem_t mutex_criterio;
-};
+}criterio;
 
 metricas m;
 proceso* cola_ready=NULL;
@@ -97,6 +98,7 @@ void* consola(void *param);
 void iniciar_ejecutador();
 void iniciar_consola();
 void kernel_run(char *nombre_archivo);
+void inicializar_kernel();
 void recibi_respuesta(instr_t* respuesta);
 
 
