@@ -1,6 +1,7 @@
 //---------kernel.c---------
 
 #include "Kernel.h"
+mseg_t timeFalso=123;
 
 int main() {
 
@@ -16,7 +17,17 @@ int main() {
 	//kernel_run("p2.lql");
 	//kernel_run("p3.lql");
 
-	iniciar_consola();
+	kernel_run("sleep.lql");
+
+	loggear("Se encola instruccion, durmiendo 5 segundos!");
+
+	sleep(5);
+
+	recibi_respuesta_fake();
+
+	//iniciar_consola();
+	loggear("Recibi respuesta fake ejecutado!");
+	sleep(10);
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
 }
@@ -224,10 +235,15 @@ instr_t* enviar_i(instr_t* i){
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	h->cond_t=cond;
 	h->mutex_t=mutex;
+
+	loggear("Seteo time falso");
+	i->timestamp=timeFalso;
+
 	loggear("Agrego a diccionario");
 	sem_wait(&mutex_diccionario_enviados);
 	dictionary_put(diccionario_enviados,i->timestamp,h);
 	sem_post(&mutex_diccionario_enviados);
+
 	loggear("Me bloqueo!");
 	pthread_mutex_lock(&cond);
 	pthread_cond_wait(&cond_ejecutar,&mutex);
@@ -237,7 +253,16 @@ instr_t* enviar_i(instr_t* i){
 
 	return h->respuesta;
 }
-
+void recibi_respuesta_fake(){
+	instr_t* rta=malloc(sizeof(instr_t));
+	t_list * params=list_create();
+	char* frase="Mensaje de respuesta fake";
+	rta->timestamp=timeFalso;
+	rta->codigo_operacion=0;
+	list_add(params,frase);
+	rta->parametros=params;
+	recibi_respuesta(rta);
+}
 void recibi_respuesta(instr_t* respuesta){
 	loggear("Instruccion recibida: ");
 	print_instruccion(respuesta);
