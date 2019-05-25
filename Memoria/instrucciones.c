@@ -1,20 +1,47 @@
 
 #include "instrucciones.h"
 
+registro* encontrar_value(t_list *suTablaDePaginas, char* keyChar){
+	uint16_t keyPedida;
+			str_to_uint16(keyChar, &keyPedida);
+			uint16_t keyEnMemoria;
+
+			for(int i = 0;i<list_size(suTablaDePaginas); i++){
+				filaTabPags * fila = list_get(suTablaDePaginas, i);
+				keyEnMemoria = get_key_pagina(fila->ptrPagina);
+				if(keyEnMemoria == keyPedida){
+					return obtener_registro_de_pagina(fila->ptrPagina);
+				}
+			}
+	return NULL;
+}
+
 void ejecutar_instruccion_select(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Select");
-	int seEncontro = 0; //No cambiar hasta que se implemente conexionKERNEL
+	char* tabla = (char *)list_get(instruccion->parametros, 0);
+	t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, tabla);
 	sleep(1);			//Buscar
-	if (seEncontro)
+	if (suTablaDePaginas != NULL)
 	{
-		//Directo para el Kernel
-		t_list *listaParam = list_create();
-		char cadena[400];
-		sprintf(cadena, "%s%s%s%s%s%s%s%lu", "Se encontro ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
-		list_add(listaParam, cadena);
+		char* keyChar = (char *)list_get(instruccion->parametros, 1);
+		registro* registroEncontrado = encontrar_value(suTablaDePaginas, keyChar);
+		if(registroEncontrado != NULL){
 
-		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+			t_list *listaParam = list_create();
+			char cadena[400];
+			sprintf(cadena, "Se encontro %s | %d | %s | %lu en Memoria",
+					tabla,
+					registroEncontrado->key,
+					registroEncontrado->value,
+					registroEncontrado->timestamp);
+			list_add(listaParam, cadena);
+
+			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+
+		}
+
+		//Directo para el Kernel
 	}
 	else
 	{
@@ -30,11 +57,11 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	print_instruccion(instruccion);
 	t_list *listaParam = list_create();
 	char cadena[400];
-	sprintf(cadena, "%s%s%s%s%s%s%s%u", "Se encontro ",
+	sprintf(cadena, "%s%s%s%s%s%s%s%lu en FS", "Se encontro",
 										(char *)list_get(instruccion->parametros, 0), " | ",
 										(char *)list_get(instruccion->parametros, 1), " | ",
 										(char *)list_get(instruccion->parametros, 2), " | ",
-										(unsigned int)instruccion->timestamp);
+										(mseg_t)instruccion->timestamp);
 	list_add(listaParam, cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 }
@@ -49,13 +76,12 @@ void ejecutar_instruccion_insert(instr_t *instruccion)
 	}
 	else
 	{
+		//if(length((char *)list_get(instruccion->parametros, 2))>tamanioValue) log_error
 		void *paginaAgregada = insertar_instruccion_en_memoria(instruccion);
-//		puts("Se agrego la pagina a la memoria principal");
 		printf("\nPagina agregada: %s\n", pagina_a_str(paginaAgregada));
 		t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0));
 		if(suTablaDePaginas == NULL){
 			suTablaDePaginas = nueva_tabla_de_paginas();
-//			puts("Se creo una nueva tabla de paginas");
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 			printf("Se agrego %s al diccionario\n", (char *)list_get(instruccion->parametros, 0));
 			agregar_fila_tabla(suTablaDePaginas, 1, paginaAgregada, 1);
@@ -67,15 +93,12 @@ void ejecutar_instruccion_insert(instr_t *instruccion)
 			puts("Tabla de paginas actual: ");
 			imprimir_tabla_de_paginas(suTablaDePaginas);
 		}
-//		puts("Se agrego una nueba fila a la tabla de paginas");
 
-
-
-//		char cadena[500];
-//		t_list *listaParam = list_create();
-//		sprintf(cadena, "%s%s%s%s%s%s%s%lu", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
-//		list_add(listaParam, cadena);
-//		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+		char cadena[500];
+		t_list *listaParam = list_create();
+		sprintf(cadena, "%s%s%s%s%s%s%s%lu a la Memoria", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 
 	}
 }

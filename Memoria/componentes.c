@@ -23,9 +23,9 @@ t_list *nueva_tabla_de_paginas(){
 void agregar_fila_tabla(t_list * tablaDePaginas, int numPag, void* pagina, bool flagMod){
 	filaTabPags *tabla = malloc(sizeof(filaTabPags));
 
-	tabla->numerosDePaginas = contadorPaginas;
-	tabla->ptrsPaginas = pagina;
-	tabla->flagsModificado = flagMod;
+	tabla->numeroDePagina = contadorPaginas;
+	tabla->ptrPagina = pagina;
+	tabla->flagModificado = flagMod;
 	contadorPaginas++;
 	list_add(tablaDePaginas, tabla);
 
@@ -142,10 +142,10 @@ char* pagina_a_str(void* pagina){
 void imprimir_tabla_de_paginas(t_list *tablaDePaginas){
 
 	void iterator(filaTabPags *fila){
-		printf(" Numero de pagina: %d\n", fila->numerosDePaginas);
-		printf(" Puntero a pagina: %p\n", fila->ptrsPaginas);
-		printf(" Registro en memo: \n%s",pagina_a_str(fila->ptrsPaginas));
-		printf(" Flag modificado : %d\n", fila->flagsModificado);
+		printf(" Numero de pagina: %d\n", fila->numeroDePagina);
+		printf(" Puntero a pagina: %p\n", fila->ptrPagina);
+		printf(" Registro en memo: \n%s",pagina_a_str(fila->ptrPagina));
+		printf(" Flag modificado : %d\n", fila->flagModificado);
 	}
 
 	list_iterate(tablaDePaginas, (void *)iterator);

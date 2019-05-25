@@ -46,11 +46,11 @@ typedef struct registro
 } registro;
 
 
-typedef struct tabPags
+typedef struct filatabPags
 {
-	int numerosDePaginas;
-	void *ptrsPaginas;
-	bool flagsModificado;
+	int numeroDePagina;
+	void *ptrPagina;
+	bool flagModificado;
 }filaTabPags;
 
 

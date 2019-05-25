@@ -409,6 +409,7 @@ void imprimirConexiones(t_dictionary *conexAc)
 	dictionary_iterator(conexAc, (void *)iterator);
 }
 
+//TODO: cambiar
 bool str_to_uint16(char *str, uint16_t *res)
 {
     char *end;
