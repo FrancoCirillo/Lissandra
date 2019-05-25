@@ -101,6 +101,7 @@ void recibi_respuesta(instr_t* respuesta);
 
 
 
+
 //Conexiones Franquito
 config_t configuracion;
 t_dictionary *conexionesActuales;
