@@ -35,5 +35,6 @@ void escribir(FILE*, t_list*);
 int obtener_num_sig_dumpeo(char*);
 
 int mem_existe_tabla(char*);
+int es_nodo_tabla(char*, mem_tabla_t*);
 
 #endif /* MEMTABLE_H_ */

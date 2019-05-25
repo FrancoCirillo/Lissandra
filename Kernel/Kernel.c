@@ -282,6 +282,7 @@ void bajar_cantidad_hilos(){
 char* obtener_parametroN(instr_t* i,int index){
 	return (char*)list_get(i->parametros,index);
 }
+
 instr_t* ejecutar_instruccion(instr_t* i){
 	loggear("#### Se ejecuta una instruccion");
 	print_instruccion(i);

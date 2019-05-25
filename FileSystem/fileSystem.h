@@ -91,6 +91,7 @@ int execute_describe(instr_t*);
 int execute_drop(instr_t*);
 
 char* obtener_parametro(instr_t*, int);
+void leer_metadata_tabla(char*, metadata_t*);
 
 /*EJEMPLO INTRUCCIONES*/ //para testeo
 void ejemplo_instr_create();
@@ -107,6 +108,6 @@ char* concat3(char*, char*, char*);
 /*Comunicación*/
 //eliminar
 //void response(remitente_t*);
-void contestar(remitente_instr_t *);
+void contestar(instr_t *);
 
 #endif /* FILE_SYSTEM_H */

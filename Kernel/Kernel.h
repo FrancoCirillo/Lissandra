@@ -100,6 +100,7 @@ void iniciar_consola();
 void kernel_run(char *nombre_archivo);
 void inicializar_kernel();
 void recibi_respuesta(instr_t* respuesta);
+void inicializar_kernel();
 
 
 
