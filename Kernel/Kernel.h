@@ -22,9 +22,6 @@ t_log* g_logger;
 t_config* g_config;
 
 
-//typedef enum {NEW,READY,EXEC,EXIT}estado;
-
-
 typedef struct proceso{
 	int current;
 	int size;
@@ -40,7 +37,10 @@ typedef struct config{
 	char* rutaLog;
 	char* ip;
 	char* puerto;
-
+	char* MEMORIA_3_IP;
+	char* MEMORIA_8_IP;
+	char* MEMORIA_9_IP;
+	char* PUERTO_MEMORIA;
 }config_t;
 
 
@@ -84,6 +84,8 @@ sem_t mutex_log;
 sem_t semaforo_procesos_ready;
 sem_t mutex_diccionario_enviados;
 sem_t mutex_codigo_request;
+sem_t mutex_conexiones_actuales;
+
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -98,6 +100,15 @@ void kernel_run(char *nombre_archivo);
 void recibi_respuesta(instr_t* respuesta);
 
 
+
+//Conexiones Franquito
+config_t configuracion;
+t_dictionary *conexionesActuales;
+void (*callback)(instr_t *instruccion, char *remitente);
+void ejecutar_requestRecibido(instr_t * instruccion,char* remitente);
+void enviar_a(instr_t* i,char* destino);
+int obtener_fd_out(char *proceso);
+void responderHandshake(identificador *idsConexionEntrante);
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
 proceso* obtener_sig_proceso();
@@ -119,4 +130,6 @@ void iniciar_log();
 void procesar_instruccion_consola(char *instruccion);
 void subir_cantidad_hilos();
 void bajar_cantidad_hilos();
+
+
 #endif /* kernel.h */

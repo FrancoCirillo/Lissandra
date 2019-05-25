@@ -18,21 +18,54 @@ int main() {
 	//kernel_run("p2.lql");
 	//kernel_run("p3.lql");
 
-	kernel_run("sleep.lql");
+	//kernel_run("sleep.lql");
 
-	loggear("Se encola instruccion, durmiendo 5 segundos!");
+	//loggear("Se encola instruccion, durmiendo 5 segundos!");
 
-	sleep(6);
+	/*sleep(6);
 	recibi_respuesta_fake1();
 	//iniciar_consola();
 	loggear("Recibi respuesta fake1 ejecutado!");
 	sleep(6);
 	recibi_respuesta_fake2();
 	loggear("Recibi respuesta fake2 ejecutado!");
+	 */
+
+	inicializar_kernel();
+
 	sleep(10);
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
+
+
 }
+void inicializar_kernel(){
+	t_list *listaParam = list_create();
+	list_add(listaParam, "Kernel");
+	list_add(listaParam, IP_KERNEL);
+	list_add(listaParam, "4444");
+	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+
+	conexionesActuales = dictionary_create();
+	callback = ejecutar_requestRecibido;
+
+	identificador *idsNuevasConexiones = malloc(sizeof(identificador));
+	int conexion_con_memoria_3 = crear_conexion(configuracion.MEMORIA_3_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL);
+	enviar_request(miInstruccion, conexion_con_memoria_3);
+	idsNuevasConexiones->fd_in = 0; //Por las moscas
+	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
+	strcpy(idsNuevasConexiones->ip_proceso, configuracion.MEMORIA_3_IP);
+	idsNuevasConexiones->fd_out = conexion_con_memoria_3;
+
+	sem_wait(&mutex_conexiones_actuales);
+	dictionary_put(conexionesActuales, "Memoria_3", idsNuevasConexiones);
+	sem_post(&mutex_conexiones_actuales);
+
+	int listenner = iniciar_servidor(IP_KERNEL, "4444");
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL);
+
+}
+/*
 void iniciar_consola(){
 	sleep(1);
 	loggear("Se inicia consola");
@@ -56,6 +89,23 @@ void* consola(void* c){
 		procesar_instruccion_consola(instruccion);
 
 	}
+}*/
+void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
+	if(remitente==0){//Es nueva instruccion-CONSOLA
+		t_list* instrucciones = list_create();
+		proceso* p=malloc(sizeof(proceso));
+		p->current=0;
+		p->size=0;
+		p->instrucciones=instrucciones;
+		p->sig=NULL;
+		list_add(p->instrucciones,instruccion);
+		p->size++;
+		loggear("Instruccion generada, encolando proceso...");
+		encolar_proceso(p);
+	}else{//Es una respuesta
+		recibi_respuesta(instruccion);
+	}
+
 }
 void procesar_instruccion_consola(char *instruccion){
 	loggear("Generando instruccion unitaria");
@@ -185,7 +235,7 @@ void* ejecutar_proceso(void* un_proceso){
 		if(instruccion_obtenida!=NULL){
 
 			instr_t* respuesta=ejecutar_instruccion(instruccion_obtenida);
-
+//METRICS
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear("Se ejecuto correctamente la instruccion!, Respuesta=");
@@ -193,8 +243,9 @@ void* ejecutar_proceso(void* un_proceso){
 				loggear("Fin de instruccion");
 			}else{
 
-				loggear("ERROR al ejecutar la instruccion, Codigo=");
+				loggear("ERROR al ejecutar la instruccion, finalizando proceso, Codigo=");
 				printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
+				return NULL;
 			}
 		}else{
 
@@ -232,10 +283,21 @@ char* obtener_parametroN(instr_t* i,int index){
 	return (char*)list_get(i->parametros,index);
 }
 instr_t* ejecutar_instruccion(instr_t* i){
-	loggear("Se ejecuta una instruccion");
-	//	sleep(1);
-	if(i->codigo_operacion==CODIGO_RUN){
+	loggear("#### Se ejecuta una instruccion");
+	print_instruccion(i);
+	if(i->codigo_operacion==8){
+		loggear("EJECUTANDO RUN!");
 		kernel_run(obtener_parametroN(i,0));
+		//CREO RESPUESTA RUN
+		instr_t * respuesta=malloc(sizeof(instr_t));
+		respuesta->codigo_operacion=0;
+		char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
+		t_list * params=list_create();
+		list_add(params,mensaje);
+		respuesta->parametros=params;
+		respuesta->timestamp=i->timestamp;
+		loggear("FIN RUN!");
+		return respuesta;
 	}
 	instr_t* respuesta=enviar_i(i);
 	return respuesta;
@@ -255,7 +317,7 @@ instr_t* enviar_i(instr_t* i){
 	//Fake init
 	loggear("Seteo time verdadero");
 	codigo_envio=list_get(i->parametros,list_size(i->parametros)-1);
-	printf("EL VALOR DEL CODIGO  ES DE %s",codigo_envio);
+	//printf("EL VALOR DEL CODIGO  ES DE %s",codigo_envio);
 	//Fake end
 
 	loggear("Agrego a diccionario");
@@ -268,7 +330,8 @@ instr_t* enviar_i(instr_t* i){
 
 	printf("\n##### Instruccion enviada, esperando respuesta###\n");
 
-
+	int conexionMemoria = obtener_fd_out("Memoria_3");
+	enviar_request(i, conexionMemoria);
 
 	loggear("Hilo bloqueado hasta recibir respuesta!");
 	pthread_mutex_lock(h->mutex_t);
@@ -279,7 +342,30 @@ instr_t* enviar_i(instr_t* i){
 
 	return h->respuesta;
 }
+void enviar_a(instr_t* i,char* destino){
+	enviar_request(i,obtener_fd_out(destino));
+}
+int obtener_fd_out(char *proceso)
+{
+	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if (idsProceso->fd_out == 0)
+	{ //Es la primera vez que se le quiere enviar algo a proceso
+		responderHandshake(idsProceso);
+	}
+	return idsProceso->fd_out;
+}
+void responderHandshake(identificador *idsConexionEntrante)
+{
+	t_list *listaParam = list_create();
+	list_add(listaParam, "Kernel");  //Tabla
+	list_add(listaParam, IP_KERNEL); //Key
+	list_add(listaParam, "4444");
+	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_KERNEL);
+	enviar_request(miInstruccion, fd_saliente);
+	idsConexionEntrante->fd_out = fd_saliente;
+}
 void recibi_respuesta_fake1(){
 	instr_t* rta=malloc(sizeof(instr_t));
 	t_list * params=list_create();
@@ -310,6 +396,8 @@ void recibi_respuesta(instr_t* respuesta){
 	loggear("Instruccion recibida: ");
 	print_instruccion(respuesta);
 
+	list_add(respuesta->parametros,"1");
+
 	sem_wait(&mutex_diccionario_enviados);
 	hilo_enviado* h=dictionary_remove(diccionario_enviados,list_get(respuesta->parametros,list_size(respuesta->parametros)-1));
 	loggear("Hilo obtenido y removido del diccionario!");
@@ -324,7 +412,7 @@ void recibi_respuesta(instr_t* respuesta){
 
 	loggear("Hilo revivido!");
 	//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
-		//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
+	//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
 
 }
 void encolar_o_finalizar_proceso(proceso* p){
@@ -401,6 +489,10 @@ void inicializarConfiguracion() {
 	configuracion.ip = obtener_por_clave(rutaConfiguracion, "IP");
 	configuracion.puerto = obtener_por_clave(rutaConfiguracion, "PUERTO");
 	configuracion.rutaLog = obtener_por_clave(rutaConfiguracion, "rutaLog");
+	configuracion.MEMORIA_3_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_3_IP");
+	configuracion.MEMORIA_8_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_8_IP");
+	configuracion.MEMORIA_9_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_9_IP");
+	configuracion.PUERTO_MEMORIA = obtener_por_clave(rutaConfiguracion, "PUERTO_MEMORIA");
 
 }
 void actualizar_configuracion(){
@@ -439,6 +531,7 @@ void inicializar_semaforos(){
 	sem_init(&mutex_cantidad_hilos,0,1);
 	sem_init(&mutex_diccionario_enviados,0,1);
 	sem_init(&mutex_codigo_request,0,1);
+	sem_init(&mutex_conexiones_actuales,0,1);
 	diccionario_enviados=dictionary_create();
 	puts("Semaforos inicializados");
 }
