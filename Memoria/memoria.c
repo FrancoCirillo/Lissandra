@@ -80,7 +80,7 @@ char *obtener_por_clave(char *ruta, char *clave)
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
-	int codigoNeto = instruccion->codigo_operacion %10; //Los primeros dos digitos son los posibles codigos de operacion
+	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
 		puts("Me llego un codigo de error");
 		ejecutar_instruccion_error(instruccion);
@@ -91,7 +91,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 		case CODIGO_SELECT:
 			ejecutar_instruccion_select(instruccion);
 			break;
-		case CONSOLA_KRN_RTA_SELECT:
+		case DEVOLUCION_SELECT:
 			ejecutar_instruccion_devolucion_select(instruccion);
 			break;
 		case CODIGO_INSERT:

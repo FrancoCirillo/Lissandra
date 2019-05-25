@@ -26,12 +26,10 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		enviar_request(miInstruccion, conexionKernel);
 		break;
 	default:
-		puts("El query lo habia hecho la consola de la memoria");
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		if (codigoOperacion == CODIGO_EXITO)
 			loggear_exito(miInstruccion);
 		if (codigoOperacion > BASE_COD_ERROR){
-			puts("Imprimiendo error");
 			loggear_error(miInstruccion);
 		}
 		break;
