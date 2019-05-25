@@ -95,7 +95,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			ejecutar_instruccion_devolucion_select(instruccion);
 			break;
 		case CODIGO_INSERT:
-			ejecutar_instruccion_insert(instruccion);
+			ejecutar_instruccion_insert(instruccion, true);
 			break;
 		case CODIGO_CREATE:
 			ejecutar_instruccion_create(instruccion);

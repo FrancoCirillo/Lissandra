@@ -20,7 +20,6 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 	switch (quienPidio(instruccion))
 	{
 	case CONSOLA_KERNEL:
-		puts("En query lo habia hecho la consola del kernel");
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
 		enviar_request(miInstruccion, conexionKernel);

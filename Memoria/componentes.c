@@ -23,22 +23,41 @@ t_list *nueva_tabla_de_paginas(){
 void agregar_fila_tabla(t_list * tablaDePaginas, int numPag, void* pagina, bool flagMod){
 	filaTabPags *tabla = malloc(sizeof(filaTabPags));
 
-	tabla->numeroDePagina = contadorPaginas;
+	tabla->numeroDePagina = numPag;
 	tabla->ptrPagina = pagina;
 	tabla->flagModificado = flagMod;
-	contadorPaginas++;
 	list_add(tablaDePaginas, tabla);
 
 }
 
 
-void *insertar_instruccion_en_memoria(instr_t* instruccion)
+void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag)
 {
 
 	int desplazamiento = 0;
 	registro *reg = obtener_registro_de_instruccion(instruccion);
 	int sectorDisponible = get_proximo_sector_disponible();
 	if(sectorDisponible == -1){
+		/*if(memoria__esta_full()){
+			ejecutar_jourmal()
+		}
+		  else ejecutar_algoritmo_reemplazo():
+
+		  pagina_lru();
+		  fila_correspondiente_a_esa_pagina()
+		  //guardar el numero de pagina de esa fila
+		  guardar el ptr a la pagina
+
+		  memcpy(ptrALaPagina+ desplazamiento, &reg->timestamp, sizeof(mseg_t));
+		  desplazamiento += sizeof(mseg_t);
+		  memcpy(ptrALaPagina + desplazamiento, &reg->key, sizeof(uint16_t));
+		  desplazamiento += sizeof(uint16_t);
+		  memcpy(ptrALaPagina+ desplazamiento, &reg->value, tamanioValue);
+		  return ptrALaPagina;
+
+		  list_remove(fila)
+
+		*/
 		ejecutar_instruccion_journal(instruccion);
 		memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool)); //Por ahora se hace "Journal" de toda la memoria (y queda vacia)
 		sectorOcupado[sectorDisponible] = true;
@@ -58,6 +77,7 @@ void *insertar_instruccion_en_memoria(instr_t* instruccion)
 		memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t));
 		desplazamiento += sizeof(uint16_t);
 		memcpy(memoriaPrincipal + desplazamiento, &reg->value, tamanioValue);
+		*nroPag = sectorDisponible;
 		return memoriaPrincipal + (sectorDisponible*tamanioRegistro);
 	}
 	free(reg);

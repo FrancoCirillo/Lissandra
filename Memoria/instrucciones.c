@@ -58,7 +58,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 {
 	puts("FS devolvio la tabla solicitada.");
-	ejecutar_instruccion_insert(instruccion);
+	ejecutar_instruccion_insert(instruccion, false);
 
 	t_list *listaParam = list_create();
 	char cadena[400];
@@ -71,53 +71,47 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 }
 
-void ejecutar_instruccion_insert(instr_t *instruccion)
+void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
 {
 	puts("Ejecutando instruccion Insert");
-	if(0)
+	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
 	{
-		int conexionFS = obtener_fd_out("FileSystem");
-		enviar_request(instruccion, conexionFS);
+		char cadena[500];
+		t_list *listaParam = list_create();
+		sprintf(cadena, "El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam);
 	}
 	else
 	{
-		if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
-		{
-			char cadena[500];
-			t_list *listaParam = list_create();
-			sprintf(cadena, "El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
-			list_add(listaParam, cadena);
-			imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam);
-		}
-		else
-		{
-			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion);
-			printf("\nPagina agregada: %s\n", pagina_a_str(paginaAgregada));
-			t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0));
-			if(suTablaDePaginas == NULL){
-				suTablaDePaginas = nueva_tabla_de_paginas();
-				dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
-				printf("Se agrego %s al diccionario\n", (char *)list_get(instruccion->parametros, 0));
-				agregar_fila_tabla(suTablaDePaginas, 1, paginaAgregada, 1);
-				puts("Tabla de paginas actual: (New)");
-				imprimir_tabla_de_paginas(suTablaDePaginas);
-			}
-			else{
-				agregar_fila_tabla(suTablaDePaginas, 1, paginaAgregada, 1);
-				puts("Tabla de paginas actual: ");
-				imprimir_tabla_de_paginas(suTablaDePaginas);
-			}
+		int numeroDePaginaAgregado;
+		void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
+		printf("\nPagina agregada: %s\n", pagina_a_str(paginaAgregada));
+		t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0));
 
-			char cadena[500];
-			t_list *listaParam = list_create();
-			sprintf(cadena, "Se inserto %s | %s | %s | %lu a la Memoria",
-					(char *)list_get(instruccion->parametros, 0),
-					(char *)list_get(instruccion->parametros, 1),
-					(char *)list_get(instruccion->parametros, 2),
-					(mseg_t)instruccion->timestamp);
-			list_add(listaParam, cadena);
-			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+		if(suTablaDePaginas == NULL){
+			suTablaDePaginas = nueva_tabla_de_paginas();
+			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
+			printf("Se agrego %s al diccionario\n", (char *)list_get(instruccion->parametros, 0));
+			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+			puts("Tabla de paginas actual: (New)");
+			imprimir_tabla_de_paginas(suTablaDePaginas);
 		}
+		else{
+			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+			puts("Tabla de paginas actual: ");
+			imprimir_tabla_de_paginas(suTablaDePaginas);
+		}
+
+		char cadena[500];
+		t_list *listaParam = list_create();
+		sprintf(cadena, "Se inserto %s | %s | %s | %lu a la Memoria",
+				(char *)list_get(instruccion->parametros, 0),
+				(char *)list_get(instruccion->parametros, 1),
+				(char *)list_get(instruccion->parametros, 2),
+				(mseg_t)instruccion->timestamp);
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 	}
 }
 

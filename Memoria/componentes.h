@@ -14,7 +14,7 @@ void *memoriaPrincipal;
 t_dictionary *tablaDeSegmentos;
 
 void gran_malloc_inicial();
-void *insertar_instruccion_en_memoria(instr_t* instruccion);
+void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag);
 registro *obtener_registro_de_instruccion(instr_t *instruccion);
 int get_proximo_sector_disponible();
 
