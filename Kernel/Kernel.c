@@ -1,7 +1,8 @@
 //---------kernel.c---------
 
 #include "Kernel.h"
-mseg_t timeFalso=123;
+
+char * codigo_envio;
 
 int main() {
 
@@ -21,12 +22,13 @@ int main() {
 
 	loggear("Se encola instruccion, durmiendo 5 segundos!");
 
-	sleep(5);
-
-	recibi_respuesta_fake();
-
+	sleep(6);
+	recibi_respuesta_fake1();
 	//iniciar_consola();
-	loggear("Recibi respuesta fake ejecutado!");
+	loggear("Recibi respuesta fake1 ejecutado!");
+	sleep(6);
+	recibi_respuesta_fake2();
+	loggear("Recibi respuesta fake2 ejecutado!");
 	sleep(10);
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
@@ -94,10 +96,16 @@ void kernel_run(char *nombre_archivo){
 
 	while(fgets(line,sizeof(line),f)){
 		nueva_instruccion=leer_a_instruccion(line,CONSOLA_KERNEL);
+		char*  codigo=malloc(sizeof(char)*12);
+		sprintf(codigo,"%d",obtener_codigo_request());
+		//printf("EL codigo es %s",codigo);
+
+		list_add(nueva_instruccion->parametros,codigo);
+
 		list_add(p->instrucciones,nueva_instruccion);
 		p->size++;
 		loggear("Se agrego una instruccion!");
-//		print_instruccion(nueva_instruccion);
+		//		print_instruccion(nueva_instruccion);
 	}
 	fclose(f);
 
@@ -105,6 +113,13 @@ void kernel_run(char *nombre_archivo){
 
 }
 
+int obtener_codigo_request(){
+	sem_wait(&mutex_codigo_request);
+	codigo_request++;
+	int aux=codigo_request;
+	sem_post(&mutex_codigo_request);
+	return aux;
+}
 
 void continuar_ejecucion(){
 	loggear("Enviando senial en 1 segundo");
@@ -131,7 +146,7 @@ int ejecutar(){
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
 		pthread_mutex_unlock(&lock_ejecutar);
 
-		sleep(1);
+		//sleep(1);
 		loggear("Espera finalizada");
 		loggear("Ejecutando");
 
@@ -147,9 +162,7 @@ int ejecutar(){
 			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
 			loggear("Se creo un hilo para atender la solicitud!");
 
-			sem_wait(&mutex_cantidad_hilos);
-			total_hilos++;
-			sem_post(&mutex_cantidad_hilos);
+			subir_cantidad_hilos();
 
 			//		pthread_join(un_hilo,NULL);
 			pthread_detach(un_hilo);
@@ -165,7 +178,7 @@ void* ejecutar_proceso(void* un_proceso){
 	loggear("Ejecutando proceso....");
 	proceso* p=(proceso*)un_proceso;
 	instr_t* instruccion_obtenida;
-	for(int i=0;i<configuracion.quantum;i++){
+	for(int i=0;i<configuracion.quantum;/*i++*/){
 		loggear("Hay quantum!");
 		instruccion_obtenida=obtener_instruccion(p);
 		//no se pudo obtener
@@ -187,24 +200,33 @@ void* ejecutar_proceso(void* un_proceso){
 
 			loggear("Ultima instruccion finalizada, fin de proceso");
 			finalizar_proceso(p);
-			sem_wait(&mutex_cantidad_hilos);
-			total_hilos--;
-			sem_post(&mutex_cantidad_hilos);
+
+			bajar_cantidad_hilos();
+
 			return NULL;
 		}
+		i++;
 		printf("\n Fin de instruccion. Quantum restante: %d, Nro de instr: %d, Quantum: %d\n",configuracion.quantum-i,i,configuracion.quantum);
 
 	}
 	loggear("Fin de quantum, encolando o finalizando");
 
-	sem_wait(&mutex_cantidad_hilos);
-	total_hilos--;
-	sem_post(&mutex_cantidad_hilos);
+	bajar_cantidad_hilos();
 
 	encolar_o_finalizar_proceso(p);
 
 
 	return NULL;
+}
+void subir_cantidad_hilos(){
+	sem_wait(&mutex_cantidad_hilos);
+	total_hilos++;
+	sem_post(&mutex_cantidad_hilos);
+}
+void bajar_cantidad_hilos(){
+	sem_wait(&mutex_cantidad_hilos);
+	total_hilos--;
+	sem_post(&mutex_cantidad_hilos);
 }
 char* obtener_parametroN(instr_t* i,int index){
 	return (char*)list_get(i->parametros,index);
@@ -218,17 +240,11 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	instr_t* respuesta=enviar_i(i);
 	return respuesta;
 }
+
 instr_t* enviar_i(instr_t* i){
 
-//	loggear("ENVIANDO INSTRUCCION FAKE ");
-//	print_instruccion(i);
-//
-//	i->codigo_operacion=0;
-//	i->timestamp=obtener_ts();
-	loggear("ENVIANDO INSTRUCCION FAKE ");
+	loggear("ENVIANDO INSTRUCCION:  ");
 	print_instruccion(i);
-	printf("##### Instruccion enviada, esperando respuesta###\n");
-
 
 	hilo_enviado* h=malloc(sizeof(hilo_enviado));
 	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
@@ -236,37 +252,56 @@ instr_t* enviar_i(instr_t* i){
 	h->cond_t=&cond;
 	h->mutex_t=&lock;
 
-	loggear("Seteo time falso");
-	i->timestamp=timeFalso;
+	//Fake init
+	loggear("Seteo time verdadero");
+	codigo_envio=list_get(i->parametros,list_size(i->parametros)-1);
+	printf("EL VALOR DEL CODIGO  ES DE %s",codigo_envio);
+	//Fake end
 
 	loggear("Agrego a diccionario");
 
 	sem_wait(&mutex_diccionario_enviados);
-	loggear("Dentro mutex");
-	char buffer[10];
-	sprintf(buffer,"%lu",i->timestamp);
-	dictionary_put(diccionario_enviados,buffer,h);
+	printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)list_get(i->parametros,list_size(i->parametros)-1));
+	dictionary_put(diccionario_enviados,list_get(i->parametros,list_size(i->parametros)-1),h);
 	sem_post(&mutex_diccionario_enviados);
 
-	loggear("Me bloqueo!");
+
+	printf("\n##### Instruccion enviada, esperando respuesta###\n");
+
+
+
+	loggear("Hilo bloqueado hasta recibir respuesta!");
 	pthread_mutex_lock(h->mutex_t);
-	loggear("Entre en lock!");
 	pthread_cond_wait(h->cond_t,h->mutex_t);
-	loggear("Sali del lock!");
 	pthread_mutex_unlock(h->mutex_t);
 
-	loggear("ME DESPERTE!   ");
-
+	loggear("Hilo despierto!");
 
 	return h->respuesta;
 }
-void recibi_respuesta_fake(){
+
+void recibi_respuesta_fake1(){
 	instr_t* rta=malloc(sizeof(instr_t));
 	t_list * params=list_create();
-	char* frase="Mensaje de respuesta fake";
-	rta->timestamp=timeFalso;
+	char* frase="Mensaje de respuesta MENSAJE 1";
+	rta->timestamp=123;
 	rta->codigo_operacion=0;
+
 	list_add(params,frase);
+	list_add(params,codigo_envio);
+	rta->parametros=params;
+
+	recibi_respuesta(rta);
+}
+void recibi_respuesta_fake2(){
+	instr_t* rta=malloc(sizeof(instr_t));
+	t_list * params=list_create();
+	char* frase="Mensaje de respuesta MENSAJE 2";
+	rta->timestamp=456;
+	rta->codigo_operacion=0;
+
+	list_add(params,frase);
+	list_add(params,codigo_envio);
 	rta->parametros=params;
 
 	recibi_respuesta(rta);
@@ -275,28 +310,22 @@ void recibi_respuesta(instr_t* respuesta){
 	loggear("Instruccion recibida: ");
 	print_instruccion(respuesta);
 
-
 	sem_wait(&mutex_diccionario_enviados);
-	char buffer[10];
-	sprintf(buffer,"%lu",respuesta->timestamp);
-	loggear("Obteniendo hilo!");
-	hilo_enviado* h=dictionary_remove(diccionario_enviados,buffer);
+	hilo_enviado* h=dictionary_remove(diccionario_enviados,list_get(respuesta->parametros,list_size(respuesta->parametros)-1));
 	loggear("Hilo obtenido y removido del diccionario!");
-
 	sem_post(&mutex_diccionario_enviados);
 
 	loggear("Asigno respuesta y revivo hilo");
 	h->respuesta=respuesta;
-	loggear("Respuesta asignada!");
-	print_instruccion(h->respuesta);
+
 	pthread_mutex_lock(h->mutex_t);
-	loggear("Entre en lock!");
 	pthread_cond_signal(h->cond_t);
-	//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
-	//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
-	loggear("Sali del lock!");
 	pthread_mutex_unlock(h->mutex_t);
-	loggear("HILO REVIVIDO!");
+
+	loggear("Hilo revivido!");
+	//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
+		//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
+
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
@@ -409,6 +438,7 @@ void inicializar_semaforos(){
 	sem_init(&semaforo_procesos_ready,0,1);
 	sem_init(&mutex_cantidad_hilos,0,1);
 	sem_init(&mutex_diccionario_enviados,0,1);
+	sem_init(&mutex_codigo_request,0,1);
 	diccionario_enviados=dictionary_create();
 	puts("Semaforos inicializados");
 }

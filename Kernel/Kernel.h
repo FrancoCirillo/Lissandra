@@ -62,11 +62,19 @@ typedef struct hilo_enviado{
 	instr_t* respuesta;
 }hilo_enviado;
 
+typedef struct criterio{
+	int codigo_criterio;
+	t_list * lista_memorias;
+	sem_t mutex_criterio;
+};
+
 metricas m;
 proceso* cola_ready=NULL;
 config_t configuracion;
 int total_hilos=0;
 t_dictionary * diccionario_enviados;
+t_dictionary * criterios;
+int codigo_request=0;
 
 //Semaforos mutex y lock
 pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
@@ -75,7 +83,7 @@ sem_t mutex_cantidad_hilos;
 sem_t mutex_log;
 sem_t semaforo_procesos_ready;
 sem_t mutex_diccionario_enviados;
-
+sem_t mutex_codigo_request;
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -96,7 +104,8 @@ proceso* obtener_sig_proceso();
 memoria obtenerMemoria(instr_t* instr);
 char* obtener_por_clave(char* ruta, char* key);
 void encolar_proceso(proceso *p);
-
+char* obtener_parametroN(instr_t* i,int index);
+int obtener_codigo_request();
 
 //Herramientas
 int hilos_disponibles();
@@ -107,7 +116,7 @@ void actualizar_configuracion();
 void inicializar_semaforos();
 void ejemplo_procesos();
 void iniciar_log();
-char* obtener_parametroN(instr_t* i,int index);
 void procesar_instruccion_consola(char *instruccion);
-
+void subir_cantidad_hilos();
+void bajar_cantidad_hilos();
 #endif /* kernel.h */
