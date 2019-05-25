@@ -57,15 +57,16 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 {
-	puts("Select realizado en FS, se guardo la siguiente tabla en la memoria:");
-	print_instruccion(instruccion);
+	puts("FS devolvio la tabla solicitada.");
+	ejecutar_instruccion_insert(instruccion);
+
 	t_list *listaParam = list_create();
 	char cadena[400];
 	sprintf(cadena, "%s%s%s%s%s%s%s%lu en FS", "Se encontro",
-										(char *)list_get(instruccion->parametros, 0), " | ",
-										(char *)list_get(instruccion->parametros, 1), " | ",
-										(char *)list_get(instruccion->parametros, 2), " | ",
-										(mseg_t)instruccion->timestamp);
+										(char *)list_get(instruccion->parametros, 0), " | ", //Tabla
+										(char *)list_get(instruccion->parametros, 1), " | ", //Key
+										(char *)list_get(instruccion->parametros, 2), " | ", //Value
+										(mseg_t)instruccion->timestamp); //Timestamp
 	list_add(listaParam, cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 }
