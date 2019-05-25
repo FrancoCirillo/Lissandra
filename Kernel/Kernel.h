@@ -57,8 +57,8 @@ typedef struct memoria{
 }memoria;
 
 typedef struct hilo_enviado{
-	pthread_cond_t cond_t;
-	pthread_mutex_t mutex_t;
+	pthread_cond_t* cond_t;
+	pthread_mutex_t* mutex_t;
 	instr_t* respuesta;
 }hilo_enviado;
 
@@ -87,6 +87,8 @@ void* consola(void *param);
 void iniciar_ejecutador();
 void iniciar_consola();
 void kernel_run(char *nombre_archivo);
+void recibi_respuesta(instr_t* respuesta);
+
 
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
