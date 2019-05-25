@@ -17,19 +17,23 @@ int obtener_fd_out(char *proceso)
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam)
 {
 	instr_t *miInstruccion;
-	switch (quienEnvio(instruccion))
+	switch (quienPidio(instruccion))
 	{
 	case CONSOLA_KERNEL:
+		puts("En query lo habia hecho la consola del kernel");
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
 		enviar_request(miInstruccion, conexionKernel);
 		break;
 	default:
+		puts("El query lo habia hecho la consola de la memoria");
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		if (codigoOperacion == CODIGO_EXITO)
 			loggear_exito(miInstruccion);
-		if (codigoOperacion > BASE_COD_ERROR)
+		if (codigoOperacion > BASE_COD_ERROR){
+			puts("Imprimiendo error");
 			loggear_error(miInstruccion);
+		}
 		break;
 	}
 }

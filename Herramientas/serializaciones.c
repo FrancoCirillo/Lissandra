@@ -366,7 +366,7 @@ void print_instruccion(instr_t *instruccion)
 	puts("");
 }
 
-cod_op quienEnvio(instr_t *instruccion)
+cod_op quienPidio(instr_t *instruccion)
 {
 	int codigoAnalizado = instruccion->codigo_operacion;
 	if (codigoAnalizado > BASE_COD_ERROR)
