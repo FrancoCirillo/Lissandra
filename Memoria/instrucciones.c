@@ -1,33 +1,20 @@
 
 #include "instrucciones.h"
 
-registro* encontrar_value(t_list *suTablaDePaginas, char* keyChar){
-	uint16_t keyPedida;
-			str_to_uint16(keyChar, &keyPedida);
-			uint16_t keyEnMemoria;
-
-			for(int i = 0;i<list_size(suTablaDePaginas); i++){
-				filaTabPags * fila = list_get(suTablaDePaginas, i);
-				keyEnMemoria = get_key_pagina(fila->ptrPagina);
-				if(keyEnMemoria == keyPedida){
-					return obtener_registro_de_pagina(fila->ptrPagina);
-				}
-			}
-	return NULL;
-}
 
 void ejecutar_instruccion_select(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Select");
 	char* tabla = (char *)list_get(instruccion->parametros, 0);
 	t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, tabla);
-	sleep(1);			//Buscar
-	if (suTablaDePaginas != NULL)
+	sleep(1);
+	if (suTablaDePaginas != NULL) //El segmento ya existia, se encontro su tabla de paginas
 	{
 		char* keyChar = (char *)list_get(instruccion->parametros, 1);
-		registro* registroEncontrado = encontrar_value(suTablaDePaginas, keyChar);
-		if(registroEncontrado != NULL)
-		{
+		filaTabPags* filaEncontrada = en_que_fila_esta_key(suTablaDePaginas, keyChar);
+		if(filaEncontrada != NULL)
+		{	//"La key pertenece a una fila preexistente"
+			registro* registroEncontrado = obtener_registro_de_pagina(filaEncontrada->ptrPagina);
 			t_list *listaParam = list_create();
 			char cadena[400];
 			sprintf(cadena, "Se encontro %s | %d | %s | %lu en Memoria",
@@ -37,6 +24,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 					registroEncontrado->timestamp);
 			list_add(listaParam, cadena);
 
+			se_utilizo(suTablaDePaginas, filaEncontrada);
 			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 
 		}
@@ -86,7 +74,7 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 	{
 		int numeroDePaginaAgregado;
 		void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-		printf("\nPagina agregada: %s\n", pagina_a_str(paginaAgregada));
+		printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 		t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0));
 
 		if(suTablaDePaginas == NULL){
@@ -101,6 +89,7 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 			puts("Tabla de paginas actual: ");
 			imprimir_tabla_de_paginas(suTablaDePaginas);
+			printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 		}
 
 		char cadena[500];

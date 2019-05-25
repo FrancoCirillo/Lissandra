@@ -12,10 +12,12 @@ void gran_malloc_inicial()
 }
 void inicializar_tabla_segmentos(){
 	tablaDeSegmentos = dictionary_create();
+	paginasSegunUso = list_create();
 }
 
 t_list *nueva_tabla_de_paginas(){
 	t_list *tablaDePaginas = list_create();
+
 	return tablaDePaginas;
 
 }
@@ -140,7 +142,7 @@ registro *obtener_registro_de_pagina(void*pagina){
 	uint16_t key = get_key_pagina(pagina);
 	char* value = get_value_pagina(pagina);
 
-	registro * miRegistro = malloc(tamanioRegistro);
+	registro *miRegistro = malloc(tamanioRegistro +1);
 	miRegistro->timestamp = timestamp;
 	miRegistro->key = key;
 	miRegistro->value = value;
@@ -162,9 +164,10 @@ char* pagina_a_str(void* pagina){
 void imprimir_tabla_de_paginas(t_list *tablaDePaginas){
 
 	void iterator(filaTabPags *fila){
+		printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 		printf(" Numero de pagina: %d\n", fila->numeroDePagina);
 		printf(" Puntero a pagina: %p\n", fila->ptrPagina);
-		printf(" Registro en memo: \n%s",pagina_a_str(fila->ptrPagina));
+		printf("  Registro en memo: \n%s",pagina_a_str(fila->ptrPagina));
 		printf(" Flag modificado : %d\n", fila->flagModificado);
 	}
 
@@ -172,4 +175,36 @@ void imprimir_tabla_de_paginas(t_list *tablaDePaginas){
 }
 
 
+void se_utilizo(t_list *suTablaDePaginas, filaTabPags* filaUsada){
+	int* paginaUsada = malloc(sizeof(int));
+	*paginaUsada = filaUsada->numeroDePagina;
+	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
+	bool esPaginaRequerida(int* numeroDePagina){
+			if(*paginaUsada == *numeroDePagina){
+				return true;
+			}
+			else return false;
+	}
 
+	if((list_find(paginasSegunUso, (void*) esPaginaRequerida)) != NULL){
+		list_remove_and_destroy_by_condition(paginasSegunUso, (void*) esPaginaRequerida, (void*)free);
+		//En list[0] queda el que menos se usa
+	}
+
+
+}
+
+filaTabPags* en_que_fila_esta_key(t_list *suTablaDePaginas, char* keyChar){
+	uint16_t keyPedida;
+	str_to_uint16(keyChar, &keyPedida);
+	uint16_t keyEnMemoria;
+	for(int i = 0; i < list_size(suTablaDePaginas); i++){
+			filaTabPags *fila = list_get(suTablaDePaginas, i);
+			keyEnMemoria = get_key_pagina(fila->ptrPagina);
+			if(keyEnMemoria == keyPedida){
+
+				return fila;
+			}
+		}
+		return NULL;
+}
