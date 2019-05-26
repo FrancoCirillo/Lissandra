@@ -35,15 +35,19 @@ void agregar_fila_tabla(t_list * tablaDePaginas, int numPag, void* pagina, bool 
 
 void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag)
 {
-
+	puts("Insertando la instruccion en memoria");
 	int desplazamiento = 0;
 	registro *reg = obtener_registro_de_instruccion(instruccion);
 	int sectorDisponible = get_proximo_sector_disponible();
+	puts("Se obtuvo el sector disponible");
 	if(sectorDisponible == -1){
+		puts("No habia ningun sector disponible en la memoria");
 		if(memoria_esta_full()){
+			puts("La memoria estaba full");
 			ejecutar_journal();
 		}
 		else{ //Algoritmo de reemplazo:
+			puts("La memoria no estaba full");
 			int* numeroDeSector = pagina_lru();
 
 			desplazamiento += ( (*numeroDeSector)*tamanioRegistro);
@@ -238,8 +242,14 @@ t_list * segmento_de_esa_tabla(char* tabla)
 }
 
 bool tabla_de_paginas_full(t_list* tablaDePaginas){
-	bool esta_modificado(filaTabPags* fila){
-		return fila->flagModificado == true;
+	puts("Chequeando si una tabla de pagina esta full");
+	bool esta_modificado(filaTabPags* fila){ //DEBERIA SER **!!!!!!
+		puts("Chequeando si la fila tiene el flag modificado");
+		if(fila->flagModificado == true){ //Esta asi solo para le printf de debug, TODO hacer el retunr directo
+			printf("	La pagina %d esta como modificada",fila->numeroDePagina);
+			return true;
+		}
+		else return false;
 	}
 	return list_all_satisfy(tablaDePaginas, (void*) esta_modificado);
 }
@@ -248,17 +258,23 @@ bool tabla_de_paginas_full(t_list* tablaDePaginas){
 bool memoria_esta_full(){
 //Un dictionary_all casero
 	int cantTablasFull = 0;
-
+	puts("Chequeando si la memoria esta full");
 	void esta_full(t_list* tablaDePaginas){
 		if(tabla_de_paginas_full(tablaDePaginas)){
+			puts("Hay una tabla de paginas full");
 			cantTablasFull++;
 		}
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void*) esta_full);
+
+	printf("Cantidad de tablas Full: %d\n", cantTablasFull);
+
 	int cantidadSegmentosTotal = dictionary_size(tablaDeSegmentos);
+	printf("Cantidad segmentos total: %d\n", cantidadSegmentosTotal);
 
 	if(cantTablasFull == cantidadSegmentosTotal){ //Porque cada segmento tiene su correspondiente tabla de paginas
+		puts("La memoria esta full");
 		return true;
 	}
 	return false;
