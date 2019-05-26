@@ -6,7 +6,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Select");
 	char* tabla = (char *)list_get(instruccion->parametros, 0);
-	t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, tabla);
+	t_list *suTablaDePaginas = segmento_de_esa_tabla(tabla);
 	sleep(1);
 	if (suTablaDePaginas != NULL) //El segmento ya existia, se encontro su tabla de paginas
 	{
@@ -73,23 +73,35 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 	else
 	{
 		int numeroDePaginaAgregado;
-		void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-		printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
-		t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0));
+		t_list *suTablaDePaginas = segmento_de_esa_tabla((char *)list_get(instruccion->parametros, 0));
 
-		if(suTablaDePaginas == NULL){
+
+		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
+			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
+			printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 			printf("Se agrego %s al diccionario\n", (char *)list_get(instruccion->parametros, 0));
+
 			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 			puts("Tabla de paginas actual: (New)");
 			imprimir_tabla_de_paginas(suTablaDePaginas);
 		}
-		else{
-			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			puts("Tabla de paginas actual: ");
-			imprimir_tabla_de_paginas(suTablaDePaginas);
-			printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+		else{ //Ya existía el segmento correspondiente a la página, hay que ver si ya existia la key
+			char* keyChar = (char *)list_get(instruccion->parametros, 1);
+			filaTabPags* filaEncontrada = en_que_fila_esta_key(suTablaDePaginas, keyChar);
+
+			if(filaEncontrada !=NULL){ // Ya existia la key en ese segmento
+				mseg_t nuevoTimestamp = instruccion->timestamp;
+				char* nuevoValue = (char *) list_get(instruccion->parametros, 2);
+				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
+				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
+				puts("Tabla de paginas actual: ");
+				imprimir_tabla_de_paginas(suTablaDePaginas);
+				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+
+			}
 		}
 
 		char cadena[500];

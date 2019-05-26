@@ -86,7 +86,15 @@ void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag)
 
 }
 
+void actualizar_pagina(void* paginaAActualizar, mseg_t nuevoTimestamp, char* nuevoValue){
 
+	int desplazamiento = 0;
+	memcpy(paginaAActualizar + desplazamiento, &nuevoTimestamp, sizeof(mseg_t));
+	desplazamiento += sizeof(mseg_t);
+//	memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t)); La key no se mofidica
+	desplazamiento += sizeof(uint16_t);
+	memcpy(memoriaPrincipal + desplazamiento, &nuevoValue, tamanioValue);
+}
 registro *obtener_registro_de_instruccion(instr_t *instruccion)
 {
 	char*  keyChar = (char *)list_get(instruccion->parametros, 1);
@@ -207,4 +215,9 @@ filaTabPags* en_que_fila_esta_key(t_list *suTablaDePaginas, char* keyChar){
 			}
 		}
 		return NULL;
+}
+
+t_list * segmento_de_esa_tabla(char* tabla)
+{
+	return dictionary_get(tablaDeSegmentos, tabla);
 }

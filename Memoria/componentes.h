@@ -16,6 +16,7 @@ t_dictionary *tablaDeSegmentos;
 /* MEMORIA PRINCIPAL */
 void gran_malloc_inicial();
 void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag);
+void actualizar_pagina(void* paginaAActualizar, mseg_t nuevoTimestamp, char* nuevoValue);
 registro *obtener_registro_de_instruccion(instr_t *instruccion);
 int get_proximo_sector_disponible();
 
@@ -25,6 +26,7 @@ t_list *nueva_tabla_de_paginas();
 
 /* TABLA DE SEGMENTOS */
 void inicializar_tabla_segmentos();
+t_list * segmento_de_esa_tabla(char* tabla);
 
 
 /* GETTERS */
