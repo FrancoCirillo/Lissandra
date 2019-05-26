@@ -85,8 +85,9 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 			printf("Se agrego %s al diccionario\n", (char *)list_get(instruccion->parametros, 0));
 
 			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			puts("Tabla de paginas actual: (New)");
+			puts("Tabla de paginas actual: (Nueva)");
 			imprimir_tabla_de_paginas(suTablaDePaginas);
+			printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 		}
 		else{ //Ya existía el segmento correspondiente a la página, hay que ver si ya existia la key
 			char* keyChar = (char *)list_get(instruccion->parametros, 1);
@@ -97,10 +98,18 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 				char* nuevoValue = (char *) list_get(instruccion->parametros, 2);
 				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
-				puts("Tabla de paginas actual: ");
+				puts("Tabla de paginas actual: (Key preexistente)");
 				imprimir_tabla_de_paginas(suTablaDePaginas);
 				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+			}
 
+			else{ //No existia la key en ese segmento
+				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
+				printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+				agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+				puts("Tabla de paginas actual: (Fila nueva)");
+				imprimir_tabla_de_paginas(suTablaDePaginas);
+				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 			}
 		}
 
