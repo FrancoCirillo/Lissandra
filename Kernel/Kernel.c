@@ -12,15 +12,17 @@ int main() {
 
 	iniciar_log();
 
+	inicializar_criterios();
+
 	iniciar_ejecutador();
 
-	//kernel_run("p1.lql");
-	//kernel_run("p2.lql");
-	//kernel_run("p3.lql");
+	inicializar_kernel();
+	//krn_concat("HOLA","COMO TE VA");
 
-	//kernel_run("sleep.lql");
-
-	//loggear("Se encola instruccion, durmiendo 5 segundos!");
+	loggear("### FINALIZANDO KERNEL ###");
+	sleep(2);
+	loggear("### KERNEL FINALIZADO ###");
+	return 0;
 
 	/*sleep(6);
 	recibi_respuesta_fake1();
@@ -30,14 +32,6 @@ int main() {
 	recibi_respuesta_fake2();
 	loggear("Recibi respuesta fake2 ejecutado!");
 	 */
-
-	inicializar_kernel();
-
-	sleep(10);
-	loggear("### KERNEL FINALIZADO ###");
-	return 0;
-
-
 }
 void inicializar_kernel(){
 	t_list *listaParam = list_create();
@@ -65,31 +59,7 @@ void inicializar_kernel(){
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL);
 
 }
-/*
-void iniciar_consola(){
-	sleep(1);
-	loggear("Se inicia consola");
-	pthread_t hilo_consola;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_create(&hilo_consola,&attr,consola,NULL);
-	pthread_join(hilo_consola,NULL);
 
-}
-void* consola(void* c){
-	char* instruccion;
-	while(1){
-		instruccion=readline("\n>>");
-		if(strcmp(instruccion,"close")==0){
-			loggear("##### FINALIZANDO KERNEL.... ###### \n");
-			return NULL;
-		}
-
-		printf("Procesando instruccion:: %s \n",instruccion);
-		procesar_instruccion_consola(instruccion);
-
-	}
-}*/
 void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 	if(remitente==0){//Es nueva instruccion-CONSOLA
 		t_list* instrucciones = list_create();
@@ -120,7 +90,6 @@ void procesar_instruccion_consola(char *instruccion){
 	p->size++;
 	loggear("Instruccion generada, encolando proceso...");
 	encolar_proceso(p);
-
 }
 void iniciar_ejecutador(){
 	loggear("Se inicia ejecutador");
@@ -131,8 +100,9 @@ void iniciar_ejecutador(){
 	pthread_detach(hilo_ejecutador);
 	loggear("Ejecutador iniciado");
 }
-void kernel_run(char *nombre_archivo){
-	loggear("RUN FILE!");
+instr_t* kernel_run(instr_t *i){
+	loggear("EJECUTANDO RUN!");
+	char* nombre_archivo=obtener_parametroN(i,0);
 	FILE *f=fopen(nombre_archivo,"r");
 	char line[64];
 	t_list* instrucciones = list_create();
@@ -142,13 +112,13 @@ void kernel_run(char *nombre_archivo){
 	p->instrucciones=instrucciones;
 	p->sig=NULL;
 	instr_t* nueva_instruccion;
-	loggear("Se ejecuto RUN, leyendo archivo!");
+	//loggear("Se ejecuto RUN, leyendo archivo!");
 
 	while(fgets(line,sizeof(line),f)){
 		nueva_instruccion=leer_a_instruccion(line,CONSOLA_KERNEL);
 		char*  codigo=malloc(sizeof(char)*12);
 		sprintf(codigo,"%d",obtener_codigo_request());
-		//printf("EL codigo es %s",codigo);
+		//		printf("EL codigo es %s",codigo);
 
 		list_add(nueva_instruccion->parametros,codigo);
 
@@ -161,8 +131,70 @@ void kernel_run(char *nombre_archivo){
 
 	encolar_proceso(p);
 
-}
 
+	instr_t * respuesta=malloc(sizeof(instr_t));
+	respuesta->codigo_operacion=0;
+	char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
+	t_list * params=list_create();
+	list_add(params,mensaje);
+	respuesta->parametros=params;
+	respuesta->timestamp=i->timestamp;
+	loggear("FIN RUN!");
+	return respuesta;
+
+}
+instr_t* kernel_add(instr_t* i){
+	char* numero_memoria=obtener_parametroN(i,1);
+	int codigo=obtener_codigo_criterio(obtener_parametroN(i,3));
+	loggear("EJECUTANDO ADD PARA MEMORIA:");
+	loggear(numero_memoria);
+	switch(codigo){
+	case SC:
+		loggear("Agregando memoria a criterio SC");
+		sem_wait(&criterio_strong_consistency->mutex_criterio);
+		if(list_size(criterio_strong_consistency->lista_memorias)>0){
+			instr_t * respuesta=malloc(sizeof(instr_t));
+			respuesta->codigo_operacion=1007;
+			char* mensaje="ERROR EN ADD, EL CRITERIO SC YA POSEE UNA MEMORIA ASIGNADA!";
+			t_list * params=list_create();
+			list_add(params,mensaje);
+			respuesta->parametros=params;
+			respuesta->timestamp=i->timestamp;
+			loggear("FIN ADD!");
+			sem_post(&criterio_strong_consistency->mutex_criterio);
+			return respuesta;
+		}
+		list_add(criterio_strong_consistency->lista_memorias,numero_memoria);
+		sem_post(&criterio_strong_consistency->mutex_criterio);
+		break;
+
+	case SHC:
+		loggear("Agregando memoria a criterio SHC");
+		sem_wait(&criterio_strong_hash_consistency->mutex_criterio);
+		list_add(criterio_strong_hash_consistency->lista_memorias,numero_memoria);
+		sem_post(&criterio_strong_hash_consistency->mutex_criterio);
+		break;
+
+	case EC:
+		loggear("Agregando memoria a criterio EC");
+		sem_wait(&criterio_eventual_consistency->mutex_criterio);
+		list_add(criterio_eventual_consistency->lista_memorias,numero_memoria);
+		sem_post(&criterio_eventual_consistency->mutex_criterio);
+		break;
+	}
+
+	instr_t * respuesta=malloc(sizeof(instr_t));
+	respuesta->codigo_operacion=0;
+	char* mensaje="ADD EJECUTADO CORRECTAMENTE!";
+	t_list * params=list_create();
+	list_add(params,mensaje);
+	respuesta->parametros=params;
+	respuesta->timestamp=i->timestamp;
+	loggear("FIN ADD!");
+
+	return respuesta;
+
+}
 int obtener_codigo_request(){
 	sem_wait(&mutex_codigo_request);
 	codigo_request++;
@@ -235,7 +267,10 @@ void* ejecutar_proceso(void* un_proceso){
 		if(instruccion_obtenida!=NULL){
 
 			instr_t* respuesta=ejecutar_instruccion(instruccion_obtenida);
-//METRICS
+
+			//METRICS
+
+
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear("Se ejecuto correctamente la instruccion!, Respuesta=");
@@ -243,8 +278,10 @@ void* ejecutar_proceso(void* un_proceso){
 				loggear("Fin de instruccion");
 			}else{
 
-				loggear("ERROR al ejecutar la instruccion, finalizando proceso, Codigo=");
-				printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
+				loggear("ERROR al ejecutar la instruccion, finalizando proceso");
+				//printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
+				bajar_cantidad_hilos();
+				print_instruccion(respuesta);
 				return NULL;
 			}
 		}else{
@@ -286,19 +323,11 @@ char* obtener_parametroN(instr_t* i,int index){
 instr_t* ejecutar_instruccion(instr_t* i){
 	loggear("#### Se ejecuta una instruccion");
 	print_instruccion(i);
-	if(i->codigo_operacion==8){
-		loggear("EJECUTANDO RUN!");
-		kernel_run(obtener_parametroN(i,0));
-		//CREO RESPUESTA RUN
-		instr_t * respuesta=malloc(sizeof(instr_t));
-		respuesta->codigo_operacion=0;
-		char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
-		t_list * params=list_create();
-		list_add(params,mensaje);
-		respuesta->parametros=params;
-		respuesta->timestamp=i->timestamp;
-		loggear("FIN RUN!");
-		return respuesta;
+	if(i->codigo_operacion==CODIGO_RUN){
+		return kernel_run(i);
+	}
+	if(i->codigo_operacion==CODIGO_ADD){
+		return kernel_add(i);
 	}
 	instr_t* respuesta=enviar_i(i);
 	return respuesta;
@@ -315,12 +344,6 @@ instr_t* enviar_i(instr_t* i){
 	h->cond_t=&cond;
 	h->mutex_t=&lock;
 
-	//Fake init
-	loggear("Seteo time verdadero");
-	codigo_envio=list_get(i->parametros,list_size(i->parametros)-1);
-	//printf("EL VALOR DEL CODIGO  ES DE %s",codigo_envio);
-	//Fake end
-
 	loggear("Agrego a diccionario");
 
 	sem_wait(&mutex_diccionario_enviados);
@@ -328,11 +351,11 @@ instr_t* enviar_i(instr_t* i){
 	dictionary_put(diccionario_enviados,list_get(i->parametros,list_size(i->parametros)-1),h);
 	sem_post(&mutex_diccionario_enviados);
 
+	loggear("Determinando memoria para request");
+	int conexionMemoria = obtener_fd_memoria(i);
+	enviar_request(i, conexionMemoria);
 
 	printf("\n##### Instruccion enviada, esperando respuesta###\n");
-
-	int conexionMemoria = obtener_fd_out("Memoria_3");
-	enviar_request(i, conexionMemoria);
 
 	loggear("Hilo bloqueado hasta recibir respuesta!");
 	pthread_mutex_lock(h->mutex_t);
@@ -342,6 +365,73 @@ instr_t* enviar_i(instr_t* i){
 	loggear("Hilo despierto!");
 
 	return h->respuesta;
+}
+
+int obtener_fd_memoria(instr_t *i){
+	char* memoria="Memoria_";
+	char* alias_memoria="";
+	//SIEMPRE el primer parametro es el nombre de la tabla que uso como key para determinar criterio
+	sem_wait(&mutex_diccionario_criterios);
+	int codigo_criterio=(int)dictionary_get(diccionario_criterios,(char*)obtener_parametroN(i,0));
+	sem_post(&mutex_diccionario_criterios);
+	//Obtengo la memoria segun el criterio
+	loggear("Determinando criterio de tabla");
+	switch(codigo_criterio){
+	case SC:
+		sem_wait(&criterio_strong_consistency->mutex_criterio);
+		alias_memoria=list_get(criterio_strong_consistency->lista_memorias,0);
+		sem_post(&criterio_strong_consistency->mutex_criterio);
+		break;
+	case SHC:
+		sem_wait(&criterio_strong_hash_consistency->mutex_criterio);
+		if(i->codigo_operacion==CODIGO_SELECT || i->codigo_operacion==CODIGO_INSERT){//EL criterio requiere que para insert y selects depende de la key
+			int key=atoi(obtener_parametroN(i,1));
+			alias_memoria=list_get(criterio_strong_hash_consistency->lista_memorias,key % list_size(criterio_strong_hash_consistency->lista_memorias));
+		}
+		else{
+			alias_memoria=list_get(criterio_strong_hash_consistency->lista_memorias,0);
+		}
+
+		sem_post(&criterio_strong_hash_consistency->mutex_criterio);
+		break;
+	case EC:
+		sem_wait(&criterio_eventual_consistency->mutex_criterio);
+		sem_wait(&mutex_contador_ec);
+		alias_memoria=list_get(criterio_eventual_consistency->lista_memorias,contador_ec % list_size(criterio_eventual_consistency->lista_memorias));
+		contador_ec++;
+		sem_post(&mutex_contador_ec);
+		sem_post(&criterio_eventual_consistency->mutex_criterio);
+		break;
+	}//Ya obtuve el alias de la memoria
+
+	loggear("Memoria obtenida:");
+	loggear(krn_concat(memoria,alias_memoria));
+
+	return obtener_fd_out(krn_concat(memoria,alias_memoria));
+}
+char* krn_concat(char* s1,char* s2){
+	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
+	strcpy(rdo,s1);
+	strcat(rdo,s2);
+	loggear(rdo);
+	return rdo;
+}
+void agregar_tabla_a_criterio(instr_t* i){//EN create
+	loggear("Agregando tabla a criterio");
+	int codigo_criterio=obtener_codigo_criterio(obtener_parametroN(i,1));
+	sem_wait(&mutex_diccionario_criterios);
+	dictionary_put(diccionario_criterios,obtener_parametroN(i,0),codigo_criterio);
+	sem_post(&mutex_diccionario_criterios);
+}
+int obtener_codigo_criterio(char* criterio){
+	if(!strcmp(criterio,"SC")){
+		return SC;
+	}else if(!strcmp(criterio,"SHC")){
+		return SHC;
+	}else if(!strcmp(criterio,"EC")){
+		return EC;
+	}else return 4;
+
 }
 void enviar_a(instr_t* i,char* destino){
 	enviar_request(i,obtener_fd_out(destino));
@@ -366,32 +456,6 @@ void responderHandshake(identificador *idsConexionEntrante)
 	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_KERNEL);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
-}
-void recibi_respuesta_fake1(){
-	instr_t* rta=malloc(sizeof(instr_t));
-	t_list * params=list_create();
-	char* frase="Mensaje de respuesta MENSAJE 1";
-	rta->timestamp=123;
-	rta->codigo_operacion=0;
-
-	list_add(params,frase);
-	list_add(params,codigo_envio);
-	rta->parametros=params;
-
-	recibi_respuesta(rta);
-}
-void recibi_respuesta_fake2(){
-	instr_t* rta=malloc(sizeof(instr_t));
-	t_list * params=list_create();
-	char* frase="Mensaje de respuesta MENSAJE 2";
-	rta->timestamp=456;
-	rta->codigo_operacion=0;
-
-	list_add(params,frase);
-	list_add(params,codigo_envio);
-	rta->parametros=params;
-
-	recibi_respuesta(rta);
 }
 void recibi_respuesta(instr_t* respuesta){
 	loggear("Instruccion recibida: ");
@@ -483,6 +547,7 @@ int hilos_disponibles(){
 void inicializarMemorias() {
 	loggear("Memorias inicializadas");
 }
+
 void inicializarConfiguracion() {
 	char* rutaConfiguracion = "Kernel.config";
 	configuracion.quantum = atoi(obtener_por_clave(rutaConfiguracion, "quantum"));
@@ -502,13 +567,8 @@ void actualizar_configuracion(){
 	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave(rutaConfiguracion, "gradoMultiprocesamiento"));
 
 }
-memoria obtenerMemoria(instr_t* instr) {
-	memoria m;
-	return m;
-}
 void iniciar_log(){
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
-
 }
 void loggear(char *valor) {
 	sem_wait(&mutex_log);
@@ -520,7 +580,6 @@ char* obtener_por_clave(char* ruta, char* key) {
 	g_config = config_create(ruta);
 	valor = config_get_string_value(g_config, key);
 	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------\n",key,valor);
-	//config_destroy(g_config);
 	return valor;
 }
 void inicializarMetricas() {
@@ -533,8 +592,83 @@ void inicializar_semaforos(){
 	sem_init(&mutex_diccionario_enviados,0,1);
 	sem_init(&mutex_codigo_request,0,1);
 	sem_init(&mutex_conexiones_actuales,0,1);
+	sem_init(&mutex_diccionario_criterios,0,1);
+	sem_init(&mutex_contador_ec,0,1);
 	diccionario_enviados=dictionary_create();
+	diccionario_criterios=dictionary_create();
 	puts("Semaforos inicializados");
 }
+void inicializar_criterios(){
+	diccionario_criterios=dictionary_create();
+	sem_t sem[3];
+	for(int i=0;i<3;i++){
+		sem_init(&sem[i],0,1);
+	}
+	criterio_eventual_consistency=malloc(sizeof(criterio));
+	criterio_eventual_consistency->codigo_criterio=0;
+	criterio_eventual_consistency->lista_memorias=list_create();
+	criterio_eventual_consistency->mutex_criterio=sem[0];
 
+	criterio_strong_consistency=malloc(sizeof(criterio));
+	criterio_strong_consistency->codigo_criterio=1;
+	criterio_strong_consistency->lista_memorias=list_create();
+	criterio_strong_consistency->mutex_criterio=sem[1];
+
+	criterio_strong_hash_consistency=malloc(sizeof(criterio));
+	criterio_strong_hash_consistency->codigo_criterio=2;
+	criterio_strong_hash_consistency->lista_memorias=list_create();
+	criterio_strong_hash_consistency->mutex_criterio=sem[2];
+	loggear("Criterios inicializados!");
+}
+/*void recibi_respuesta_fake1(){
+	instr_t* rta=malloc(sizeof(instr_t));
+	t_list * params=list_create();
+	char* frase="Mensaje de respuesta MENSAJE 1";
+	rta->timestamp=123;
+	rta->codigo_operacion=0;
+
+	list_add(params,frase);
+	list_add(params,codigo_envio);
+	rta->parametros=params;
+
+	recibi_respuesta(rta);
+}
+void recibi_respuesta_fake2(){
+	instr_t* rta=malloc(sizeof(instr_t));
+	t_list * params=list_create();
+	char* frase="Mensaje de respuesta MENSAJE 2";
+	rta->timestamp=456;
+	rta->codigo_operacion=0;
+
+	list_add(params,frase);
+	list_add(params,codigo_envio);
+	rta->parametros=params;
+
+	recibi_respuesta(rta);
+}*/
+/*
+void iniciar_consola(){
+	sleep(1);
+	loggear("Se inicia consola");
+	pthread_t hilo_consola;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_consola,&attr,consola,NULL);
+	pthread_join(hilo_consola,NULL);
+
+}
+void* consola(void* c){
+	char* instruccion;
+	while(1){
+		instruccion=readline("\n>>");
+		if(strcmp(instruccion,"close")==0){
+			loggear("##### FINALIZANDO KERNEL.... ###### \n");
+			return NULL;
+		}
+
+		printf("Procesando instruccion:: %s \n",instruccion);
+		procesar_instruccion_consola(instruccion);
+
+	}
+}*/
 

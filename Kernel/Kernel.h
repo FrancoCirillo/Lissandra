@@ -22,6 +22,11 @@
 t_log* g_logger;
 t_config* g_config;
 
+typedef enum tipo_criterio{
+	SC=0,
+	SHC=1,
+	EC=2,
+}tipo_criterio;
 
 typedef struct proceso{
 	int current;
@@ -52,11 +57,6 @@ typedef struct metricas{
 	clock_t tiempoSelect;
 }metricas;
 
-typedef struct memoria{
-	int ip;
-	int puerto;
-}memoria;
-
 typedef struct hilo_enviado{
 	pthread_cond_t* cond_t;
 	pthread_mutex_t* mutex_t;
@@ -72,21 +72,28 @@ typedef struct criterio{
 metricas m;
 proceso* cola_ready=NULL;
 config_t configuracion;
-int total_hilos=0;
 t_dictionary * diccionario_enviados;
-t_dictionary * criterios;
+t_dictionary * diccionario_criterios;
+criterio* criterio_strong_hash_consistency;
+criterio* criterio_strong_consistency;
+criterio* criterio_eventual_consistency;
+
+int total_hilos=0;
 int codigo_request=0;
+int contador_ec=0;
 
 //Semaforos mutex y lock
 pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
+
 sem_t mutex_cantidad_hilos;
 sem_t mutex_log;
 sem_t semaforo_procesos_ready;
 sem_t mutex_diccionario_enviados;
 sem_t mutex_codigo_request;
 sem_t mutex_conexiones_actuales;
-
+sem_t mutex_diccionario_criterios;
+sem_t mutex_contador_ec;
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -97,12 +104,16 @@ void encolar_o_finalizar_proceso(proceso* p);
 void* consola(void *param);
 void iniciar_ejecutador();
 void iniciar_consola();
-void kernel_run(char *nombre_archivo);
+instr_t* kernel_run(instr_t *nombre_archivo);
+instr_t* kernel_add(instr_t *nombre_archivo);
+
+//Inits
 void inicializar_kernel();
 void recibi_respuesta(instr_t* respuesta);
 void inicializar_kernel();
-
-
+void inicializar_criterios();
+void inicializarConfiguracion();
+void inicializar_semaforos();
 
 //Conexiones Franquito
 config_t configuracion;
@@ -112,27 +123,27 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente);
 void enviar_a(instr_t* i,char* destino);
 int obtener_fd_out(char *proceso);
 void responderHandshake(identificador *idsConexionEntrante);
+
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
 proceso* obtener_sig_proceso();
-memoria obtenerMemoria(instr_t* instr);
 char* obtener_por_clave(char* ruta, char* key);
 void encolar_proceso(proceso *p);
 char* obtener_parametroN(instr_t* i,int index);
 int obtener_codigo_request();
-
+instr_t* obtener_respuesta_run(instr_t* i);
+int obtener_fd_memoria(instr_t *i);
+int obtener_codigo_criterio(char* criterio);
 //Herramientas
 int hilos_disponibles();
-void inicializarConfiguracion();
 void loggear(char* mensaje);
 void informarMetricas();
 void actualizar_configuracion();
-void inicializar_semaforos();
 void ejemplo_procesos();
 void iniciar_log();
 void procesar_instruccion_consola(char *instruccion);
 void subir_cantidad_hilos();
 void bajar_cantidad_hilos();
-
+char* krn_concat(char* s1,char* s2);
 
 #endif /* kernel.h */
