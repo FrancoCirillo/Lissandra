@@ -40,26 +40,40 @@ void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag)
 	registro *reg = obtener_registro_de_instruccion(instruccion);
 	int sectorDisponible = get_proximo_sector_disponible();
 	if(sectorDisponible == -1){
-		/*if(memoria__esta_full()){
-			ejecutar_jourmal()
+		if(memoria_esta_full()){
+			ejecutar_journal();
 		}
-		  else ejecutar_algoritmo_reemplazo():
+		else{ //Algoritmo de reemplazo:
+			int* numeroDeSector = pagina_lru();
 
-		  pagina_lru();
-		  fila_correspondiente_a_esa_pagina()
-		  //guardar el numero de pagina de esa fila
-		  guardar el ptr a la pagina
+			desplazamiento += ( (*numeroDeSector)*tamanioRegistro);
+			memcpy(memoriaPrincipal + desplazamiento, &reg->timestamp, sizeof(mseg_t));
+			desplazamiento += sizeof(mseg_t);
+			memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t));
+			desplazamiento += sizeof(uint16_t);
+			memcpy(memoriaPrincipal + desplazamiento, &reg->value, tamanioValue);
+			*nroPag = (*numeroDeSector);
 
-		  memcpy(ptrALaPagina+ desplazamiento, &reg->timestamp, sizeof(mseg_t));
-		  desplazamiento += sizeof(mseg_t);
-		  memcpy(ptrALaPagina + desplazamiento, &reg->key, sizeof(uint16_t));
-		  desplazamiento += sizeof(uint16_t);
-		  memcpy(ptrALaPagina+ desplazamiento, &reg->value, tamanioValue);
-		  return ptrALaPagina;
+			int indiceEnTabla = 0;
 
-		  list_remove(fila)
+			filaTabPags* filaABorrar = fila_correspondiente_a_esa_pagina((*numeroDeSector), &indiceEnTabla);
 
-		*/
+			char* segmentoSolicitado = (char*) list_get(instruccion->parametros, 0);
+
+			t_list* suTablaDePaginas = dictionary_get(tablaDeSegmentos, segmentoSolicitado);
+
+			list_remove_and_destroy_element(suTablaDePaginas, indiceEnTabla, (void*)free);
+
+			if(list_is_empty(suTablaDePaginas)){
+				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoSolicitado, (void*)free);
+			}
+
+
+			return memoriaPrincipal + ((*numeroDeSector)*tamanioRegistro);
+
+
+
+		  }
 		ejecutar_instruccion_journal(instruccion);
 		memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool)); //Por ahora se hace "Journal" de toda la memoria (y queda vacia)
 		sectorOcupado[sectorDisponible] = true;
@@ -187,6 +201,7 @@ void se_utilizo(t_list *suTablaDePaginas, filaTabPags* filaUsada){
 	int* paginaUsada = malloc(sizeof(int));
 	*paginaUsada = filaUsada->numeroDePagina;
 	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
+
 	bool esPaginaRequerida(int* numeroDePagina){
 			if(*paginaUsada == *numeroDePagina){
 				return true;
@@ -221,3 +236,78 @@ t_list * segmento_de_esa_tabla(char* tabla)
 {
 	return dictionary_get(tablaDeSegmentos, tabla);
 }
+
+bool tabla_de_paginas_full(t_list* tablaDePaginas){
+	bool esta_modificado(filaTabPags* fila){
+		return fila->flagModificado == true;
+	}
+	return list_all_satisfy(tablaDePaginas, (void*) esta_modificado);
+}
+
+
+bool memoria_esta_full(){
+//Un dictionary_all casero
+	int cantTablasFull = 0;
+
+	void esta_full(t_list* tablaDePaginas){
+		if(tabla_de_paginas_full(tablaDePaginas)){
+			cantTablasFull++;
+		}
+	}
+
+	dictionary_iterator(tablaDeSegmentos, (void*) esta_full);
+	int cantidadSegmentosTotal = dictionary_size(tablaDeSegmentos);
+
+	if(cantTablasFull == cantidadSegmentosTotal){ //Porque cada segmento tiene su correspondiente tabla de paginas
+		return true;
+	}
+	return false;
+
+}
+
+int* pagina_lru(){
+	return list_get(paginasSegunUso, 0);
+}
+
+
+void ejecutar_journal(){
+	puts("Journal en proceso");
+}
+
+filaTabPags* fila_con_el_numero(t_list* suTablaDePaginas, int numeroDePagina, int* indiceEnTabla){
+
+	bool tiene_el_numero(filaTabPags* fila){
+		if(fila->numeroDePagina == numeroDePagina){
+			return true;
+		}
+
+		else {
+			(*indiceEnTabla)++;
+			return false;
+		}
+	}
+
+	return list_find(suTablaDePaginas, (void*) tiene_el_numero);
+}
+
+
+filaTabPags* fila_correspondiente_a_esa_pagina(int numeroDePagina, int* indiceEnTabla){
+	//Un dictionary_find casero
+
+	filaTabPags* filaEncontrada;
+	filaTabPags* filaPosible;
+	void tiene_esa_pagina_la_fila(t_list* suTablaDePaginas){
+		filaPosible = fila_con_el_numero(suTablaDePaginas, numeroDePagina, indiceEnTabla);
+		if(filaPosible != NULL){//Se encontro la fila que tenia ese numero
+			filaEncontrada = filaPosible;
+		}
+	}
+
+	dictionary_iterator(tablaDeSegmentos, (void*) tiene_esa_pagina_la_fila);
+
+	if(filaPosible == NULL){
+		return NULL;
+	}
+	else return filaEncontrada;
+}
+

@@ -14,9 +14,10 @@ int main(int argc, char *argv[])
 
 	callback = ejecutar_instruccion;
 
-	enviar_datos_a_FS(argv);
-
-	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO);
+	puts(COLOR_ANSI_ROJO"AVISO: MEMORIA DESCONECTADA - SOLO PARA TESTEAR FUNCIONES QUE NO REQUERAN CONEXIONES"COLOR_ANSI_RESET);
+//	enviar_datos_a_FS(argv);
+//	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO); //Descomentar para conexiones
+	int listenner = 1; //BORRAR PARA CONECTAR
 
 	//recibir el tamanio del Value
 
@@ -124,17 +125,19 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 
 void check_inicial(int argc, char* argv[])
 {
+// Descomentar para testear conexiones
+//	if (argc < 2 || strcmp(argv[1], "4") == 0 || strcmp(argv[1], "2") == 0)
+//	{
+//		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
+//		puts("<NUMERERO-DE-MEMORIA> Funcionales por el momento: 3, 8, 9");
+//		puts("Tampoco se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
+//		puts("Tampoco se puede elegir el numero 2 porque es el IP que (Por el momento, testing) usa el FS");
+//
+//		exit(0);
+//	}
 
-	if (argc < 2 || strcmp(argv[1], "4") == 0 || strcmp(argv[1], "2") == 0)
-	{
-		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
-		puts("<NUMERERO-DE-MEMORIA> Funcionales por el momento: 3, 8, 9");
-		puts("Tampoco se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
-		puts("Tampoco se puede elegir el numero 2 porque es el IP que (Por el momento, testing) usa el FS");
+	sprintf(nombreDeMemoria, "Memoria_3"); //Borrar para testear conexiones
 
-		exit(0);
-	}
-	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
-
+//	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
 }
 
