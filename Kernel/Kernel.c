@@ -69,6 +69,11 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 		p->instrucciones=instrucciones;
 		p->sig=NULL;
 		list_add(p->instrucciones,instruccion);
+		//Agrego código de instrucción
+		char*  codigo=malloc(sizeof(char)*12);
+		sprintf(codigo,"%d",obtener_codigo_request());
+		list_add(instruccion->parametros,codigo);
+		
 		p->size++;
 		loggear("Instruccion generada, encolando proceso...");
 		encolar_proceso(p);
