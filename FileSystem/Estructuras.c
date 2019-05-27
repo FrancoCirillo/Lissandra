@@ -238,10 +238,6 @@ void actualizar_tiempo_retardo_config(mseg_t value) {
 
 }
 
-char* mseg_to_string(mseg_t number) {
-    return string_from_format("%llu", number);
-}
-
 void inicializar_directorios() {
 
 	crear_directorio("mnj/Lissandra_FS/", "Tablas");

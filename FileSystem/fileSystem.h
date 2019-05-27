@@ -45,7 +45,7 @@ sem_t mutex_log;
 
 /*STRUCTS*/
 
-typedef unsigned long int mseg_t;
+typedef unsigned long long mseg_t;
 
 typedef struct archivo_t {
 	int size;

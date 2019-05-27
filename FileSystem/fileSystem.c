@@ -1,13 +1,20 @@
 //-------fileSystem.c-------
 
 #include "fileSystem.h"
-#include <limits.h>
+
+
+typedef unsigned long long mseg_t;
 
 int main() {
-//No funciona..
-	//mseg_t num = obtener_ts();
-	//char* nums = mseg_to_string(num);
-	//printf("%llu", num);
+
+//mseg_t a =get_ts();
+//sleep(2);
+//mseg_t b =get_ts();
+//printf("%" PRIu64 "\n", a);
+//unsigned long long int asd = string_to_mseg("12312312323412");
+//printf("asd: %llu\n", asd);
+
+
 
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
