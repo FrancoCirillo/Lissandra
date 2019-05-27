@@ -10,8 +10,8 @@ typedef struct mem_tabla_t {
 } mem_tabla_t;
 
 typedef struct registro_t {
-	int key;
-	//uint16_t key;			//TODO ver este tipo. int es provisorio.
+//	int key;
+	uint16_t key;
 	char* value;
 	mseg_t timestamp;
 } registro_t;
@@ -27,6 +27,7 @@ void dumpeo();
 void mem_limpiar();
 void mem_agregar_tabla(char*);
 void mem_agregar_reg(instr_t*);
+mem_tabla_t* mem_obtener_nodo_tabla(char*);
 
 void pasar_a_archivo(char*, t_list*, char*);
 void bajar_tabla(mem_tabla_t*);

@@ -62,17 +62,37 @@ void mem_agregar_tabla(char* tabla) {
 	sem_post(&mutex_memtable);
 }
 
+//esto no compila.
 void mem_agregar_reg(instr_t* instr) { //crea el struct registro_t y lo agrega a los registros de la tabla correspondiente
 	registro_t* nuevo_reg = malloc(sizeof(registro_t));
-	nuevo_reg->key = atoi(obtener_parametro(instr, 1));
+	char*tabla =obtener_parametro(instr, 0);
+	nuevo_reg->key = (uint16_t) atoi(obtener_parametro(instr, 1));
 	nuevo_reg->value = obtener_parametro(instr, 2);
-	nuevo_reg->timestamp = obtener_parametro(instr, 3); //mseg_t?
+	//nuevo_reg->timestamp = (mseg_t)obtener_parametro(instr, 3);
+
+	//Ver si recibimos el TS, sino, hay que validar aca y agregarlo.
 
 	//TODO obtener_nodo_tabla --> obtiene el nodo de la tabla a la que le quiero agregar un registro
-//	mem_tabla_t* nodo_tabla = mem_obtener_nodo_tabla(tabla); //list_find(es_nodo_tabla)
+	//mem_tabla_t* nodo_tabla = mem_obtener_nodo_tabla(tabla);
 
-	//list_add(nodo_tabla registros, nuevo_reg); o algo asi
+	//list_add(nodo_tabla->registros, nuevo_reg);
+	//loggear_FS("Se inserto el registro en la memtable.");
+	//Ver si agregamos mas info del registro en el log.
 }
+
+//Lo que fala es mem_obtener_nodo_tabla().
+//mem_tabla_t* mem_obtener_nodo_tabla(char*){
+//	int i = memtable->elements_count;
+//	int j=0;
+//	int signal =;
+//	while(j <= i && )
+//
+//	return NULL;
+//}
+
+
+
+
 
 void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
 	if (!strcmp(ext, "tmp")) {
@@ -113,7 +133,7 @@ int mem_existe_tabla(char* tabla){
 
 int es_nodo_tabla(char* tabla, mem_tabla_t* nodo_tabla){
 	char* nombre_nodo;
-	strcpy(nombre_nodo, nodo_tabla->tabla);
+//	strcpy(nombre_nodo, nodo_tabla->tabla);
 	return strcmp(nombre_nodo, tabla);
 }
 
