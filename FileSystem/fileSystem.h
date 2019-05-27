@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <inttypes.h>
 #include "Estructuras.h"
 #include "compactador.h"
 #include "memtable.h"

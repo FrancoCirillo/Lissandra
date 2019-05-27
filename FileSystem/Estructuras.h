@@ -39,8 +39,6 @@ void archivo_inicializar(FILE *);
 void metadata_inicializar(FILE*, instr_t*);
 
 
-char* mseg_to_string(mseg_t number);
-
 //semaforos
 
 //sem_t mutex_config;

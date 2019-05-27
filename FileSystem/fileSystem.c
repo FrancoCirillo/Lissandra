@@ -2,19 +2,17 @@
 
 #include "fileSystem.h"
 
-
-typedef unsigned long long mseg_t;
-
 int main() {
 
-//mseg_t a =get_ts();
-//sleep(2);
-//mseg_t b =get_ts();
-//printf("%" PRIu64 "\n", a);
-//unsigned long long int asd = string_to_mseg("12312312323412");
-//printf("asd: %llu\n", asd);
-
-
+//	mseg_t a =get_ts();
+//	printf("%" PRIu64 ,a);
+//
+//	mseg_t b = string_to_mseg("1558987461846");
+//	printf("imprimo de string_to_mseg(): %" PRIu64 "\n", b);
+//
+//	char* c = mseg_to_string(a);
+//	printf("imprimo guardado en a = get_ts() usando mseg_to_string():%s\n",c);
+//	free(c);
 
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
