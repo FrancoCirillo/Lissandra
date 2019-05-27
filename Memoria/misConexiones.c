@@ -56,9 +56,7 @@ void enviar_datos_a_FS(char *argv[])
 		t_list *listaParam = list_create();
 
 		printf(COLOR_ANSI_VERDE "	PROCESO %s\n" COLOR_ANSI_RESET, nombreDeMemoria);
-		sprintf(miIPMemoria, "127.0.0.3"); //Borrar para testear conexiones
-//		Descomentar para testear conexiones
-//		sprintf(miIPMemoria, "127.0.0.%s", argv[1]);
+		sprintf(miIPMemoria, "127.0.0.%s", argv[1]);
 		printf("IP Memoria: %s.\n", miIPMemoria);
 
 		list_add(listaParam, nombreDeMemoria);

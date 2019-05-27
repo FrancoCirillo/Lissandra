@@ -23,7 +23,7 @@ bool memoria_esta_full();
 void ejecutar_journal();
 
 /* TABLA DE PAGINAS */
-void agregar_fila_tabla(t_list * tablaDePaginas, int numPag, void* pagina, bool flagMod);
+filaTabPags *agregar_fila_tabla(t_list * tablaDePaginas, int numPag, void* pagina, bool flagMod);
 t_list *nueva_tabla_de_paginas();
 bool tabla_de_paginas_full(t_list* tablaDePaginas);
 bool memoria_esta_full();
@@ -51,7 +51,8 @@ void imprimir_tabla_de_paginas(t_list *tablaDePaginas);
 /* ALGORITMO DE REEMPLAZO */
 
 t_list* paginasSegunUso;
-void se_utilizo(t_list *suTablaDePaginas, filaTabPags* filaUsada);
+void se_utilizo(filaTabPags *filaUsada);
+void se_uso(int paginaUsada);
 int* pagina_lru();
 filaTabPags* fila_correspondiente_a_esa_pagina(int numeroDePagina, int* indiceEnTabla);
 filaTabPags* fila_con_el_numero(t_list* suTablaDePaginas, int numeroDePagina, int* indiceEnTabla);

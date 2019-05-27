@@ -25,7 +25,7 @@ t_list *nueva_tabla_de_paginas()
 	return tablaDePaginas;
 }
 
-void agregar_fila_tabla(t_list *tablaDePaginas, int numPag, void *pagina, bool flagMod)
+filaTabPags *agregar_fila_tabla(t_list *tablaDePaginas, int numPag, void *pagina, bool flagMod)
 {
 	filaTabPags *tabla = malloc(sizeof(filaTabPags));
 
@@ -33,6 +33,8 @@ void agregar_fila_tabla(t_list *tablaDePaginas, int numPag, void *pagina, bool f
 	tabla->ptrPagina = pagina;
 	tabla->flagModificado = flagMod;
 	list_add(tablaDePaginas, tabla);
+
+	return tabla;
 }
 
 void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
@@ -49,8 +51,9 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		}
 		else
 		{ //Algoritmo de reemplazo:
+			puts("Ejecutando el algoritmo de reemplazo");
 			int *numeroDeSector = pagina_lru();
-
+			printf("La pagina menos usada es %d", *numeroDeSector);
 			desplazamiento += ((*numeroDeSector) * tamanioRegistro);
 			memcpy(memoriaPrincipal + desplazamiento, &reg->timestamp, sizeof(mseg_t));
 			desplazamiento += sizeof(mseg_t);
@@ -198,10 +201,45 @@ void imprimir_tabla_de_paginas(t_list *tablaDePaginas)
 	list_iterate(tablaDePaginas, (void *)iterator);
 }
 
-void se_utilizo(t_list *suTablaDePaginas, filaTabPags *filaUsada)
+void se_uso(int paginaUtilizada){
+
+	int *paginaUsada = malloc(sizeof(int));
+	*paginaUsada = paginaUtilizada;
+	printf("Se utilizo %d\n", *paginaUsada);
+
+	bool esPaginaRequerida(int *numeroDePagina)
+	{
+		if (*paginaUsada == *numeroDePagina)
+		{
+			return true;
+		}
+		else
+			return false;
+	}
+
+	if ((list_find(paginasSegunUso, (void *)esPaginaRequerida)) != NULL)
+	{
+		puts("La pagina ya estaba");
+		list_remove_and_destroy_by_condition(paginasSegunUso, (void *)esPaginaRequerida, (void *)free);
+		puts("Instancia anterior borrada");
+		//En list[0] queda el que menos se usa
+	}
+	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
+	printf("Se agrego %d al final de la lista\n", *paginaUsada);
+
+	puts("Lista de paginas segun su uso:");
+	void mostrarPaginasSegunUso(int* numDePag){
+		printf("%d\n", *numDePag);
+	}
+	list_iterate(paginasSegunUso, (void*) mostrarPaginasSegunUso);
+}
+
+//DEPRECATED TODO: USAR SE_USO
+void se_utilizo(filaTabPags *filaUsada)
 {
 	int *paginaUsada = malloc(sizeof(int));
 	*paginaUsada = filaUsada->numeroDePagina;
+	printf("Se utilizo %d", *paginaUsada);
 	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
 
 	bool esPaginaRequerida(int *numeroDePagina)
@@ -277,6 +315,11 @@ bool memoria_esta_full()
 
 int *pagina_lru()
 {
+	puts("Lista de paginas segun su uso:");
+	void mostrarPaginasSegunUso(int* numeroDePagina){
+		printf("%d", *numeroDePagina);
+	}
+	list_iterate(paginasSegunUso, (void*) mostrarPaginasSegunUso);
 	return list_get(paginasSegunUso, 0);
 }
 
