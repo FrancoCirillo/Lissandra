@@ -6,8 +6,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 {
 	puts("Ejecutando instruccion Select");
 	char* tabla = (char *)list_get(instruccion->parametros, 0);
-	t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, tabla);
-	sleep(1);
+	t_list *suTablaDePaginas = segmento_de_esa_tabla(tabla);
 	if (suTablaDePaginas != NULL) //El segmento ya existia, se encontro su tabla de paginas
 	{
 		char* keyChar = (char *)list_get(instruccion->parametros, 1);
@@ -23,8 +22,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 					registroEncontrado->value,
 					registroEncontrado->timestamp);
 			list_add(listaParam, cadena);
-
-			se_utilizo(suTablaDePaginas, filaEncontrada);
+			se_uso(filaEncontrada->numeroDePagina);
 			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 
 		}
@@ -46,8 +44,8 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 {
 	puts("FS devolvio la tabla solicitada.");
-	ejecutar_instruccion_insert(instruccion, false);
-
+	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
+	se_uso(paginaInsertada);
 	t_list *listaParam = list_create();
 	char cadena[400];
 	sprintf(cadena, "%s%s%s%s%s%s%s%lu en FS", "Se encontro",
@@ -59,9 +57,12 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 }
 
-void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
+int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
 {
 	puts("Ejecutando instruccion Insert");
+
+	int numeroDePaginaInsertada;
+
 	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
 	{
 		char cadena[500];
@@ -69,27 +70,62 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 		sprintf(cadena, "El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam);
+		return -1;
 	}
 	else
 	{
 		int numeroDePaginaAgregado;
-		void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-		printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
-		t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0));
+		t_list *suTablaDePaginas = segmento_de_esa_tabla((char *)list_get(instruccion->parametros, 0));
 
-		if(suTablaDePaginas == NULL){
+//CASO 1:
+		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
+			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
+			printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
-			printf("Se agrego %s al diccionario\n", (char *)list_get(instruccion->parametros, 0));
-			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			puts("Tabla de paginas actual: (New)");
-			imprimir_tabla_de_paginas(suTablaDePaginas);
-		}
-		else{
-			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			puts("Tabla de paginas actual: ");
+
+			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+			puts("Tabla de paginas actual: (Nueva)");
 			imprimir_tabla_de_paginas(suTablaDePaginas);
 			printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+
+			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+		}
+
+
+		else{ //Ya existía el segmento correspondiente a la página, hay que ver si ya existia la key
+
+			char* keyChar = (char *)list_get(instruccion->parametros, 1);
+			filaTabPags* filaEncontrada = en_que_fila_esta_key(suTablaDePaginas, keyChar);
+//CASO 2:
+			if(filaEncontrada !=NULL){ // Ya existia la key en ese segmento
+				mseg_t nuevoTimestamp = instruccion->timestamp;
+				char* nuevoValue = (char *) list_get(instruccion->parametros, 2);
+				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
+				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
+				puts("Tabla de paginas actual: (Key preexistente)");
+				imprimir_tabla_de_paginas(suTablaDePaginas);
+				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+
+				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
+			}
+
+
+//CASO 3:
+			else{ //No existia la key en ese segment
+				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
+				printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+				puts("Tabla de paginas actual: (Fila nueva)");
+				imprimir_tabla_de_paginas(suTablaDePaginas);
+				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+
+				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+			}
+
+
+
 		}
 
 		char cadena[500];
@@ -101,6 +137,7 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 				(mseg_t)instruccion->timestamp);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+		return numeroDePaginaInsertada;
 	}
 }
 

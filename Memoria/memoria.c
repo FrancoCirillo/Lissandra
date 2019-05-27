@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
 	callback = ejecutar_instruccion;
 
 	enviar_datos_a_FS(argv);
-
 	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO);
 
 	//recibir el tamanio del Value
@@ -124,7 +123,6 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 
 void check_inicial(int argc, char* argv[])
 {
-
 	if (argc < 2 || strcmp(argv[1], "4") == 0 || strcmp(argv[1], "2") == 0)
 	{
 		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
@@ -134,7 +132,7 @@ void check_inicial(int argc, char* argv[])
 
 		exit(0);
 	}
-	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
 
+	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
 }
 
