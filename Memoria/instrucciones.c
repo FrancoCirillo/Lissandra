@@ -72,19 +72,15 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 	}
 	else
 	{
-		puts("El largo del valor es correcto");
 		int numeroDePaginaAgregado;
 		t_list *suTablaDePaginas = segmento_de_esa_tabla((char *)list_get(instruccion->parametros, 0));
-		puts("Se encontro la tabla de paginas del segmento correspondiente a la tabla pedida (Puede ser NULL)");
 
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
-			puts("No existia un segmento correspondiente a esa tabla");
 			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
 			printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
-			printf("Se agrego %s al diccionario\n", (char *)list_get(instruccion->parametros, 0));
 
 			agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 			puts("Tabla de paginas actual: (Nueva)");
@@ -92,13 +88,10 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 			printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 		}
 		else{ //Ya existía el segmento correspondiente a la página, hay que ver si ya existia la key
-			puts("Ya existia un segmento correspondiente a esa tabla");
 			char* keyChar = (char *)list_get(instruccion->parametros, 1);
 			filaTabPags* filaEncontrada = en_que_fila_esta_key(suTablaDePaginas, keyChar);
-			puts("Se obtuvo la fila correspondiende a esa key");
 
 			if(filaEncontrada !=NULL){ // Ya existia la key en ese segmento
-				puts("Ya existia la key en ese segmento");
 				mseg_t nuevoTimestamp = instruccion->timestamp;
 				char* nuevoValue = (char *) list_get(instruccion->parametros, 2);
 				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
@@ -109,7 +102,6 @@ void ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se ins
 			}
 
 			else{ //No existia la key en ese segment
-				puts("No existia la key en ese segmento");
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
 				printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 				agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
