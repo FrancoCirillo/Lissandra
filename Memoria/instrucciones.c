@@ -10,13 +10,15 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 	if (suTablaDePaginas != NULL) //El segmento ya existia, se encontro su tabla de paginas
 	{
 		char* keyChar = (char *)list_get(instruccion->parametros, 1);
-		filaTabPags* filaEncontrada = en_que_fila_esta_key(suTablaDePaginas, keyChar);
+		uint16_t keyBuscada;
+		str_to_uint16(keyChar, &keyBuscada);
+		filaTabPags* filaEncontrada = fila_con_la_key(suTablaDePaginas, keyBuscada);
 		if(filaEncontrada != NULL)
 		{	//"La key pertenece a una fila preexistente"
 			registro* registroEncontrado = obtener_registro_de_pagina(filaEncontrada->ptrPagina);
 			t_list *listaParam = list_create();
 			char cadena[400];
-			sprintf(cadena, "Se encontro %s | %d | %s | %lu en Memoria",
+			sprintf(cadena, "Se encontro %s | %d | %s | %"PRIu64" en Memoria",
 					tabla,
 					registroEncontrado->key,
 					registroEncontrado->value,
@@ -48,11 +50,13 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	se_uso(paginaInsertada);
 	t_list *listaParam = list_create();
 	char cadena[400];
-	sprintf(cadena, "%s%s%s%s%s%s%s%lu en FS", "Se encontro",
-										(char *)list_get(instruccion->parametros, 0), " | ", //Tabla
-										(char *)list_get(instruccion->parametros, 1), " | ", //Key
-										(char *)list_get(instruccion->parametros, 2), " | ", //Value
-										(mseg_t)instruccion->timestamp); //Timestamp
+	sprintf(cadena,
+			"Se encontro %s | %s | %s | %"PRIu64" en FS",
+			(char *)list_get(instruccion->parametros, 0), //Tabla
+			(char *)list_get(instruccion->parametros, 1),//Key
+			(char *)list_get(instruccion->parametros, 2), //Value
+			(mseg_t)instruccion->timestamp); //Timestamp
+
 	list_add(listaParam, cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 }
@@ -97,14 +101,18 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 		else{ //Ya existía el segmento correspondiente a la página, hay que ver si ya existia la key
 
 			char* keyChar = (char *)list_get(instruccion->parametros, 1);
-			filaTabPags* filaEncontrada = en_que_fila_esta_key(suTablaDePaginas, keyChar);
+			uint16_t keyBuscada;
+			str_to_uint16(keyChar, &keyBuscada);
+			filaTabPags* filaEncontrada = fila_con_la_key(suTablaDePaginas,keyBuscada);
 //CASO 2:
 			if(filaEncontrada !=NULL){ // Ya existia la key en ese segmento
+				imprimir_tabla_de_paginas(suTablaDePaginas);
 				mseg_t nuevoTimestamp = instruccion->timestamp;
 				char* nuevoValue = (char *) list_get(instruccion->parametros, 2);
 				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
+				filaEncontrada->flagModificado = flagMod;
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
-				puts("Tabla de paginas actual: (Key preexistente)");
+				puts("\n\nTabla de paginas actual: (Key preexistente)");
 				imprimir_tabla_de_paginas(suTablaDePaginas);
 				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 
@@ -130,7 +138,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 		char cadena[500];
 		t_list *listaParam = list_create();
-		sprintf(cadena, "Se inserto %s | %s | %s | %lu a la Memoria",
+		sprintf(cadena, "Se inserto %s | %s | %s | %"PRIu64" en la Memoria",
 				(char *)list_get(instruccion->parametros, 0),
 				(char *)list_get(instruccion->parametros, 1),
 				(char *)list_get(instruccion->parametros, 2),

@@ -53,7 +53,17 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		{ //Algoritmo de reemplazo:
 			puts("Ejecutando el algoritmo de reemplazo");
 			int *numeroDeSector = pagina_lru();
-			printf("La pagina menos usada es %d", *numeroDeSector);
+
+			int indiceEnTabla = 0;
+
+			//Buscando la fila correspondiente a la pagina menos usada
+			char *segmentoConFilaABorrar;
+			fila_correspondiente_a_esa_pagina((*numeroDeSector), &indiceEnTabla, &segmentoConFilaABorrar);
+
+			//El segmento (Tabla) al que corresponde esa pagina es segmentoConFilaABorrar
+			t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, segmentoConFilaABorrar);
+
+			//Modificando esa pagina (Esto tambien podría hacerse al principio del algoritmo, es lo mismo)
 			desplazamiento += ((*numeroDeSector) * tamanioRegistro);
 			memcpy(memoriaPrincipal + desplazamiento, &reg->timestamp, sizeof(mseg_t));
 			desplazamiento += sizeof(mseg_t);
@@ -62,21 +72,15 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 			memcpy(memoriaPrincipal + desplazamiento, &reg->value, tamanioValue);
 			*nroPag = (*numeroDeSector);
 
-			int indiceEnTabla = 0;
-
-			fila_correspondiente_a_esa_pagina((*numeroDeSector), &indiceEnTabla);
-
-			char *segmentoSolicitado = (char *)list_get(instruccion->parametros, 0);
-
-			t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, segmentoSolicitado);
-
+			//Borrando la fila "indiceEnTabla" de la Tabla de paginas "segmentoConFilaABorrar"
 			list_remove_and_destroy_element(suTablaDePaginas, indiceEnTabla, (void *)free);
-
 			if (list_is_empty(suTablaDePaginas))
 			{
-				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoSolicitado, (void *)free);
+				//La tabla de páginas quedó vacía, no tiene sentido guardar el puntero
+				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoConFilaABorrar, (void *)free);
 			}
-			free(reg);
+			free(segmentoConFilaABorrar); //malloc en fila_correspondiente_a_esa_pagina
+			free(reg); //malloc en obtener_registro_de_instruccion
 			return memoriaPrincipal + ((*numeroDeSector) * tamanioRegistro);
 		}
 	}
@@ -106,7 +110,7 @@ void actualizar_pagina(void *paginaAActualizar, mseg_t nuevoTimestamp, char *nue
 	desplazamiento += sizeof(mseg_t);
 	//	memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t)); La key no se mofidica
 	desplazamiento += sizeof(uint16_t);
-	memcpy(memoriaPrincipal + desplazamiento, &nuevoValue, tamanioValue);
+	memcpy(paginaAActualizar+ desplazamiento, &nuevoValue, tamanioValue);
 }
 registro *obtener_registro_de_instruccion(instr_t *instruccion)
 {
@@ -177,7 +181,7 @@ registro *obtener_registro_de_pagina(void *pagina)
 char *registro_a_str(registro *registro)
 {
 	char *regString = malloc(450);
-	sprintf(regString, "	Timestamp:	%lu\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
+	sprintf(regString, "	Timestamp:	%"PRIu64"\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
 	return regString;
 }
 
@@ -205,7 +209,6 @@ void se_uso(int paginaUtilizada){
 
 	int *paginaUsada = malloc(sizeof(int));
 	*paginaUsada = paginaUtilizada;
-	printf("Se utilizo %d\n", *paginaUsada);
 
 	bool esPaginaRequerida(int *numeroDePagina)
 	{
@@ -219,62 +222,17 @@ void se_uso(int paginaUtilizada){
 
 	if ((list_find(paginasSegunUso, (void *)esPaginaRequerida)) != NULL)
 	{
-		puts("La pagina ya estaba");
 		list_remove_and_destroy_by_condition(paginasSegunUso, (void *)esPaginaRequerida, (void *)free);
-		puts("Instancia anterior borrada");
 		//En list[0] queda el que menos se usa
 	}
 	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
-	printf("Se agrego %d al final de la lista\n", *paginaUsada);
 
-	puts("Lista de paginas segun su uso:");
+	printf("Lista de paginas segun su uso:[");
 	void mostrarPaginasSegunUso(int* numDePag){
-		printf("%d\n", *numDePag);
+		printf("%d,", *numDePag);
 	}
 	list_iterate(paginasSegunUso, (void*) mostrarPaginasSegunUso);
-}
-
-//DEPRECATED TODO: USAR SE_USO
-void se_utilizo(filaTabPags *filaUsada)
-{
-	int *paginaUsada = malloc(sizeof(int));
-	*paginaUsada = filaUsada->numeroDePagina;
-	printf("Se utilizo %d", *paginaUsada);
-	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
-
-	bool esPaginaRequerida(int *numeroDePagina)
-	{
-		if (*paginaUsada == *numeroDePagina)
-		{
-			return true;
-		}
-		else
-			return false;
-	}
-
-	if ((list_find(paginasSegunUso, (void *)esPaginaRequerida)) != NULL)
-	{
-		list_remove_and_destroy_by_condition(paginasSegunUso, (void *)esPaginaRequerida, (void *)free);
-		//En list[0] queda el que menos se usa
-	}
-}
-
-filaTabPags *en_que_fila_esta_key(t_list *suTablaDePaginas, char *keyChar)
-{
-	uint16_t keyPedida;
-	str_to_uint16(keyChar, &keyPedida);
-	uint16_t keyEnMemoria;
-	for (int i = 0; i < list_size(suTablaDePaginas); i++)
-	{
-		filaTabPags *fila = list_get(suTablaDePaginas, i);
-		keyEnMemoria = get_key_pagina(fila->ptrPagina);
-		if (keyEnMemoria == keyPedida)
-		{
-
-			return fila;
-		}
-	}
-	return NULL;
+	printf("]\n");
 }
 
 t_list *segmento_de_esa_tabla(char *tabla)
@@ -315,12 +273,7 @@ bool memoria_esta_full()
 
 int *pagina_lru()
 {
-	puts("Lista de paginas segun su uso:");
-	void mostrarPaginasSegunUso(int* numeroDePagina){
-		printf("%d", *numeroDePagina);
-	}
-	list_iterate(paginasSegunUso, (void*) mostrarPaginasSegunUso);
-	return list_get(paginasSegunUso, 0);
+	return (int*) list_get(paginasSegunUso, 0);
 }
 
 void ejecutar_journal()
@@ -335,31 +288,59 @@ filaTabPags *fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, in
 	{
 		if (fila->numeroDePagina == numeroDePagina)
 		{
-			return true;
+			return 1;
 		}
 
 		else
 		{
 			(*indiceEnTabla)++;
-			return false;
+			return 0;
 		}
 	}
 
 	return list_find(suTablaDePaginas, (void *)tiene_el_numero);
 }
 
-filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla)
+filaTabPags *fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada){
+
+	bool tiene_la_key(filaTabPags * fila)
+	{
+		if (get_key_pagina(fila->ptrPagina) == keyBuscada)
+		{
+			return 1;
+		}
+
+		else
+		{
+			return 0;
+		}
+	}
+
+	return list_find(suTablaDePaginas, (void *)tiene_la_key);
+}
+
+filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla, char** segmentoQueLaTiene)
 {
 	//Un dictionary_find casero
 
 	filaTabPags *filaEncontrada;
 	filaTabPags *filaPosible;
+	int seEncontro = 0;
+
 	void tiene_esa_pagina_la_fila(char *segmento, t_list *suTablaDePaginas)
 	{
-		filaPosible = fila_con_el_numero(suTablaDePaginas, numeroDePagina, indiceEnTabla);
-		if (filaPosible != NULL)
-		{ //Se encontro la fila que tenia ese numero
-			filaEncontrada = filaPosible;
+		if(seEncontro == 0)
+		{
+			*indiceEnTabla= 0;
+			filaPosible = fila_con_el_numero(suTablaDePaginas, numeroDePagina, indiceEnTabla);
+			if (filaPosible != NULL)
+			{ //Se encontro la fila que tenia ese numero
+				seEncontro = 1;
+				filaEncontrada = filaPosible;
+				*segmentoQueLaTiene = malloc(sizeof(segmento));
+				*segmentoQueLaTiene = strcpy(*segmentoQueLaTiene, segmento);
+			}
+
 		}
 	}
 
@@ -367,6 +348,8 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 
 	if (filaPosible == NULL)
 	{
+		log_error(g_logger, "No se encontro la fila con la pagina"); //Durante el algoritmo de reemplazo nunca se debería dar
+		*segmentoQueLaTiene = NULL;
 		return NULL;
 	}
 	else

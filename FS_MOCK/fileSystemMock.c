@@ -56,7 +56,6 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 void ejecutar_instruccion_select(instr_t *instruccion, char *remitente)
 {
 	puts("Ejecutando instruccion Select");
-	sleep(1);
 	int tablaPreexistente = 1;
 	if (tablaPreexistente)
 	{
@@ -70,7 +69,9 @@ void ejecutar_instruccion_select(instr_t *instruccion, char *remitente)
 	{
 		t_list *listaParam = list_create();
 		char cadena[400];
-		sprintf(cadena, "%s%s", (char *)list_get(instruccion->parametros, 0), "No existe");
+		sprintf(cadena,
+				"%s No existe",
+				(char *)list_get(instruccion->parametros, 0));
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 	}
@@ -82,7 +83,12 @@ void ejecutar_instruccion_insert(instr_t *instruccion, char *remitente)
 	sleep(1);
 	t_list *listaParam = list_create();
 	char cadena[400];
-	sprintf(cadena, "%s%s%s%s%s%s%s%lu", "Se inserto ", (char *)list_get(instruccion->parametros, 0), " | ", (char *)list_get(instruccion->parametros, 1), " | ", (char *)list_get(instruccion->parametros, 2), " | ", (mseg_t)instruccion->timestamp);
+	sprintf(cadena,
+			"Se inserto %s | %s | %s | %"PRIu64,
+			(char *)list_get(instruccion->parametros, 0),
+			(char *)list_get(instruccion->parametros, 1),
+			(char *)list_get(instruccion->parametros, 2),
+			(mseg_t)instruccion->timestamp);
 	list_add(listaParam, cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 }
@@ -93,7 +99,12 @@ void ejecutar_instruccion_create(instr_t *instruccion, char *remitente)
 
 	t_list *listaParam = list_create();
 	char cadena[400];
-	sprintf(cadena, "%s%s%s%s%s%s%s%s", "Se creo la tabla", (char *)list_get(instruccion->parametros, 0), " con tipo de consistencia ", (char *)list_get(instruccion->parametros, 1), ", tiene ", (char *)list_get(instruccion->parametros, 2), " particiones y un tiempo de compactacion de ", (char *)list_get(instruccion->parametros, 3));
+	sprintf(cadena,
+			"Se creo la tabla %s con tipo de consistencia %s, tiene %s particiones y un tiempo de compactacion de %s",
+			(char *)list_get(instruccion->parametros, 0),
+			(char *)list_get(instruccion->parametros, 1),
+			(char *)list_get(instruccion->parametros, 2),
+			(char *)list_get(instruccion->parametros, 3));
 	list_add(listaParam, cadena);
 
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
@@ -104,7 +115,9 @@ void ejecutar_instruccion_describe(instr_t *instruccion, char *remitente)
 	puts("Ejecutando instruccion Describe");
 	t_list *listaParam = list_create();
 	char cadena[400];
-	sprintf(cadena, "%s%s%s", "Metadata ", (char *)list_get(instruccion->parametros, 0), ":\n	Tipo de consistencia: \n	Numero de Particiones: 4\n	Tiempo entre compactaciones: 60000");
+	sprintf(cadena,
+			"Metadata %s :\n	Tipo de consistencia: \n	Numero de Particiones: 4\n	Tiempo entre compactaciones: 60000",
+			(char *)list_get(instruccion->parametros, 0));
 	list_add(listaParam, cadena);
 
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
