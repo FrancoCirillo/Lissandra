@@ -5,9 +5,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-//#include <time.h>
 #include <sys/time.h>
 #include <inttypes.h>
+#include <commons/string.h>
 
 typedef uint64_t mseg_t;
 

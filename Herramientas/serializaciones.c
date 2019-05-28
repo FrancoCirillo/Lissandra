@@ -359,7 +359,7 @@ void print_instruccion(instr_t *instruccion)
 		printf("%s\n", value);
 	}
 
-	printf("Timestamp: %lu \n", instruccion->timestamp);
+	printf("Timestamp: %"PRIu64"\n",instruccion->timestamp);
 	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
 	printf("Parametros:\n");
 	list_iterate(instruccion->parametros, (void *)iterator);
@@ -382,7 +382,7 @@ void imprimir_registro(instr_t *instruccion)
 {
 	printf("Key %s\n", (char *)list_get(instruccion->parametros, 1));
 	printf("Value %s\n", (char *)list_get(instruccion->parametros, 2));
-	printf("Timestamp: %lu \n", instruccion->timestamp);
+	printf("Timestamp: %"PRIu64"\n", instruccion->timestamp);
 }
 
 //Todo: usar logger
