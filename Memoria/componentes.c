@@ -227,12 +227,6 @@ void se_uso(int paginaUtilizada){
 	}
 	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
 
-	printf("Lista de paginas segun su uso:[");
-	void mostrarPaginasSegunUso(int* numDePag){
-		printf("%d,", *numDePag);
-	}
-	list_iterate(paginasSegunUso, (void*) mostrarPaginasSegunUso);
-	printf("]\n");
 }
 
 t_list *segmento_de_esa_tabla(char *tabla)

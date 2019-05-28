@@ -30,14 +30,14 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		}
 		else
 		{
-			puts("La key no se encontro en Memoria. Consultando al FS");
+//			puts("La key no se encontro en Memoria. Consultando al FS");
 			int conexionFS = obtener_fd_out("FileSystem");
 			enviar_request(instruccion, conexionFS);
 		}
 	}
 	else
 	{
-		puts("La tabla no se encontro en Memoria. Consultando al FS");
+//		puts("La tabla no se encontro en Memoria. Consultando al FS");
 		int conexionFS = obtener_fd_out("FileSystem");
 		enviar_request(instruccion, conexionFS);
 	}
@@ -45,7 +45,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 {
-	puts("FS devolvio la tabla solicitada.");
+//	puts("FS devolvio la tabla solicitada.");
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
 	se_uso(paginaInsertada);
 	t_list *listaParam = list_create();
@@ -63,7 +63,7 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
 {
-	puts("Ejecutando instruccion Insert");
+	if(flagMod) puts("Ejecutando instruccion Insert"); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
 
 	int numeroDePaginaInsertada;
 
@@ -84,15 +84,15 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 1:
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
 			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-			printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+//			printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 
 			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			puts("Tabla de paginas actual: (Nueva)");
-			imprimir_tabla_de_paginas(suTablaDePaginas);
-			printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+//			puts("Tabla de paginas actual: (Nueva)");
+//			imprimir_tabla_de_paginas(suTablaDePaginas);
+//			printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 
 			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 		}
@@ -106,15 +106,14 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 			filaTabPags* filaEncontrada = fila_con_la_key(suTablaDePaginas,keyBuscada);
 //CASO 2:
 			if(filaEncontrada !=NULL){ // Ya existia la key en ese segmento
-				imprimir_tabla_de_paginas(suTablaDePaginas);
 				mseg_t nuevoTimestamp = instruccion->timestamp;
 				char* nuevoValue = (char *) list_get(instruccion->parametros, 2);
 				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
 				filaEncontrada->flagModificado = flagMod;
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
-				puts("\n\nTabla de paginas actual: (Key preexistente)");
-				imprimir_tabla_de_paginas(suTablaDePaginas);
-				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+//				puts("\n\nTabla de paginas actual: (Key preexistente)");
+//				imprimir_tabla_de_paginas(suTablaDePaginas);
+//				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 
 				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
 			}
@@ -126,8 +125,8 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 				puts("Tabla de paginas actual: (Fila nueva)");
-				imprimir_tabla_de_paginas(suTablaDePaginas);
-				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+//				imprimir_tabla_de_paginas(suTablaDePaginas);
+//				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
 
 				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 			}
@@ -135,17 +134,18 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 
 		}
-
-		char cadena[500];
-		t_list *listaParam = list_create();
-		sprintf(cadena, "Se inserto %s | %s | %s | %"PRIu64" en la Memoria",
-				(char *)list_get(instruccion->parametros, 0),
-				(char *)list_get(instruccion->parametros, 1),
-				(char *)list_get(instruccion->parametros, 2),
-				(mseg_t)instruccion->timestamp);
-		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
-		return numeroDePaginaInsertada;
+		if(flagMod){
+			char cadena[500];
+			t_list *listaParam = list_create();
+			sprintf(cadena, "Se inserto %s | %s | %s | %"PRIu64" en la Memoria",
+					(char *)list_get(instruccion->parametros, 0),
+					(char *)list_get(instruccion->parametros, 1),
+					(char *)list_get(instruccion->parametros, 2),
+					(mseg_t)instruccion->timestamp);
+			list_add(listaParam, cadena);
+			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+		}
+			return numeroDePaginaInsertada;
 	}
 }
 
