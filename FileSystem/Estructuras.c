@@ -35,11 +35,6 @@ int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
-int existe_tabla(char * nombre_tabla) {
-
-	return 1;   //Vamos a recorrer la mem, e identificar si hay un nodo con ese nombre.
-}
-
 int cant_bloques_disp(){
 	return 100;   // TODO Ver con el bit array.
 }

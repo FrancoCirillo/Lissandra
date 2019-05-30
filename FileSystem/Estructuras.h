@@ -33,7 +33,6 @@ void  crear_bloques();
 void  crear_metadata(instr_t*);
 //leer_metadata_tabla(???) TODO definir esta funcion
 
-int existe_tabla(char * );
 
 void archivo_inicializar(FILE *);
 void metadata_inicializar(FILE*, instr_t*);
