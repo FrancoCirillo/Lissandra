@@ -5,18 +5,77 @@
 //Nada de esto esta probado.
 
 void inicializar_memtable() {
-	memtable = list_create();
+	memtable = dictionary_create();
 	loggear_FS("Se inicializó la memtable.");
 }
 
-void finalizar_memtable() {
-	//list_iterate();  //Liberar todos los registros y tablas.
-	list_destroy(memtable);
+void finalizar_memtable() { //Borra y libera todos los registros y tablas.
+	//IMPORTANTE: la variable global no se puede usar a menos que hagan otro diccionary_create
+	dictionary_destroy_and_destroy_elements(memtable, &borrar_lista_registros);;
 }
 
-void dumpear(t_list* mem) {
+void borrar_lista_registros(void* lista){
+	list_destroy_and_destroy_elements((t_list*)lista, &borrar_registro);
+}
 
-	//list_iterate(mem, bajar_tabla());
+void borrar_registro(void* registro){ //no tengo ni idea de lo que estoy haciendo
+	free(((registro_t*)registro)->value);
+	free((registro_t*)registro);
+}
+
+void limpiar_memtable(){
+	dictionary_clean_and_destroy_elements(memtable, &borrar_lista_registros);
+}
+
+int existe_tabla(char* tabla){
+	return dictionary_has_key(memtable, tabla);
+}
+
+void eliminar_tabla_de_mem(char* tabla){
+	dictionary_remove_and_destroy(memtable, tabla, &borrar_lista_registros);
+}
+
+t_list* crear_lista_registros(){
+	return list_create();
+}
+
+void agregar_tabla(char* tabla){
+	t_list* registros = crear_lista_registros();
+	dictionary_put(memtable, tabla, registros);
+}
+
+void agregar_registro(char* tabla, registro_t* registro){
+	t_list* registros_tabla = dictionary_get(memtable, tabla);
+	list_add(registros_tabla, registro);
+}
+
+t_list* obtener_registros(char* tabla, uint16_t key){
+	t_list* registros_tabla = dictionary_get(memtable, tabla);
+
+	_Bool es_key_registro(void* registro){
+		uint16_t key_registro = ((registro_t*)registro)->key;
+		return key_registro == key;
+	}
+
+	return list_filter(registros_tabla, &es_key_registro);
+}
+
+registro_t* obtener_registro_mas_reciente(char* tabla, uint16_t key){
+	t_list* registros_de_key = obtener_registros(tabla, key);
+	list_sort(registros_de_key, &es_registro_mas_reciente);
+	return list_get(registros_de_key, 0);
+}
+
+
+_Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
+	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
+	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
+	return (_Bool)(ts_un_registro > ts_otro_registro);
+}
+
+void dumpear(t_dictionary* mem) {
+
+	//list_iterate(mem, bajar_tabla()); no es mas lista
 	//
 	//de cada tabla de esa mem, que no es la mem que sigue usando, bajar a los .tmp correspondientes.
 	//Ver bien como hacer esto..
@@ -27,7 +86,7 @@ void dumpeo() {
 	int tiempo_dump = obtener_tiempo_dump_config();
 	sem_post(&mutex_tiempo_dump_config);
 
-	t_list* mem;
+	t_dictionary* mem;
 
 	while (1) {
 		sleep(tiempo_dump);
@@ -35,7 +94,7 @@ void dumpeo() {
 		mem = memtable;
 
 		sem_wait(&mutex_memtable);
-		mem_limpiar();  //la deja como nueva. sin tablas.
+		limpiar_memtable();  //la deja como nueva. sin tablas.
 		sem_post(&mutex_memtable);
 
 		//Ver si aca hay que crear hilo, o espera a que termina el dumpeo de las tablas.
@@ -48,26 +107,12 @@ void dumpeo() {
 	}
 }
 
-void mem_limpiar() {
-	//la vacia
-}
-
-void mem_agregar_tabla(char* tabla) {
-	mem_tabla_t* m_tabla = malloc(sizeof(mem_tabla_t));
-	m_tabla->tabla = tabla;
-	m_tabla->registros = list_create();
-
-	sem_wait(&mutex_memtable);
-	list_add(memtable, m_tabla);
-	sem_post(&mutex_memtable);
-}
-
 //esto no compila.
-void mem_agregar_reg(instr_t* instr) { //crea el struct registro_t y lo agrega a los registros de la tabla correspondiente
-	registro_t* nuevo_reg = malloc(sizeof(registro_t));
-	char*tabla =obtener_parametro(instr, 0);
-	nuevo_reg->key = (uint16_t) atoi(obtener_parametro(instr, 1));
-	nuevo_reg->value = obtener_parametro(instr, 2);
+//void mem_agregar_reg(instr_t* instr) { //crea el struct registro_t y lo agrega a los registros de la tabla correspondiente
+//	registro_t* nuevo_reg = malloc(sizeof(registro_t));
+//	char*tabla =obtener_parametro(instr, 0);
+//	nuevo_reg->key = (uint16_t) atoi(obtener_parametro(instr, 1));
+//	nuevo_reg->value = obtener_parametro(instr, 2);
 	//nuevo_reg->timestamp = (mseg_t)obtener_parametro(instr, 3);
 
 	//Ver si recibimos el TS, sino, hay que validar aca y agregarlo.
@@ -78,7 +123,7 @@ void mem_agregar_reg(instr_t* instr) { //crea el struct registro_t y lo agrega a
 	//list_add(nodo_tabla->registros, nuevo_reg);
 	//loggear_FS("Se inserto el registro en la memtable.");
 	//Ver si agregamos mas info del registro en el log.
-}
+//}
 
 //Lo que fala es mem_obtener_nodo_tabla().
 //mem_tabla_t* mem_obtener_nodo_tabla(char*){
@@ -111,11 +156,11 @@ void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
 	}
 }
 
-void bajar_tabla(mem_tabla_t* t) {
-	//char* i = string_itoa(obtener_num_sig_dumpeo(t->tabla));
-	//i = contat(i, ".tmp");
-	pasar_a_archivo(t->tabla, t->registros, "tmp");
-}
+//void bajar_tabla(mem_tabla_t* t) {
+//	//char* i = string_itoa(obtener_num_sig_dumpeo(t->tabla));
+//	//i = contat(i, ".tmp");
+//	pasar_a_archivo(t->tabla, t->registros, "tmp");
+//}
 
 void escribir(FILE* f, t_list* algo){
 	//no se que hace
@@ -126,16 +171,6 @@ int obtener_num_sig_dumpeo(char* tabla) {
 	return 1;
 }
 
-int mem_existe_tabla(char* tabla){
-	//list_any_satisfy?
-	return 1;
-}
-
-int es_nodo_tabla(char* tabla, mem_tabla_t* nodo_tabla){
-	char* nombre_nodo;
-//	strcpy(nombre_nodo, nodo_tabla->tabla);
-	return strcmp(nombre_nodo, tabla);
-}
 
 
 

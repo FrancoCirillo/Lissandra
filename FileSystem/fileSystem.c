@@ -159,11 +159,12 @@ int execute_create(instr_t* instr) {
 int execute_insert(instr_t* instr) { //no esta chequeado
 
 	char* tabla = obtener_parametro(instr, 0); //nombre tabla
+	registro_t* registro = pasar_a_registro(instr);
 	if (!existe_tabla(tabla)) {
 		return ERROR_INSERT;
 	}
 	else {
-		mem_agregar_reg(instr);
+		agregar_registro(tabla, registro);
 	}
 	return CODIGO_EXITO;
 }
