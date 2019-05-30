@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
 	cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro; //Se trunca automaticamente al entero (por ser todos int)
 
-	printf("cantidadDeSecotres = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro);
+	printf("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro);
 
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
 	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool));

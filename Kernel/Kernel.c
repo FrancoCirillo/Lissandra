@@ -130,7 +130,7 @@ instr_t* kernel_run(instr_t *i){
 		list_add(p->instrucciones,nueva_instruccion);
 		p->size++;
 		loggear("Se agrego una instruccion!");
-		//		print_instruccion(nueva_instruccion);
+		//		imprimir_instruccion(nueva_instruccion);
 	}
 	fclose(f);
 
@@ -286,7 +286,7 @@ void* ejecutar_proceso(void* un_proceso){
 				loggear("ERROR al ejecutar la instruccion, finalizando proceso");
 				//printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
 				bajar_cantidad_hilos();
-				print_instruccion(respuesta);
+				imprimir_instruccion(respuesta);
 				return NULL;
 			}
 		}else{
@@ -327,7 +327,7 @@ char* obtener_parametroN(instr_t* i,int index){
 
 instr_t* ejecutar_instruccion(instr_t* i){
 	loggear("#### Se ejecuta una instruccion");
-	print_instruccion(i);
+	imprimir_instruccion(i);
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
 	}
@@ -341,7 +341,7 @@ instr_t* ejecutar_instruccion(instr_t* i){
 instr_t* enviar_i(instr_t* i){
 
 	loggear("ENVIANDO INSTRUCCION:  ");
-	print_instruccion(i);
+	imprimir_instruccion(i);
 
 	hilo_enviado* h=malloc(sizeof(hilo_enviado));
 	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
@@ -464,7 +464,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 }
 void recibi_respuesta(instr_t* respuesta){
 	loggear("Instruccion recibida: ");
-	print_instruccion(respuesta);
+	imprimir_instruccion(respuesta);
 
 	list_add(respuesta->parametros,"1");
 

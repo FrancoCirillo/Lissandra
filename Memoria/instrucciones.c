@@ -1,3 +1,4 @@
+//--------instrucciones.c--------
 
 #include "instrucciones.h"
 
