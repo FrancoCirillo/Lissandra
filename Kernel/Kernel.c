@@ -38,7 +38,7 @@ void inicializar_kernel(){
 	list_add(listaParam, "Kernel");
 	list_add(listaParam, IP_KERNEL);
 	list_add(listaParam, "4444");
-	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+	instr_t *miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_requestRecibido;
@@ -352,8 +352,8 @@ instr_t* enviar_i(instr_t* i){
 	loggear("Agrego a diccionario");
 
 	sem_wait(&mutex_diccionario_enviados);
-	printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)list_get(i->parametros,list_size(i->parametros)-1));
-	dictionary_put(diccionario_enviados,list_get(i->parametros,list_size(i->parametros)-1),h);
+	printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
+	dictionary_put(diccionario_enviados, obtener_ultimo_parametro(i), h);
 	sem_post(&mutex_diccionario_enviados);
 
 	loggear("Determinando memoria para request");
@@ -466,10 +466,10 @@ void recibi_respuesta(instr_t* respuesta){
 	loggear("Instruccion recibida: ");
 	imprimir_instruccion(respuesta);
 
-	list_add(respuesta->parametros,"1");
+//	list_add(respuesta->parametros,"1");
 
 	sem_wait(&mutex_diccionario_enviados);
-	hilo_enviado* h=dictionary_remove(diccionario_enviados,list_get(respuesta->parametros,list_size(respuesta->parametros)-1));
+	hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
 	loggear("Hilo obtenido y removido del diccionario!");
 	sem_post(&mutex_diccionario_enviados);
 
