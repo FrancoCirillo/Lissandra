@@ -140,6 +140,7 @@ void ejecutar_instruccion_drop(instr_t *instruccion, char *remitente)
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente)
 {
+	list_add(listaParam, obtener_ultimo_parametro(instruccion));
 	instr_t *miInstruccion;
 	switch (quien_pidio(instruccion))
 	{

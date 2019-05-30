@@ -223,4 +223,12 @@ void imprimir_conexiones(t_dictionary *diccionario);
  */
 bool str_to_uint16(char *str, uint16_t *res);
 
+/*
+ * Devuelve el último parametro de la instruccion.
+ * NULL si no tiene parametros.
+ * Sirve porque en el último parámetro guardamos qué hilo del Kernel lo envió
+ */
+
+void* obtener_ultimo_parametro(instr_t* instruccion);
+
 #endif /* SERIALIZACIONES_H_ */

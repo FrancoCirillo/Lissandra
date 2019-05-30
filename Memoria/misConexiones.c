@@ -18,6 +18,7 @@ int obtener_fd_out(char *proceso)
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam)
 {
+	list_add(listaParam, obtener_ultimo_parametro(instruccion));
 	instr_t *miInstruccion;
 	switch (quien_pidio(instruccion))
 	{

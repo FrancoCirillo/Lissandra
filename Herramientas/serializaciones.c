@@ -420,3 +420,7 @@ bool str_to_uint16(char *str, uint16_t *res)
     return true;
 }
 
+
+void* obtener_ultimo_parametro(instr_t* instruccion){
+	return list_get(instruccion->parametros, list_size(instruccion->parametros)-1);
+}
