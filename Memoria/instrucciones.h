@@ -1,9 +1,4 @@
-/*
- * instrucciones.h
- *
- *  Created on: 24 may. 2019
- *      Author: utnso
- */
+//--------instrucciones.h--------
 
 #ifndef INSTRUCCIONES_H_
 #define INSTRUCCIONES_H_

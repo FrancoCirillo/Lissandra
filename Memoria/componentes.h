@@ -36,26 +36,26 @@ t_list * segmento_de_esa_tabla(char* tabla);
 
 /* GETTERS */
 
-mseg_t get_ts_pagina(void*pagina);
-uint16_t get_key_pagina(void*pagina);
-char* get_value_pagina(void*pagina);
+mseg_t get_ts_pagina(void* pagina);
+uint16_t get_key_pagina(void* pagina);
+char* get_value_pagina(void* pagina);
 
-registro *obtener_registro_de_pagina(void*pagina);
+registro *obtener_registro_de_pagina(void* pagina);
 
 char* pagina_a_str(void* pagina);
 char* registro_a_str(registro* registro);
-void imprimir_tabla_de_paginas(t_list *tablaDePaginas);
+void imprimir_tabla_de_paginas(t_list* tablaDePaginas);
 
 
 /* ALGORITMO DE REEMPLAZO */
 
 t_list* paginasSegunUso;
-void se_utilizo(filaTabPags *filaUsada);
+void se_utilizo(filaTabPags* filaUsada);
 void se_uso(int paginaUsada);
 int* pagina_lru();
 
-filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla, char** segmentoQueLaTiene);
-filaTabPags* fila_con_el_numero(t_list* suTablaDePaginas, int numeroDePagina, int* indiceEnTabla);
-filaTabPags *fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada);
+filaTabPags* fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla, char** segmentoQueLaTiene);
+filaTabPags* fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, int* indiceEnTabla);
+filaTabPags* fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada);
 
 #endif //COMPONENTES_H

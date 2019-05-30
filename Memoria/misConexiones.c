@@ -1,3 +1,5 @@
+//--------misConexiones.c--------
+
 #include "misConexiones.h"
 
 int obtener_fd_out(char *proceso)
@@ -17,7 +19,7 @@ int obtener_fd_out(char *proceso)
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam)
 {
 	instr_t *miInstruccion;
-	switch (quienPidio(instruccion))
+	switch (quien_pidio(instruccion))
 	{
 	case CONSOLA_KERNEL:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);

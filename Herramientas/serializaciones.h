@@ -159,7 +159,7 @@ instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *l
 * Lee request y lo guarda en una nueva instr_t (malloc en crear_instruccion)
 *
 * En queConsola va CONSOLA_KERNEL, CONSOLA_MEMORIA o CONSOLA_FS, según desde qué consola
-* se haga en input.
+* se haga el input.
 *
 * Devuelve la instruccion creada, con la BASE_CONSOLA sumada al comando reconocido
 */
@@ -176,13 +176,13 @@ cod_op reconocer_comando(char *comando);
  * Devuelve 0 si la cantidad de parametros permitidos de comando
  * coinciden con el tamanio de listaParam
  */
-int esComandoValido(cod_op comando, t_list *listaParam);
+int es_comando_valido(cod_op comando, t_list *listaParam);
 
 
 /*
  * Imprime instruccion en stdout
  */
-void print_instruccion(instr_t *instruccion);
+void imprimir_instruccion(instr_t *instruccion);
 
 
 /*
@@ -191,7 +191,7 @@ void print_instruccion(instr_t *instruccion);
  * Usado con las otras funciones devuelve qué consola fue la que realizó el input,
  * por lo tanto sirve para saber en qué consola imprimir la instruccion
  */
-cod_op quienPidio(instr_t *instruccion);
+cod_op quien_pidio(instr_t *instruccion);
 
 
 /*
@@ -214,7 +214,7 @@ void loggear_error(instr_t *miInstruccion);
 /*
  * Imprime un diccionario de conexiones
  */
-void imprimirConexiones(t_dictionary *diccionario);
+void imprimir_conexiones(t_dictionary *diccionario);
 
 /*
  * Conversion de char* a uint_t

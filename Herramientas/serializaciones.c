@@ -222,9 +222,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 				if(actual != NULL) //Si es NULL no se introdujo el timestamp opcional
 				{
 					valor = strdup(actual);
-					list_add(listaParam, valor);
-					char* ptr;
-					timestampRequest = strtoul(valor, &ptr, 10);
+					timestampRequest = string_a_mseg(valor);
 				}
 			}
 
@@ -234,7 +232,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	free(requestCopy);
 
 	cod_op comandoReconocido = reconocer_comando(comando);
-	if (esComandoValido(comandoReconocido, listaParam) > 0)
+	if (es_comando_valido(comandoReconocido, listaParam) > 0)
 	{
 		switch (queConsola)
 		{
@@ -295,7 +293,7 @@ cod_op reconocer_comando(char *comando)
 		return INPUT_ERROR;
 }
 
-int esComandoValido(cod_op comando, t_list *listaParam)
+int es_comando_valido(cod_op comando, t_list *listaParam)
 {
 	int cantParam = list_size(listaParam);
 	switch (comando)
@@ -352,7 +350,7 @@ instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *l
 	return miInstr;
 }
 
-void print_instruccion(instr_t *instruccion)
+void imprimir_instruccion(instr_t *instruccion)
 {
 
 	void iterator(char *value){
@@ -366,7 +364,7 @@ void print_instruccion(instr_t *instruccion)
 	puts("");
 }
 
-cod_op quienPidio(instr_t *instruccion)
+cod_op quien_pidio(instr_t *instruccion)
 {
 	int codigoAnalizado = instruccion->codigo_operacion;
 	if (codigoAnalizado > BASE_COD_ERROR)
@@ -395,7 +393,7 @@ void loggear_exito(instr_t *miInstruccion)
 	printf("%s\n", (char *)list_get(miInstruccion->parametros, 0));
 }
 
-void imprimirConexiones(t_dictionary *conexAc)
+void imprimir_conexiones(t_dictionary *conexAc)
 {
 	puts("Conexiones conocidas:");
 	void iterator(char *key, identificador *idsProceso)

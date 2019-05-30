@@ -15,11 +15,12 @@
 #include "../Herramientas/utilsServidor.h"
 #include "../Herramientas/utilsCliente.h"
 #include "../Herramientas/tiempo.h"
-#include "componentes.h"
 #include "admin.h"
+#include "componentes.h"
 #include "misConexiones.h"
 #include "instrucciones.h"
-		/* CONEXIONES */
+
+	/* CONEXIONES */
 
 identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
@@ -39,7 +40,7 @@ void inicializar_configuracion();
 void iniciar_log();
 void iniciar_config();
 
-		/* DECLARACION DE FUNCIONES */
+	/* DECLARACION DE FUNCIONES */
 
 void (*callback)(instr_t *instruccion, char *remitente);
 

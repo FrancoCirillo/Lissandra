@@ -15,8 +15,8 @@ mseg_t obtener_ts();
 mseg_t dif_timestamps(mseg_t tiempo1, mseg_t tiempo2);
 mseg_t max_timestamp(mseg_t tiempo1, mseg_t tiempo2);
 
-char* mseg_to_string(mseg_t );
-mseg_t string_to_mseg(char* );
+char* mseg_a_string(mseg_t numero);
+mseg_t string_a_mseg(char* numero);
 
 
 #endif /* HERRAMIENTAS_TIEMPO_H */

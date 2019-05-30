@@ -1,9 +1,4 @@
-/*
- * misConexiones.h
- *
- *  Created on: 24 may. 2019
- *      Author: utnso
- */
+//--------misConexiones.h--------
 
 #ifndef MISCONEXIONES_H_
 #define MISCONEXIONES_H_
