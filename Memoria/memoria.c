@@ -88,21 +88,25 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 		switch (codigoNeto)
 		{
 		case CODIGO_SELECT:
+			sleep(3);
 			ejecutar_instruccion_select(instruccion);
 			break;
 		case DEVOLUCION_SELECT:
 			ejecutar_instruccion_devolucion_select(instruccion);
 			break;
 		case CODIGO_INSERT:
+			sleep(3);
 			ejecutar_instruccion_insert(instruccion, true);
 			break;
 		case CODIGO_CREATE:
+			sleep(3);
 			ejecutar_instruccion_create(instruccion);
 			break;
 		case CODIGO_DESCRIBE:
 			ejecutar_instruccion_describe(instruccion);
 			break;
 		case CODIGO_DROP:
+			sleep(3);
 			ejecutar_instruccion_drop(instruccion);
 			break;
 		case CODIGO_JOURNAL:

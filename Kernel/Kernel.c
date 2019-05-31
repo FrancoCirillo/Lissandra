@@ -39,8 +39,8 @@ int main() {
 
 	iniciar_ejecutador();
 
-	//inicializar_kernel();
-	iniciar_consola();
+	inicializar_kernel();
+	//iniciar_consola();
 	loggear("### FINALIZANDO KERNEL ###");
 	sleep(2);
 	loggear("### KERNEL FINALIZADO ###");
@@ -450,7 +450,7 @@ int obtener_fd_memoria(instr_t *i){
 	}//Ya obtuve el alias de la memoria
 
 	loggear("Memoria obtenida:");
-	loggear(krn_concat(memoria,alias_memoria));
+	//loggear(krn_concat(memoria,alias_memoria));
 
 	return obtener_fd_out(krn_concat(memoria,alias_memoria));
 }
