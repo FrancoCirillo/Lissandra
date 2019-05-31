@@ -387,7 +387,7 @@ instr_t* enviar_i(instr_t* i){
 	loggear("Agrego a diccionario");
 
 	sem_wait(&mutex_diccionario_enviados);
-	printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
+	//printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
 	dictionary_put(diccionario_enviados, obtener_ultimo_parametro(i), h);
 	sem_post(&mutex_diccionario_enviados);
 
