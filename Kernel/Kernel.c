@@ -4,6 +4,29 @@
 
 char * codigo_envio;
 
+void iniciar_consola(){
+	sleep(1);
+	loggear("Se inicia consola");
+	pthread_t hilo_consola;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_consola,&attr,consola,NULL);
+	pthread_join(hilo_consola,NULL);
+}
+void* consola(void* c){
+	char* instruccion;
+	while(1){
+		instruccion=readline("\n>>");
+		if(strcmp(instruccion,"close")==0){
+			loggear("##### FINALIZANDO KERNEL.... ###### \n");
+			return NULL;
+		}
+		printf("Procesando instruccion:: %s \n",instruccion);
+		procesar_instruccion_consola(instruccion);
+	}
+
+}
+
 int main() {
 
 	inicializar_semaforos();
@@ -16,9 +39,8 @@ int main() {
 
 	iniciar_ejecutador();
 
-	inicializar_kernel();
-	//krn_concat("HOLA","COMO TE VA");
-
+	//inicializar_kernel();
+	iniciar_consola();
 	loggear("### FINALIZANDO KERNEL ###");
 	sleep(2);
 	loggear("### KERNEL FINALIZADO ###");
@@ -73,7 +95,7 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 		char*  codigo=malloc(sizeof(char)*12);
 		sprintf(codigo,"%d",obtener_codigo_request());
 		list_add(instruccion->parametros,codigo);
-		
+
 		p->size++;
 		loggear("Instruccion generada, encolando proceso...");
 		encolar_proceso(p);
@@ -91,6 +113,11 @@ void procesar_instruccion_consola(char *instruccion){
 	p->instrucciones=instrucciones;
 	p->sig=NULL;
 	instr_t* nueva_instruccion=leer_a_instruccion(instruccion,CONSOLA_KERNEL);
+	char*  codigo=malloc(sizeof(char)*12);
+	sprintf(codigo,"%d",obtener_codigo_request());
+	list_add(nueva_instruccion->parametros,codigo);
+
+
 	list_add(p->instrucciones,nueva_instruccion);
 	p->size++;
 	loggear("Instruccion generada, encolando proceso...");
@@ -135,8 +162,7 @@ instr_t* kernel_run(instr_t *i){
 	fclose(f);
 
 	encolar_proceso(p);
-
-
+//RESPUESTA
 	instr_t * respuesta=malloc(sizeof(instr_t));
 	respuesta->codigo_operacion=0;
 	char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
@@ -326,6 +352,7 @@ char* obtener_parametroN(instr_t* i,int index){
 }
 
 instr_t* ejecutar_instruccion(instr_t* i){
+	instr_t* respuesta;
 	loggear("#### Se ejecuta una instruccion");
 	imprimir_instruccion(i);
 	if(i->codigo_operacion==CODIGO_RUN){
@@ -333,15 +360,23 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	}
 	if(i->codigo_operacion==CODIGO_ADD){
 		return kernel_add(i);
+	}if(i->codigo_operacion==CODIGO_CREATE){
+		agregar_tabla_a_criterio(i);
 	}
-	instr_t* respuesta=enviar_i(i);
+	if((respuesta=validar(i))!=NULL){
+		return respuesta;
+	}
+	respuesta=enviar_i(i);
 	return respuesta;
+}
+instr_t *validar(instr_t * i){
+	return NULL;
 }
 
 instr_t* enviar_i(instr_t* i){
 
-	loggear("ENVIANDO INSTRUCCION:  ");
-	imprimir_instruccion(i);
+	printf(" ENVIANDO INSTRUCCION CODIGO %s\n",(char*)obtener_ultimo_parametro(i));
+	//imprimir_instruccion(i);
 
 	hilo_enviado* h=malloc(sizeof(hilo_enviado));
 	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
@@ -356,9 +391,13 @@ instr_t* enviar_i(instr_t* i){
 	dictionary_put(diccionario_enviados, obtener_ultimo_parametro(i), h);
 	sem_post(&mutex_diccionario_enviados);
 
+
 	loggear("Determinando memoria para request");
 	int conexionMemoria = obtener_fd_memoria(i);
+
+	loggear("ENVIANDO INSTRUCCION:  ");
 	enviar_request(i, conexionMemoria);
+
 
 	printf("\n##### Instruccion enviada, esperando respuesta###\n");
 
@@ -377,9 +416,10 @@ int obtener_fd_memoria(instr_t *i){
 	char* alias_memoria="";
 	//SIEMPRE el primer parametro es el nombre de la tabla que uso como key para determinar criterio
 	sem_wait(&mutex_diccionario_criterios);
-	int codigo_criterio=(int)dictionary_get(diccionario_criterios,(char*)obtener_parametroN(i,0));
+	int codigo_criterio=*(int*)dictionary_get(diccionario_criterios,(char*)obtener_parametroN(i,0));
 	sem_post(&mutex_diccionario_criterios);
 	//Obtengo la memoria segun el criterio
+	printf("Codigo de criterio es : %d \n",codigo_criterio);
 	loggear("Determinando criterio de tabla");
 	switch(codigo_criterio){
 	case SC:
@@ -423,10 +463,12 @@ char* krn_concat(char* s1,char* s2){
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
 	loggear("Agregando tabla a criterio");
-	int codigo_criterio=obtener_codigo_criterio(obtener_parametroN(i,1));
+	int* codigo_criterio=malloc(sizeof(int));
+	*codigo_criterio=obtener_codigo_criterio(obtener_parametroN(i,1));
 	sem_wait(&mutex_diccionario_criterios);
 	dictionary_put(diccionario_criterios,obtener_parametroN(i,0),codigo_criterio);
 	sem_post(&mutex_diccionario_criterios);
+	printf("Se agrega la tabla %s, al criterio codigo: %d\n\n",(char*)obtener_parametroN(i,0),*codigo_criterio);
 }
 int obtener_codigo_criterio(char* criterio){
 	if(!strcmp(criterio,"SC")){
@@ -466,7 +508,7 @@ void recibi_respuesta(instr_t* respuesta){
 	loggear("Instruccion recibida: ");
 	imprimir_instruccion(respuesta);
 
-//	list_add(respuesta->parametros,"1");
+	//	list_add(respuesta->parametros,"1");
 
 	sem_wait(&mutex_diccionario_enviados);
 	hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));

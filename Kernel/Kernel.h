@@ -94,6 +94,7 @@ sem_t mutex_codigo_request;
 sem_t mutex_conexiones_actuales;
 sem_t mutex_diccionario_criterios;
 sem_t mutex_contador_ec;
+
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -106,11 +107,10 @@ void iniciar_ejecutador();
 void iniciar_consola();
 instr_t* kernel_run(instr_t *nombre_archivo);
 instr_t* kernel_add(instr_t *nombre_archivo);
-
+instr_t *validar(instr_t * i);
 //Inits
 void inicializar_kernel();
 void recibi_respuesta(instr_t* respuesta);
-void inicializar_kernel();
 void inicializar_criterios();
 void inicializarConfiguracion();
 void inicializar_semaforos();
@@ -124,6 +124,7 @@ void enviar_a(instr_t* i,char* destino);
 int obtener_fd_out(char *proceso);
 void responderHandshake(identificador *idsConexionEntrante);
 
+
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
 proceso* obtener_sig_proceso();
@@ -134,6 +135,8 @@ int obtener_codigo_request();
 instr_t* obtener_respuesta_run(instr_t* i);
 int obtener_fd_memoria(instr_t *i);
 int obtener_codigo_criterio(char* criterio);
+void agregar_tabla_a_criterio(instr_t* i);
+
 //Herramientas
 int hilos_disponibles();
 void loggear(char* mensaje);
@@ -145,5 +148,6 @@ void procesar_instruccion_consola(char *instruccion);
 void subir_cantidad_hilos();
 void bajar_cantidad_hilos();
 char* krn_concat(char* s1,char* s2);
+
 
 #endif /* kernel.h */
