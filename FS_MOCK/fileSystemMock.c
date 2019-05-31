@@ -75,22 +75,88 @@ void ejecutar_instruccion_select(instr_t *instruccion, char *remitente)
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 	}
+
+
 }
 
 void ejecutar_instruccion_insert(instr_t *instruccion, char *remitente)
 {
-	puts("Ejecutando instruccion Insert");
-	sleep(1);
+
+	cod_op codOp;
+	t_list* resultadoInsert;
+
+	if(quien_pidio(instruccion) == CONSOLA_FS){
+		puts("Ejecutando instruccion Insert");
+		sleep(1);
+		resultadoInsert = insertar_posta(instruccion, &codOp);
+		imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
+	}
+	else{
+		 /*
+		  * La única forma que llegue un INSERT de otro lado es a travez de un Journal (ya sea pedido desde la consola del Kernel,
+		  * la consola de Memoria o automaticamente por las memorias cada x tiempo).
+		  *
+		  * En cualquiera de los casos no debería existir la posibilidad de que haya un error en un INSERT, ya que el Kernel hace
+		  * la verificación de que la Tabla exista antes de hacer un isnert.
+		  *
+		  * Puede darse la situación en la que se haga un INSERT e inmediatemente después un DROP de esa misma tabla y el
+		  * insert no va a ser satisfactorio. En ese caso no se considera un error, sino que es el comportamiento
+		  * esperado por el usuario: Borrar una tabla. Sin embargo, decidimos sí mostrar un error.
+		  *
+		  * Lo mismo si primero se hace un INSERT desde la consola del Kernel y un DROP desde cualquier otra consola.
+		  *
+		  * Si el usuario hace un INSERT desde la consola de la Memoria, está decidiendo saltearse la valicación.
+		  * La ejecución satisfactoria del INSERT desde la consola de la Memoria no está garantizada
+		  * porque la validación la hace el Kernel.
+		  *
+		  * Si bien este caso es un error del usuario, consideramos que todo error no esperado debe ser notificado.
+		  * Sin embargo, una vez que están los datos en la Memoria no hay forma de saber si en INSERT fue realizado
+		  * desde la consola del Kernel o Memoria. Es por eso que decidimos que los errores de éste tipo se muestren
+		  * en la consola de Memoria que es quien tiene el Journal.
+		  *
+		  * Si el JOURNAL se llama desde la consola del Kernel y hay un error (aunque por ahora no conocemos ningun caso que daría error),
+		  * decidimos que igualmente los errores se muestren en la consola de la Memoria que es quien tiene el Journal.
+		  *
+		  *
+		  *
+		  */
+
+		resultadoInsert = insertar_posta(instruccion, &codOp);
+		if(codOp == ERROR_INSERT){
+			instruccion->codigo_operacion = CONSOLA_MEM_INSERT; //Para que el error se mustre en la memoria
+			imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
+		}
+
+	}
+
+}
+
+t_list* insertar_posta(instr_t *instruccion, cod_op* codOp){
+	//Hacer lo que verdaderamente hace el insert
+	int salioBien = 1; //Seria la operacion en sí
 	t_list *listaParam = list_create();
 	char cadena[400];
-	sprintf(cadena,
-			"Se inserto %s | %s | %s | %"PRIu64,
-			(char *)list_get(instruccion->parametros, 0),
-			(char *)list_get(instruccion->parametros, 1),
-			(char *)list_get(instruccion->parametros, 2),
-			(mseg_t)instruccion->timestamp);
 	list_add(listaParam, cadena);
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+
+	if(salioBien){
+		sprintf(cadena,
+				"Se inserto %s | %s | %s | %"PRIu64,
+				(char *)list_get(instruccion->parametros, 0),
+				(char *)list_get(instruccion->parametros, 1),
+				(char *)list_get(instruccion->parametros, 2),
+				(mseg_t)instruccion->timestamp);
+		*codOp = CODIGO_EXITO;
+	}
+	else{
+		sprintf(cadena,
+					"No se pudo insertar %s | %s | %s | %"PRIu64,
+					(char *)list_get(instruccion->parametros, 0),
+					(char *)list_get(instruccion->parametros, 1),
+					(char *)list_get(instruccion->parametros, 2),
+					(mseg_t)instruccion->timestamp);
+		*codOp = ERROR_INSERT;
+	}
+	return listaParam;
 }
 
 void ejecutar_instruccion_create(instr_t *instruccion, char *remitente)

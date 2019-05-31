@@ -46,8 +46,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 	{
 		if (memoria_esta_full())
 		{
-			ejecutar_journal();
-			log_error(g_logger, "El journal todavia no esta implementado.");
+			ejecutar_instruccion_journal(instruccion);
 		}
 		else
 		{ //Algoritmo de reemplazo:
@@ -238,7 +237,7 @@ bool tabla_de_paginas_full(t_list *tablaDePaginas)
 {
 	bool esta_modificado(filaTabPags * fila)
 	{
-		return fila->flagModificado == true;
+		return fila->flagModificado;
 	}
 	return list_all_satisfy(tablaDePaginas, (void *)esta_modificado);
 }
@@ -270,10 +269,6 @@ int *pagina_lru()
 	return (int*) list_get(paginasSegunUso, 0);
 }
 
-void ejecutar_journal()
-{
-	puts("Journal en proceso");
-}
 
 filaTabPags *fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, int *indiceEnTabla)
 {
@@ -348,4 +343,78 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 	}
 	else
 		return filaEncontrada;
+}
+
+
+
+void ejecutar_instruccion_journal(instr_t *instruccion)
+{
+	puts("Ejecutando instruccion Journal");
+	int conexionConFS = obtener_fd_out("FileSystem");
+
+	puts("Se encontro el fd_out");
+	void enviar_paginas_modificadas(char *segmento, t_list *suTablaDePaginas)
+	{
+		puts("Chequeando una tabla de paginas");
+		void enviar_si_esta_modificada(filaTabPags * fila)
+		{
+			puts("Chequeando tiene una fila modificada");
+			if(fila->flagModificado)
+			{
+				puts("Se encontro una pagina modificada");
+				cod_op codOp = CODIGO_INSERT;
+
+				if(quien_pidio(instruccion) == CONSOLA_KERNEL)
+				{
+					puts("El journal lo pidio Kernel");
+					codOp += BASE_CONSOLA_KERNEL;
+				}
+				else
+				{
+					puts("El journal lo pidio Memoria");
+					codOp += BASE_CONSOLA_MEMORIA;
+				}
+
+				instr_t* instruccionAEnviar = fila_a_instr(fila, codOp);
+				puts("Se genero la instruccion a enviar");
+				enviar_request(instruccionAEnviar, conexionConFS);
+				puts("Se envio el request");
+				list_destroy(instruccionAEnviar->parametros); //No hacemos free a sus elementos xq son punteros a la Memoria Principal
+				free(instruccionAEnviar);
+				puts("Se vacio la lista y se destruyeron sus elementos");
+			}
+		}
+
+
+
+		list_iterate(suTablaDePaginas, (void *)enviar_si_esta_modificada);
+
+	}
+
+	dictionary_iterator(tablaDeSegmentos, (void *)enviar_paginas_modificadas);
+
+//	limpiar_memoria(); TODO
+
+	puts("Se recorrieron todas las paginas");
+	t_list *listaParam = list_create();
+	char *cadena = "Journal realizado.";
+	list_add(listaParam, cadena);
+	cod_op codOp = CODIGO_EXITO;
+	imprimir_donde_corresponda(codOp, instruccion, listaParam);
+}
+
+instr_t	 *fila_a_instr(filaTabPags* fila, cod_op codOp){
+	registro* suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
+	puts("Se tienen los datos de la pagina");
+	return registro_a_instr(suRegistro, codOp);
+}
+
+instr_t *registro_a_instr(registro* unRegistro, cod_op codOp){
+
+	t_list* listaParam  = list_create();
+	list_add(listaParam, &(unRegistro->key));
+	list_add(listaParam, unRegistro->value);
+
+	puts("Se va a crear la instruccion");
+	return crear_instruccion(unRegistro->timestamp, codOp, listaParam);
 }

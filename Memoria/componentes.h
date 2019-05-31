@@ -58,4 +58,10 @@ filaTabPags* fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 filaTabPags* fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, int* indiceEnTabla);
 filaTabPags* fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada);
 
+
+/* JOURNAL */
+void ejecutar_instruccion_journal(instr_t *instruccion);
+instr_t	 *fila_a_instr(filaTabPags* fila, cod_op codOp);
+instr_t *registro_a_instr(registro* unRegistro, cod_op codOp);
+
 #endif //COMPONENTES_H

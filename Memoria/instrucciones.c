@@ -179,14 +179,6 @@ void ejecutar_instruccion_exito(instr_t *instruccion)
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, instruccion->parametros);
 }
 
-
-void ejecutar_instruccion_journal(instr_t *instruccion)
-{
-	puts("Ejecutando instruccion Journal");
-	int conexionFS = obtener_fd_out("FileSystem");
-	enviar_request(instruccion, conexionFS);
-}
-
 void ejecutar_instruccion_error(instr_t * instruccion)
 {
 	imprimir_donde_corresponda(instruccion->codigo_operacion, instruccion, instruccion->parametros);

@@ -55,4 +55,6 @@ void ejecutar_instruccion_drop(instr_t *instruccion, char *remitente);
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
 int obtener_fd_out(char *proceso);
 
+t_list* insertar_posta(instr_t *instruccion, cod_op* codOp);
+
 #endif /* FILE_SYSTEM_H */
