@@ -84,17 +84,29 @@ void inicializar_FS();
 void finalizar_FS();
 void iniciar_semaforos();
 
-/*MANEJO INTRUCCIONES*/
+/*FUNCIONES AUXILIARES*/
+char* obtener_parametro(instr_t*, int);
+int obtener_particion_key(char*, int);
+_Bool es_registro_mas_reciente(void*, void*);
 
+
+/*FUNCIONES DE BLOQUES*/ //TODO hacer
+//--------------importante:NO ME RECONOCE REGISTRO_T
+
+t_list* leer_archivos_temporales(char*, uint16_t);
+//void escribir_bloque(registro_t*);
+void eliminar_archivos(char*);
+
+
+metadata_t* obtener_metadata_tabla(char*); //TODO definir esta funcion
+
+/*MANEJO INTRUCCIONES*/
 void evaluar_instruccion(instr_t*);
 int execute_create(instr_t*);
 int execute_insert(instr_t*);
 int execute_select(instr_t*);
-int execute_describe(instr_t*);
+int execute_describe(instr_t*); //TODO hacer
 int execute_drop(instr_t*);
-
-char* obtener_parametro(instr_t*, int);
-void leer_metadata_tabla(char*, metadata_t*);
 
 /*EJEMPLO INTRUCCIONES*/ //para testeo
 void ejemplo_instr_create();
@@ -104,7 +116,6 @@ void ejemplo_instr_describe();
 void ejemplo_instr_drop();
 
 /*MANEJO DE CADENAS*/
-
 char* concat(char*, char*);
 char* concat3(char*, char*, char*);
 

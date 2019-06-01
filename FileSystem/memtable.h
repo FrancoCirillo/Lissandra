@@ -13,21 +13,29 @@ typedef struct registro_t {
 
 t_dictionary* memtable;
 
+// --------FUNCIONES DE MEMTABLE--------
 void inicializar_memtable();
 void finalizar_memtable();
-void borrar_lista_registros(void*);
-void borrar_registro(void*);
 void limpiar_memtable();
-int existe_tabla(char*);
-void eliminar_tabla_de_mem(char*);
-t_list* crear_lista_registros();
-void agregar_tabla(char*);
-void agregar_registro(char*, registro_t*);
-t_list* obtener_registros(char*, uint16_t);
-_Bool es_registro_mas_reciente(void*, void*);
-registro_t* obtener_registro_mas_reciente(char*, uint16_t);
 
-registro_t* pasar_a_registro(instr_t*); //TODO hacer!!
+// --------FUNCIONES DE REGISTROS--------
+t_list* crear_lista_registros();
+void borrar_lista_registros(void*);
+void agregar_registro(char*, registro_t*);
+void borrar_registro(void*);
+registro_t* pasar_a_registro(instr_t*);
+t_list* obtener_registros_mem(char*, uint16_t);
+
+//VAN EN FILE SYSTEM!!
+registro_t* obtener_registro_mas_reciente(t_list*);
+t_list* obtener_registros_key(char*, uint16_t);
+registro_t* leer_binario(char*, uint16_t); //va en fileSystem
+
+// --------FUNCIONES DE TABLAS--------
+int existe_tabla(char*);
+void agregar_tabla(char*);
+void eliminar_tabla_de_mem(char*);
+
 
 void dumpear(t_dictionary*);
 void dumpeo();

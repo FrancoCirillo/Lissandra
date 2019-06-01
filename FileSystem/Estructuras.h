@@ -26,12 +26,12 @@ void leer_metadata_FS();		//es un único archivo
 int cant_bloques_disp();
 
 void  crear_directorio(char *,char *);
+void eliminar_directorio(char*); //TODO hacer
 FILE* crear_archivo(char*, char*, char*);
 int  crear_particiones(instr_t*);
 void  crear_bloque(char*);
 void  crear_bloques();
 void  crear_metadata(instr_t*);
-//leer_metadata_tabla(???) TODO definir esta funcion
 
 
 void archivo_inicializar(FILE *);

@@ -49,7 +49,7 @@ void agregar_registro(char* tabla, registro_t* registro){
 	list_add(registros_tabla, registro);
 }
 
-t_list* obtener_registros(char* tabla, uint16_t key){
+t_list* obtener_registros_mem(char* tabla, uint16_t key){
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 
 	_Bool es_key_registro(void* registro){
@@ -60,17 +60,25 @@ t_list* obtener_registros(char* tabla, uint16_t key){
 	return list_filter(registros_tabla, &es_key_registro);
 }
 
-registro_t* obtener_registro_mas_reciente(char* tabla, uint16_t key){
-	t_list* registros_de_key = obtener_registros(tabla, key);
+//TODO borrar
+registro_t* obtener_registro_mas_reciente(t_list* registros_de_key){
 	list_sort(registros_de_key, &es_registro_mas_reciente);
 	return list_get(registros_de_key, 0);
 }
-
 
 _Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
 	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
 	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
 	return (_Bool)(ts_un_registro > ts_otro_registro);
+}
+
+registro_t* pasar_a_registro(instr_t* instr){
+	registro_t* registro = malloc(sizeof(registro_t));
+	registro->key = (uint16_t) atoi(obtener_parametro(instr, 1));
+	registro->value = obtener_parametro(instr, 2); //tengo que hacer algun malloc?
+	char* timestamp = obtener_parametro(instr, 3);
+	registro->timestamp = string_a_mseg(timestamp);
+	return registro;
 }
 
 void dumpear(t_dictionary* mem) {
@@ -113,7 +121,7 @@ void dumpeo() {
 //	char*tabla =obtener_parametro(instr, 0);
 //	nuevo_reg->key = (uint16_t) atoi(obtener_parametro(instr, 1));
 //	nuevo_reg->value = obtener_parametro(instr, 2);
-	//nuevo_reg->timestamp = (mseg_t)obtener_parametro(instr, 3);
+//	nuevo_reg->timestamp = (mseg_t)obtener_parametro(instr, 3);
 
 	//Ver si recibimos el TS, sino, hay que validar aca y agregarlo.
 
