@@ -93,11 +93,13 @@ _Bool es_registro_mas_reciente(void*, void*);
 /*FUNCIONES DE BLOQUES*/ //TODO hacer
 //--------------importante:NO ME RECONOCE REGISTRO_T
 
+//registro_t* leer_binario(char*, uint16_t);
 t_list* leer_archivos_temporales(char*, uint16_t);
 //void escribir_bloque(registro_t*);
 void eliminar_archivos(char*);
 
-
+//registro_t* obtener_registro_mas_reciente(t_list*);
+//t_list* obtener_registros_key(char*, uint16_t);
 metadata_t* obtener_metadata_tabla(char*); //TODO definir esta funcion
 
 /*MANEJO INTRUCCIONES*/

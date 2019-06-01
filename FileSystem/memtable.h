@@ -36,7 +36,8 @@ int existe_tabla(char*);
 void agregar_tabla(char*);
 void eliminar_tabla_de_mem(char*);
 
-
+void escribir_registro_bloque(registro_t*, FILE*); //TODO hacer
+void dumpear_tabla(char*, void*);
 void dumpear(t_dictionary*);
 void dumpeo();
 

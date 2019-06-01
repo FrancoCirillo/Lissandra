@@ -28,6 +28,7 @@ int cant_bloques_disp();
 void  crear_directorio(char *,char *);
 void eliminar_directorio(char*); //TODO hacer
 FILE* crear_archivo(char*, char*, char*);
+void crear_tmp(char*); //TODO obtener nro de tmp y luego crear_archivo(nro_tmp, tabla, ".tmp")
 int  crear_particiones(instr_t*);
 void  crear_bloque(char*);
 void  crear_bloques();

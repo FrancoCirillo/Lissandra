@@ -178,7 +178,7 @@ int execute_select(instr_t* instr) {
 	registro_t* registro = pasar_a_registro(instr);
 	int key = registro->key; //Hacer funcion obtener_key(registro_t*)???
 	t_list* registros_key = obtener_registros_key(tabla, key);
-	registro_t* registro_reciente = obtener_registro_mas_reciente(registros_key);
+	registro_t* registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
 	return CODIGO_EXITO;
 }
 
@@ -208,14 +208,14 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
 	registro_t* registro_bin = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
 
-	t_list* registros_totales = list_create(); //FREE!
+	t_list* registros_totales = crear_lista_registros();
 	list_add_all(registros_totales, registros_mem);
 	list_add_all(registros_totales, registros_temp);
 	list_add(registros_totales, registro_bin);
 	return registros_totales;
 }
 
-//
+
 //registro_t* obtener_registro_mas_reciente(t_list* registros_de_key){
 //	list_sort(registros_de_key, &es_registro_mas_reciente);
 //	return list_get(registros_de_key, 0);

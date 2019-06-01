@@ -47,6 +47,7 @@ void agregar_tabla(char* tabla){
 void agregar_registro(char* tabla, registro_t* registro){
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	list_add(registros_tabla, registro);
+	loggear_FS("Se inserto el registro en la memtable.");
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key){
@@ -60,7 +61,7 @@ t_list* obtener_registros_mem(char* tabla, uint16_t key){
 	return list_filter(registros_tabla, &es_key_registro);
 }
 
-//TODO borrar
+//TODO borrar cuando se resuelva
 registro_t* obtener_registro_mas_reciente(t_list* registros_de_key){
 	list_sort(registros_de_key, &es_registro_mas_reciente);
 	return list_get(registros_de_key, 0);
@@ -76,15 +77,29 @@ registro_t* pasar_a_registro(instr_t* instr){
 	registro_t* registro = malloc(sizeof(registro_t));
 	registro->key = (uint16_t) atoi(obtener_parametro(instr, 1));
 	registro->value = obtener_parametro(instr, 2); //tengo que hacer algun malloc?
-	char* timestamp = obtener_parametro(instr, 3);
-	registro->timestamp = string_a_mseg(timestamp);
+	registro->timestamp = instr->timestamp; //se supone que la instr siempre tiene ts y nos abstrae de validar si el ts viene en los parametros
 	return registro;
 }
 
-void dumpear(t_dictionary* mem) {
 
-	//list_iterate(mem, bajar_tabla()); no es mas lista
-	//
+
+void dumpear_tabla(char* tabla, void* registros){
+	(t_list*) registros;
+
+	crear_tmp(tabla);
+	void escribir_reg_en_tmp(void* registro){
+		(registro_t*) registro;
+		//bloque = obtener_bloque;
+		//escribir nro de bloque en tmp
+		//escribir_registro_bloque(registro, bloque);
+	}
+
+	list_iterate(registros, &escribir_reg_en_tmp);
+}
+
+void dumpear(t_dictionary* mem) {
+	dictionary_iterator(memtable, &dumpear_tabla);
+
 	//de cada tabla de esa mem, que no es la mem que sigue usando, bajar a los .tmp correspondientes.
 	//Ver bien como hacer esto..
 }
@@ -101,13 +116,15 @@ void dumpeo() {
 
 		mem = memtable;
 
+		dumpear(mem); //tiene que dumpear antes de limpiar
+
 		sem_wait(&mutex_memtable);
 		limpiar_memtable();  //la deja como nueva. sin tablas.
 		sem_post(&mutex_memtable);
 
 		//Ver si aca hay que crear hilo, o espera a que termina el dumpeo de las tablas.
 		//Preguntar en el foro si se hacen dumpeos paralelos.
-		dumpear(mem);
+		//dumpear(mem);
 
 		sem_wait(&mutex_tiempo_dump_config);
 		tiempo_dump = obtener_tiempo_dump_config();	//Primero guardar variables y despues bloquearlas, y usarlas.
@@ -116,15 +133,6 @@ void dumpeo() {
 }
 
 //esto no compila.
-//void mem_agregar_reg(instr_t* instr) { //crea el struct registro_t y lo agrega a los registros de la tabla correspondiente
-//	registro_t* nuevo_reg = malloc(sizeof(registro_t));
-//	char*tabla =obtener_parametro(instr, 0);
-//	nuevo_reg->key = (uint16_t) atoi(obtener_parametro(instr, 1));
-//	nuevo_reg->value = obtener_parametro(instr, 2);
-//	nuevo_reg->timestamp = (mseg_t)obtener_parametro(instr, 3);
-
-	//Ver si recibimos el TS, sino, hay que validar aca y agregarlo.
-
 	//TODO obtener_nodo_tabla --> obtiene el nodo de la tabla a la que le quiero agregar un registro
 	//mem_tabla_t* nodo_tabla = mem_obtener_nodo_tabla(tabla);
 
@@ -133,7 +141,7 @@ void dumpeo() {
 	//Ver si agregamos mas info del registro en el log.
 //}
 
-//Lo que fala es mem_obtener_nodo_tabla().
+//Lo que falta es mem_obtener_nodo_tabla().
 //mem_tabla_t* mem_obtener_nodo_tabla(char*){
 //	int i = memtable->elements_count;
 //	int j=0;
@@ -142,9 +150,6 @@ void dumpeo() {
 //
 //	return NULL;
 //}
-
-
-
 
 
 void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
