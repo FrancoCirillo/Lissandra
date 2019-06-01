@@ -39,8 +39,8 @@ int main() {
 
 	iniciar_ejecutador();
 
-	//inicializar_kernel();
-	iniciar_consola();
+	inicializar_kernel();
+	//iniciar_consola();
 	loggear("### FINALIZANDO KERNEL ###");
 	sleep(2);
 	loggear("### KERNEL FINALIZADO ###");
@@ -387,7 +387,7 @@ instr_t* enviar_i(instr_t* i){
 	loggear("Agrego a diccionario");
 
 	sem_wait(&mutex_diccionario_enviados);
-	printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
+	//printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
 	dictionary_put(diccionario_enviados, obtener_ultimo_parametro(i), h);
 	sem_post(&mutex_diccionario_enviados);
 
@@ -450,7 +450,7 @@ int obtener_fd_memoria(instr_t *i){
 	}//Ya obtuve el alias de la memoria
 
 	loggear("Memoria obtenida:");
-	loggear(krn_concat(memoria,alias_memoria));
+	//loggear(krn_concat(memoria,alias_memoria));
 
 	return obtener_fd_out(krn_concat(memoria,alias_memoria));
 }
