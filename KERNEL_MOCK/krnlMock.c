@@ -74,7 +74,8 @@ int main(int argc, char *argv[])
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
-
+	int hilo = 1;
+	list_add(instruccion->parametros, &hilo);
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
 			ejecutar_instruccion_error(instruccion);
 	}

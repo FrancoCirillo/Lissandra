@@ -63,5 +63,8 @@ filaTabPags* fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada);
 void ejecutar_instruccion_journal(instr_t *instruccion);
 instr_t	 *fila_a_instr(filaTabPags* fila, cod_op codOp);
 instr_t *registro_a_instr(registro* unRegistro, cod_op codOp);
+void limpiar_memoria();
+void limpiar_memoria_principal();
+void limpiar_segmentos();
 
 #endif //COMPONENTES_H

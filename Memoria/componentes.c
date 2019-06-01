@@ -393,7 +393,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 	dictionary_iterator(tablaDeSegmentos, (void *)enviar_paginas_modificadas);
 
-//	limpiar_memoria(); TODO
+	limpiar_memoria();
 
 	puts("Se recorrieron todas las paginas");
 	t_list *listaParam = list_create();
@@ -417,4 +417,30 @@ instr_t *registro_a_instr(registro* unRegistro, cod_op codOp){
 
 	puts("Se va a crear la instruccion");
 	return crear_instruccion(unRegistro->timestamp, codOp, listaParam);
+}
+
+void limpiar_memoria(){
+	puts("Limpiando mem ppal");
+	limpiar_memoria_principal();
+	puts("Limpiando segmentos");
+	limpiar_segmentos();
+	puts("Segmentos limpios");
+}
+
+
+void limpiar_memoria_principal(){
+	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool)); //Ahora indica que todos los sectores de la memoria se pueden sobreescribir
+	//Supongo que no hace falta que hagamos un memset en 0 a la Memoria Principal en si
+}
+
+void limpiar_segmentos(){
+
+	void limpiar_tabla_de_paginas(char *segmento, t_list *suTablaDePaginas)
+		{
+			list_destroy_and_destroy_elements(suTablaDePaginas, (void*)free);
+		}
+
+	dictionary_iterator(tablaDeSegmentos, (void *)limpiar_tabla_de_paginas);
+
+	dictionary_clean(tablaDeSegmentos); //No dictionary_clean_and_destroy_elements porque ya los limpio arriba
 }
