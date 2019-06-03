@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	list_add(listaParam, "Kernel");
 	list_add(listaParam, IP_KERNEL);
 	list_add(listaParam, "4444");
-	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+	instr_t * miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
 	if (argc > 1)
 	{
@@ -63,9 +63,11 @@ int main(int argc, char *argv[])
 		dictionary_put(conexionesActuales, "Memoria_9", idsNuevasConexiones);
 	}
 
-	int listenner = iniciar_servidor(IP_KERNEL, "4444");
+	g_logger = log_create(configuracion.RUTA_LOG, "KernelMock", 1, LOG_LEVEL_INFO);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL);
+	int listenner = iniciar_servidor(IP_KERNEL, "4444", g_logger);
+
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger);
 
 	//config_destroy(g_config);
 
@@ -172,7 +174,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 void ejecutar_instruccion_exito(instr_t *instruccion)
 {
-	loggear_exito(instruccion);
+	loggear_exito(instruccion,g_logger);
 }
 
 void ejecutar_instruccion_select(instr_t *instruccion)
@@ -209,7 +211,7 @@ void ejecutar_instruccion_run(instr_t *instruccion)
 
 void ejecutar_instruccion_error(instr_t * instruccion)
 {
-	loggear_error(instruccion);
+	loggear_error(instruccion, g_logger);
 }
 
 
@@ -246,12 +248,6 @@ int obtener_fd_out(char *proceso)
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;
-}
-void loggear(char *valor)
-{
-	g_logger = log_create(configuracion.RUTA_LOG, "KernalMock", 1, LOG_LEVEL_INFO);
-	log_info(g_logger, valor);
-	log_destroy(g_logger);
 }
 
 char *obtener_por_clave(char *ruta, char *clave)

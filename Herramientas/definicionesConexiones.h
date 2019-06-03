@@ -5,6 +5,7 @@
 
 #include <commons/collections/list.h>
 #include "tiempo.h"
+#include <errno.h>
 #include <inttypes.h>
 #define IP_FILESYSTEM "127.0.0.2"
 #define IP_MEMORIA "127.0.0.3"

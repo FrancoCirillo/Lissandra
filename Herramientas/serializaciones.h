@@ -113,7 +113,7 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente);
  * Si hay un error al recibir el ts o la operación devuelve el el código de error
  * Devuelve 1 en exito
  */
-int recibir_request(int socket_cliente, instr_t **instruccion);
+int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger);
 
 
 /*
@@ -121,15 +121,15 @@ int recibir_request(int socket_cliente, instr_t **instruccion);
  *
  * Devuelve el resultado del recv
  */
-int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp);
+int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp, t_log *logger);
 
 
 /*
- * Recibe cod_op bytes del socket cliente
+ * Recibe cod_op bytes del socket cliente, el Codigo de Operacion.
  *
  * Devuelve el resultado del recv
  */
-int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion);
+int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion, t_log *logger);
 
 
 /*
@@ -203,13 +203,13 @@ void imprimir_registro(instr_t *instruccion);
 /*
  * Imprime el primer parametro de instruccion
  */
-void loggear_exito(instr_t *miInstruccion);
+void loggear_exito(instr_t *miInstruccion, t_log* logger);
 
 
 /*
  * Imprime el primer parametro de instruccion, en rojo
  */
-void loggear_error(instr_t *miInstruccion);
+void loggear_error(instr_t *miInstruccion, t_log* logger);
 
 /*
  * Imprime un diccionario de conexiones
@@ -217,11 +217,17 @@ void loggear_error(instr_t *miInstruccion);
 void imprimir_conexiones(t_dictionary *diccionario);
 
 /*
- * Conversion de char* a uint_t
+ * Conversion de char* a uint16_t
  * Sirve para poder usar el parametro Key
  *
  */
 bool str_to_uint16(char *str, uint16_t *res);
+
+/*
+ * Conversion de uint16_t a char*
+ * La usamos para manejarnos siempre con char* en los parametros de las instr_t*
+ */
+void uint16_to_str(uint16_t key, char** keyChar);
 
 /*
  * Devuelve el último parametro de la instruccion.

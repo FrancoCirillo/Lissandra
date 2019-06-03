@@ -10,12 +10,23 @@ void gran_malloc_inicial()
 	{
 		log_error(g_logger, "No se pudo reservar espacio para la memoria principal");
 	}
-	log_info(g_logger, "Espacio para la memoria principal reservada");
+	log_debug(debug_logger, "Espacio para la memoria principal reservada");
 }
 void inicializar_tabla_segmentos()
 {
 	tablaDeSegmentos = dictionary_create();
 	paginasSegunUso = list_create();
+}
+
+void inicializar_sectores_memoria()
+{
+	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue;
+	cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro; //Se trunca automaticamente al entero (por ser todos int)
+
+	log_debug(debug_logger, "cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro);
+
+	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
+	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool));
 }
 
 t_list *nueva_tabla_de_paginas()
@@ -50,7 +61,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		}
 		else
 		{ //Algoritmo de reemplazo:
-			puts("Ejecutando el algoritmo de reemplazo");
+			log_debug(debug_logger, "Ejecutando el algoritmo de reemplazo");
 			int *numeroDeSector = pagina_lru();
 
 			int indiceEnTabla = 0;
@@ -194,11 +205,11 @@ void imprimir_tabla_de_paginas(t_list *tablaDePaginas)
 
 	void iterator(filaTabPags * fila)
 	{
-		printf(" ~~~~~~~~~~~~~~~~~~~~\n");
-		printf(" Numero de pagina: %d\n", fila->numeroDePagina);
-		printf(" Puntero a pagina: %p\n", fila->ptrPagina);
-		printf("  Registro en memo: \n%s", pagina_a_str(fila->ptrPagina));
-		printf(" Flag modificado : %d\n", fila->flagModificado);
+		log_debug(debug_logger, " ~~~~~~~~~~~~~~~~~~~~\n");
+		log_debug(debug_logger, " Numero de pagina: %d\n", fila->numeroDePagina);
+		log_debug(debug_logger, " Puntero a pagina: %p\n", fila->ptrPagina);
+		log_debug(debug_logger, "  Registro en memo: \n%s", pagina_a_str(fila->ptrPagina));
+		log_debug(debug_logger, " Flag modificado : %d\n", fila->flagModificado);
 	}
 
 	list_iterate(tablaDePaginas, (void *)iterator);
@@ -349,43 +360,43 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 
 void ejecutar_instruccion_journal(instr_t *instruccion)
 {
-	puts("Ejecutando instruccion Journal");
+	log_info(g_logger, "Ejecutando instruccion Journal");
 	int conexionConFS = obtener_fd_out("FileSystem");
 
-	puts("Se encontro el fd_out");
+	log_debug(debug_logger, "Se encontro el fd_out");
 	void enviar_paginas_modificadas(char *segmento, t_list *suTablaDePaginas)
 	{
-		puts("Chequeando una tabla de paginas");
+		char* tablaAInsertar = segmento;
+		printf("Tabla a insertar: %s\n", tablaAInsertar);
+		log_debug(debug_logger, "Chequeando una tabla de paginas");
 		void enviar_si_esta_modificada(filaTabPags * fila)
 		{
-			puts("Chequeando tiene una fila modificada");
+			log_debug(debug_logger, "Chequeando tiene una fila modificada");
 			if(fila->flagModificado)
 			{
-				puts("Se encontro una pagina modificada");
+				log_debug(debug_logger, "Se encontro una pagina modificada");
 				cod_op codOp = CODIGO_INSERT;
 
 				if(quien_pidio(instruccion) == CONSOLA_KERNEL)
 				{
-					puts("El journal lo pidio Kernel");
+					log_debug(debug_logger, "El journal lo pidio Kernel");
 					codOp += BASE_CONSOLA_KERNEL;
 				}
 				else
 				{
-					puts("El journal lo pidio Memoria");
+					log_debug(debug_logger, "El journal lo pidio Memoria");
 					codOp += BASE_CONSOLA_MEMORIA;
 				}
 
-				instr_t* instruccionAEnviar = fila_a_instr(fila, codOp);
-				puts("Se genero la instruccion a enviar");
+				printf("Cod op:%d\n", codOp);
+				instr_t* instruccionAEnviar = fila_a_instr(tablaAInsertar, fila, codOp);
+				log_debug(debug_logger, "Se genero la instruccion a enviar");
 				enviar_request(instruccionAEnviar, conexionConFS);
-				puts("Se envio el request");
 				list_destroy(instruccionAEnviar->parametros); //No hacemos free a sus elementos xq son punteros a la Memoria Principal
 				free(instruccionAEnviar);
-				puts("Se vacio la lista y se destruyeron sus elementos");
+				log_debug(debug_logger, "Se vacio la lista y se destruyeron sus elementos");
 			}
 		}
-
-
 
 		list_iterate(suTablaDePaginas, (void *)enviar_si_esta_modificada);
 
@@ -395,7 +406,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 	limpiar_memoria();
 
-	puts("Se recorrieron todas las paginas");
+	log_debug(debug_logger, "Se recorrieron todas las paginas");
 	t_list *listaParam = list_create();
 	char *cadena = "Journal realizado.";
 	list_add(listaParam, cadena);
@@ -403,28 +414,41 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	imprimir_donde_corresponda(codOp, instruccion, listaParam);
 }
 
-instr_t	 *fila_a_instr(filaTabPags* fila, cod_op codOp){
+instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp){
 	registro* suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
-	puts("Se tienen los datos de la pagina");
-	return registro_a_instr(suRegistro, codOp);
+	printf("1Tabla a insertar: %s\n", tablaAInsertar);
+	log_debug(debug_logger, "Se tienen los datos de la pagina");
+	return registro_a_instr(tablaAInsertar, suRegistro, codOp);
 }
 
-instr_t *registro_a_instr(registro* unRegistro, cod_op codOp){
+instr_t *registro_a_instr(char* tablaAInsertar,registro* unRegistro, cod_op codOp){
+	printf("Registro: %s\n", registro_a_str(unRegistro));
+	printf("T:%s\n", tablaAInsertar);
 
+	char keyChar[6];
 	t_list* listaParam  = list_create();
-	list_add(listaParam, &(unRegistro->key));
+	list_add(listaParam, tablaAInsertar);
+	uint16_t key = unRegistro->key;
+	snprintf(keyChar, 6,"%d", key);
+	list_add(listaParam, keyChar);
 	list_add(listaParam, unRegistro->value);
 
-	puts("Se va a crear la instruccion");
-	return crear_instruccion(unRegistro->timestamp, codOp, listaParam);
+	instr_t* instruccionCreada = crear_instruccion(unRegistro->timestamp, codOp, listaParam);
+	printf("Timestamp: %"PRIu64"\n",	instruccionCreada->timestamp);
+	printf("CodigoInstruccion: %d\n", 	instruccionCreada->codigo_operacion);
+	printf("Tabla: %s\n", 				(char *)list_get(instruccionCreada->parametros, 0));
+	printf("Key: %s\n", 				(char *)list_get(instruccionCreada->parametros, 1));
+	printf("Key posta: %s\n", keyChar);
+	printf("Value: %s\n",				(char *)list_get(instruccionCreada->parametros, 2));
+	return instruccionCreada;
 }
 
 void limpiar_memoria(){
-	puts("Limpiando mem ppal");
+	log_debug(debug_logger, "Limpiando mem ppal");
 	limpiar_memoria_principal();
-	puts("Limpiando segmentos");
+	log_debug(debug_logger, "Limpiando segmentos");
 	limpiar_segmentos();
-	puts("Segmentos limpios");
+	log_debug(debug_logger, "Segmentos limpios");
 }
 
 
@@ -444,3 +468,20 @@ void limpiar_segmentos(){
 
 	dictionary_clean(tablaDeSegmentos); //No dictionary_clean_and_destroy_elements porque ya los limpio arriba
 }
+
+
+void *ejecutar_journal(){
+
+    t_list *listaParam = list_create();
+    int i = 0;
+    list_add(listaParam, &i);
+    instr_t* miInstruccion = crear_instruccion(obtener_ts(), CONSOLA_MEM_JOURNAL, listaParam);
+
+	while(1)
+	{
+		sleep(15);
+		ejecutar_instruccion_journal(miInstruccion);
+	}
+}
+
+

@@ -131,17 +131,17 @@ t_list *recibir_paquete(int socket_cliente)
 	return NULL;
 }
 
-int recibir_request(int socket_cliente, instr_t **instruccion)
+int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger)
 {
 	mseg_t nuevoTimestamp;
 	cod_op nuevoCodOp;
 	t_list *listaParam;
 
-	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp); //return en error
+	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp, logger); //return en error
 	if (t <= 0)
 		return t;
 
-	t = recibir_operacion(socket_cliente, &nuevoCodOp);
+	t = recibir_operacion(socket_cliente, &nuevoCodOp, logger);
 	if (t <= 0)
 		return t;
 
@@ -155,31 +155,26 @@ int recibir_request(int socket_cliente, instr_t **instruccion)
 	return 1;
 }
 
-//TODO: usar logger
-int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp)
+int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp,  t_log *logger)
 {
 	int r = recv(socket_cliente, nuevoTimestamp, sizeof(mseg_t), MSG_WAITALL);
-	if (r == 0)
-	{
-		perror("El cliente se desconecto: ");
-	}
 	if (r < 0)
 	{
-		perror("Error en el recv: ");
+		log_error(logger, "Error en el recv: %s\n", strerror(errno));
 	}
 	return r;
 }
 
-int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion)
+int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion, t_log* logger)
 {
 	int r = recv(socket_cliente, nuevaOperacion, sizeof(cod_op), MSG_WAITALL);
 	if (r == 0)
 	{
-		perror("El cliente se desconecto: ");
+		log_error(logger, "El cliente se desconecto en el medio de una recepción.");
 	}
 	if (r < 0)
 	{
-		perror("Error en el recv: ");
+		log_error(logger, "Error en el recv: %s\n", strerror(errno));
 	}
 	return r;
 }
@@ -384,13 +379,13 @@ void imprimir_registro(instr_t *instruccion)
 }
 
 //Todo: usar logger
-void loggear_error(instr_t *miInstruccion)
+void loggear_error(instr_t *miInstruccion, t_log* logger)
 {
-	printf(COLOR_ANSI_ROJO "%s\n" COLOR_ANSI_RESET, (char *)list_get(miInstruccion->parametros, 0));
+	log_warning(logger, (char *)list_get(miInstruccion->parametros, 0));
 }
-void loggear_exito(instr_t *miInstruccion)
+void loggear_exito(instr_t *miInstruccion, t_log* logger)
 {
-	printf("%s\n", (char *)list_get(miInstruccion->parametros, 0));
+	log_info(logger, "%s\n", (char *)list_get(miInstruccion->parametros, 0));
 }
 
 void imprimir_conexiones(t_dictionary *conexAc)
@@ -420,6 +415,9 @@ bool str_to_uint16(char *str, uint16_t *res)
     return true;
 }
 
+void uint16_to_str(uint16_t key, char** keyChar){
+	sprintf((*keyChar), "%d", key);
+}
 
 void* obtener_ultimo_parametro(instr_t* instruccion){
 	return list_get(instruccion->parametros, list_size(instruccion->parametros)-1);

@@ -6,9 +6,8 @@
  * socket() y bind()
  */
 
-int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir)
+int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir, t_log *logger)
 {
-	logger = log_create("log.log", "Servidor", 1, LOG_LEVEL_DEBUG); //TODO: recibirlo por parametro (Cada proceso tiene su logger)
 	int socket_servidor;
 
 	struct addrinfo hints, *servinfo; //Estructuras solo para llenar servinfo
@@ -37,19 +36,19 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir)
 	}
 
 	if ((listen(socket_servidor, SOMAXCONN)) < 0)
-	{ //TODO: queremos SO MAX CONNECTIONS?
+	{ //TODO: queremos SO MAX CONNECTIONS?, es 128
 		log_error(logger, "Error al dejar todo listo para escuchar en socket servidor");
 		//TODO: Cerrar socket servidor?
 		return -1;
 	}
 	freeaddrinfo(servinfo);
 
-	log_trace(logger, "Listo para escuchar a mi cliente");
+	log_info(logger, "Listo para escuchar a mi cliente");
 
 	return socket_servidor;
 }
 
-int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), t_dictionary *conexionesConocidas, int queConsola)
+int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), t_dictionary *conexionesConocidas, int queConsola, t_log *logger)
 {
 
 	//Gracias a la guia de Beej:
@@ -81,7 +80,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 		int resultado = select(fdmax + 1, &read_fds, NULL, NULL, NULL);
 		if (resultado == -1)
 		{
-			perror("select");
+			log_error(logger, "Error al realizar el select(): %s\n", strerror(errno));
 		}
 		else if (resultado > 0)
 		{
@@ -97,7 +96,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen);
 						if (newfd == -1)
 						{
-							perror("accept");
+							log_error(logger, "Error al realizar el accept(): %s\n", strerror(errno));
 						}
 						else
 						{
@@ -106,16 +105,16 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande
 
 							instr_t *instruccion_handshake;
-							recibir_request(newfd, &instruccion_handshake);
+							recibir_request(newfd, &instruccion_handshake, logger);
 
 							char *quienEs = (char *)list_get(instruccion_handshake->parametros, 0); //El nombre
-							printf("Se conecto %s\n", quienEs);
+							log_debug(logger, "Se conecto %s\n", quienEs);
 
 							if (dictionary_get(conexionesConocidas, quienEs) != NULL)
 							{ //Ya lo conocia, no tenia su fd_in
 								identificador *miIdentificador = (identificador *)dictionary_get(conexionesConocidas, quienEs);
 								miIdentificador->fd_in = newfd;
-								dictionary_put(conexionesConocidas, quienEs, miIdentificador); //Hace falta? O al cambiar lo apuntado por el puntero ya esta?
+								dictionary_put(conexionesConocidas, quienEs, miIdentificador); //TODO: Hace falta? O al cambiar lo apuntado por el puntero ya esta?
 							}
 							else
 							{
@@ -136,7 +135,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 					}
 					else if (i == 0)
 					{ //Recibido desde la consola
-						fgets(bufferLeido, 100, stdin);
+						fgets(bufferLeido, TAMANIO_MAX_INPUT_CONSOLA, stdin);
 						instr_t *request_recibida = leer_a_instruccion(bufferLeido, queConsola);
 						if (request_recibida != NULL)
 							ejecutar_requestRecibido(request_recibida, 0);
@@ -146,23 +145,20 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 					{// Ya se había hecho accept en el fd
 						//recibir los mensajes
 						instr_t *instrcuccion_recibida;
-						int recibo = recibir_request(i, &instrcuccion_recibida);
+						int recibo = recibir_request(i, &instrcuccion_recibida, logger);
+						char auxFd[4];
+						sprintf(auxFd, "%d", i); //Para poder usarlo como key en el diccionario
+						char* quienLoEnvia = dictionary_get(auxiliarConexiones, auxFd);
 
 						if (recibo == 0)
 						{
-							printf(COLOR_ANSI_ROJO "El cliente se desconecto" COLOR_ANSI_RESET "\n"); //TODO: Agregar logger
+							log_warning(logger, "El cliente '%s'se desconecto\n", quienLoEnvia);
 							FD_CLR(i, &master);
-							char auxFd[4];
-							sprintf(auxFd, "%d", newfd); //Para poder usarlo como key en el diccionario
-							char* desconectado = dictionary_get(auxiliarConexiones, auxFd);
-							dictionary_remove(conexionesConocidas, desconectado);
+							dictionary_remove(conexionesConocidas, quienLoEnvia); //No and_destroy porque se libera solo afuera del else
 						}
 
 						else
 						{ //Se recibio una instruccion desde otro proceso
-							char auxFd[4];
-							sprintf(auxFd, "%d", i);
-							char *quienLoEnvia = dictionary_get(auxiliarConexiones, auxFd);
 							ejecutar_requestRecibido(instrcuccion_recibida, quienLoEnvia);
 						}
 

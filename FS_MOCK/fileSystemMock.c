@@ -11,9 +11,11 @@ int main()
 
 	inicializar_configuracion();
 
-	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
+	g_logger = log_create(configuracion.RUTA_LOG, "MockFS", 1, LOG_LEVEL_INFO);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS);
+	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT, g_logger);
+
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS, g_logger);
 
 	return 0;
 }
@@ -133,18 +135,26 @@ void ejecutar_instruccion_insert(instr_t *instruccion, char *remitente)
 
 t_list* insertar_posta(instr_t *instruccion, cod_op* codOp){
 	//Hacer lo que verdaderamente hace el insert
+	puts("iNSERTANDO POSTA");
 	int salioBien = 1; //Seria la operacion en sí
 	t_list *listaParam = list_create();
 	char cadena[400];
 	list_add(listaParam, cadena);
-
 	if(salioBien){
+		printf(
+				"Se inserto %s | %s | %s | %"PRIu64,
+				(char *)list_get(instruccion->parametros, 0),
+				(char *)list_get(instruccion->parametros, 1),
+				(char *)list_get(instruccion->parametros, 2),
+				(mseg_t)instruccion->timestamp);
+
 		sprintf(cadena,
 				"Se inserto %s | %s | %s | %"PRIu64,
 				(char *)list_get(instruccion->parametros, 0),
 				(char *)list_get(instruccion->parametros, 1),
 				(char *)list_get(instruccion->parametros, 2),
 				(mseg_t)instruccion->timestamp);
+//		printf("\n\n%s\n", cadena);
 		*codOp = CODIGO_EXITO;
 	}
 	else{
@@ -230,11 +240,11 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		}
 		if (codigoOperacion == CODIGO_EXITO)
 		{
-			loggear_exito(miInstruccion);
+			loggear_exito(miInstruccion, g_logger);
 		}
 		if (codigoOperacion > BASE_COD_ERROR)
 		{
-			loggear_error(miInstruccion);
+			loggear_error(miInstruccion, g_logger);
 		}
 		break;
 	}
@@ -244,19 +254,12 @@ void inicializar_configuracion()
 {
 	puts("Configuracion:");
 	char *rutaConfig = "fsMock.config";
-	puts("Config accedido.");
 	configuracion.PUERTO_ESCUCHA = obtener_por_clave(rutaConfig, "PUERTO_ESCUCHA");
 	configuracion.TAMANIO_VALUE = atoi(obtener_por_clave(rutaConfig, "TAMANIO_VALUE"));
 	configuracion.TIEMPO_DUMP = atoi(obtener_por_clave(rutaConfig, "TIEMPO_DUMP"));
 	configuracion.RUTA_LOG = obtener_por_clave(rutaConfig, "RUTA_LOG");
 }
 
-void loggear(char *valor)
-{
-	g_logger = log_create(configuracion.RUTA_LOG, "fs", 1, LOG_LEVEL_INFO);
-	log_info(g_logger, valor);
-	log_destroy(g_logger);
-}
 
 char *obtener_por_clave(char *ruta, char *clave)
 {

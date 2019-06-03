@@ -15,12 +15,12 @@ t_dictionary *tablaDeSegmentos;
 
 /* MEMORIA PRINCIPAL */
 void gran_malloc_inicial();
+void inicializar_sectores_memoria();
 void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag);
 void actualizar_pagina(void* paginaAActualizar, mseg_t nuevoTimestamp, char* nuevoValue);
 registro *obtener_registro_de_instruccion(instr_t *instruccion);
 int get_proximo_sector_disponible();
 bool memoria_esta_full();
-void ejecutar_journal();
 
 /* TABLA DE PAGINAS */
 filaTabPags *agregar_fila_tabla(t_list * tablaDePaginas, int numPag, void* pagina, bool flagMod);
@@ -61,8 +61,9 @@ filaTabPags* fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada);
 
 /* JOURNAL */
 void ejecutar_instruccion_journal(instr_t *instruccion);
-instr_t	 *fila_a_instr(filaTabPags* fila, cod_op codOp);
-instr_t *registro_a_instr(registro* unRegistro, cod_op codOp);
+void *ejecutar_journal(); //Job para el journal
+instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp);
+instr_t *registro_a_instr(char* tablaAInsertar, registro* unRegistro, cod_op codOp);
 void limpiar_memoria();
 void limpiar_memoria_principal();
 void limpiar_segmentos();

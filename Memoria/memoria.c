@@ -6,33 +6,22 @@ int main(int argc, char *argv[])
 {
 
 	check_inicial(argc, argv);
-	iniciar_log();
-	iniciar_config();
 	inicializar_configuracion();
-	conexionesActuales = dictionary_create();
-	idsNuevasConexiones = malloc(sizeof(identificador));
+	iniciar_log();
 
-	callback = ejecutar_instruccion;
+	inicializar_semaforos();
 
-	enviar_datos_a_FS(argv);
-	int listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO);
+
+	inicializar_estructuras_conexiones();
+	empezar_conexiones(argv);
+//	iniciar_ejecutador_journal();
 
 	//recibir el tamanio del Value
-
-	gran_malloc_inicial();
-	inicializar_tabla_segmentos();
-
 	tamanioValue = 32;
-	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue;
 
-	cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro; //Se trunca automaticamente al entero (por ser todos int)
+	inicializar_estructuras_memoria();
 
-	printf("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro);
-
-	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
-	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool));
-
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA, g_logger);
 	//config_destroy(g_config);
 
 	return 0;
@@ -40,6 +29,7 @@ int main(int argc, char *argv[])
 
 void inicializar_configuracion()
 {
+	g_config = config_create("memoria.config");
 	puts("Configuracion:");
 	char *rutaConfig = "memoria.config";
 	configuracion.PUERTO = obtener_por_clave(rutaConfig, "PUERTO");
@@ -59,13 +49,8 @@ void inicializar_configuracion()
 
 void iniciar_log()
 {
-	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_INFO);
-
-}
-
-void iniciar_config()
-{
-	g_config = config_create("memoria.config");
+	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
+	debug_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 0, LOG_LEVEL_TRACE);
 }
 
 char *obtener_por_clave(char *ruta, char *clave)
@@ -77,36 +62,63 @@ char *obtener_por_clave(char *ruta, char *clave)
 	return valor;
 }
 
+void inicializar_semaforos()
+{
+	sem_init(&mutex_journal, 0,1);
+}
+
+void inicializar_estructuras_conexiones()
+{
+	conexionesActuales = dictionary_create();
+	idsNuevasConexiones = malloc(sizeof(identificador));
+	callback = ejecutar_instruccion;
+}
+
+void empezar_conexiones(char *argv[])
+{
+	enviar_datos_a_FS(argv);
+	listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO, g_logger);
+}
+
+
+void inicializar_estructuras_memoria()
+{
+	gran_malloc_inicial();
+	inicializar_sectores_memoria();
+	inicializar_tabla_segmentos();
+
+}
+
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
 	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
-		puts("Me llego un codigo de error");
+		log_debug(debug_logger, "Me llego un codigo de error");
 		ejecutar_instruccion_error(instruccion);
 	}
 	else{
 		switch (codigoNeto)
 		{
 		case CODIGO_SELECT:
-			sleep(3);
+//			sleep(3);
 			ejecutar_instruccion_select(instruccion);
 			break;
 		case DEVOLUCION_SELECT:
 			ejecutar_instruccion_devolucion_select(instruccion);
 			break;
 		case CODIGO_INSERT:
-			sleep(3);
+//			sleep(3);
 			ejecutar_instruccion_insert(instruccion, true);
 			break;
 		case CODIGO_CREATE:
-			sleep(3);
+//			sleep(3);
 			ejecutar_instruccion_create(instruccion);
 			break;
 		case CODIGO_DESCRIBE:
 			ejecutar_instruccion_describe(instruccion);
 			break;
 		case CODIGO_DROP:
-			sleep(3);
+//			sleep(3);
 			ejecutar_instruccion_drop(instruccion);
 			break;
 		case CODIGO_JOURNAL:
@@ -123,17 +135,26 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 	}
 }
 
-
+void iniciar_ejecutador_journal(){
+	log_debug(debug_logger, "Iniciando ejecutador journal");
+	pthread_t hilo_ejecutador_journal;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_ejecutador_journal,&attr, &ejecutar_journal, NULL);
+	pthread_detach(hilo_ejecutador_journal);
+	log_debug(debug_logger, "Ejecutador iniciado journal");
+}
 
 void check_inicial(int argc, char* argv[])
 {
 	if (argc < 2 || strcmp(argv[1], "4") == 0 || strcmp(argv[1], "2") == 0)
 	{
 		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
-		puts("<NUMERERO-DE-MEMORIA> Funcionales por el momento: 3, 8, 9");
-		puts("Tampoco se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
+
+		puts("No se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
 		puts("Tampoco se puede elegir el numero 2 porque es el IP que (Por el momento, testing) usa el FS");
 
+		puts("\nMockKernel por el momento usa las memorias 3 y/u 8 y/o 9");
 		exit(0);
 	}
 

@@ -31,14 +31,14 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		}
 		else
 		{
-//			puts("La key no se encontro en Memoria. Consultando al FS");
+			log_debug(debug_logger, "La key no se encontro en Memoria. Consultando al FS");
 			int conexionFS = obtener_fd_out("FileSystem");
 			enviar_request(instruccion, conexionFS);
 		}
 	}
 	else
 	{
-//		puts("La tabla no se encontro en Memoria. Consultando al FS");
+		log_debug(debug_logger, "La tabla no se encontro en Memoria. Consultando al FS");
 		int conexionFS = obtener_fd_out("FileSystem");
 		enviar_request(instruccion, conexionFS);
 	}
@@ -46,7 +46,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 {
-//	puts("FS devolvio la tabla solicitada.");
+	log_debug(debug_logger, "FS devolvio la tabla solicitada.");
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
 	se_uso(paginaInsertada);
 	t_list *listaParam = list_create();
@@ -64,7 +64,7 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
 {
-	if(flagMod) puts("Ejecutando instruccion Insert"); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
+	if(flagMod) log_info(g_logger, "Ejecutando instruccion Insert"); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
 
 	int numeroDePaginaInsertada;
 
@@ -85,15 +85,15 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 1:
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
 			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-//			printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+			log_debug(debug_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 
 			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-//			puts("Tabla de paginas actual: (Nueva)");
-//			imprimir_tabla_de_paginas(suTablaDePaginas);
-//			printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+			log_debug(debug_logger, "\nTabla de paginas actual: (Nueva)");
+			imprimir_tabla_de_paginas(suTablaDePaginas);
+			log_debug(debug_logger, " ~~~~~~~~~~~~~~~~~~~~\n");
 
 			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 		}
@@ -112,9 +112,9 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
 				filaEncontrada->flagModificado = flagMod;
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
-//				puts("\n\nTabla de paginas actual: (Key preexistente)");
-//				imprimir_tabla_de_paginas(suTablaDePaginas);
-//				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+				log_debug(debug_logger, "\nTabla de paginas actual: (Key preexistente)");
+				imprimir_tabla_de_paginas(suTablaDePaginas);
+				log_debug(debug_logger, "~~~~~~~~~~~~~~~~~~~~\n");
 
 				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
 			}
@@ -123,11 +123,11 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 3:
 			else{ //No existia la key en ese segment
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-				printf("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+				log_debug(debug_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-				puts("Tabla de paginas actual: (Fila nueva)");
-//				imprimir_tabla_de_paginas(suTablaDePaginas);
-//				printf(" ~~~~~~~~~~~~~~~~~~~~\n");
+				log_debug(debug_logger, "Tabla de paginas actual: (Fila nueva)");
+				imprimir_tabla_de_paginas(suTablaDePaginas);
+				log_debug(debug_logger, "~~~~~~~~~~~~~~~~~~~~\n");
 
 				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 			}
@@ -152,24 +152,25 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 void ejecutar_instruccion_create(instr_t *instruccion)
 {
-	puts("Ejecutando instruccion Create");
+	log_info(g_logger, "Ejecutando instruccion Create");
 	int conexionFS = obtener_fd_out("FileSystem");
 	enviar_request(instruccion, conexionFS);
 }
 
 void ejecutar_instruccion_describe(instr_t *instruccion)
 {
-	puts("Ejecutando instruccion Describe");
-	puts("La tabla no se encontro en Memoria. Consultando al FS");
+	log_info(g_logger, "Ejecutando instruccion Describe");
+	log_debug(debug_logger, "La tabla no se encontro en Memoria. Consultando al FS");
 	int conexionFS = obtener_fd_out("FileSystem");
-	puts("Se tiene el fd_out");
-	if(enviar_request(instruccion, conexionFS)==-1) puts("No se envio");
-	puts("Se envio al FS");
+	log_debug(debug_logger, "Se tiene el fd_out");
+	if(enviar_request(instruccion, conexionFS)==-1) log_error(g_logger, "No se envio el Describe al FS");
+	log_debug(debug_logger, "Se envio al FS");
 }
 
 void ejecutar_instruccion_drop(instr_t *instruccion)
 {
-	puts("Ejecutando instruccion Drop");
+	log_info(g_logger, "Ejecutando instruccion Drop");
+
 	int conexionFS = obtener_fd_out("FileSystem");
 	enviar_request(instruccion, conexionFS);
 }

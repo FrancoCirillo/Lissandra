@@ -30,9 +30,9 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 	default:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		if (codigoOperacion == CODIGO_EXITO)
-			loggear_exito(miInstruccion);
+			loggear_exito(miInstruccion, g_logger);
 		if (codigoOperacion > BASE_COD_ERROR){
-			loggear_error(miInstruccion);
+			loggear_error(miInstruccion, g_logger);
 		}
 		break;
 	}

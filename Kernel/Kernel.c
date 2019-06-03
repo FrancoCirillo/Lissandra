@@ -77,8 +77,8 @@ void inicializar_kernel(){
 	dictionary_put(conexionesActuales, "Memoria_3", idsNuevasConexiones);
 	sem_post(&mutex_conexiones_actuales);
 
-	int listenner = iniciar_servidor(IP_KERNEL, "4444");
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL);
+	int listenner = iniciar_servidor(IP_KERNEL, "4444", g_logger);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger);
 
 }
 
