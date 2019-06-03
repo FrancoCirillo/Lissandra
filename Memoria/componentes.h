@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <semaphore.h>
 #include "admin.h"
 #include "../Herramientas/definicionesConexiones.h"
 #include "../Herramientas/serializaciones.h"
@@ -60,6 +61,7 @@ filaTabPags* fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada);
 
 
 /* JOURNAL */
+sem_t mutex_journal;
 void ejecutar_instruccion_journal(instr_t *instruccion);
 void *ejecutar_journal(); //Job para el journal
 instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp);

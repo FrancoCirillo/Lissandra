@@ -11,10 +11,9 @@ int main(int argc, char *argv[])
 
 	inicializar_semaforos();
 
-
 	inicializar_estructuras_conexiones();
 	empezar_conexiones(argv);
-//	iniciar_ejecutador_journal();
+	iniciar_ejecutador_journal();
 
 	//recibir el tamanio del Value
 	tamanioValue = 32;
@@ -92,6 +91,7 @@ void inicializar_estructuras_memoria()
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
 	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
+	sem_wait(&mutex_journal);
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
 		log_debug(debug_logger, "Me llego un codigo de error");
 		ejecutar_instruccion_error(instruccion);
@@ -133,6 +133,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			break;
 		}
 	}
+	sem_post(&mutex_journal);
 }
 
 void iniciar_ejecutador_journal(){

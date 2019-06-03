@@ -5,7 +5,8 @@
 
 void ejecutar_instruccion_select(instr_t *instruccion)
 {
-	puts("Ejecutando instruccion Select");
+	log_info(g_logger, "Ejecutando instruccion Select");
+	usleep(configuracion.RETARDO_MEMORIA * 1000);
 	char* tabla = (char *)list_get(instruccion->parametros, 0);
 	t_list *suTablaDePaginas = segmento_de_esa_tabla(tabla);
 	if (suTablaDePaginas != NULL) //El segmento ya existia, se encontro su tabla de paginas
@@ -33,14 +34,20 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		{
 			log_debug(debug_logger, "La key no se encontro en Memoria. Consultando al FS");
 			int conexionFS = obtener_fd_out("FileSystem");
-			enviar_request(instruccion, conexionFS);
+			usleep(configuracion.RETARDO_FS * 1000);
+			if(enviar_request(instruccion, conexionFS)==-1){
+				log_error(g_logger, "No se logro enviar el Select al FS");
+			}
 		}
 	}
 	else
 	{
 		log_debug(debug_logger, "La tabla no se encontro en Memoria. Consultando al FS");
 		int conexionFS = obtener_fd_out("FileSystem");
-		enviar_request(instruccion, conexionFS);
+		usleep(configuracion.RETARDO_FS * 1000);
+		if(enviar_request(instruccion, conexionFS)==-1){
+			log_error(g_logger, "No se logro enviar el Select al FS");
+		}
 	}
 }
 
@@ -65,7 +72,7 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
 {
 	if(flagMod) log_info(g_logger, "Ejecutando instruccion Insert"); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
-
+	usleep(configuracion.RETARDO_MEMORIA * 1000);
 	int numeroDePaginaInsertada;
 
 	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
@@ -154,25 +161,32 @@ void ejecutar_instruccion_create(instr_t *instruccion)
 {
 	log_info(g_logger, "Ejecutando instruccion Create");
 	int conexionFS = obtener_fd_out("FileSystem");
-	enviar_request(instruccion, conexionFS);
+	usleep(configuracion.RETARDO_FS * 1000);
+	if(enviar_request(instruccion, conexionFS)==-1){
+		log_error(g_logger, "No se envio el Create al FS");
+	}
 }
 
 void ejecutar_instruccion_describe(instr_t *instruccion)
 {
 	log_info(g_logger, "Ejecutando instruccion Describe");
-	log_debug(debug_logger, "La tabla no se encontro en Memoria. Consultando al FS");
 	int conexionFS = obtener_fd_out("FileSystem");
-	log_debug(debug_logger, "Se tiene el fd_out");
-	if(enviar_request(instruccion, conexionFS)==-1) log_error(g_logger, "No se envio el Describe al FS");
-	log_debug(debug_logger, "Se envio al FS");
+	usleep(configuracion.RETARDO_FS * 1000);
+	if(enviar_request(instruccion, conexionFS)==-1){
+		log_error(g_logger, "No se envio el Describe al FS");
+	}
 }
 
 void ejecutar_instruccion_drop(instr_t *instruccion)
 {
+	usleep(configuracion.RETARDO_MEMORIA * 1000);
 	log_info(g_logger, "Ejecutando instruccion Drop");
 
 	int conexionFS = obtener_fd_out("FileSystem");
-	enviar_request(instruccion, conexionFS);
+	usleep(configuracion.RETARDO_FS * 1000);
+	if(enviar_request(instruccion, conexionFS)==-1){
+		log_error(g_logger, "No se envio el Drop al FS");
+	}
 }
 
 void ejecutar_instruccion_exito(instr_t *instruccion)

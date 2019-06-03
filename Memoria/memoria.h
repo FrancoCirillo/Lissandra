@@ -31,7 +31,7 @@ config configuracion;
 void inicializar_configuracion();
 void iniciar_log();
 char *obtener_por_clave(char *ruta, char *clave);
-sem_t mutex_journal;
+
 
 	/* CONEXIONES */
 

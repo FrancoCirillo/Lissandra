@@ -388,7 +388,6 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 					codOp += BASE_CONSOLA_MEMORIA;
 				}
 
-				printf("Cod op:%d\n", codOp);
 				instr_t* instruccionAEnviar = fila_a_instr(tablaAInsertar, fila, codOp);
 				log_debug(debug_logger, "Se genero la instruccion a enviar");
 				enviar_request(instruccionAEnviar, conexionConFS);
@@ -416,14 +415,12 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp){
 	registro* suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
-	printf("1Tabla a insertar: %s\n", tablaAInsertar);
 	log_debug(debug_logger, "Se tienen los datos de la pagina");
 	return registro_a_instr(tablaAInsertar, suRegistro, codOp);
 }
 
 instr_t *registro_a_instr(char* tablaAInsertar,registro* unRegistro, cod_op codOp){
-	printf("Registro: %s\n", registro_a_str(unRegistro));
-	printf("T:%s\n", tablaAInsertar);
+	log_debug(debug_logger, "Registro: %s\n", registro_a_str(unRegistro));
 
 	char* keyChar = malloc(sizeof(int));
 	t_list* listaParam  = list_create();
@@ -434,12 +431,6 @@ instr_t *registro_a_instr(char* tablaAInsertar,registro* unRegistro, cod_op codO
 	list_add(listaParam, unRegistro->value);
 
 	instr_t* instruccionCreada = crear_instruccion(unRegistro->timestamp, codOp, listaParam);
-	printf("Timestamp: %"PRIu64"\n",	instruccionCreada->timestamp);
-	printf("CodigoInstruccion: %d\n", 	instruccionCreada->codigo_operacion);
-	printf("Tabla: %s\n", 				(char *)list_get(instruccionCreada->parametros, 0));
-	printf("Key: %s\n", 				(char *)list_get(instruccionCreada->parametros, 1));
-	printf("Key posta: %s\n", keyChar);
-	printf("Value: %s\n",				(char *)list_get(instruccionCreada->parametros, 2));
 	return instruccionCreada;
 }
 
@@ -479,8 +470,10 @@ void *ejecutar_journal(){
 
 	while(1)
 	{
-		sleep(15);
+		usleep(configuracion.RETARDO_JOURNAL * 1000);
+		sem_wait(&mutex_journal);
 		ejecutar_instruccion_journal(miInstruccion);
+		sem_post(&mutex_journal);
 	}
 }
 

@@ -10,21 +10,6 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-extern t_log *g_logger;
-extern t_log *debug_logger;
-extern t_config *g_config;
-extern int tamanioValue;
-extern int tamanioRegistro;
-extern char nombreDeMemoria[12];
-extern bool* sectorOcupado;
-extern int cantidadDeSectores;
-extern t_dictionary *conexionesActuales;
-extern char miIPMemoria[18];
-extern char nombreDeMemoria[12];
-extern identificador *idsNuevasConexiones;
-
-extern t_dictionary *tablaDeSegmentos;
-
 typedef struct config
 {
 	char *PUERTO;
@@ -48,6 +33,21 @@ typedef struct registro
 	char* value;
 } registro;
 
+extern t_log *g_logger;
+extern t_log *debug_logger;
+extern t_config *g_config;
+extern config configuracion;
+extern int tamanioValue;
+extern int tamanioRegistro;
+extern char nombreDeMemoria[12];
+extern bool* sectorOcupado;
+extern int cantidadDeSectores;
+extern t_dictionary *conexionesActuales;
+extern char miIPMemoria[18];
+extern char nombreDeMemoria[12];
+extern identificador *idsNuevasConexiones;
+
+extern t_dictionary *tablaDeSegmentos;
 
 typedef struct filatabPags
 {
