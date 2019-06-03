@@ -425,11 +425,11 @@ instr_t *registro_a_instr(char* tablaAInsertar,registro* unRegistro, cod_op codO
 	printf("Registro: %s\n", registro_a_str(unRegistro));
 	printf("T:%s\n", tablaAInsertar);
 
-	char keyChar[6];
+	char* keyChar = malloc(sizeof(int));
 	t_list* listaParam  = list_create();
 	list_add(listaParam, tablaAInsertar);
 	uint16_t key = unRegistro->key;
-	snprintf(keyChar, 6,"%d", key);
+	sprintf(keyChar, "%d", key);
 	list_add(listaParam, keyChar);
 	list_add(listaParam, unRegistro->value);
 
