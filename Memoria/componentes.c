@@ -371,7 +371,8 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	loggear_debug(debug_logger, &mutex_log, string_from_format("Se encontro el fd_out"));
 	void enviar_paginas_modificadas(char *segmento, t_list *suTablaDePaginas)
 	{
-		char* tablaAInsertar = segmento;
+		char* tablaAInsertar = string_from_format("%s", segmento);
+
 		printf("Tabla a journalear: %s\n", tablaAInsertar);
 		loggear_debug(debug_logger, &mutex_log, string_from_format("Chequeando una tabla de paginas"));
 		void enviar_si_esta_modificada(filaTabPags * fila)
@@ -397,13 +398,16 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 				loggear_debug(debug_logger, &mutex_log, string_from_format("Se genero la instruccion a enviar"));
 				enviar_request(instruccionAEnviar, conexionConFS);
 				list_destroy(instruccionAEnviar->parametros); //No hacemos free a sus elementos xq son punteros a la Memoria Principal
-				free(instruccionAEnviar);
 				loggear_debug(debug_logger, &mutex_log, string_from_format("Se vacio la lista y se destruyeron sus elementos"));
+				free(instruccionAEnviar);
+				loggear_debug(debug_logger, &mutex_log, string_from_format("free(instruccionAEnviar)"));
 			}
 		}
 
 		list_iterate(suTablaDePaginas, (void *)enviar_si_esta_modificada);
 
+		free(tablaAInsertar); //malloc en string_from_format
+		loggear_debug(debug_logger, &mutex_log, string_from_format("free(tablaAInsertar)"));
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)enviar_paginas_modificadas);
@@ -426,13 +430,13 @@ instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp){
 
 instr_t *registro_a_instr(char* tablaAInsertar,registro* unRegistro, cod_op codOp){
 	loggear_debug(debug_logger, &mutex_log, string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
-
-	char* keyChar = malloc(sizeof(int));
 	t_list* listaParam  = list_create();
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Lista param creada\n"));
 	list_add(listaParam, tablaAInsertar);
-	uint16_t key = unRegistro->key;
-	sprintf(keyChar, "%d", key);
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Nombre de la tabla a insertar agregado\n"));
+	char* keyChar = string_from_format("%d", unRegistro->key);
 	list_add(listaParam, keyChar);
+
 	list_add(listaParam, unRegistro->value);
 
 	instr_t* instruccionCreada = crear_instruccion(unRegistro->timestamp, codOp, listaParam);
