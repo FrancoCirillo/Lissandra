@@ -35,6 +35,7 @@ typedef struct registro
 } registro;
 
 extern sem_t mutex_log;
+extern sem_t mutex_journal;
 extern t_log *g_logger;
 extern t_log *debug_logger;
 extern t_config *g_config;

@@ -45,7 +45,7 @@ registro *obtener_registro_de_pagina(void* pagina);
 
 char* pagina_a_str(void* pagina);
 char* registro_a_str(registro* registro);
-void imprimir_tabla_de_paginas(t_list* tablaDePaginas);
+void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log* logger);
 
 
 /* ALGORITMO DE REEMPLAZO */
@@ -70,4 +70,9 @@ void limpiar_memoria();
 void limpiar_memoria_principal();
 void limpiar_segmentos();
 
+
+/* SHOW */
+void mostrar_paginas(instr_t* instruccion);
+void imprimir_segmento(char* nombreSegmento, t_list* suTablaDePaginas);
+void imprimir_segmento_basico(char* nombreSegmento, t_list* suTablaDePaginas);
 #endif //COMPONENTES_H

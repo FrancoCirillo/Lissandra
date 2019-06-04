@@ -191,8 +191,7 @@ registro *obtener_registro_de_pagina(void *pagina)
 
 char *registro_a_str(registro *registro)
 {
-	char *regString = malloc(450);
-	sprintf(regString, "	Timestamp:	%"PRIu64"\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
+	char* regString = string_from_format("	Timestamp:	%"PRIu64"\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
 	return regString;
 }
 
@@ -201,19 +200,24 @@ char *pagina_a_str(void *pagina)
 	return registro_a_str(obtener_registro_de_pagina(pagina));
 }
 
-void imprimir_tabla_de_paginas(t_list *tablaDePaginas)
+void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log* logger)
 {
+
+	char* texto = string_new();
 
 	void iterator(filaTabPags * fila)
 	{
-		loggear_debug(debug_logger, &mutex_log, string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
-		loggear_debug(debug_logger, &mutex_log, string_from_format(" Numero de pagina: %d\n", fila->numeroDePagina));
-		loggear_debug(debug_logger, &mutex_log, string_from_format(" Puntero a pagina: %p\n", fila->ptrPagina));
-		loggear_debug(debug_logger, &mutex_log, string_from_format("  Registro en memo: \n%s", pagina_a_str(fila->ptrPagina)));
-		loggear_debug(debug_logger, &mutex_log, string_from_format(" Flag modificado : %d\n", fila->flagModificado));
+		char* paginaStr = pagina_a_str(fila->ptrPagina);
+		string_append_with_format(&texto, " ~~~~~~~~~~~~~~~~~~~~\n"); //No le gusta todo en un solo append
+		string_append_with_format(&texto, " Numero de pagina: %d\n", fila->numeroDePagina);
+		string_append_with_format(&texto, " Puntero a pagina: %p\n", fila->ptrPagina);
+		string_append_with_format(&texto, "  Pagina en memo: \n%s", paginaStr);
+		string_append_with_format(&texto, " Flag modificado : %d\n", fila->flagModificado);
+		free(paginaStr);
 	}
 
 	list_iterate(tablaDePaginas, (void *)iterator);
+	loggear_info(logger, &mutex_log, texto);
 }
 
 void se_uso(int paginaUtilizada){
@@ -368,7 +372,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	void enviar_paginas_modificadas(char *segmento, t_list *suTablaDePaginas)
 	{
 		char* tablaAInsertar = segmento;
-		printf("Tabla a insertar: %s\n", tablaAInsertar);
+		printf("Tabla a journalear: %s\n", tablaAInsertar);
 		loggear_debug(debug_logger, &mutex_log, string_from_format("Chequeando una tabla de paginas"));
 		void enviar_si_esta_modificada(filaTabPags * fila)
 		{
@@ -481,9 +485,41 @@ void *ejecutar_journal()
 
 int eliminar_tabla(instr_t* instruccion)
 {
-	t_list* segmentoABorrar = segmento_de_esa_tabla((char*)list_get(instruccion->parametros, 0));
+	char* tablaABorrar = (char*)list_get(instruccion->parametros, 0);
+	t_list* segmentoABorrar = segmento_de_esa_tabla(tablaABorrar);
+
+	dictionary_remove(tablaDeSegmentos, tablaABorrar);
 	list_destroy_and_destroy_elements(segmentoABorrar, (void*)free);
+
 	return 0;
 }
 
 
+void imprimir_segmento(char* nombreSegmento, t_list* suTablaDePaginas){
+
+	loggear_info(g_logger, &mutex_log, string_from_format("Tabla: %s\n", nombreSegmento));
+	loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+}
+
+void imprimir_segmento_basico(char* nombreSegmento, t_list* suTablaDePaginas){
+	char* texto = string_new();
+	string_append_with_format(&texto, "------------------------\n");
+	string_append_with_format(&texto, "Tabla: %s\n", nombreSegmento);
+
+	void iterator(filaTabPags* fila){
+		char* paginaStr = pagina_a_str(fila->ptrPagina);
+		string_append(&texto, paginaStr);
+		free(paginaStr);
+	}
+	list_iterate(suTablaDePaginas, (void *)iterator);
+	loggear_info(g_logger, &mutex_log, texto);
+}
+
+void mostrar_paginas(instr_t* instruccion){
+	if(list_get(instruccion->parametros, 0) != NULL){
+		dictionary_iterator(tablaDeSegmentos,(void*) imprimir_segmento);
+	}
+	else{
+		dictionary_iterator(tablaDeSegmentos,(void*) imprimir_segmento_basico);
+	}
+}

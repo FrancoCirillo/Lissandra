@@ -257,9 +257,6 @@ cod_op reconocer_comando(char *comando)
 	if (strcmp(comando, "SELECT") == 0)
 		return CODIGO_SELECT;
 
-	else if (strcmp(comando, "DEVOLUCION_SELECT") == 0)
-		return DEVOLUCION_SELECT;
-
 	else if (strcmp(comando, "INSERT") == 0)
 		return CODIGO_INSERT;
 
@@ -283,6 +280,9 @@ cod_op reconocer_comando(char *comando)
 
 	else if (strcmp(comando, "METRICS") == 0)
 		return CODIGO_METRICS;
+
+	else if (strcmp(comando, "SHOW") == 0)
+			return CODIGO_SHOW;
 
 	else
 		return INPUT_ERROR;
@@ -324,6 +324,9 @@ int es_comando_valido(cod_op comando, t_list *listaParam)
 	case INPUT_ERROR:
 		return -1;
 		break;
+
+	case CODIGO_SHOW: //Para testing
+		return 1;
 
 	default:
 		return -1;

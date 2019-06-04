@@ -65,6 +65,7 @@ void inicializar_semaforos()
 {
 	sem_init(&mutex_log, 0,1);
 	sem_init(&mutex_journal, 0, 1);
+
 }
 
 void inicializar_estructuras_conexiones()
@@ -125,8 +126,12 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			ejecutar_instruccion_exito(instruccion);
 			break;
 
+		case CODIGO_SHOW:
+			mostrar_paginas(instruccion);
+			break;
+
 		default:
-			puts("El comando no pertenece a la Memoria");
+			loggear_info(g_logger,&mutex_log, string_from_format("El comando no pertenece a la memoria"));
 			break;
 		}
 	}
@@ -157,11 +162,5 @@ void check_inicial(int argc, char* argv[])
 	}
 
 	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
-}
-
-void loggear(char *valor) {
-	sem_wait(&mutex_log);
-	log_info(g_logger, valor);
-	sem_post(&mutex_log);
 }
 

@@ -99,7 +99,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 			log_debug(debug_logger, "\nTabla de paginas actual: (Nueva)");
-			imprimir_tabla_de_paginas(suTablaDePaginas);
+			loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
 			log_debug(debug_logger, " ~~~~~~~~~~~~~~~~~~~~\n");
 
 			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
@@ -120,7 +120,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				filaEncontrada->flagModificado = flagMod;
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
 				log_debug(debug_logger, "\nTabla de paginas actual: (Key preexistente)");
-				imprimir_tabla_de_paginas(suTablaDePaginas);
+				loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
 				log_debug(debug_logger, "~~~~~~~~~~~~~~~~~~~~\n");
 
 				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
@@ -133,7 +133,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				log_debug(debug_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 				log_debug(debug_logger, "Tabla de paginas actual: (Fila nueva)");
-				imprimir_tabla_de_paginas(suTablaDePaginas);
+				loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
 				log_debug(debug_logger, "~~~~~~~~~~~~~~~~~~~~\n");
 
 				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
