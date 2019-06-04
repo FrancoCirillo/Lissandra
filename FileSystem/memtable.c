@@ -84,12 +84,15 @@ registro_t* pasar_a_registro(instr_t* instr){
 
 
 void dumpear_tabla(char* tabla, void* registros){
-	crear_tmp(tabla);
-	void escribir_reg_en_tmp(void* registro){
-		int nro_bloque = siguiente_bloque_disponible();
-		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-		//escribir nro de bloque en tmp
-		escribir_registro_bloque((registro_t*)registro, ruta_bloque); //este warnings es porque esta comentado en estructuras.h
+	if(cant_bloques_disp() == 0){
+			//Tirar error
+	}
+	char* ruta_tmp = crear_tmp(tabla);  //cuando se crea, tiene que ser sin bloques!!!
+	int nro_bloque = siguiente_bloque_disponible();
+	agregar_bloque_archivo(ruta_tmp, nro_bloque);
+	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+	void escribir_reg_en_tmp(void* registro) {
+		escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp); //este warnings es porque esta comentado en estructuras.h
 	}
 
 	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
