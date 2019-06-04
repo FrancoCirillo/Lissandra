@@ -39,6 +39,30 @@ int cant_bloques_disp(){
 	return 100;   // TODO Ver con el bit array.
 }
 
+char* obtener_path_metadata(char* tabla){
+	return string_from_format("%s/%s/Metadata.config", RUTA_TABLAS, tabla);
+}
+
+t_config* obtener_metadata(char* tabla){
+	char* path = string_new();
+	path = obtener_path_metadata(tabla);
+	return config_create(path); //hay que hacer config_destroy
+}
+
+int obtener_part_metadata(char* tabla){
+	t_config* metadata = obtener_metadata(tabla);
+	return config_get_int_value(metadata, "PARTITIONS");
+}
+
+char* obtener_consistencia_metadata(char* tabla){
+	t_config* metadata = obtener_metadata(tabla);
+	return config_get_string_value(metadata, "CONSISTENCY");
+}
+
+int obtener_tiempo_compactacion_metadata(char* tabla){
+	t_config* metadata = obtener_metadata(tabla);
+	return config_get_int_value(metadata, "COMPACTATION_TIME");
+}
 
 //*****************************************************************
 //De aca para abajo estan corregidos y funcionan sin memory leaks.
@@ -74,21 +98,21 @@ int crear_particiones(instr_t* i) {
 
 void crear_metadata(instr_t* instr) {
 	char* tabla = obtener_parametro(instr, 0);
-	FILE* f = crear_archivo("Metadata", tabla, "");
+	FILE* f = crear_archivo("Metadata", tabla, ".config"); //se lo agregue para usar las commons
 	metadata_inicializar(f, instr);
 	fclose(f);
-	char* mje = malloc(sizeof(char) * (40 + strlen(tabla)));
+	char* mensaje = malloc(sizeof(char) * (40 + strlen(tabla)));
 
-	sprintf(mje, "Se creó el metadata en la tabla \"%s\".", tabla);
-	loggear_FS(mje);
-	free(mje);
+	sprintf(mensaje, "Se creó el metadata en la tabla \"%s\".", tabla);
+	loggear_FS(mensaje);
+	free(mensaje);
 }
 
-void metadata_inicializar(FILE* f, instr_t* i) {
-	char* consist = obtener_parametro(i, 1);
-	char* part = obtener_parametro(i, 2);
-	char* time = obtener_parametro(i, 3);
-	fprintf(f, "%s%s%s%s%s%s%s", "CONSISTENCY = ", consist, "\nPARTITIONS = ", part, "\nCOMPACTATION_TIME = ", time, "\n");
+void metadata_inicializar(FILE* f, instr_t* instr) {
+	char* consist = obtener_parametro(instr, 1);
+	char* part = obtener_parametro(instr, 2);
+	char* time = obtener_parametro(instr, 3);
+	fprintf(f, "%s%s%s%s%s%s%s", "CONSISTENCY=", consist, "\nPARTITIONS=", part, "\nCOMPACTATION_TIME=", time, "\n");
 }
 
 //Inicializa con size = 0, y el array de Blocks con un bloque asignado.
@@ -100,7 +124,7 @@ void archivo_inicializar(FILE* f) {
 	// No hace el fclose(f);
 }
 
-FILE* crear_archivo(char * nombre, char* tabla, char * ext) {
+FILE* crear_archivo(char* nombre, char* tabla, char* ext) {
 	char* ruta = malloc(sizeof(char) * (strlen(RUTA_TABLAS) + strlen(nombre) + strlen(tabla)) + 1 + 1 + strlen(ext));
 	sprintf(ruta, "%s%s%s%s%s", RUTA_TABLAS, tabla, "/", nombre, ext);
 	FILE* f = fopen(ruta, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.

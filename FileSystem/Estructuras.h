@@ -21,6 +21,13 @@ void actualizar_tiempo_dump_config(mseg_t);		//ver si le llega mseg_t o un char*
 char* obtener_por_clave(char* , char* );
 int obtener_tiempo_dump_config();
 
+//METADATA TABLAS
+void  crear_metadata(instr_t*);
+t_config* obtener_metadata(char*);
+int obtener_part_metadata(char*);
+char* obtener_consistencia_metadata(char*);
+int obtener_tiempo_compactacion_metadata(char*);
+
 
 void leer_metadata_FS();		//es un único archivo
 int cant_bloques_disp();
@@ -32,7 +39,6 @@ void crear_tmp(char*); //TODO obtener nro de tmp y luego crear_archivo(nro_tmp, 
 int  crear_particiones(instr_t*);
 void  crear_bloque(char*);
 void  crear_bloques();
-void  crear_metadata(instr_t*);
 
 
 void archivo_inicializar(FILE *);
