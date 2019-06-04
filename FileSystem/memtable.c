@@ -84,20 +84,18 @@ registro_t* pasar_a_registro(instr_t* instr){
 
 
 void dumpear_tabla(char* tabla, void* registros){
-	(t_list*) registros;
-
 	crear_tmp(tabla);
 	void escribir_reg_en_tmp(void* registro){
-		(registro_t*) registro;
-		//bloque = obtener_bloque;
+		int nro_bloque = siguiente_bloque_disponible();
+		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 		//escribir nro de bloque en tmp
-		//escribir_registro_bloque(registro, bloque);
+		escribir_registro_bloque((registro_t*)registro, ruta_bloque); //este warnings es porque esta comentado en estructuras.h
 	}
 
-	list_iterate(registros, &escribir_reg_en_tmp);
+	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
 }
 
-void dumpear(t_dictionary* mem) {
+void dumpear(t_dictionary* mem) { //tengo otra forma de hacerlo, si esta no gusta
 	dictionary_iterator(memtable, &dumpear_tabla);
 
 	//de cada tabla de esa mem, que no es la mem que sigue usando, bajar a los .tmp correspondientes.

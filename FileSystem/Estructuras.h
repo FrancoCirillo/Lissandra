@@ -9,6 +9,7 @@
 #define ESTRUCTURAS_H_
 
 #include "fileSystem.h"
+#include <commons/txt.h>
 
 							/*ARCHIVOS*/
 
@@ -39,6 +40,13 @@ void crear_tmp(char*); //TODO obtener nro de tmp y luego crear_archivo(nro_tmp, 
 int  crear_particiones(instr_t*);
 void  crear_bloque(char*);
 void  crear_bloques();
+
+
+//BLOQUES
+int siguiente_bloque_disponible(); //TODO obtener con bitarray
+//char* formatear_registro(registro_t*);
+char* obtener_ruta_bloque(int);
+//void escribir_registro_bloque(registro_t*, char*); ---> NO ME RECONOCE REGISTRO_T
 
 
 void archivo_inicializar(FILE *);

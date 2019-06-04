@@ -39,29 +39,55 @@ int cant_bloques_disp(){
 	return 100;   // TODO Ver con el bit array.
 }
 
-char* obtener_path_metadata(char* tabla){
-	return string_from_format("%s/%s/Metadata.config", RUTA_TABLAS, tabla);
+char* obtener_path_metadata(char* tabla) {
+	return string_from_format("%s/%s/Metadata", RUTA_TABLAS, tabla);
 }
 
-t_config* obtener_metadata(char* tabla){
+t_config* obtener_metadata(char* tabla) {
 	char* path = string_new();
 	path = obtener_path_metadata(tabla);
 	return config_create(path); //hay que hacer config_destroy
 }
 
-int obtener_part_metadata(char* tabla){
+int obtener_part_metadata(char* tabla) {
 	t_config* metadata = obtener_metadata(tabla);
 	return config_get_int_value(metadata, "PARTITIONS");
 }
 
-char* obtener_consistencia_metadata(char* tabla){
+char* obtener_consistencia_metadata(char* tabla) {
 	t_config* metadata = obtener_metadata(tabla);
 	return config_get_string_value(metadata, "CONSISTENCY");
 }
 
-int obtener_tiempo_compactacion_metadata(char* tabla){
+int obtener_tiempo_compactacion_metadata(char* tabla) {
 	t_config* metadata = obtener_metadata(tabla);
 	return config_get_int_value(metadata, "COMPACTATION_TIME");
+}
+
+char* formatear_registro(registro_t* registro) {
+	uint16_t key = registro->key;
+	char* value = registro->value;
+	char* ts = mseg_a_string(registro->timestamp);
+	return string_from_format("%s;%d;%s", ts, key, value);
+}
+
+char* obtener_ruta_bloque(int nro_bloque) {
+	return string_from_format("%s/%d.bin", RUTA_BLOQUES, nro_bloque);
+}
+
+void escribir_registro_bloque(registro_t* registro, char* ruta_bloque) {
+	FILE* bloque = txt_open_for_append(ruta_bloque);
+	char* string_registro = formatear_registro(registro);
+	//if(hay espacio para el registro en el bloque):
+		txt_write_in_file(bloque, string_registro);
+	//else
+	//escribir lo que se pueda en el bloque (txt_write_in_file)
+	//int nro_bloque = siguiente_bloque_disponible();
+	//char* nuevo_bloque = obtener_ruta_bloque(nro_bloque);
+	//FILE* otro_bloque = txt_open_for_append(nuevo_bloque)
+	//escribir lo que queda en el bloque (txt_write_in_file)
+	//txt_close_file_(otro_bloque);
+	txt_close_file(bloque);
 }
 
 //*****************************************************************
@@ -98,7 +124,7 @@ int crear_particiones(instr_t* i) {
 
 void crear_metadata(instr_t* instr) {
 	char* tabla = obtener_parametro(instr, 0);
-	FILE* f = crear_archivo("Metadata", tabla, ".config"); //se lo agregue para usar las commons
+	FILE* f = crear_archivo("Metadata", tabla, "");
 	metadata_inicializar(f, instr);
 	fclose(f);
 	char* mensaje = malloc(sizeof(char) * (40 + strlen(tabla)));
@@ -270,14 +296,14 @@ void inicializar_directorios() {
 
 void leer_metadata_FS() {  //esto se lee una vez.
 
-	char*ruta = "mnj/Lissandra_FS/Metadata/Metadata.bin";
+	char* ruta = "mnj/Lissandra_FS/Metadata/Metadata.bin";
 	meta_config = config_create(ruta);
 	Metadata_FS.block_size = config_get_int_value(meta_config, "BLOCK_SIZE");
 	Metadata_FS.blocks = config_get_int_value(meta_config, "BLOCKS");
 	Metadata_FS.magic_number = config_get_string_value(meta_config, "MAGIC_NUMBER");
 
-	char* mje = malloc(sizeof(char) * 200);
-	sprintf(mje, "%s%s%d%s%d%s%s",
+	char* mensaje = malloc(sizeof(char) * 200);
+	sprintf(mensaje, "%s%s%d%s%d%s%s",
 			"Metadata leído. Los datos son:\n",
 			"BLOCK_SIZE = ",
 			Metadata_FS.block_size,
@@ -286,7 +312,7 @@ void leer_metadata_FS() {  //esto se lee una vez.
 			"\nMAGIC_NUMBER = ",
 			Metadata_FS.magic_number);
 
-	loggear_FS(mje);
-	free(mje);
+	loggear_FS(mensaje);
+	free(mensaje);
 }
 

@@ -88,6 +88,7 @@ void iniciar_semaforos();
 char* obtener_parametro(instr_t*, int);
 int obtener_particion_key(char*, int);
 _Bool es_registro_mas_reciente(void*, void*);
+char* obtener_nombre_tabla(instr_t*);
 
 
 /*FUNCIONES DE BLOQUES*/ //TODO hacer

@@ -134,7 +134,8 @@ void evaluar_instruccion(instr_t* instr) {
 }
 
 int execute_create(instr_t* instr) {
-	char* tabla = obtener_parametro(instr, 0);
+	char* tabla = obtener_nombre_tabla(instr);
+	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
 		agregar_tabla(tabla); //la agrega a la mem
 		crear_directorio(RUTA_TABLAS, tabla);
@@ -157,7 +158,8 @@ int execute_create(instr_t* instr) {
 
 
 int execute_insert(instr_t* instr) { //no esta chequeado
-	char* tabla = obtener_parametro(instr, 0); //nombre tabla
+	char* tabla = obtener_nombre_tabla(instr);
+	//string_to_upper(tabla);
 	registro_t* registro = pasar_a_registro(instr);
 	if (!existe_tabla(tabla)) {
 		return ERROR_INSERT;
@@ -171,7 +173,8 @@ int execute_insert(instr_t* instr) { //no esta chequeado
 
 
 int execute_select(instr_t* instr) {
-	char* tabla = obtener_parametro(instr, 0); //consigue nombre de la tabla
+	char* tabla = obtener_nombre_tabla(instr);
+	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
 		return ERROR_SELECT; //log
 	}
@@ -183,7 +186,8 @@ int execute_select(instr_t* instr) {
 }
 
 int execute_drop(instr_t* instr) {
-	char* tabla = obtener_parametro(instr, 0); //consigue nombre de la tabla
+	char* tabla = obtener_nombre_tabla(instr);
+	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
 		return ERROR_DROP; //log
 	}
@@ -192,6 +196,9 @@ int execute_drop(instr_t* instr) {
 	return CODIGO_EXITO;
 }
 
+char* obtener_nombre_tabla(instr_t* instr) {
+	return obtener_parametro(instr, 0);
+}
 
 char* obtener_parametro(instr_t * instr, int index) {
 	return (char*) list_get(instr->parametros, index);
