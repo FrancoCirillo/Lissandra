@@ -16,12 +16,12 @@
 							/*ARCHIVOS*/
 
 void loggear_FS(char*);
-void loggear_FS_error(char *, instr_t* );
+void loggear_FS_error(char*, instr_t*);
 void inicializar_configuracion(void);
 void inicializar_directorios(void);
 void actualizar_tiempo_retardo_config(mseg_t);   //ver si le llega mseg_t o un char*
 void actualizar_tiempo_dump_config(mseg_t);		//ver si le llega mseg_t o un char*
-char* obtener_por_clave(char* , char* );
+char* obtener_por_clave(char* , char*);
 int obtener_tiempo_dump_config();
 
 //METADATA TABLAS

@@ -76,19 +76,21 @@ char* obtener_ruta_bloque(int nro_bloque) {
 }
 
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
-	FILE* bloque = txt_open_for_append(ruta_bloque);
+	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
 	char* string_registro = formatear_registro(registro);
 	if(tam_registro(registro) <= espacio_restante_bloque(ruta_archivo)) //es < o <= ?
-		txt_write_in_file(bloque, string_registro);
-	//else
-	//escribir lo que se pueda en el bloque (txt_write_in_file)
-	//int nro_bloque = siguiente_bloque_disponible();
-	//agregar_bloque_archivo(ruta_archivo, nro_bloque);
-	//char* nuevo_bloque = obtener_ruta_bloque(nro_bloque);
-	//FILE* archivo_nuevo_bloque = txt_open_for_append(nuevo_bloque)
-	//escribir lo que queda en el bloque (txt_write_in_file)
-	//txt_close_file_(otro_bloque);
-	txt_close_file(bloque);
+		txt_write_in_file(archivo_bloque, string_registro);
+	else {
+		int tam_restante = espacio_restante_bloque(ruta_archivo);
+		txt_write_in_file(archivo_bloque, string_substring_until(string_registro, tam_restante)); //toma los n primeros caracteres del reg
+		int nro_bloque = siguiente_bloque_disponible();
+		agregar_bloque_archivo(ruta_archivo, nro_bloque);
+		char* nuevo_bloque = obtener_ruta_bloque(nro_bloque);
+		FILE* archivo_nuevo_bloque = txt_open_for_append(nuevo_bloque);
+		txt_write_in_file(archivo_nuevo_bloque, string_substring_from(string_registro, tam_restante)); //toma los n ultimos caracteres
+		txt_close_file(archivo_nuevo_bloque);
+	}
+	txt_close_file(archivo_bloque);
 }
 
 //---------------------------BITARRAY---------------------------
