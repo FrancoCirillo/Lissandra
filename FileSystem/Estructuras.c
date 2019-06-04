@@ -39,6 +39,7 @@ int cant_bloques_disp(){
 	return 100;   // TODO Ver con el bit array.
 }
 
+//---------------------------METADATA---------------------------
 char* obtener_path_metadata(char* tabla) {
 	return string_from_format("%s/%s/Metadata", RUTA_TABLAS, tabla);
 }
@@ -64,6 +65,8 @@ int obtener_tiempo_compactacion_metadata(char* tabla) {
 	return config_get_int_value(metadata, "COMPACTATION_TIME");
 }
 
+
+//---------------------------BLOQUES---------------------------
 char* formatear_registro(registro_t* registro) {
 	uint16_t key = registro->key;
 	char* value = registro->value;
@@ -89,6 +92,42 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque) {
 	//txt_close_file_(otro_bloque);
 	txt_close_file(bloque);
 }
+
+//---------------------------BITARRAY---------------------------
+int maximo_bloques(){
+	return Metadata_FS.blocks;
+}
+
+void crear_bitarray() {
+	int bloques_en_bytes = ceil(maximo_bloques()/8);
+	char* miBitarray = string_repeat(0, bloques_en_bytes);
+	bitarray = bitarray_create_with_mode(miBitarray, bloques_en_bytes, LSB_FIRST);
+}
+
+void eliminar_bitarray(){
+	bitarray_destroy(bitarray);
+}
+
+int bloque_esta_ocupado(int nro_bloque) {
+	return  bitarray_test_bit(bitarray, nro_bloque);
+}
+
+int siguiente_bloque_disponible() {
+	int nro_bloque = 0;
+	while(nro_bloque < maximo_bloques() && bloque_esta_ocupado(nro_bloque))
+		nro_bloque++;
+	return nro_bloque;
+}
+
+void ocupar_bloque(int nro_bloque) {
+	bitarray_set_bit(bitarray, nro_bloque);
+}
+
+void liberar_bloque(int nro_bloque) {
+	bitarray_clean_bit(bitarray, nro_bloque);
+}
+
+
 
 //*****************************************************************
 //De aca para abajo estan corregidos y funcionan sin memory leaks.
@@ -182,11 +221,11 @@ void crear_directorio(char* ruta, char * nomb) {
 	//Concat hace un malloc. Aca tiene que haber un free
 }
 
-void crear_bloques() {  //Los bloques van a partir del numero 1.
+void crear_bloques() {  //Los bloques van a partir del numero 0.
 
 	int cantidad = Metadata_FS.blocks;
 	char* num;
-	for (int i = 1; i <= cantidad; i++) {
+	for (int i = 0; i <= cantidad; i++) {
 		num = string_itoa(i);
 		crear_bloque(num);
 		free(num);

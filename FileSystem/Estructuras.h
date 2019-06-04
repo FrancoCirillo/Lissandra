@@ -10,6 +10,8 @@
 
 #include "fileSystem.h"
 #include <commons/txt.h>
+#include <commons/bitarray.h>
+#include <math.h>
 
 							/*ARCHIVOS*/
 
@@ -23,11 +25,21 @@ char* obtener_por_clave(char* , char* );
 int obtener_tiempo_dump_config();
 
 //METADATA TABLAS
+void metadata_inicializar(FILE*, instr_t*);
 void  crear_metadata(instr_t*);
 t_config* obtener_metadata(char*);
 int obtener_part_metadata(char*);
 char* obtener_consistencia_metadata(char*);
 int obtener_tiempo_compactacion_metadata(char*);
+
+//BITARRAY
+t_bitarray* bitarray;
+void crear_bitarray();
+void eliminar_bitarray();
+int bloque_esta_ocupado(int nro_bloque);
+int siguiente_bloque_disponible();
+void ocupar_bloque(int);
+void liberar_bloque(int);
 
 
 void leer_metadata_FS();		//es un único archivo
@@ -43,14 +55,12 @@ void  crear_bloques();
 
 
 //BLOQUES
-int siguiente_bloque_disponible(); //TODO obtener con bitarray
 //char* formatear_registro(registro_t*);
 char* obtener_ruta_bloque(int);
 //void escribir_registro_bloque(registro_t*, char*); ---> NO ME RECONOCE REGISTRO_T
 
 
 void archivo_inicializar(FILE *);
-void metadata_inicializar(FILE*, instr_t*);
 
 
 //semaforos
