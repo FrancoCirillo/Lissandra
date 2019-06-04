@@ -198,8 +198,7 @@ char* obtener_parametro(instr_t * instr, int index) {
 }
 
 int obtener_particion_key(char* tabla, int key) {
-	metadata_t* metadata = obtener_metadata_tabla(tabla);
-	int cant_particiones = atoi(metadata->partitions);
+	int cant_particiones = obtener_part_metadata(tabla);
 	return key % cant_particiones;
 }
 
@@ -208,7 +207,7 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
 	registro_t* registro_bin = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
 
-	t_list* registros_totales = crear_lista_registros();
+	t_list* registros_totales = crear_lista_registros(); //free
 	list_add_all(registros_totales, registros_mem);
 	list_add_all(registros_totales, registros_temp);
 	list_add(registros_totales, registro_bin);
