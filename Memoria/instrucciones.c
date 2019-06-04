@@ -182,6 +182,7 @@ void ejecutar_instruccion_drop(instr_t *instruccion)
 	usleep(configuracion.RETARDO_MEMORIA * 1000);
 	log_info(g_logger, "Ejecutando instruccion Drop");
 
+	eliminar_tabla(instruccion);
 	int conexionFS = obtener_fd_out("FileSystem");
 	usleep(configuracion.RETARDO_FS * 1000);
 	if(enviar_request(instruccion, conexionFS)==-1){

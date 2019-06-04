@@ -38,7 +38,7 @@ t_list *nueva_tabla_de_paginas()
 
 filaTabPags *agregar_fila_tabla(t_list *tablaDePaginas, int numPag, void *pagina, bool flagMod)
 {
-	filaTabPags *tabla = malloc(sizeof(filaTabPags));
+	filaTabPags *tabla = malloc(sizeof(filaTabPags)); //free al hacer DROP, JOURNAL o LRU
 
 	tabla->numeroDePagina = numPag;
 	tabla->ptrPagina = pagina;
@@ -461,7 +461,8 @@ void limpiar_segmentos(){
 }
 
 
-void *ejecutar_journal(){
+void *ejecutar_journal()
+{
 
     t_list *listaParam = list_create();
     int i = 0;
@@ -475,6 +476,13 @@ void *ejecutar_journal(){
 		ejecutar_instruccion_journal(miInstruccion);
 		sem_post(&mutex_journal);
 	}
+}
+
+int eliminar_tabla(instr_t* instruccion)
+{
+	t_list* segmentoABorrar = segmento_de_esa_tabla((char*)list_get(instruccion, 0));
+	list_destroy_and_destroy_elements(segmentoABorrar, (void*)free);
+	return 0;
 }
 
 
