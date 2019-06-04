@@ -4,18 +4,21 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../logging.c \
 ../serializaciones.c \
 ../tiempo.c \
 ../utilsCliente.c \
 ../utilsServidor.c 
 
 OBJS += \
+./logging.o \
 ./serializaciones.o \
 ./tiempo.o \
 ./utilsCliente.o \
 ./utilsServidor.o 
 
 C_DEPS += \
+./logging.d \
 ./serializaciones.d \
 ./tiempo.d \
 ./utilsCliente.d \

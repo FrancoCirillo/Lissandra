@@ -23,7 +23,7 @@
 #include "instrucciones.h"
 
 	/* CONFIG Y LOG */
-
+sem_t mutex_log;
 t_log *g_logger;
 t_log *debug_logger;
 t_config *g_config;

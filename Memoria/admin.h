@@ -9,6 +9,7 @@
 #include "../Herramientas/definicionesConexiones.h"
 #include <inttypes.h>
 #include <stdbool.h>
+#include <semaphore.h>
 
 typedef struct config
 {
@@ -33,6 +34,7 @@ typedef struct registro
 	char* value;
 } registro;
 
+extern sem_t mutex_log;
 extern t_log *g_logger;
 extern t_log *debug_logger;
 extern t_config *g_config;

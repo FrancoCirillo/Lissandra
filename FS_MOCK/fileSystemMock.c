@@ -6,16 +6,16 @@ int main()
 {
 	printf(COLOR_ANSI_AMARILLO "	PROCESO FILESYSTEM" COLOR_ANSI_RESET "\n");
 
+	sem_init(&mutex_log,0,1);
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
 
 	inicializar_configuracion();
-
 	g_logger = log_create(configuracion.RUTA_LOG, "MockFS", 1, LOG_LEVEL_INFO);
 
-	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT, g_logger);
+	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT, g_logger, &mutex_log);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS, g_logger);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS, g_logger, &mutex_log);
 
 	return 0;
 }
@@ -240,11 +240,11 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		}
 		if (codigoOperacion == CODIGO_EXITO)
 		{
-			loggear_exito(miInstruccion, g_logger);
+			loggear_exito_proceso(miInstruccion, g_logger, &mutex_log);
 		}
 		if (codigoOperacion > BASE_COD_ERROR)
 		{
-			loggear_error(miInstruccion, g_logger);
+			loggear_error_proceso(miInstruccion, g_logger, &mutex_log);
 		}
 		break;
 	}
@@ -279,7 +279,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	list_add(listaParam, PORT); //TODO configuracion.PUERTO
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_FILESYSTEM);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_FILESYSTEM, g_logger, &mutex_log);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }

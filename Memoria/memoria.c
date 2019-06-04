@@ -5,11 +5,11 @@
 int main(int argc, char *argv[])
 {
 
-	check_inicial(argc, argv);
+	inicializar_semaforos();
 	inicializar_configuracion();
+	check_inicial(argc, argv);
 	iniciar_log();
 
-	inicializar_semaforos();
 
 	inicializar_estructuras_conexiones();
 	empezar_conexiones(argv);
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
 	inicializar_estructuras_memoria();
 
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA, g_logger);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA, g_logger, &mutex_log);
 	//config_destroy(g_config);
 
 	return 0;
@@ -63,7 +63,8 @@ char *obtener_por_clave(char *ruta, char *clave)
 
 void inicializar_semaforos()
 {
-	sem_init(&mutex_journal, 0,1);
+	sem_init(&mutex_log, 0,1);
+	sem_init(&mutex_journal, 0, 1);
 }
 
 void inicializar_estructuras_conexiones()
@@ -76,7 +77,7 @@ void inicializar_estructuras_conexiones()
 void empezar_conexiones(char *argv[])
 {
 	enviar_datos_a_FS(argv);
-	listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO, g_logger);
+	listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO, g_logger, &mutex_log);
 }
 
 
@@ -93,7 +94,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 	sem_wait(&mutex_journal);
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
-		log_debug(debug_logger, "Me llego un codigo de error");
+		loggear_debug(debug_logger,&mutex_log, string_from_format("Me llego un codigo de error"));
 		ejecutar_instruccion_error(instruccion);
 	}
 	else{
@@ -133,13 +134,13 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 }
 
 void iniciar_ejecutador_journal(){
-	log_debug(debug_logger, "Iniciando ejecutador journal");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Iniciando ejecutador journal"));
 	pthread_t hilo_ejecutador_journal;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador_journal,&attr, &ejecutar_journal, NULL);
 	pthread_detach(hilo_ejecutador_journal);
-	log_debug(debug_logger, "Ejecutador iniciado journal");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador iniciado journal"));
 }
 
 void check_inicial(int argc, char* argv[])
@@ -156,5 +157,11 @@ void check_inicial(int argc, char* argv[])
 	}
 
 	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
+}
+
+void loggear(char *valor) {
+	sem_wait(&mutex_log);
+	log_info(g_logger, valor);
+	sem_post(&mutex_log);
 }
 

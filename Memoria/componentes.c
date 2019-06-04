@@ -8,9 +8,9 @@ void gran_malloc_inicial()
 	memoriaPrincipal = malloc(tamanioMemoria);
 	if (memoriaPrincipal == NULL)
 	{
-		log_error(g_logger, "No se pudo reservar espacio para la memoria principal");
+		loggear_error(g_logger, &mutex_log, string_from_format("No se pudo reservar espacio para la memoria principal"));
 	}
-	log_debug(debug_logger, "Espacio para la memoria principal reservada");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Espacio para la memoria principal reservada"));
 }
 void inicializar_tabla_segmentos()
 {
@@ -23,7 +23,8 @@ void inicializar_sectores_memoria()
 	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue;
 	cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro; //Se trunca automaticamente al entero (por ser todos int)
 
-	log_debug(debug_logger, "cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro);
+	loggear_debug(debug_logger, &mutex_log,
+			string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
 
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
 	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool));
@@ -61,7 +62,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		}
 		else
 		{ //Algoritmo de reemplazo:
-			log_debug(debug_logger, "Ejecutando el algoritmo de reemplazo");
+			loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutando el algoritmo de reemplazo"));
 			int *numeroDeSector = pagina_lru();
 
 			int indiceEnTabla = 0;
@@ -108,7 +109,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		return memoriaPrincipal + (sectorDisponible * tamanioRegistro);
 	}
 
-	log_error(g_logger, "Error al insertrar la pagina en Memoria");
+	loggear_error(g_logger, &mutex_log, string_from_format("Error al insertrar la pagina en Memoria"));
 	return NULL;
 }
 
@@ -205,11 +206,11 @@ void imprimir_tabla_de_paginas(t_list *tablaDePaginas)
 
 	void iterator(filaTabPags * fila)
 	{
-		log_debug(debug_logger, " ~~~~~~~~~~~~~~~~~~~~\n");
-		log_debug(debug_logger, " Numero de pagina: %d\n", fila->numeroDePagina);
-		log_debug(debug_logger, " Puntero a pagina: %p\n", fila->ptrPagina);
-		log_debug(debug_logger, "  Registro en memo: \n%s", pagina_a_str(fila->ptrPagina));
-		log_debug(debug_logger, " Flag modificado : %d\n", fila->flagModificado);
+		loggear_debug(debug_logger, &mutex_log, string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
+		loggear_debug(debug_logger, &mutex_log, string_from_format(" Numero de pagina: %d\n", fila->numeroDePagina));
+		loggear_debug(debug_logger, &mutex_log, string_from_format(" Puntero a pagina: %p\n", fila->ptrPagina));
+		loggear_debug(debug_logger, &mutex_log, string_from_format("  Registro en memo: \n%s", pagina_a_str(fila->ptrPagina)));
+		loggear_debug(debug_logger, &mutex_log, string_from_format(" Flag modificado : %d\n", fila->flagModificado));
 	}
 
 	list_iterate(tablaDePaginas, (void *)iterator);
@@ -348,7 +349,7 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 
 	if (filaPosible == NULL)
 	{
-		log_error(g_logger, "No se encontro la fila con la pagina"); //Durante el algoritmo de reemplazo nunca se debería dar
+		loggear_error(g_logger, &mutex_log, string_from_format("No se encontro la fila con la pagina")); //Durante el algoritmo de reemplazo nunca se debería dar
 		*segmentoQueLaTiene = NULL;
 		return NULL;
 	}
@@ -360,40 +361,40 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 
 void ejecutar_instruccion_journal(instr_t *instruccion)
 {
-	log_info(g_logger, "Ejecutando instruccion Journal");
+	loggear_info(g_logger, &mutex_log, string_from_format("Ejecutando instruccion Journal"));
 	int conexionConFS = obtener_fd_out("FileSystem");
 
-	log_debug(debug_logger, "Se encontro el fd_out");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Se encontro el fd_out"));
 	void enviar_paginas_modificadas(char *segmento, t_list *suTablaDePaginas)
 	{
 		char* tablaAInsertar = segmento;
 		printf("Tabla a insertar: %s\n", tablaAInsertar);
-		log_debug(debug_logger, "Chequeando una tabla de paginas");
+		loggear_debug(debug_logger, &mutex_log, string_from_format("Chequeando una tabla de paginas"));
 		void enviar_si_esta_modificada(filaTabPags * fila)
 		{
-			log_debug(debug_logger, "Chequeando tiene una fila modificada");
+			loggear_debug(debug_logger, &mutex_log, string_from_format("Chequeando tiene una fila modificada"));
 			if(fila->flagModificado)
 			{
-				log_debug(debug_logger, "Se encontro una pagina modificada");
+				loggear_debug(debug_logger, &mutex_log, string_from_format("Se encontro una pagina modificada"));
 				cod_op codOp = CODIGO_INSERT;
 
 				if(quien_pidio(instruccion) == CONSOLA_KERNEL)
 				{
-					log_debug(debug_logger, "El journal lo pidio Kernel");
+					loggear_debug(debug_logger, &mutex_log, string_from_format("El journal lo pidio Kernel"));
 					codOp += BASE_CONSOLA_KERNEL;
 				}
 				else
 				{
-					log_debug(debug_logger, "El journal lo pidio Memoria");
+					loggear_debug(debug_logger, &mutex_log, string_from_format("El journal lo pidio Memoria"));
 					codOp += BASE_CONSOLA_MEMORIA;
 				}
 
 				instr_t* instruccionAEnviar = fila_a_instr(tablaAInsertar, fila, codOp);
-				log_debug(debug_logger, "Se genero la instruccion a enviar");
+				loggear_debug(debug_logger, &mutex_log, string_from_format("Se genero la instruccion a enviar"));
 				enviar_request(instruccionAEnviar, conexionConFS);
 				list_destroy(instruccionAEnviar->parametros); //No hacemos free a sus elementos xq son punteros a la Memoria Principal
 				free(instruccionAEnviar);
-				log_debug(debug_logger, "Se vacio la lista y se destruyeron sus elementos");
+				loggear_debug(debug_logger, &mutex_log, string_from_format("Se vacio la lista y se destruyeron sus elementos"));
 			}
 		}
 
@@ -405,7 +406,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 	limpiar_memoria();
 
-	log_debug(debug_logger, "Se recorrieron todas las paginas");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Se recorrieron todas las paginas"));
 	t_list *listaParam = list_create();
 	char *cadena = "Journal realizado.";
 	list_add(listaParam, cadena);
@@ -415,12 +416,12 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp){
 	registro* suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
-	log_debug(debug_logger, "Se tienen los datos de la pagina");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Se tienen los datos de la pagina"));
 	return registro_a_instr(tablaAInsertar, suRegistro, codOp);
 }
 
 instr_t *registro_a_instr(char* tablaAInsertar,registro* unRegistro, cod_op codOp){
-	log_debug(debug_logger, "Registro: %s\n", registro_a_str(unRegistro));
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
 
 	char* keyChar = malloc(sizeof(int));
 	t_list* listaParam  = list_create();
@@ -435,11 +436,11 @@ instr_t *registro_a_instr(char* tablaAInsertar,registro* unRegistro, cod_op codO
 }
 
 void limpiar_memoria(){
-	log_debug(debug_logger, "Limpiando mem ppal");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Limpiando mem ppal"));
 	limpiar_memoria_principal();
-	log_debug(debug_logger, "Limpiando segmentos");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Limpiando segmentos"));
 	limpiar_segmentos();
-	log_debug(debug_logger, "Segmentos limpios");
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Segmentos limpios"));
 }
 
 
@@ -480,7 +481,7 @@ void *ejecutar_journal()
 
 int eliminar_tabla(instr_t* instruccion)
 {
-	t_list* segmentoABorrar = segmento_de_esa_tabla((char*)list_get(instruccion, 0));
+	t_list* segmentoABorrar = segmento_de_esa_tabla((char*)list_get(instruccion->parametros, 0));
 	list_destroy_and_destroy_elements(segmentoABorrar, (void*)free);
 	return 0;
 }

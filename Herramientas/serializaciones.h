@@ -13,6 +13,7 @@
 #include <commons/log.h>
 #include <readline/readline.h>
 #include <commons/collections/dictionary.h>
+#include "logging.h"
 #include "tiempo.h"
 #include "definicionesConexiones.h"
 
@@ -113,23 +114,21 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente);
  * Si hay un error al recibir el ts o la operación devuelve el el código de error
  * Devuelve 1 en exito
  */
-int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger);
-
+int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger, sem_t* mutex_log);
 
 /*
  * Recibe mseg_t bytes de socket_cliente
  *
  * Devuelve el resultado del recv
  */
-int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp, t_log *logger);
-
+int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp,  t_log *logger, sem_t* mutex_log);
 
 /*
  * Recibe cod_op bytes del socket cliente, el Codigo de Operacion.
  *
  * Devuelve el resultado del recv
  */
-int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion, t_log *logger);
+int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion, t_log *logger, sem_t *mutex_log);
 
 
 /*
@@ -203,13 +202,13 @@ void imprimir_registro(instr_t *instruccion);
 /*
  * Imprime el primer parametro de instruccion
  */
-void loggear_exito(instr_t *miInstruccion, t_log* logger);
+void loggear_exito_proceso(instr_t *miInstruccion, t_log* logger, sem_t *mutex_log);
 
 
 /*
  * Imprime el primer parametro de instruccion, en rojo
  */
-void loggear_error(instr_t *miInstruccion, t_log* logger);
+void loggear_error_proceso(instr_t *miInstruccion, t_log* logger, sem_t* mutex_log);
 
 /*
  * Imprime un diccionario de conexiones

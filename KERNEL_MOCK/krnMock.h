@@ -15,6 +15,7 @@
 #include <commons/config.h>
 #include <commons/string.h>
 #include <commons/collections/list.h>
+#include <semaphore.h>
 #include <sys/stat.h>
 #include "../Herramientas/definicionesConexiones.h"
 #include "../Herramientas/utilsServidor.h"
@@ -47,7 +48,7 @@ typedef struct config
 
 config configuracion;
 t_dictionary *conexionesActuales;
-
+sem_t mutex_log;
 void (*callback)(instr_t *instruccion, char *remitente);
 
 void responderHandshake(identificador *idsConexionEntrante);

@@ -11,10 +11,11 @@
 #include <netdb.h>
 #include <string.h>
 #include "definicionesConexiones.h"
+#include "logging.h"
 #include "serializaciones.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-int crear_conexion(char *ip, char *puerto, char *miIP);
+int crear_conexion(char *ip, char *puerto, char *miIP, t_log* logger, sem_t* mutex_log);
 
 #endif /* UTILS_CLIENTE_ */

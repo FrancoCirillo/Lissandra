@@ -30,9 +30,9 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 	default:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		if (codigoOperacion == CODIGO_EXITO)
-			loggear_exito(miInstruccion, g_logger);
+			loggear_exito_proceso(miInstruccion, g_logger, &mutex_log);
 		if (codigoOperacion > BASE_COD_ERROR){
-			loggear_error(miInstruccion, g_logger);
+			loggear_error_proceso(miInstruccion, g_logger, &mutex_log);
 		}
 		break;
 	}
@@ -47,7 +47,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	list_add(listaParam, configuracion.PUERTO);
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPMemoria);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPMemoria, g_logger, &mutex_log);
 
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
@@ -65,9 +65,9 @@ void enviar_datos_a_FS(char *argv[])
 		list_add(listaParam, nombreDeMemoria);
 		list_add(listaParam, miIPMemoria);
 		list_add(listaParam, configuracion.PUERTO);
-		instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+		instr_t * miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-		int conexion_con_fs = crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria);
+		int conexion_con_fs = crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria, g_logger, &mutex_log);
 		enviar_request(miInstruccion, conexion_con_fs);
 
 		idsNuevasConexiones->fd_in = 0; //Ojo

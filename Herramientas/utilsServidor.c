@@ -6,7 +6,7 @@
  * socket() y bind()
  */
 
-int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir, t_log *logger)
+int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir, t_log *logger, sem_t *mutex_log)
 {
 	int socket_servidor;
 
@@ -22,7 +22,7 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir, t_log *logger)
 
 	if ((socket_servidor = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol)) < 0)
 	{
-		log_error(logger, "Error al crear el socket servidor");
+		loggear_error(logger, mutex_log, string_from_format("Error al crear el socket servidor"));
 		//TODO: Cerrar socket servidor?
 		return -1;
 	}
@@ -30,25 +30,31 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir, t_log *logger)
 	setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEADDR, &aceptar, sizeof(int));
 	if (bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen) < 0)
 	{
-		log_error(logger, "Error al vincular el socket servidor con el puerto");
+		loggear_error(logger, mutex_log,  string_from_format("Error al vincular el socket servidor con el puerto"));
 		close(socket_servidor);
 		return -1;
 	}
 
 	if ((listen(socket_servidor, SOMAXCONN)) < 0)
 	{ //TODO: queremos SO MAX CONNECTIONS?, es 128
-		log_error(logger, "Error al dejar todo listo para escuchar en socket servidor");
+		loggear_error(logger, mutex_log, string_from_format("Error al dejar todo listo para escuchar en socket servidor"));
 		//TODO: Cerrar socket servidor?
 		return -1;
 	}
 	freeaddrinfo(servinfo);
 
-	log_info(logger, "Listo para escuchar a mi cliente");
+	loggear_info(logger, mutex_log, string_from_format("Listo para escuchar a mi cliente"));
 
 	return socket_servidor;
 }
 
-int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), t_dictionary *conexionesConocidas, int queConsola, t_log *logger)
+int vigilar_conexiones_entrantes(
+		int listener,
+		void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente),
+		t_dictionary *conexionesConocidas,
+		int queConsola,
+		t_log *logger,
+		sem_t *mutex_log)
 {
 
 	//Gracias a la guia de Beej:
@@ -68,7 +74,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 	FD_SET(listener, &master); // agregamos a los fds que vigila select()
 	FD_SET(0, &master);		   // 0 es el fd de la consola
 
-	// mantener cual es el fd mas grande (lo pide el seelct())
+	// mantener cual es el fd mas grande (lo pide el select())
 	fdmax = listener; // por ahora es este
 	t_dictionary *auxiliarConexiones = dictionary_create();
 
@@ -80,7 +86,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 		int resultado = select(fdmax + 1, &read_fds, NULL, NULL, NULL);
 		if (resultado == -1)
 		{
-			log_error(logger, "Error al realizar el select(): %s\n", strerror(errno));
+			loggear_error(logger, mutex_log, string_from_format("Error al realizar el select(): %s\n", strerror(errno)));
 		}
 		else if (resultado > 0)
 		{
@@ -96,7 +102,7 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 						newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen);
 						if (newfd == -1)
 						{
-							log_error(logger, "Error al realizar el accept(): %s\n", strerror(errno));
+							loggear_error(logger,mutex_log, string_from_format("Error al realizar el accept(): %s\n", strerror(errno)));
 						}
 						else
 						{
@@ -105,10 +111,10 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande
 
 							instr_t *instruccion_handshake;
-							recibir_request(newfd, &instruccion_handshake, logger);
+							recibir_request(newfd, &instruccion_handshake, logger, mutex_log);
 
 							char *quienEs = (char *)list_get(instruccion_handshake->parametros, 0); //El nombre
-							log_debug(logger, "Se conecto %s\n", quienEs);
+							loggear_debug(logger, mutex_log, string_from_format("Se conecto %s\n", quienEs));
 
 							if (dictionary_get(conexionesConocidas, quienEs) != NULL)
 							{ //Ya lo conocia, no tenia su fd_in
@@ -127,9 +133,9 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 								idsNuevaConexion->fd_out = 0;
 								dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
 							}
-							char auxFd[4];
-							sprintf(auxFd, "%d", newfd); //Para poder usarlo como key en el diccionario
+							char* auxFd = string_from_format("%d", newfd);
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
+							free(auxFd);
 							//							imprimirConexiones(conexionesConocidas); //Debug
 						}
 					}
@@ -145,14 +151,14 @@ int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(
 					{// Ya se había hecho accept en el fd
 						//recibir los mensajes
 						instr_t *instrcuccion_recibida;
-						int recibo = recibir_request(i, &instrcuccion_recibida, logger);
-						char auxFd[4];
-						sprintf(auxFd, "%d", i); //Para poder usarlo como key en el diccionario
+						int recibo = recibir_request(i, &instrcuccion_recibida, logger, mutex_log);
+						char* auxFd = string_from_format("%d", i);
 						char* quienLoEnvia = dictionary_get(auxiliarConexiones, auxFd);
+						free(auxFd);
 
 						if (recibo == 0)
 						{
-							log_warning(logger, "El cliente '%s'se desconecto\n", quienLoEnvia);
+							loggear_warning(logger,mutex_log, string_from_format("El cliente '%s'se desconecto\n", quienLoEnvia));
 							FD_CLR(i, &master);
 							dictionary_remove(conexionesConocidas, quienLoEnvia); //No and_destroy porque se libera solo afuera del else
 						}
