@@ -131,17 +131,17 @@ t_list *recibir_paquete(int socket_cliente)
 	return NULL;
 }
 
-int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger)
+int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger, sem_t* mutex_log)
 {
 	mseg_t nuevoTimestamp;
 	cod_op nuevoCodOp;
 	t_list *listaParam;
 
-	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp, logger); //return en error
+	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp, logger, mutex_log); //return en error
 	if (t <= 0)
 		return t;
 
-	t = recibir_operacion(socket_cliente, &nuevoCodOp, logger);
+	t = recibir_operacion(socket_cliente, &nuevoCodOp, logger, mutex_log);
 	if (t <= 0)
 		return t;
 
@@ -155,26 +155,26 @@ int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger)
 	return 1;
 }
 
-int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp,  t_log *logger)
+int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp,  t_log *logger, sem_t *mutex_log)
 {
 	int r = recv(socket_cliente, nuevoTimestamp, sizeof(mseg_t), MSG_WAITALL);
 	if (r < 0)
 	{
-		log_error(logger, "Error en el recv: %s\n", strerror(errno));
+		loggear_error(logger, mutex_log, string_from_format("Error en el recv: %s\n", strerror(errno)));
 	}
 	return r;
 }
 
-int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion, t_log* logger)
+int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion, t_log* logger, sem_t *mutex_log)
 {
 	int r = recv(socket_cliente, nuevaOperacion, sizeof(cod_op), MSG_WAITALL);
 	if (r == 0)
 	{
-		log_error(logger, "El cliente se desconecto en el medio de una recepción.");
+		loggear_error(logger, mutex_log, string_from_format("El cliente se desconecto en el medio de una recepción."));
 	}
 	if (r < 0)
 	{
-		log_error(logger, "Error en el recv: %s\n", strerror(errno));
+		loggear_error(logger, mutex_log, string_from_format("Error en el recv: %s\n", strerror(errno)));
 	}
 	return r;
 }
@@ -378,14 +378,14 @@ void imprimir_registro(instr_t *instruccion)
 	printf("Timestamp: %"PRIu64"\n", instruccion->timestamp);
 }
 
-//Todo: usar logger
-void loggear_error(instr_t *miInstruccion, t_log* logger)
+void loggear_error_proceso(instr_t *miInstruccion, t_log* logger, sem_t *mutex_log)
 {
-	log_warning(logger, (char *)list_get(miInstruccion->parametros, 0));
+	loggear_warning(logger,mutex_log,  string_from_format("%s\n", (char *)list_get(miInstruccion->parametros, 0)));
 }
-void loggear_exito(instr_t *miInstruccion, t_log* logger)
+void loggear_exito_proceso(instr_t *miInstruccion, t_log* logger, sem_t* mutex_log)
 {
-	log_info(logger, "%s\n", (char *)list_get(miInstruccion->parametros, 0));
+
+	loggear_info(logger, mutex_log, string_from_format("%s\n", (char *)list_get(miInstruccion->parametros, 0)));
 }
 
 void imprimir_conexiones(t_dictionary *conexAc)

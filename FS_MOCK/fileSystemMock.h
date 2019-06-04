@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <semaphore.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/string.h>
@@ -38,6 +39,7 @@ typedef struct config
 
 config configuracion;
 
+sem_t mutex_log;
 void loggear(char *valor);
 void inicializar_configuracion();
 char *obtener_por_clave(char *ruta, char *clave);

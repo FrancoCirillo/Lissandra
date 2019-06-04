@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	if (argc > 1)
 	{
 		identificador *idsNuevasConexiones = malloc(sizeof(identificador));
-		conexion_con_memoria_3 = crear_conexion(configuracion.MEMORIA_3_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL);
+		conexion_con_memoria_3 = crear_conexion(configuracion.MEMORIA_3_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL, g_logger, &mutex_log);
 		enviar_request(miInstruccion, conexion_con_memoria_3);
 		idsNuevasConexiones->fd_in = 0; //Por las moscas
 		strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 	if (argc > 2)
 	{
 		identificador *idsNuevasConexiones = malloc(sizeof(identificador));
-		conexion_con_memoria_8 = crear_conexion(configuracion.MEMORIA_8_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL);
+		conexion_con_memoria_8 = crear_conexion(configuracion.MEMORIA_8_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL, g_logger, &mutex_log);
 		enviar_request(miInstruccion, conexion_con_memoria_8);
 		idsNuevasConexiones->fd_in = 0; //Por las moscas
 		strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	if (argc > 3)
 	{
 		identificador *idsNuevasConexiones = malloc(sizeof(identificador));
-		conexion_con_memoria_9 = crear_conexion(configuracion.MEMORIA_9_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL);
+		conexion_con_memoria_9 = crear_conexion(configuracion.MEMORIA_9_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL, g_logger, &mutex_log);
 		enviar_request(miInstruccion, conexion_con_memoria_9);
 		idsNuevasConexiones->fd_in = 0; //Por las moscas
 		strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
 
 	g_logger = log_create(configuracion.RUTA_LOG, "KernelMock", 1, LOG_LEVEL_INFO);
 
-	int listenner = iniciar_servidor(IP_KERNEL, "4444", g_logger);
+	int listenner = iniciar_servidor(IP_KERNEL, "4444", g_logger, &mutex_log);
 
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
 
 	//config_destroy(g_config);
 
@@ -174,7 +174,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 void ejecutar_instruccion_exito(instr_t *instruccion)
 {
-	loggear_exito(instruccion,g_logger);
+	loggear_exito_proceso(instruccion,g_logger, &mutex_log);
 }
 
 void ejecutar_instruccion_select(instr_t *instruccion)
@@ -211,7 +211,7 @@ void ejecutar_instruccion_run(instr_t *instruccion)
 
 void ejecutar_instruccion_error(instr_t * instruccion)
 {
-	loggear_error(instruccion, g_logger);
+	loggear_error_proceso(instruccion, g_logger, &mutex_log);
 }
 
 
@@ -235,7 +235,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	list_add(listaParam, "4444");
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_KERNEL);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_KERNEL, g_logger, &mutex_log);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
