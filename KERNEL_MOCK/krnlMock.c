@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
 		//Para más memorias habría que arrancar con gossiping
 		exit(0);
 	}
+	g_logger = log_create(configuracion.RUTA_LOG, "KernelMock", 1, LOG_LEVEL_TRACE);
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_instruccion;
 
@@ -29,16 +30,21 @@ int main(int argc, char *argv[])
 	list_add(listaParam, "4444");
 	instr_t * miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
+	sem_init(&mutex_log, 0,1);
 	if (argc > 1)
 	{
+		printf("Memoria_3\n");
 		identificador *idsNuevasConexiones = malloc(sizeof(identificador));
 		conexion_con_memoria_3 = crear_conexion(configuracion.MEMORIA_3_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL, g_logger, &mutex_log);
+		printf("Conexion creada\n");
 		enviar_request(miInstruccion, conexion_con_memoria_3);
+		printf("Reques enviado\n");
 		idsNuevasConexiones->fd_in = 0; //Por las moscas
 		strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
 		strcpy(idsNuevasConexiones->ip_proceso, configuracion.MEMORIA_3_IP);
 		idsNuevasConexiones->fd_out = conexion_con_memoria_3;
 		dictionary_put(conexionesActuales, "Memoria_3", idsNuevasConexiones);
+		printf("Conectado con Memoria_3\n");
 	}
 	if (argc > 2)
 	{
@@ -63,10 +69,11 @@ int main(int argc, char *argv[])
 		dictionary_put(conexionesActuales, "Memoria_9", idsNuevasConexiones);
 	}
 
-	g_logger = log_create(configuracion.RUTA_LOG, "KernelMock", 1, LOG_LEVEL_INFO);
 
+	puts("Por crear logger:");
+	puts("Log creado");
 	int listenner = iniciar_servidor(IP_KERNEL, "4444", g_logger, &mutex_log);
-
+	puts("Servidor iniciado");
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
 
 	//config_destroy(g_config);
@@ -219,11 +226,13 @@ void inicializar_configuracion()
 {
 	puts("Configuracion:");
 	char *rutaConfig = "krnlMock.config";
-	configuracion.MEMORIA_3_IP = obtener_por_clave(rutaConfig, "MEMORIA_3_IP");
-	configuracion.MEMORIA_8_IP = obtener_por_clave(rutaConfig, "MEMORIA_8_IP");
-	configuracion.MEMORIA_9_IP = obtener_por_clave(rutaConfig, "MEMORIA_9_IP");
-	configuracion.PUERTO_MEMORIA = obtener_por_clave(rutaConfig, "PUERTO_MEMORIA");
-	configuracion.RUTA_LOG = obtener_por_clave(rutaConfig, "RUTA_LOG");
+	g_config = config_create(rutaConfig);
+	configuracion.MEMORIA_3_IP = obtener_por_clave("MEMORIA_3_IP");
+	configuracion.MEMORIA_8_IP = obtener_por_clave("MEMORIA_8_IP");
+	configuracion.MEMORIA_9_IP = obtener_por_clave("MEMORIA_9_IP");
+	configuracion.PUERTO_MEMORIA = obtener_por_clave("PUERTO_MEMORIA");
+	configuracion.RUTA_LOG = obtener_por_clave("RUTA_LOG");
+	puts("Config terminada");
 }
 
 //hace el connect!!
@@ -250,10 +259,9 @@ int obtener_fd_out(char *proceso)
 	return idsProceso->fd_out;
 }
 
-char *obtener_por_clave(char *ruta, char *clave)
+char *obtener_por_clave(char *clave)
 {
 	char *valor;
-	g_config = config_create(ruta);
 	valor = config_get_string_value(g_config, clave);
 	printf(" %s: %s \n", clave, valor);
 

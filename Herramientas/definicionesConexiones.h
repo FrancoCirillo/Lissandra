@@ -51,6 +51,7 @@ typedef enum cod_op {
 	DEVOLUCION_SELECT = 10,
 	CODIGO_HANDSHAKE = 11,
 	INPUT_ERROR = 12,
+	CODIGO_VALUE = 13,
 
 	CODIGO_SHOW = 51,
 

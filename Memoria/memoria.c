@@ -13,10 +13,7 @@ int main(int argc, char *argv[])
 
 	inicializar_estructuras_conexiones();
 	empezar_conexiones(argv);
-	iniciar_ejecutador_journal();
-
-	//recibir el tamanio del Value
-	tamanioValue = 32;
+//	iniciar_ejecutador_journal(); Piden desactivarlo en el checkpoint presencial
 
 	inicializar_estructuras_memoria();
 
@@ -28,9 +25,9 @@ int main(int argc, char *argv[])
 
 void inicializar_configuracion()
 {
-	g_config = config_create("memoria.config");
 	puts("Configuracion:");
 	char *rutaConfig = "memoria.config";
+	g_config = config_create(rutaConfig);
 	configuracion.PUERTO = obtener_por_clave(rutaConfig, "PUERTO");
 	configuracion.IP_FS = obtener_por_clave(rutaConfig, "IP_FS");
 	configuracion.PUERTO_FS = obtener_por_clave(rutaConfig, "PUERTO_FS");
@@ -65,7 +62,6 @@ void inicializar_semaforos()
 {
 	sem_init(&mutex_log, 0,1);
 	sem_init(&mutex_journal, 0, 1);
-
 }
 
 void inicializar_estructuras_conexiones()
@@ -79,6 +75,7 @@ void empezar_conexiones(char *argv[])
 {
 	enviar_datos_a_FS(argv);
 	listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO, g_logger, &mutex_log);
+	pedir_tamanio_value();
 }
 
 
@@ -130,6 +127,10 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			mostrar_paginas(instruccion);
 			break;
 
+		case CODIGO_VALUE:
+			actualizar_tamanio_value(instruccion);
+			inicializar_estructuras_memoria();
+			break;
 		default:
 			loggear_info(g_logger,&mutex_log, string_from_format("El comando no pertenece a la memoria"));
 			break;

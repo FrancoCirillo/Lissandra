@@ -32,7 +32,7 @@ t_dictionary *conexionesActuales;
 typedef struct config
 {
 	char *PUERTO_ESCUCHA;
-	char TAMANIO_VALUE;
+	char* TAMANIO_VALUE;
 	char TIEMPO_DUMP;
 	char *RUTA_LOG;
 } config;
@@ -56,6 +56,7 @@ void ejecutar_instruccion_describe(instr_t *instruccion, char *remitente);
 void ejecutar_instruccion_drop(instr_t *instruccion, char *remitente);
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
 int obtener_fd_out(char *proceso);
+void enviar_tamanio_value(char* remitente);
 
 t_list* insertar_posta(instr_t *instruccion, cod_op* codOp);
 

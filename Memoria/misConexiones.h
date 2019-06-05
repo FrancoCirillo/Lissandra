@@ -22,6 +22,7 @@ int obtener_fd_out(char *proceso);
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam);
 void responderHandshake(identificador *idsConexionEntrante);
 void enviar_datos_a_FS(char *argv[]);
-
+void pedir_tamanio_value();
+void actualizar_tamanio_value(instr_t* instruccion);
 
 #endif /* MISCONEXIONES_H_ */

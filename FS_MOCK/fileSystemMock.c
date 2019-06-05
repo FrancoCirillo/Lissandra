@@ -49,6 +49,9 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 	case CONSOLA_KRN_DROP:
 		ejecutar_instruccion_drop(instruccion, remitente);
 		break;
+	case CODIGO_VALUE:
+		enviar_tamanio_value(remitente);
+		break;
 	default:
 		puts("El comando no pertenece al FileSystem");
 		break;
@@ -255,7 +258,7 @@ void inicializar_configuracion()
 	puts("Configuracion:");
 	char *rutaConfig = "fsMock.config";
 	configuracion.PUERTO_ESCUCHA = obtener_por_clave(rutaConfig, "PUERTO_ESCUCHA");
-	configuracion.TAMANIO_VALUE = atoi(obtener_por_clave(rutaConfig, "TAMANIO_VALUE"));
+	configuracion.TAMANIO_VALUE = obtener_por_clave(rutaConfig, "TAMANIO_VALUE");
 	configuracion.TIEMPO_DUMP = atoi(obtener_por_clave(rutaConfig, "TIEMPO_DUMP"));
 	configuracion.RUTA_LOG = obtener_por_clave(rutaConfig, "RUTA_LOG");
 }
@@ -293,3 +296,19 @@ int obtener_fd_out(char *proceso)
 	}
 	return idsProceso->fd_out;
 }
+
+void enviar_tamanio_value(char* remitente){
+	int conexionMemoriaN = obtener_fd_out(remitente);
+    t_list *listaParam = list_create();
+    list_add(listaParam, configuracion.TAMANIO_VALUE);
+    instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
+	puts("Enviando tamanio del value");
+    enviar_request(miInstruccion, conexionMemoriaN);
+    puts("Tamanio del value enviado");
+}
+
+
+
+
+
+

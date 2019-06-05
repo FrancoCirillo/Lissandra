@@ -42,9 +42,7 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir, t_log *logger, sem_
 		return -1;
 	}
 	freeaddrinfo(servinfo);
-
 	loggear_info(logger, mutex_log, string_from_format("Listo para escuchar a mi cliente"));
-
 	return socket_servidor;
 }
 
@@ -123,7 +121,7 @@ int vigilar_conexiones_entrantes(
 								dictionary_put(conexionesConocidas, quienEs, miIdentificador); //TODO: Hace falta? O al cambiar lo apuntado por el puntero ya esta?
 							}
 							else
-							{
+							{ //No lo conocia
 								char *suIP = (char *)list_get(instruccion_handshake->parametros, 1);	 //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
 								char *suPuerto = (char *)list_get(instruccion_handshake->parametros, 2); //Su Puerto
 								identificador *idsNuevaConexion = malloc(sizeof(identificador));

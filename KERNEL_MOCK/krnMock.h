@@ -54,7 +54,7 @@ void (*callback)(instr_t *instruccion, char *remitente);
 void responderHandshake(identificador *idsConexionEntrante);
 
 void inicializar_configuracion();
-char *obtener_por_clave(char *ruta, char *clave);
+char *obtener_por_clave(char *clave);
 void ejecutar_instruccion(instr_t *instruccion, char *remitente);
 void ejecutar_instruccion_select(instr_t *instruccion);
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion);
