@@ -38,7 +38,7 @@ int obtener_tiempo_dump_config() {
 
 //---------------------------METADATA---------------------------
 char* obtener_path_metadata(char* tabla) {
-	return string_from_format("%s/%s/Metadata", RUTA_TABLAS, tabla);
+	return string_from_format("%s%s/Metadata", RUTA_TABLAS, tabla);
 }
 
 t_config* obtener_metadata(char* tabla) {
@@ -72,7 +72,7 @@ char* formatear_registro(registro_t* registro) {
 }
 
 char* obtener_ruta_bloque(int nro_bloque) {
-	return string_from_format("%s/%d.bin", RUTA_BLOQUES, nro_bloque);
+	return string_from_format("%s%d.bin", RUTA_BLOQUES, nro_bloque);
 }
 
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
@@ -97,6 +97,33 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 int maximo_bloques(){
 	return Metadata_FS.blocks;
 }
+
+char* obtener_ruta_bitmap() {
+	return string_from_format("%sBitmap.bin", RUTA_METADATA);
+}
+
+void crear_bitmap() {
+	char* ruta_bitmap = obtener_ruta_bitmap();
+	FILE* archivo_bitmap = fopen(ruta_bitmap, "w+");
+	fclose(archivo_bitmap);
+}
+
+//void leer_bitmap() {
+//	char* ruta_bitmap = obtener_ruta_bitmap();
+//	FILE* bitmap = fopen(ruta_bitmap, "r");
+//	int leido = fread(bitarray->bitarray, bitarray->size, 1, bitmap);
+//	if(leido < bitarray->size){
+//		//ocurrio error
+//	}
+//	fclose(bitmap);
+//}
+//
+//void actualizar_bitmap() {
+//	char* ruta_bitmap = obtener_ruta_bitmap();
+//	FILE* bitmap = fopen(ruta_bitmap, "w");
+//	fwrite(bitarray->bitarray, bitarray->size, 1, bitmap);
+//	fclose(bitmap);
+//}
 
 int cant_bloques_disp() {
 	int nro_bloque = 0;

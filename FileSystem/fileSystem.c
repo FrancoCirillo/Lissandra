@@ -160,7 +160,7 @@ int execute_create(instr_t* instr) {
 int execute_insert(instr_t* instr) { //no esta chequeado
 	char* tabla = obtener_nombre_tabla(instr);
 	//string_to_upper(tabla);
-	registro_t* registro = pasar_a_registro(instr);
+	registro_t* registro = pasar_a_registro(instr); //VALIDAR SI TAM_VALUE ES MAYOR AL MAX_TAM_VALUE
 	if (!existe_tabla(tabla)) {
 		return ERROR_INSERT;
 	} else {
@@ -181,6 +181,9 @@ int execute_select(instr_t* instr) {
 	registro_t* registro = pasar_a_registro(instr);
 	int key = registro->key; //Hacer funcion obtener_key(registro_t*)???
 	t_list* registros_key = obtener_registros_key(tabla, key);
+	if(list_is_empty(registros_key)){
+		//no se encontraron registros con esa key
+	}
 	registro_t* registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
 	return CODIGO_EXITO;
 }
