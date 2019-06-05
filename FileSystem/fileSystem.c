@@ -22,6 +22,8 @@ int main() {
 
 	//testeo
 	ejemplo_instr_create();
+	ejemplo_instr_insert();
+
 
 	//////////////////////////////////////////////
 
@@ -65,12 +67,14 @@ void inicializar_FS() {
 	inicializar_memtable();
 	inicializar_directorios();
 	crear_bloques();
+	crear_bitarray();//chequear.
 	loggear_FS("-----------Fin inicialización LFS-----------");
 }
 
 void finalizar_FS() {
 	config_destroy(g_config);
 	config_destroy(meta_config);
+	eliminar_bitarray();
 	finalizar_memtable();  // Liberar memoria
 	loggear_FS("-----------FIN PROCESO-----------");
 }
@@ -135,16 +139,17 @@ void evaluar_instruccion(instr_t* instr) {
 
 int execute_create(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
-	//string_to_upper(tabla);
+	//string_to_upper(tabla);  //TODO
 	if (!existe_tabla(tabla)) {
 		agregar_tabla(tabla); //la agrega a la mem
 		crear_directorio(RUTA_TABLAS, tabla);
 		crear_metadata(instr);
 
-		if(!crear_particiones(instr)){
-			return ERROR_CREATE; //y que pasa con lo anterior?
+		if(!crear_particiones(instr)){  //Crear funcion puede_crear_particiones.
+			return ERROR_CREATE; //Pasar esto arriba. Validar primero. y asignar bloques, para reservarlos.
+			//Los bloques se
 		}
-
+		//crear_particiones();
 		char* mensaje = malloc(sizeof(char)* 80);
 		sprintf(mensaje, "Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 		loggear_FS(mensaje);
@@ -162,6 +167,7 @@ int execute_insert(instr_t* instr) { //no esta chequeado
 	//string_to_upper(tabla);
 	registro_t* registro = pasar_a_registro(instr); //VALIDAR SI TAM_VALUE ES MAYOR AL MAX_TAM_VALUE
 	if (!existe_tabla(tabla)) {
+		loggear_FS_error("La tabla no existe en el File System.", instr);
 		return ERROR_INSERT;
 	} else {
 		agregar_registro(tabla, registro);
@@ -195,7 +201,7 @@ int execute_drop(instr_t* instr) {
 		return ERROR_DROP; //log
 	}
 	eliminar_tabla_de_mem(tabla);
-	eliminar_directorio(tabla); //adentro tiene un eliminar_archivos(tabla)
+//	eliminar_directorio(tabla); //adentro tiene un eliminar_archivos(tabla)
 	return CODIGO_EXITO;
 }
 
@@ -214,8 +220,8 @@ int obtener_particion_key(char* tabla, int key) {
 
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
-	t_list* registros_temp = leer_archivos_temporales(tabla, key);
-	registro_t* registro_bin = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
+	t_list* registros_temp;// = leer_archivos_temporales(tabla, key);
+	registro_t* registro_bin;// = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
 
 	t_list* registros_totales = crear_lista_registros(); //free
 	list_add_all(registros_totales, registros_mem);
@@ -237,6 +243,30 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 //}
 
 //------------EJEMPLO INSTRUCCIONES----------------
+
+
+void ejemplo_instr_insert() {
+
+	//INSERT
+	//[TABLA] [KEY] “[VALUE]” [Timestamp]
+
+	loggear_FS("Ejecutamos Instruccion INSERT");
+	instr_t* instr = malloc(sizeof(instr_t));
+	instr->timestamp = obtener_ts();
+	instr->codigo_operacion = CODIGO_INSERT;
+	instr->parametros = list_create();
+
+	list_add(instr->parametros, "ALUMNOS");
+	list_add(instr->parametros, "1234");
+	list_add(instr->parametros, "Hola");
+	//list_add(instr->parametros, "60000"); //timestamp lo recibimos en la instr
+
+	evaluar_instruccion(instr);
+
+	contestar(instr);  //Libera memoria del mje
+
+	loggear_FS("Se libero la memoria de la instruccion");
+}
 
 void ejemplo_instr_create() {
 
