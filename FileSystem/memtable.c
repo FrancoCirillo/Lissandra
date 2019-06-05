@@ -11,7 +11,7 @@ void inicializar_memtable() {
 
 void finalizar_memtable() { //Borra y libera todos los registros y tablas.
 	//IMPORTANTE: la variable global no se puede usar a menos que hagan otro diccionary_create
-	dictionary_destroy_and_destroy_elements(memtable, &borrar_lista_registros);;
+	dictionary_destroy_and_destroy_elements(memtable, &borrar_lista_registros);
 }
 
 void borrar_lista_registros(void* lista){
@@ -19,13 +19,13 @@ void borrar_lista_registros(void* lista){
 }
 
 void borrar_registro(void* registro){ //no tengo ni idea de lo que estoy haciendo
-	free(((registro_t*)registro)->value);
+	//free(((registro_t*)registro)->value);
 	free((registro_t*)registro);
 }
 
 void limpiar_memtable(){
 	dictionary_clean_and_destroy_elements(memtable, &borrar_lista_registros);
-}
+}// dictionary_iterator
 
 int existe_tabla(char* tabla){
 	return dictionary_has_key(memtable, tabla);

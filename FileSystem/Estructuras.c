@@ -9,7 +9,6 @@
 
 //Todo
 /*
- * existe tabla
  * eliminar carpeta
  * eliminar directorio
  * copiar archivo (para los tmpc)
@@ -26,10 +25,6 @@
 //Pendientes Dai:
 //1) Ver si el g_logger global no hace problemas..
 //	 Si se crea una vez sola o ahi en el loggear_FS esta bien.
-//2) Ver TS. Tipo de dato??
-//3) chequear semaforizacion de todo esto..
-//4) Ver validaciones de errores.. tests?
-//5) validaciones de errores, aca o en las funciones en las que lo llaman?
 
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
@@ -42,19 +37,21 @@ char* obtener_path_metadata(char* tabla) {
 }
 
 t_config* obtener_metadata(char* tabla) {
-	char* path = string_new();
-	path = obtener_path_metadata(tabla);
-	return config_create(path); //hay que hacer config_destroy
+	//char* path = string_new();
+	char* path = obtener_path_metadata(tabla);
+	return config_create(path); //hay que hacer config_destroy y free del path
 }
 
 int obtener_part_metadata(char* tabla) {
 	t_config* metadata = obtener_metadata(tabla);
-	return config_get_int_value(metadata, "PARTITIONS");
+	int particiones = config_get_int_value(metadata, "PARTITIONS");
+	config_destroy(metadata);
+	return particiones;
 }
 
 char* obtener_consistencia_metadata(char* tabla) {
 	t_config* metadata = obtener_metadata(tabla);
-	return config_get_string_value(metadata, "CONSISTENCY");
+	return config_get_string_value(metadata, "CONSISTENCY");   //guardar en variable, destroy y el free. Desp el return.
 }
 
 int obtener_tiempo_compactacion_metadata(char* tabla) {
@@ -134,9 +131,10 @@ int cant_bloques_disp() {
 }
 
 void crear_bitarray() {
-	int bloques_en_bytes = ceil(maximo_bloques()/8);
+	int bloques_en_bytes = (maximo_bloques()+7)/8;// = ceil(maximo_bloques()/8);
 	char* miBitarray = string_repeat(0, bloques_en_bytes);
 	bitarray = bitarray_create_with_mode(miBitarray, bloques_en_bytes, LSB_FIRST);
+	free(miBitarray);
 }
 
 void eliminar_bitarray(){
@@ -182,7 +180,7 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	}
 	t_config* archivo = config_create(ruta_archivo);
 	char** bloques_ant = config_get_array_value(archivo, "BLOCKS");
-	char* bloques_tot = agregar_bloque_bloques(bloques_ant, nro_bloque);
+	char* bloques_tot ;//= agregar_bloque_bloques(bloques_ant, nro_bloque);
 	config_set_value(archivo, "BLOCKS", bloques_tot);
 	config_destroy(archivo);
 	return 1;
@@ -210,7 +208,7 @@ void aumentar_tam_archivo(char* ruta_archivo, registro_t* registro) {
 int cantidad_bloques_usados(char* ruta_archivo) {
 	t_config* archivo = config_create(ruta_archivo);
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
-	char* bloques = pasar_a_string(lista_bloques);
+	char* bloques;// = pasar_a_string(lista_bloques);
 	return strlen(bloques);
 }
 
@@ -231,7 +229,7 @@ int crear_particiones(instr_t* instr) {
 	if (cant_bloques_disp() < cantidad){
 		loggear_FS_error("Error al crear las particiones. No hay suficientes bloques disponibles",instr);
 		return 0;
-	}
+	}//Moverlo a puede_crear_particiones()
 
 	FILE* f;
 	char* tabla = obtener_nombre_tabla(instr);
