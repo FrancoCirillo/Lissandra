@@ -113,60 +113,56 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	free(string_registro);
 }
 
-//t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
-//	int nro_bloque = obtener_siguiente_bloque(ruta_archivo);
-//	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-//	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-//	registro_t* registro;
-//	t_list* registros = crear_lista_registros();
-//	int status = 1;
-//	int atributo_reg = 1;
-//	char* buffer = malloc(sizeof(mseg_t));
-//	while(status) {
-//		int atributo_reg;
-//		char caracter_leido = getc(archivo_bloque);
-//		switch(caracter_leido) {
-//		case ';':
-//			switch(atributo_reg) {
-//			case 1:
-//				registro->timestamp = string_a_mseg(buffer);
-//				free(buffer);
-//				char* buffer = malloc(sizeof(uint16_t));
-//				break;
-//			case 2:
-//				registro ->key = (uint16_t) atoi(buffer);
-//				free(buffer);
-//				char* buffer = malloc(config_FS.tamanio_value);
-//				break;
-//			case 3:
-//				strcpy(registro->value, buffer);
-//				free(buffer);
-//				char* buffer = malloc(sizeof(mseg_t));
-//				break;
-//			}
-//			break;
-//		case '\n': //tengo un registro completo
-//			atributo_reg = 1;
-//			if(registro->key == key)
-//				list_add(registros, registro); //lo agrego solo si tiene la key que busco
-//			break;
-//		case EOF: //se me acabo el archivo
-//			fclose(archivo_bloque);
-//			free(ruta_bloque);
-//			nro_bloque = obtener_siguiente_bloque(ruta_archivo);
-//			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
-//				char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-//				FILE* archivo_bloque = fopen(ruta_bloque, "r");
-//			} else
-//				status = 0; //corta el while
-//			break;
-//		default:
-//			//guardo en buffer
-//			break;
-//		}
-//	}
-//	return registros; //En la funcion que lo llamo, tengo que validar que no este vacio y destruir la lista
-//}
+int obtener_siguiente_bloque_archivo(char* ruta_archivo) {
+	return 1;
+}
+
+registro_t* obtener_reg(char* buffer) {
+	registro_t* registro = malloc(sizeof(registro_t));
+	registro->key = 132;
+	registro->timestamp = 123817263721;
+	registro->value = "HOLA";
+	return registro;
+}
+
+t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
+	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo);
+	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+	FILE* archivo_bloque = fopen(ruta_bloque, "r");
+	registro_t* registro;
+	t_list* registros = crear_lista_registros();
+	int status = 1;
+	char* buffer = string_new();
+	while(status) {
+		char caracter_leido = fgetc(archivo_bloque);
+		char* s_caracter;
+		switch(caracter_leido) {
+		case '\n': //tengo un registro completo
+			registro = obtener_reg(buffer);
+			if(registro->key == key)
+				list_add(registros, registro); //lo agrego solo si tiene la key que busco
+			free(registro);
+			break;
+		case EOF: //se me acabo el archivo
+			fclose(archivo_bloque);
+			free(ruta_bloque);
+			nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo);
+			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
+				ruta_bloque = obtener_ruta_bloque(nro_bloque);
+				archivo_bloque = fopen(ruta_bloque, "r");
+			} else
+				status = 0; //corta el while
+			break;
+		default:
+			s_caracter = string_from_format("%c", caracter_leido);
+			strcat(buffer, s_caracter);
+			free(s_caracter);
+			break;
+		}
+	}
+	return registros; //En la funcion que lo llamo, tengo que validar que no este vacio y destruir la lista
+}
+
 //---------------------------BITARRAY---------------------------
 int bloques_en_bytes() {
 	return (int) ceil(Metadata_FS.blocks/8);
@@ -328,7 +324,7 @@ int puede_crear_particiones(instr_t* i){
 	int particiones = atoi(obtener_parametro(i, 2));
 	int resultado = 0;
 	sem_wait(&mutex_cant_bloques);
-	if(resultado = (bloques_disponibles>=particiones)){
+	if(resultado = (bloques_disponibles >= particiones)) {
 		bloques_disponibles= bloques_disponibles - particiones;// Esto reserva la cantidad de bloques para que finalice bien el CREATE.
 	}
 	sem_post(&mutex_cant_bloques);
