@@ -37,7 +37,6 @@ char* obtener_path_metadata(char* tabla) {
 }
 
 t_config* obtener_metadata(char* tabla) {
-	//char* path = string_new();
 	char* path = obtener_path_metadata(tabla);
 	return config_create(path); //hay que hacer config_destroy y free del path
 }
@@ -51,7 +50,7 @@ int obtener_part_metadata(char* tabla) {
 
 char* obtener_consistencia_metadata(char* tabla) {
 	t_config* metadata = obtener_metadata(tabla);
-	return config_get_string_value(metadata, "CONSISTENCY");   //guardar en variable, destroy y el free. Desp el return.
+	return config_get_string_value(metadata, "CONSISTENCY");  //guardar en variable, destroy y el free. Desp el return.
 }
 
 int obtener_tiempo_compactacion_metadata(char* tabla) {
@@ -75,7 +74,7 @@ char* obtener_ruta_bloque(int nro_bloque) {
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
 	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
 	char* string_registro = formatear_registro(registro);
-	if(tam_registro(registro) <= espacio_restante_bloque(ruta_archivo)) //es < o <= ?
+	if(tam_registro(registro) <= espacio_restante_bloque(ruta_archivo))
 		txt_write_in_file(archivo_bloque, string_registro);
 	else {
 		int tam_restante = espacio_restante_bloque(ruta_archivo);
@@ -95,12 +94,8 @@ int maximo_bloques(){
 	return Metadata_FS.blocks;
 }
 
-char* obtener_ruta_bitmap() {
-	return string_from_format("%sBitmap.bin", RUTA_METADATA);
-}
-
 void crear_bitmap() {
-	char* ruta_bitmap = obtener_ruta_bitmap();
+	char* ruta_bitmap = RUTA_BITMAP;
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "w+");
 	fclose(archivo_bitmap);
 }
@@ -131,7 +126,7 @@ int cant_bloques_disp() {
 }
 
 void crear_bitarray() {
-	int bloques_en_bytes = (maximo_bloques()+7)/8;// = ceil(maximo_bloques()/8);
+	int bloques_en_bytes = ceil(maximo_bloques()/8);
 	char* miBitarray = string_repeat(0, bloques_en_bytes);
 	bitarray = bitarray_create_with_mode(miBitarray, bloques_en_bytes, LSB_FIRST);
 	free(miBitarray);
@@ -180,7 +175,7 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	}
 	t_config* archivo = config_create(ruta_archivo);
 	char** bloques_ant = config_get_array_value(archivo, "BLOCKS");
-	char* bloques_tot ;//= agregar_bloque_bloques(bloques_ant, nro_bloque);
+	char* bloques_tot = agregar_bloque_bloques(bloques_ant, nro_bloque);
 	config_set_value(archivo, "BLOCKS", bloques_tot);
 	config_destroy(archivo);
 	return 1;
@@ -208,7 +203,7 @@ void aumentar_tam_archivo(char* ruta_archivo, registro_t* registro) {
 int cantidad_bloques_usados(char* ruta_archivo) {
 	t_config* archivo = config_create(ruta_archivo);
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
-	char* bloques;// = pasar_a_string(lista_bloques);
+	char* bloques = pasar_a_string(lista_bloques);
 	return strlen(bloques);
 }
 

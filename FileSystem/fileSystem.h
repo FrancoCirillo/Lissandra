@@ -36,6 +36,7 @@
 #define RUTA_TABLAS "mnj/Lissandra_FS/Tablas/"
 #define RUTA_BLOQUES "mnj/Lissandra_FS/Bloques/"
 #define RUTA_METADATA "mnj/Lissandra_FS/Metadata/"
+#define RUTA_BITMAP "mnj/Lissandra_FS/Metadata/Bitmap.bin"
 #define RUTA_PUNTO_MONTAJE "mnj/Lissandra_FS/"
 
 

@@ -18,7 +18,7 @@ void borrar_lista_registros(void* lista){
 	list_destroy_and_destroy_elements((t_list*)lista, &borrar_registro);
 }
 
-void borrar_registro(void* registro){ //no tengo ni idea de lo que estoy haciendo
+void borrar_registro(void* registro){
 	//free(((registro_t*)registro)->value);
 	free((registro_t*)registro);
 }
@@ -77,7 +77,7 @@ registro_t* pasar_a_registro(instr_t* instr){
 	registro_t* registro = malloc(sizeof(registro_t));
 	registro->key = (uint16_t) atoi(obtener_parametro(instr, 1));
 	registro->value = obtener_parametro(instr, 2); //tengo que hacer algun malloc?
-	registro->timestamp = instr->timestamp; //se supone que la instr siempre tiene ts y nos abstrae de validar si el ts viene en los parametros
+	registro->timestamp = instr->timestamp;
 	return registro;
 }
 
@@ -117,7 +117,7 @@ void dumpeo() {
 
 		mem = memtable;
 
-		dumpear(mem); //tiene que dumpear antes de limpiar
+		dumpear(mem);
 
 		sem_wait(&mutex_memtable);
 		limpiar_memtable();  //la deja como nueva. sin tablas.
@@ -125,7 +125,6 @@ void dumpeo() {
 
 		//Ver si aca hay que crear hilo, o espera a que termina el dumpeo de las tablas.
 		//Preguntar en el foro si se hacen dumpeos paralelos.
-		//dumpear(mem);
 
 		sem_wait(&mutex_tiempo_dump_config);
 		tiempo_dump = obtener_tiempo_dump_config();	//Primero guardar variables y despues bloquearlas, y usarlas.
@@ -176,14 +175,10 @@ void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
 //	pasar_a_archivo(t->tabla, t->registros, "tmp");
 //}
 
-void escribir(FILE* f, t_list* algo){
-	//no se que hace
-}
+//void escribir(FILE* f, t_list* algo){
+//	//no se que hace
+//}
 
-int obtener_num_sig_dumpeo(char* tabla) {
-	//busqueda ultimo dump.tmp en tabla.
-	return 1;
-}
 
 
 

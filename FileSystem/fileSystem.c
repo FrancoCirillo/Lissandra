@@ -67,7 +67,7 @@ void inicializar_FS() {
 	inicializar_memtable();
 	inicializar_directorios();
 	crear_bloques();
-	crear_bitarray();//chequear.
+	crear_bitarray(); //crear_bitmap();
 	loggear_FS("-----------Fin inicialización LFS-----------");
 }
 
@@ -139,16 +139,16 @@ void evaluar_instruccion(instr_t* instr) {
 
 int execute_create(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
-	//string_to_upper(tabla);  //TODO
+	//TODO string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
+		if(!crear_particiones(instr)) {  //Crear funcion puede_crear_particiones.
+			return ERROR_CREATE; //Asignar bloques, para reservarlos?
+					//Los bloques se
+			}
 		agregar_tabla(tabla); //la agrega a la mem
 		crear_directorio(RUTA_TABLAS, tabla);
 		crear_metadata(instr);
 
-		if(!crear_particiones(instr)){  //Crear funcion puede_crear_particiones.
-			return ERROR_CREATE; //Pasar esto arriba. Validar primero. y asignar bloques, para reservarlos.
-			//Los bloques se
-		}
 		//crear_particiones();
 		char* mensaje = malloc(sizeof(char)* 80);
 		sprintf(mensaje, "Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
@@ -182,13 +182,14 @@ int execute_select(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
 	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
-		return ERROR_SELECT; //log
+		return ERROR_SELECT; //TODO log: no existe tabla
 	}
 	registro_t* registro = pasar_a_registro(instr);
-	int key = registro->key; //Hacer funcion obtener_key(registro_t*)???
+	int key = registro->key;
 	t_list* registros_key = obtener_registros_key(tabla, key);
 	if(list_is_empty(registros_key)){
-		//no se encontraron registros con esa key
+		return ERROR_SELECT;
+		//TODO log: no se encontraron registros con esa key
 	}
 	registro_t* registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
 	return CODIGO_EXITO;
@@ -198,14 +199,14 @@ int execute_drop(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
 	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
-		return ERROR_DROP; //log
+		return ERROR_DROP; //TODO log:no existe tabla
 	}
 	eliminar_tabla_de_mem(tabla);
-//	eliminar_directorio(tabla); //adentro tiene un eliminar_archivos(tabla)
+	eliminar_directorio(tabla); //adentro tiene un eliminar_archivos(tabla)
 	return CODIGO_EXITO;
 }
 
-char* obtener_nombre_tabla(instr_t* instr) {
+char* obtener_nombre_tabla(instr_t* instr) { //Azul: aca se puede hacer el string_to_upper();
 	return obtener_parametro(instr, 0);
 }
 
@@ -220,8 +221,8 @@ int obtener_particion_key(char* tabla, int key) {
 
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
-	t_list* registros_temp;// = leer_archivos_temporales(tabla, key);
-	registro_t* registro_bin;// = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
+	t_list* registros_temp = leer_archivos_temporales(tabla, key);
+	registro_t* registro_bin = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
 
 	t_list* registros_totales = crear_lista_registros(); //free
 	list_add_all(registros_totales, registros_mem);
