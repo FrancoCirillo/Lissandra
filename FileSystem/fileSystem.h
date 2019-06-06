@@ -26,6 +26,8 @@
 #include "compactador.h"
 #include "memtable.h"
 
+#include "registros.h"
+
 //ORDEN PARAMETROS
 
 //SELECT [NOMBRE_TABLA] [KEY]
@@ -79,6 +81,7 @@ typedef struct metadata_FS_t {
 	char* magic_number;
 } metadata_FS_t;
 
+
 config_FS_t config_FS;
 metadata_FS_t Metadata_FS;
 ruta_t g_ruta;
@@ -104,13 +107,13 @@ char* obtener_nombre_tabla(instr_t*);
 /*FUNCIONES DE BLOQUES*/
 //importante:NO ME RECONOCE REGISTRO_T
 
-//registro_t* leer_binario(char*, uint16_t); //TODO hacer
+registro_t* leer_binario(char*, uint16_t); //TODO hacer
 t_list* leer_archivos_temporales(char*, uint16_t); //TODO hacer
-//void escribir_bloque(registro_t*);
+void escribir_bloque(registro_t*);
 void eliminar_archivos(char*); //TODO hacer
 
-//registro_t* obtener_registro_mas_reciente(t_list*);
-//t_list* obtener_registros_key(char*, uint16_t);
+char* obtener_registro_mas_reciente(t_list*);
+t_list* obtener_registros_key(char*, uint16_t);
 
 /*MANEJO INTRUCCIONES*/
 void evaluar_instruccion(instr_t*);
