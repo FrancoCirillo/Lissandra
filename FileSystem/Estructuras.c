@@ -111,9 +111,63 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	free(string_registro);
 }
 
+//t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
+//	int nro_bloque = obtener_siguiente_bloque(ruta_archivo);
+//	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+//	FILE* archivo_bloque = fopen(ruta_bloque, "r");
+//	registro_t* registro;
+//	t_list* registros = crear_lista_registros();
+//	int status = 1;
+//	int atributo_reg = 1;
+//	char* buffer = malloc(sizeof(mseg_t));
+//	while(status) {
+//		int atributo_reg;
+//		char caracter_leido = getc(archivo_bloque);
+//		switch(caracter_leido) {
+//		case ';':
+//			switch(atributo_reg) {
+//			case 1:
+//				registro->timestamp = string_a_mseg(buffer);
+//				free(buffer);
+//				char* buffer = malloc(sizeof(uint16_t));
+//				break;
+//			case 2:
+//				registro ->key = (uint16_t) atoi(buffer);
+//				free(buffer);
+//				char* buffer = malloc(config_FS.tamanio_value);
+//				break;
+//			case 3:
+//				strcpy(registro->value, buffer);
+//				free(buffer);
+//				char* buffer = malloc(sizeof(mseg_t));
+//				break;
+//			}
+//			break;
+//		case '\n': //tengo un registro completo
+//			atributo_reg = 1;
+//			if(registro->key == key)
+//				list_add(registros, registro); //lo agrego solo si tiene la key que busco
+//			break;
+//		case EOF: //se me acabo el archivo
+//			fclose(archivo_bloque);
+//			free(ruta_bloque);
+//			nro_bloque = obtener_siguiente_bloque(ruta_archivo);
+//			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
+//				char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+//				FILE* archivo_bloque = fopen(ruta_bloque, "r");
+//			} else
+//				status = 0; //corta el while
+//			break;
+//		default:
+//			//guardo en buffer
+//			break;
+//		}
+//	}
+//	return registros; //En la funcion que lo llamo, tengo que validar que no este vacio y destruir la lista
+//}
 //---------------------------BITARRAY---------------------------
 int bloques_en_bytes() {
-	return ceil(Metadata_FS.blocks/8);
+	return (int) ceil(Metadata_FS.blocks/8);
 }
 
 void inicializar_bitmap() {

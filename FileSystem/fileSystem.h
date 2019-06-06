@@ -39,7 +39,6 @@
 #define RUTA_BITMAP "mnj/Lissandra_FS/Metadata/Bitmap.bin"
 #define RUTA_PUNTO_MONTAJE "mnj/Lissandra_FS/"
 
-
 /*SEMAFOROS*/
 sem_t mutex_tiempo_dump_config;
 sem_t mutex_tiempo_retardo_config;
@@ -88,18 +87,18 @@ void iniciar_semaforos();
 
 /*FUNCIONES AUXILIARES*/
 char* obtener_parametro(instr_t*, int);
-int obtener_particion_key(char*, int);
+int   obtener_particion_key(char*, int);
 _Bool es_registro_mas_reciente(void*, void*);
 char* obtener_nombre_tabla(instr_t*);
 
 
-/*FUNCIONES DE BLOQUES*/ //TODO hacer
-//--------------importante:NO ME RECONOCE REGISTRO_T
+/*FUNCIONES DE BLOQUES*/
+//importante:NO ME RECONOCE REGISTRO_T
 
-//registro_t* leer_binario(char*, uint16_t);
-t_list* leer_archivos_temporales(char*, uint16_t);
+//registro_t* leer_binario(char*, uint16_t); //TODO hacer
+t_list* leer_archivos_temporales(char*, uint16_t); //TODO hacer
 //void escribir_bloque(registro_t*);
-void eliminar_archivos(char*);
+void eliminar_archivos(char*); //TODO hacer
 
 //registro_t* obtener_registro_mas_reciente(t_list*);
 //t_list* obtener_registros_key(char*, uint16_t);

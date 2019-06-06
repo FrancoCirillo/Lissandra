@@ -14,8 +14,8 @@ void finalizar_memtable() { //Borra y libera todos los registros y tablas.
 	dictionary_destroy_and_destroy_elements(memtable, &borrar_lista_registros);
 }
 
-void borrar_lista_registros(void* lista){
-	list_destroy_and_destroy_elements((t_list*)lista, &borrar_registro);
+void borrar_lista_registros(void* registros) {
+	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
 }
 
 void borrar_registro(void* registro){
@@ -23,11 +23,18 @@ void borrar_registro(void* registro){
 	free((registro_t*)registro);
 }
 
-void limpiar_memtable(){
-	dictionary_clean_and_destroy_elements(memtable, &borrar_lista_registros);
-}// dictionary_iterator
+void borrar_registros(char* tabla, void* registros) {
+	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
+	agregar_tabla(tabla);
+	//dictionary_put inserta un nuevo par (key->data) al diccionario
+	//en caso de ya existir la key actualiza la data.
+}
 
-int existe_tabla(char* tabla){
+void limpiar_memtable() {
+	dictionary_iterator(memtable, &borrar_registros);
+}
+
+int existe_tabla(char* tabla) {
 	return dictionary_has_key(memtable, tabla);
 }
 
@@ -35,22 +42,23 @@ void eliminar_tabla_de_mem(char* tabla){
 	dictionary_remove_and_destroy(memtable, tabla, &borrar_lista_registros);
 }
 
-t_list* crear_lista_registros(){
+t_list* crear_lista_registros() {
 	return list_create();
 }
 
-void agregar_tabla(char* tabla){
+void agregar_tabla(char* tabla) {
 	t_list* registros = crear_lista_registros();
 	dictionary_put(memtable, tabla, registros);
+	loggear_FS("Se agrego la tabla en la memtable.");
 }
 
-void agregar_registro(char* tabla, registro_t* registro){
+void agregar_registro(char* tabla, registro_t* registro) {
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	list_add(registros_tabla, registro);
 	loggear_FS("Se inserto el registro en la memtable.");
 }
 
-t_list* obtener_registros_mem(char* tabla, uint16_t key){
+t_list* obtener_registros_mem(char* tabla, uint16_t key) {
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 
 	_Bool es_key_registro(void* registro){
@@ -62,18 +70,23 @@ t_list* obtener_registros_mem(char* tabla, uint16_t key){
 }
 
 //TODO borrar cuando se resuelva
-registro_t* obtener_registro_mas_reciente(t_list* registros_de_key){
+registro_t* obtener_registro_mas_reciente(t_list* registros_de_key) {
 	list_sort(registros_de_key, &es_registro_mas_reciente);
 	return list_get(registros_de_key, 0);
 }
 
-_Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
+_Bool es_registro_mas_reciente(void* un_registro, void* otro_registro) {
 	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
 	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
 	return (_Bool)(ts_un_registro > ts_otro_registro);
 }
 
-registro_t* pasar_a_registro(instr_t* instr){
+registro_t* leer_binario(char* tabla, uint16_t key) { //TODO hacer
+	registro_t* unRegistro;
+	return unRegistro;
+}
+
+registro_t* pasar_a_registro(instr_t* instr) {
 	registro_t* registro = malloc(sizeof(registro_t));
 	registro->key = (uint16_t) atoi(obtener_parametro(instr, 1));
 	registro->value = obtener_parametro(instr, 2); //tengo que hacer algun malloc?
@@ -81,29 +94,22 @@ registro_t* pasar_a_registro(instr_t* instr){
 	return registro;
 }
 
-//
-//	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
-//	FILE* temporal = crear_archivo(nombre_tmp, tabla, ".tmp");
-//	free(nombre_tmp);
-//	return string_from_format("%s/%s/%s.tmp", RUTA_TABLAS, tabla, nombre_tmp);
-//}
+int obtener_num_sig_dumpeo(char* tabla) {
+	return 1;
+}
 
-void dumpear_tabla(char* tabla, void* registros){
-//	if(cant_bloques_disp() == 0){
-//			//Tirar error
-//	}
+void dumpear_tabla(char* tabla, void* registros) {
 
 	int nro_dump = obtener_num_sig_dumpeo(tabla);
 	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 	char* ruta_tmp = string_from_format("%s%s/%s.tmp", RUTA_TABLAS, tabla, nombre_tmp);
 	FILE* temporal = crear_tmp(tabla, nombre_tmp);
-	int nro_bloque = inicializar_archivo(temporal);
+	int nro_bloque = archivo_inicializar(temporal);
 	fclose(temporal);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
 	void escribir_reg_en_tmp(void* registro) {
 	escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp); //este warnings es porque esta comentado en estructuras.h
-
 	}
 
 	free(ruta_tmp);
@@ -129,7 +135,7 @@ void dumpeo() {
 	while (1) {
 		sleep(tiempo_dump);
 
-		mem = memtable;
+		mem = memtable; //Para que?
 
 		dumpear(mem);
 

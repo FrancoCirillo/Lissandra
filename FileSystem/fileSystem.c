@@ -140,17 +140,15 @@ int execute_create(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
 	//TODO string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
-		if(!crear_particiones(instr)) {  //Crear funcion puede_crear_particiones.
-			return ERROR_CREATE; //Asignar bloques, para reservarlos?
-					//Los bloques se
-			}
+		if(!crear_particiones(instr)) {
+			return ERROR_CREATE;
+		}
 		agregar_tabla(tabla); //la agrega a la mem
 		crear_directorio(RUTA_TABLAS, tabla);
 		crear_metadata(instr);
-
-		//crear_particiones();
-		char* mensaje = malloc(sizeof(char)* 80);
-		sprintf(mensaje, "Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
+		char* mensaje = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
+//		char* mensaje = malloc(sizeof(char)* 80);
+//		sprintf(mensaje, "Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 		loggear_FS(mensaje);
 		free(mensaje);
 		return CODIGO_EXITO;
@@ -241,6 +239,11 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 //	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
 //	return (_Bool)(ts_un_registro > ts_otro_registro);
 //}
+
+t_list* leer_archivos_temporales(char* tabla, uint16_t key) { //TODO hacer
+	return crear_lista_registros();
+}
+
 
 //------------EJEMPLO INSTRUCCIONES----------------
 
