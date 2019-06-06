@@ -3,12 +3,8 @@
 #define MEMTABLE_H_
 
 #include "fileSystem.h"
+#include "registros.h"
 
-typedef struct registro_t {
-	uint16_t key;
-	char* value;
-	mseg_t timestamp;
-} registro_t;
 
 t_dictionary* memtable;
 
@@ -26,10 +22,10 @@ void 		borrar_registro(void*);
 registro_t* pasar_a_registro(instr_t*);
 t_list* 	obtener_registros_mem(char*, uint16_t);
 
-//VAN EN FILE SYSTEM!!
-registro_t* obtener_registro_mas_reciente(t_list*);
-t_list* 	obtener_registros_key(char*, uint16_t);
-registro_t* leer_binario(char*, uint16_t); //va en fileSystem
+////VAN EN FILE SYSTEM!!
+//registro_t* obtener_registro_mas_reciente(t_list*);
+//t_list* 	obtener_registros_key(char*, uint16_t);
+//registro_t* leer_binario(char*, uint16_t); //va en fileSystem
 
 // --------FUNCIONES DE TABLAS--------
 int  existe_tabla(char*);

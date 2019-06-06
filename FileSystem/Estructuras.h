@@ -8,6 +8,7 @@
 #ifndef ESTRUCTURAS_H_
 #define ESTRUCTURAS_H_
 
+#include "memtable.h"
 #include "fileSystem.h"
 #include <commons/txt.h>
 #include <commons/bitarray.h>
@@ -15,6 +16,8 @@
 #include <semaphore.h>
 #include <math.h>
 #include <stdio.h>
+
+#include "registros.h"
 
 							/*Globales*/
 int   bloques_disponibles;
@@ -68,9 +71,9 @@ char* agregar_bloque_bloques(char*, int); //TODO le agrega el int como un char*
 int   agregar_bloque_archivo(char*, int);
 FILE* crear_tmp(char*, char*);
 void  crear_particiones(instr_t*);
-//int   tam_registro(registro_t*);
+int   tam_registro(registro_t*);
 int   obtener_tam_archivo(char*);
-//void  aumentar_tam_archivo(char*, registro_t*);
+void  aumentar_tam_archivo(char*, registro_t*);
 int   cantidad_bloques_usados(char*);
 int   espacio_restante_bloque(char*);
 
@@ -78,13 +81,17 @@ int   espacio_restante_bloque(char*);
 //BLOQUES
 void  crear_bloque(char*);
 void  crear_bloques();
-//char* formatear_registro(registro_t*);
+char* formatear_registro(registro_t*);
 char* obtener_ruta_bloque(int);
-//void escribir_registro_bloque(registro_t*, char*, char*); ---> NO ME RECONOCE REGISTRO_T
-int   puede_crear_particiones(instr_t* );
-int   cant_bloques_disponibles();
-void  restar_bloques_disponibles(int);
-void  incremetar_bloques_disponibles(int);
+
+void escribir_registro_bloque(registro_t*, char*, char*); //---> NO ME RECONOCE REGISTRO_T
+int puede_crear_particiones(instr_t* );
+int cant_bloques_disponibles();
+void restar_bloques_disponibles(int);
+void incremetar_bloques_disponibles(int);
+
+registro_t* obtener_reg(char* buffer);
+void imprimir_reg_fs(registro_t *registro);
 
 
 

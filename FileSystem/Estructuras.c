@@ -118,11 +118,33 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo) {
 }
 
 registro_t* obtener_reg(char* buffer) {
+	char* bufferCopy = strdup(buffer);
 	registro_t* registro = malloc(sizeof(registro_t));
-	registro->key = 132;
-	registro->timestamp = 123817263721;
-	registro->value = "HOLA";
+	char* token = malloc(sizeof(int));
+
+	char* actual = strtok(bufferCopy, " ");
+	token = strdup(actual);
+	registro->timestamp = string_a_mseg(token);
+
+	actual = strtok(NULL, " ");
+	token = strdup(actual);
+	registro->key = (uint16_t)atoi(token);
+
+	actual = strtok(NULL, "\n");
+	token = strdup(actual);
+	registro->value = strdup(token);
+
+	free(bufferCopy);
+
 	return registro;
+}
+
+void imprimir_reg_fs(registro_t *registro)
+{
+	printf("Timestamp: %"PRIu64"\n",registro->timestamp);
+	printf("Key: %d\n", registro->key);
+	printf("Value: %s\n", registro->value);
+	puts("");
 }
 
 t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
