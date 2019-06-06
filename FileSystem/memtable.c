@@ -102,7 +102,7 @@ void dumpear_tabla(char* tabla, void* registros) {
 
 	int nro_dump = obtener_num_sig_dumpeo(tabla);
 	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
-	char* ruta_tmp = string_from_format("%s%s/%s.tmp", RUTA_TABLAS, tabla, nombre_tmp);
+	char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 	FILE* temporal = crear_tmp(tabla, nombre_tmp);
 	int nro_bloque = archivo_inicializar(temporal);
 	fclose(temporal);

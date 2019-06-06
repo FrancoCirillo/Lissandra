@@ -4,56 +4,14 @@
 
 int main() {
 
-//	mseg_t a =get_ts();
-//	printf("%" PRIu64 ,a);
-//
-//	mseg_t b = string_to_mseg("1558987461846");
-//	printf("imprimo de string_to_mseg(): %" PRIu64 "\n", b);
-//
-//	char* c = mseg_to_string(a);
-//	printf("imprimo guardado en a = get_ts() usando mseg_to_string():%s\n",c);
-//	free(c);
-
-
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	inicializar_FS();
 
 
-
 	//testeo
 	ejemplo_instr_create();
-	ejemplo_instr_insert();
+	//ejemplo_instr_insert();
 
-
-	//////////////////////////////////////////////
-
-	//	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT);
-
-	//	vigilar_conexiones_entrantes(listenner);
-
-	//////////////////////////////////////////////
-
-	//Esto va dentro del create, pero estoy probando.
-
-	//////////////////////////////////////
-	//FUNCIONA.
-	//		crear_directorio(RUTA_TABLAS,"Tablota");
-	//		FILE* f = crear_archivo("Part_3", "Tablota", ".bin");
-	//		int i= archivo_inicializar(f);
-	//		if(i>0){
-	//			puts("exito");
-	//		}
-	//		else puts("fallo");
-	//////////////////////////////////////
-
-	//Funciona
-	//actualizar_tiempo_retardo_config(600);
-	//printf("El valor es: %d.",(int)config_FS.retardo);
-	//Joyita.
-	//printf("%ld",config_FS.tiempo_dump);
-	//actualizar_tiempo_retardo_config();
-
-	//////////////////////////////////////
 
 	finalizar_FS();
 	return 0;
@@ -64,16 +22,18 @@ void inicializar_FS() {
 	iniciar_semaforos();
 	loggear_FS("-----------INICIO PROCESO-----------");
 	inicializar_configuracion();
+	iniciar_rutas();
 	inicializar_memtable();
 	inicializar_directorios();
-	crear_bloques();
+	crear_bloques(); //inicializa tambien la var globlal de bloques disp.
 	inicializar_bitmap();
 	loggear_FS("-----------Fin inicialización LFS-----------");
 }
 
 void finalizar_FS() {
 	config_destroy(g_config);
-	config_destroy(meta_config);
+	//config_destroy(meta_config); No es necesario.
+	finalizar_rutas();
 	finalizar_memtable();  // Liberar memoria
 	loggear_FS("-----------FIN PROCESO-----------");
 }
@@ -83,6 +43,21 @@ void iniciar_semaforos() {
 	sem_init(&mutex_tiempo_retardo_config, 0, 1);
 	sem_init(&mutex_memtable, 0, 1);
 	sem_init(&mutex_log, 0, 1);
+	sem_init(&mutex_cant_bloques, 0, 1);
+}
+
+void iniciar_rutas(){
+	g_ruta.tablas = concat(config_FS.punto_montaje, "Tablas/");
+	g_ruta.bloques = concat(config_FS.punto_montaje, "Bloques/");
+	g_ruta.metadata = concat(config_FS.punto_montaje, "Metadata/Metadata.bin");
+	g_ruta.bitmap = concat(config_FS.punto_montaje, "Metadata/Bitmap.bin");
+}
+
+void finalizar_rutas(){
+	free(g_ruta.tablas);
+	free(g_ruta.bloques);
+	free(g_ruta.metadata);
+	free(g_ruta.bitmap);
 }
 
 //------------MANEJO INSTRUCCIONES-----------------
@@ -140,11 +115,13 @@ int execute_create(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
 	//TODO string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
-		if(!crear_particiones(instr)) {
+		if(!puede_crear_particiones(instr)) {
+			loggear_FS_error("No hay bloques disponibles para crear las particiones.", instr);
 			return ERROR_CREATE;
 		}
 		agregar_tabla(tabla); //la agrega a la mem
-		crear_directorio(RUTA_TABLAS, tabla);
+		crear_directorio(g_ruta.tablas, tabla);
+		crear_particiones(instr);
 		crear_metadata(instr);
 		char* mensaje = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 //		char* mensaje = malloc(sizeof(char)* 80);
@@ -285,10 +262,10 @@ void ejemplo_instr_create() {
 	instr->codigo_operacion = CODIGO_CREATE;
 	instr->parametros = list_create();
 
-	list_add(instr->parametros, "ALUMNOS");
-	list_add(instr->parametros, "SS");
-	list_add(instr->parametros, "7");
-	list_add(instr->parametros, "60000");
+	list_add(instr->parametros, "Como PCs en el agua");
+	list_add(instr->parametros, "SC");
+	list_add(instr->parametros, "5");
+	list_add(instr->parametros, "20000");
 
 	evaluar_instruccion(instr);
 

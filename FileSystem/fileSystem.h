@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <math.h>
 #include <inttypes.h>
 #include "Estructuras.h"
 #include "compactador.h"
@@ -33,11 +34,6 @@
 //DESCRIBE [NOMBRE_TABLA]
 //DROP [NOMBRE_TABLA]
 
-#define RUTA_TABLAS "mnj/Lissandra_FS/Tablas/"
-#define RUTA_BLOQUES "mnj/Lissandra_FS/Bloques/"
-#define RUTA_METADATA "mnj/Lissandra_FS/Metadata/"
-#define RUTA_BITMAP "mnj/Lissandra_FS/Metadata/Bitmap.bin"
-#define RUTA_PUNTO_MONTAJE "mnj/Lissandra_FS/"
 
 /*SEMAFOROS*/
 sem_t mutex_tiempo_dump_config;
@@ -45,9 +41,18 @@ sem_t mutex_tiempo_retardo_config;
 sem_t mutex_memtable;
 sem_t mutex_log;
 
+
 /*STRUCTS*/
 
 typedef unsigned long long mseg_t;
+
+typedef struct ruta_t {
+	char* tablas;
+	char* bloques;
+	char* bitmap;
+	char* metadata;
+} ruta_t;
+
 
 typedef struct archivo_t {
 	int size;
@@ -76,14 +81,18 @@ typedef struct metadata_FS_t {
 
 config_FS_t config_FS;
 metadata_FS_t Metadata_FS;
+ruta_t g_ruta;
 
 t_log* g_logger;
 t_config* g_config;
 t_config* meta_config;
 
+
 void inicializar_FS();
 void finalizar_FS();
 void iniciar_semaforos();
+void iniciar_rutas();
+void finalizar_rutas();
 
 /*FUNCIONES AUXILIARES*/
 char* obtener_parametro(instr_t*, int);

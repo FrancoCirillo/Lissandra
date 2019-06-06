@@ -7,6 +7,7 @@
 
 #include "Estructuras.h"
 
+
 //Todo
 /*
  * eliminar carpeta
@@ -36,7 +37,7 @@ void  eliminar_directorio(char* tabla){
 
 //---------------------------METADATA---------------------------
 char* obtener_path_metadata(char* tabla) {
-	return string_from_format("%s%s/Metadata", RUTA_TABLAS, tabla);
+	return string_from_format("%s%s/Metadata", g_ruta.tablas, tabla);
 }
 
 t_config* obtener_metadata(char* tabla) {
@@ -84,7 +85,8 @@ int tam_registro(registro_t* registro) {
 }
 
 char* obtener_ruta_bloque(int nro_bloque) {
-	return string_from_format("%s%d.bin", RUTA_BLOQUES, nro_bloque);
+	return string_from_format("%s%d.bin", g_ruta.bloques, nro_bloque);
+
 }
 
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
@@ -171,7 +173,7 @@ int bloques_en_bytes() {
 }
 
 void inicializar_bitmap() {
-	FILE* archivo_bitmap = fopen(RUTA_BITMAP, "w+");
+	FILE* archivo_bitmap = fopen(g_ruta.bitmap, "w+");
 	char* bitmap = string_repeat(0, bloques_en_bytes());
 	fwrite(bitmap, bloques_en_bytes(), 1, archivo_bitmap);
 	fclose(archivo_bitmap);
@@ -179,7 +181,7 @@ void inicializar_bitmap() {
 }
 
 t_bitarray* levantar_bitmap() { //Pasa el contenido del bitmap a un bitarray
-	FILE* archivo_bitmap = fopen(RUTA_BITMAP, "r");
+	FILE* archivo_bitmap = fopen(g_ruta.bitmap, "r");
 	char* bitmap = malloc(bloques_en_bytes() + 1);
 	int resultado_read = fread(bitmap, bloques_en_bytes(), 1, archivo_bitmap);
 	if(resultado_read){
@@ -191,7 +193,7 @@ t_bitarray* levantar_bitmap() { //Pasa el contenido del bitmap a un bitarray
 }
 
 void actualizar_bitmap(t_bitarray* bitarray) {
-	FILE* bitmap = fopen(RUTA_BITMAP, "w");
+	FILE* bitmap = fopen(g_ruta.bitmap, "w");
 	fwrite(bitarray->bitarray, bloques_en_bytes(), 1, bitmap);
 	fclose(bitmap);
 }
@@ -301,28 +303,55 @@ int espacio_restante_bloque(char* ruta_archivo) {
 //De aca para abajo estan corregidos y funcionan sin memory leaks.
 //*****************************************************************
 
-int crear_particiones(instr_t* instr) {
 
-	int cantidad = atoi(obtener_parametro(instr, 2)); //cantidad de particiones?
+int cant_bloques_disponibles(){
+	sem_wait(&mutex_cant_bloques);
+	int cantidad= bloques_disponibles;
+	sem_post(&mutex_cant_bloques);
 
-	if (cant_bloques_disp() < cantidad){
-		loggear_FS_error("Error al crear las particiones. No hay suficientes bloques disponibles",instr);
-		return 0;
+	return cantidad;
+}
+void restar_bloques_disponibles(int num){
+	sem_wait(&mutex_cant_bloques);
+	bloques_disponibles= bloques_disponibles - num;
+	sem_post(&mutex_cant_bloques);
+
+}
+void incremetar_bloques_disponibles(int num){
+	sem_wait(&mutex_cant_bloques);
+	bloques_disponibles= bloques_disponibles + num;
+	sem_post(&mutex_cant_bloques);
+
+}
+
+int puede_crear_particiones(instr_t* i){
+	int particiones = atoi(obtener_parametro(i, 2));
+	int resultado = 0;
+	sem_wait(&mutex_cant_bloques);
+	if(resultado = (bloques_disponibles>=particiones)){
+		bloques_disponibles= bloques_disponibles - particiones;// Esto reserva la cantidad de bloques para que finalice bien el CREATE.
 	}
+	sem_post(&mutex_cant_bloques);
+	return resultado;
+}
 
+
+void crear_particiones(instr_t* instr) {
+
+	int cantidad = atoi(obtener_parametro(instr, 2));
 	char* tabla = obtener_nombre_tabla(instr);
-
+	char* nomb_part ;
 	for(int num = 1; num <= cantidad; num++) {
-		char* nomb_part = string_from_format("Part_%d", num);
+		nomb_part = string_from_format("Part_%d", num);
 		FILE* archivo_binario = crear_archivo(nomb_part, tabla, ".bin");
 		archivo_inicializar(archivo_binario);
 
 		free(nomb_part);
 		fclose(archivo_binario);
 	}
-
-	loggear_FS("Se crearon las particiones de la tabla correctamente.");
-	return 1;
+	char * mje= string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
+	loggear_FS(mje);
+	free(mje);
 }
 
 void crear_metadata(instr_t* instr) {
@@ -331,8 +360,6 @@ void crear_metadata(instr_t* instr) {
 	metadata_inicializar(archivo_metadata, instr);
 	fclose(archivo_metadata);
 	char* mensaje = string_from_format("Se creó el metadata en la tabla \"%s\".", tabla);
-//	char* mensaje = malloc(sizeof(char) * (40 + strlen(tabla)));
-//	sprintf(mensaje, "Se creó el metadata en la tabla \"%s\".", tabla);
 	loggear_FS(mensaje);
 	free(mensaje);
 }
@@ -344,31 +371,17 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 	fprintf(f, "%s%s%s%s%s%s%s", "CONSISTENCY=", consist, "\nPARTITIONS=", part, "\nCOMPACTATION_TIME=", time, "\n");
 }
 
-//Inicializa con size = 0, y el array de Blocks con un bloque asignado.
-//Devuelve el bloque que se le asigno al inicializarlo
 int archivo_inicializar(FILE* f) {
-	if (cant_bloques_disp() == 0) {
-		//TODO log: error, no se puede asignar bloques al archivo
-	}
-	int bloque_num = siguiente_bloque_disponible();
-	fprintf(f, "%s%d%s%d%s", "SIZE=", 0, "\nBLOCKS=[", bloque_num, "]\n");
 
-	//Si hay un bloque disp se valida cuando se llama a esta funcion. Solo pasa en CREATE.
+	int bloque_num = 3;     //siguiente_bloque_disponible();  //Rompe.
+	fprintf(f, "%s%d%s%d%s", "SIZE=", 0, "\nBLOCKS=[", bloque_num, "]\n");
 	// No hace el fclose(f);
 	return bloque_num;
 }
 
 FILE* crear_archivo(char* nombre, char* tabla, char* ext) {
-	char* ruta = string_from_format("%s%s/%s%s", RUTA_TABLAS, tabla, nombre, ext);
-//	char* ruta = malloc(sizeof(char) * (strlen(RUTA_TABLAS) + strlen(nombre) + strlen(tabla)) + 1 + 1 + strlen(ext));
-//	sprintf(ruta, "%s%s%s%s%s", RUTA_TABLAS, tabla, "/", nombre, ext);
+	char* ruta = string_from_format("%s%s/%s%s", g_ruta.tablas, tabla, nombre, ext);
 	FILE* archivo = fopen(ruta, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
-
-	char* mensaje = string_from_format("Se creó el archivo %s%s en la tabla \"%s\".", nombre, ext, tabla);
-//	char* mensaje = malloc(sizeof(char) * (strlen(nombre) + strlen(tabla) + 50));
-//	sprintf(mensaje, "Se creó el archivo %s%s en la tabla \"%s\".", nombre, ext, tabla);
-	loggear_FS(mensaje);
-	free(mensaje);
 	free(ruta);
 	return archivo;
 }
@@ -395,6 +408,7 @@ void crear_directorio(char* ruta, char * nomb) {
 void crear_bloques() {  //Los bloques van a partir del numero 0.
 
 	int cantidad = Metadata_FS.blocks;
+	bloques_disponibles = cantidad;
 	char* num;
 	for (int i = 0; i <= cantidad; i++) {
 		num = string_itoa(i);
@@ -405,8 +419,8 @@ void crear_bloques() {  //Los bloques van a partir del numero 0.
 }
 
 void crear_bloque(char * nombre) {
-	char* ruta = malloc(sizeof(char) * (strlen(RUTA_BLOQUES) + strlen(nombre) + strlen(".bin")) + 1);
-	sprintf(ruta, "%s%s%s", RUTA_BLOQUES, nombre, ".bin");
+	char* ruta = malloc(sizeof(char) * (strlen(g_ruta.bloques) + strlen(nombre) + strlen(".bin")) + 1);
+	sprintf(ruta, "%s%s%s", g_ruta.bloques, nombre, ".bin");
 	FILE* f = fopen(ruta, "w+");
 	free(ruta);
 	fclose(f);
@@ -451,7 +465,7 @@ void inicializar_configuracion(void) {
 	g_config = config_create("Lissandra.config");
 	config_FS.punto_montaje = config_get_string_value(g_config, "PUNTO_MONTAJE");
 	config_FS.puerto_escucha = config_get_string_value(g_config, "PUERTO_ESCUCHA");
-	config_FS.tamanio_value = config_get_int_value(g_config, "TAMANIO_VALUE");
+	config_FS.tamanio_value = config_get_int_value(g_config, "TAMAÑO_VALUE");
 	config_FS.retardo = (mseg_t)config_get_int_value(g_config, "RETARDO");
 	config_FS.tiempo_dump = (mseg_t)config_get_int_value(g_config, "TIEMPO_DUMP");
 
@@ -493,8 +507,11 @@ void actualizar_tiempo_retardo_config(mseg_t value) {
 
 void inicializar_directorios() {
 
-	crear_directorio("mnj/Lissandra_FS/", "Tablas");
-	crear_directorio("mnj/Lissandra_FS/", "Bloques"); //vacias
+	//crear_directorio("mnj/Lissandra_FS/", "Tablas");
+	crear_directorio(config_FS.punto_montaje, "Metadata");
+	crear_directorio(config_FS.punto_montaje, "Tablas");
+	crear_directorio(config_FS.punto_montaje, "Bloques");
+	//crear_directorio("mnj/Lissandra_FS/", "Bloques"); //vacias
 
 	loggear_FS("Directorios listos.");
 
@@ -503,24 +520,21 @@ void inicializar_directorios() {
 }
 
 void leer_metadata_FS() {  //esto se lee una vez.
+	//Lee del archivo de configuracion para crear el metadata.bin con sus datos correspondientes ademas de guardarlos en Metadata_FS.
 
-	char* ruta = "mnj/Lissandra_FS/Metadata/Metadata.bin";
-	meta_config = config_create(ruta);
-	Metadata_FS.block_size = config_get_int_value(meta_config, "BLOCK_SIZE");
-	Metadata_FS.blocks = config_get_int_value(meta_config, "BLOCKS");
-	Metadata_FS.magic_number = config_get_string_value(meta_config, "MAGIC_NUMBER");
+	//char* ruta = concat3(config_FS.punto_montaje, "Metadata", "Metadata.bin");
+	FILE* archivo = fopen(g_ruta.metadata, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
+	Metadata_FS.block_size = config_get_int_value(g_config, "BLOCK_SIZE");
+	Metadata_FS.blocks = config_get_int_value(g_config, "BLOCKS");
+	Metadata_FS.magic_number = config_get_string_value(g_config, "MAGIC_NUMBER");  //Leo del archivo de configuracion.
 
 	char* mensaje = malloc(sizeof(char) * 200);
-	sprintf(mensaje, "%s%s%d%s%d%s%s",
-			"Metadata leído. Los datos son:\n",
-			"BLOCK_SIZE = ",
-			Metadata_FS.block_size,
-			"\nBLOCKS = ",
-			Metadata_FS.blocks,
-			"\nMAGIC_NUMBER = ",
-			Metadata_FS.magic_number);
-
+	sprintf(mensaje, "Metadata leído. Los datos son:\nBLOCK_SIZE = %d\nBLOCKS = %d\nMAGIC_NUMBER = %s",
+			Metadata_FS.block_size, Metadata_FS.blocks,	Metadata_FS.magic_number);
+	fprintf(archivo, "BLOCK_SIZE = %d\nBLOCKS = %d\nMAGIC_NUMBER = %s", Metadata_FS.block_size, Metadata_FS.blocks,	Metadata_FS.magic_number);
+	fclose(archivo);
 	loggear_FS(mensaje);
 	free(mensaje);
+	//free(ruta);
 }
 

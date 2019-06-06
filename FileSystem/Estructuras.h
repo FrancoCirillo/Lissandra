@@ -11,7 +11,15 @@
 #include "fileSystem.h"
 #include <commons/txt.h>
 #include <commons/bitarray.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include <math.h>
+#include <stdio.h>
+
+							/*Globales*/
+int bloques_disponibles;
+
+sem_t mutex_cant_bloques;
 
 							/*ARCHIVOS*/
 
@@ -23,6 +31,7 @@ void  actualizar_tiempo_retardo_config(mseg_t);   //ver si le llega mseg_t o un 
 void  actualizar_tiempo_dump_config(mseg_t);		//ver si le llega mseg_t o un char*
 char* obtener_por_clave(char* , char*);
 int   obtener_tiempo_dump_config();
+
 
 //METADATA TABLAS
 void	  metadata_inicializar(FILE*, instr_t*);
@@ -58,7 +67,7 @@ char* pasar_a_string(char**); //TODO esta funcion pasa de char** a char*
 char* agregar_bloque_bloques(char*, int); //TODO le agrega el int como un char*
 int   agregar_bloque_archivo(char*, int);
 FILE* crear_tmp(char*, char*);
-int   crear_particiones(instr_t*);
+void   crear_particiones(instr_t*);
 //int   tam_registro(registro_t*);
 int   obtener_tam_archivo(char*);
 //void  aumentar_tam_archivo(char*, registro_t*);
@@ -72,19 +81,14 @@ void  crear_bloques();
 //char* formatear_registro(registro_t*);
 char* obtener_ruta_bloque(int);
 //void escribir_registro_bloque(registro_t*, char*, char*); ---> NO ME RECONOCE REGISTRO_T
+int puede_crear_particiones(instr_t* );
+int cant_bloques_disponibles();
+void restar_bloques_disponibles(int);
+void incremetar_bloques_disponibles(int);
+
 
 
 int archivo_inicializar(FILE*);
-
-
-//semaforos
-
-//sem_t mutex_config;
-//sem_t mutex_tiempo_dump;
-//sem_t mutex_memtable;
-//sem_t mutex_archivo;
-//sem_t mutex_bitmap;
-//sem_t mutex_
 
 
 #endif /* ESTRUCTURAS_H_ */
