@@ -67,14 +67,13 @@ void inicializar_FS() {
 	inicializar_memtable();
 	inicializar_directorios();
 	crear_bloques();
-	crear_bitarray(); //crear_bitmap();
+	inicializar_bitmap();
 	loggear_FS("-----------Fin inicialización LFS-----------");
 }
 
 void finalizar_FS() {
 	config_destroy(g_config);
 	config_destroy(meta_config);
-	eliminar_bitarray();
 	finalizar_memtable();  // Liberar memoria
 	loggear_FS("-----------FIN PROCESO-----------");
 }

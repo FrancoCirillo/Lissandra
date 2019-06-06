@@ -81,24 +81,38 @@ registro_t* pasar_a_registro(instr_t* instr){
 	return registro;
 }
 
-
+//
+//	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
+//	FILE* temporal = crear_archivo(nombre_tmp, tabla, ".tmp");
+//	free(nombre_tmp);
+//	return string_from_format("%s/%s/%s.tmp", RUTA_TABLAS, tabla, nombre_tmp);
+//}
 
 void dumpear_tabla(char* tabla, void* registros){
-	if(cant_bloques_disp() == 0){
-			//Tirar error
-	}
-	char* ruta_tmp = crear_tmp(tabla);  //cuando se crea, tiene que ser sin bloques!!!
-	int nro_bloque = siguiente_bloque_disponible();
-	agregar_bloque_archivo(ruta_tmp, nro_bloque);
+//	if(cant_bloques_disp() == 0){
+//			//Tirar error
+//	}
+
+	int nro_dump = obtener_num_sig_dumpeo(tabla);
+	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
+	char* ruta_tmp = string_from_format("%s%s/%s.tmp", RUTA_TABLAS, tabla, nombre_tmp);
+	FILE* temporal = crear_tmp(tabla, nombre_tmp);
+	int nro_bloque = inicializar_archivo(temporal);
+	fclose(temporal);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+
 	void escribir_reg_en_tmp(void* registro) {
-		escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp); //este warnings es porque esta comentado en estructuras.h
+	escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp); //este warnings es porque esta comentado en estructuras.h
+
 	}
 
+	free(ruta_tmp);
+	free(nombre_tmp);
+	free(ruta_bloque);
 	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
 }
 
-void dumpear(t_dictionary* mem) { //tengo otra forma de hacerlo, si esta no gusta
+void dumpear(t_dictionary* mem) {
 	dictionary_iterator(memtable, &dumpear_tabla);
 
 	//de cada tabla de esa mem, que no es la mem que sigue usando, bajar a los .tmp correspondientes.
