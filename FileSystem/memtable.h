@@ -16,6 +16,7 @@ t_dictionary* memtable;
 void inicializar_memtable();
 void finalizar_memtable();
 void limpiar_memtable();
+void leer_memtable();
 
 // --------FUNCIONES DE REGISTROS--------
 t_list* 	crear_lista_registros();

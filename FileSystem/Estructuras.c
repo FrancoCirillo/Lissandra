@@ -214,10 +214,12 @@ int bloque_esta_ocupado(int nro_bloque) {
 }
 
 int siguiente_bloque_disponible() {
-	int nro_bloque = 0;
-	while(nro_bloque < Metadata_FS.blocks && bloque_esta_ocupado(nro_bloque))
-		nro_bloque++;
-	return nro_bloque;
+//	int nro_bloque = 0;
+//	while(nro_bloque < Metadata_FS.blocks && bloque_esta_ocupado(nro_bloque))
+//		nro_bloque++;
+//	return nro_bloque;
+
+	return un_num_bloque++;
 }
 
 void ocupar_bloque(int nro_bloque) {
@@ -322,9 +324,10 @@ void incremetar_bloques_disponibles(int num){
 
 int puede_crear_particiones(instr_t* i){
 	int particiones = atoi(obtener_parametro(i, 2));
-	int resultado = 0;
+	int resultado;
 	sem_wait(&mutex_cant_bloques);
-	if(resultado = (bloques_disponibles >= particiones)) {
+	resultado = (bloques_disponibles>=particiones);
+	if(resultado){
 		bloques_disponibles= bloques_disponibles - particiones;// Esto reserva la cantidad de bloques para que finalice bien el CREATE.
 	}
 	sem_post(&mutex_cant_bloques);
@@ -369,7 +372,7 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 
 int archivo_inicializar(FILE* f) {
 
-	int bloque_num = 3;     //siguiente_bloque_disponible();  //Rompe.
+	int bloque_num = siguiente_bloque_disponible();
 	fprintf(f, "%s%d%s%d%s", "SIZE=", 0, "\nBLOCKS=[", bloque_num, "]\n");
 	// No hace el fclose(f);
 	return bloque_num;

@@ -7,11 +7,14 @@ int main() {
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	inicializar_FS();
 
+	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 
-	//testeo
 	ejemplo_instr_create();
-	//ejemplo_instr_insert();
+	ejemplo_instr_insert();
 
+	//leer_memtable();
+
+	//registro_t* reg;
 
 	finalizar_FS();
 	return 0;
@@ -78,7 +81,6 @@ void evaluar_instruccion(instr_t* instr) {
 	case CODIGO_INSERT:
 		loggear_FS("Me llego una instruccion INSERT.");
 		respuesta = execute_insert(instr);
-		//respuesta = execute_insert(mensaje->instruccion);
 		break;
 
 	case CODIGO_SELECT:
@@ -124,8 +126,6 @@ int execute_create(instr_t* instr) {
 		crear_particiones(instr);
 		crear_metadata(instr);
 		char* mensaje = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
-//		char* mensaje = malloc(sizeof(char)* 80);
-//		sprintf(mensaje, "Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 		loggear_FS(mensaje);
 		free(mensaje);
 		return CODIGO_EXITO;
@@ -142,14 +142,13 @@ int execute_insert(instr_t* instr) { //no esta chequeado
 	registro_t* registro = pasar_a_registro(instr); //VALIDAR SI TAM_VALUE ES MAYOR AL MAX_TAM_VALUE
 	if (!existe_tabla(tabla)) {
 		loggear_FS_error("La tabla no existe en el File System.", instr);
+		free(registro);
 		return ERROR_INSERT;
 	} else {
 		agregar_registro(tabla, registro);
 	}
 	return CODIGO_EXITO;
 }
-//NOTA DAI: Una tabla existe si en la mem hay un nodo de esa tabla vacia.
-//es decir, no hay que validar en la mem ademas de en el FS.
 
 
 int execute_select(instr_t* instr) {
@@ -236,10 +235,9 @@ void ejemplo_instr_insert() {
 	instr->codigo_operacion = CODIGO_INSERT;
 	instr->parametros = list_create();
 
-	list_add(instr->parametros, "ALUMNOS");
+	list_add(instr->parametros, "Como PCs en el agua");
 	list_add(instr->parametros, "1234");
 	list_add(instr->parametros, "Hola");
-	//list_add(instr->parametros, "60000"); //timestamp lo recibimos en la instr
 
 	evaluar_instruccion(instr);
 
@@ -268,15 +266,6 @@ void ejemplo_instr_create() {
 	list_add(instr->parametros, "20000");
 
 	evaluar_instruccion(instr);
-
-	//testeo
-	//	crear_metadata(instr);
-	//	int cc= atoi(c);
-	//	int p = crear_particiones(a,cc);
-	//		if(p>0){
-	//			puts("exito en las particiones");
-	//			}
-	//			else puts("fallaron");
 
 	contestar(instr);  //Libera memoria del mje
 
