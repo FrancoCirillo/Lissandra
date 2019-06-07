@@ -187,6 +187,7 @@ int execute_select(instr_t* instruccion, char* remitente) {
 	t_list *listaParam = list_create();
 	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
+		puts("No existe la tabla");
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
@@ -196,15 +197,19 @@ int execute_select(instr_t* instruccion, char* remitente) {
 	int key = registro->key;
 	t_list* registros_key = obtener_registros_key(tabla, key);
 	if(list_is_empty(registros_key)){
+		puts("No hay registros en la key");
 		char* cadena = string_from_format("No se encontraron registros con la key '%s'", (char *)list_get(instruccion->parametros, 1)); //TODO: free
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 		return ERROR_SELECT;
 	}
-	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
+	puts("Select realizado");
+	printf("Tabla %s\n", (char *)list_get(instruccion->parametros, 0));
+	printf("Tabla %s\n", (char *)list_get(instruccion->parametros, 1));
+//	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select, TODO: no anda
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 1)); //Key
-	list_add(listaParam, "V");	// cambiar (cuando ande) por list_add(listaParam, registro_reciente->value; //Value
+	list_add(listaParam, "V");	// cambiar (cuando ande) por value_registro_reciente; //Value
 	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
 	return CODIGO_EXITO;
 }
@@ -242,7 +247,9 @@ int obtener_particion_key(char* tabla, int key) {
 	return key % cant_particiones;
 }
 
-registro_t* leer_binario(char* p1, uint16_t p2){}
+registro_t* leer_binario(char* p1, uint16_t p2){
+	return NULL;
+}
 
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_mem = obtener_registros_mem(tabla, key);

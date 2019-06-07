@@ -50,7 +50,7 @@ t_bitarray* levantar_bitmap();
 void 		actualizar_bitmap(t_bitarray*);
 int 		cant_bloques_disp();
 void 		eliminar_bitarray(t_bitarray*);
-int 		bloque_esta_ocupado(int nro_bloque);
+int bloque_esta_ocupado(t_bitarray* bitmap,int nro_bloque);
 int 		siguiente_bloque_disponible(); //NO VALIDA SI HAY BLOQUES DISPONIBLES
 void 		ocupar_bloque(int);
 void 		liberar_bloque(int);
