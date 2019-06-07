@@ -7,11 +7,16 @@ int main() {
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	inicializar_FS();
 
+	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
+
 	inicializar_conexiones();
 	//testeo
 	ejemplo_instr_create();
-	//ejemplo_instr_insert();
+	ejemplo_instr_insert();
 
+	//leer_memtable();
+
+	//registro_t* reg;
 
 	finalizar_FS();
 	return 0;
@@ -175,8 +180,6 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 		return listaParam;
 	}
 }
-//NOTA DAI: Una tabla existe si en la mem hay un nodo de esa tabla vacia.
-//es decir, no hay que validar en la mem ademas de en el FS.
 
 
 int execute_select(instr_t* instruccion, char* remitente) {
@@ -198,8 +201,7 @@ int execute_select(instr_t* instruccion, char* remitente) {
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 		return ERROR_SELECT;
 	}
-	registro_t* registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
-	puts("Se tiene el registro mas reciente");
+	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 1)); //Key
 	list_add(listaParam, "V");	// cambiar (cuando ande) por list_add(listaParam, registro_reciente->value; //Value
@@ -240,6 +242,8 @@ int obtener_particion_key(char* tabla, int key) {
 	return key % cant_particiones;
 }
 
+registro_t* leer_binario(char* p1, uint16_t p2){}
+
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
@@ -253,16 +257,17 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 }
 
 
-//registro_t* obtener_registro_mas_reciente(t_list* registros_de_key){
-//	list_sort(registros_de_key, &es_registro_mas_reciente);
-//	return list_get(registros_de_key, 0);
-//}
-//
-//_Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
-//	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
-//	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
-//	return (_Bool)(ts_un_registro > ts_otro_registro);
-//}
+char* obtener_registro_mas_reciente(t_list* registros_de_key) {
+	list_sort(registros_de_key, &es_registro_mas_reciente);
+	registro_t* registro = list_get(registros_de_key, 0);
+	return registro->value;
+}
+
+_Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
+	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
+	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
+	return (_Bool)(ts_un_registro > ts_otro_registro);
+}
 
 t_list* leer_archivos_temporales(char* tabla, uint16_t key) { //TODO hacer
 	return crear_lista_registros();
@@ -283,10 +288,9 @@ void ejemplo_instr_insert() {
 	instr->codigo_operacion = CODIGO_INSERT;
 	instr->parametros = list_create();
 
-	list_add(instr->parametros, "ALUMNOS");
+	list_add(instr->parametros, "Como PCs en el agua");
 	list_add(instr->parametros, "1234");
 	list_add(instr->parametros, "Hola");
-	//list_add(instr->parametros, "60000"); //timestamp lo recibimos en la instr
 
 	evaluar_instruccion(instr, 0);
 
@@ -315,15 +319,6 @@ void ejemplo_instr_create() {
 	list_add(instr->parametros, "20000");
 
 	evaluar_instruccion(instr, 0);
-
-	//testeo
-	//	crear_metadata(instr);
-	//	int cc= atoi(c);
-	//	int p = crear_particiones(a,cc);
-	//		if(p>0){
-	//			puts("exito en las particiones");
-	//			}
-	//			else puts("fallaron");
 
 	contestar(instr);  //Libera memoria del mje
 
