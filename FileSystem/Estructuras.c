@@ -201,12 +201,13 @@ void inicializar_bitmap() {
 t_bitarray* get_bitmap(){
 	//puts("Getting bitmap...");
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "r");
-	char*bitmap=malloc(cantidad_bloques+1);
+	char*bitmap=malloc(cantidad_bloques/8+1);
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cantidad_bloques/8, archivo_bitmap);
-	bitmap[cantidad_bloques+1]='\0';
+	bitmap[cantidad_bloques/8+1]='\0';
 
 	//printf("Bitmap is %s\n",bitmap);
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cantidad_bloques/8, LSB_FIRST);
+	//free(bitmap);
 	return bitarray;
 }
 void actualizar_bitmap(t_bitarray* bitarray) {
@@ -227,6 +228,7 @@ int cant_bloques_disp() {
 		}
 		nro_bloque++;
 	}
+	eliminar_bitarray(bitmap);
 	return cantidad_disponible;
 }
 
@@ -248,6 +250,7 @@ int siguiente_bloque_disponible() {
 	if(nro_bloque==cantidad_bloques){
 		return -1;
 	}
+	eliminar_bitarray(bitmap);
 	return nro_bloque;
 
 }

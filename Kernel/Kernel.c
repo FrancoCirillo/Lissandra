@@ -1,7 +1,6 @@
 //---------kernel.c---------
 
 #include "Kernel.h"
-
 char * codigo_envio;
 
 void iniciar_consola(){
@@ -46,15 +45,17 @@ int main() {
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
 
-	/*sleep(6);
-	recibi_respuesta_fake1();
-	//iniciar_consola();
-	loggear("Recibi respuesta fake1 ejecutado!");
-	sleep(6);
-	recibi_respuesta_fake2();
-	loggear("Recibi respuesta fake2 ejecutado!");
-	 */
+//	/*sleep(6);
+//	recibi_respuesta_fake1();
+//	//iniciar_consola();
+//	loggear("Recibi respuesta fake1 ejecutado!");
+//	sleep(6);
+//	recibi_respuesta_fake2();
+//	loggear("Recibi respuesta fake2 ejecutado!");
+
 }
+
+
 void inicializar_kernel(){
 	t_list *listaParam = list_create();
 	list_add(listaParam, "Kernel");
