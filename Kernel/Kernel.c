@@ -28,6 +28,8 @@ void* consola(void* c){
 
 int main(int argc, char* argv[]) {
 
+
+
 	inicializar_semaforos();
 
 	inicializarConfiguracion();
@@ -38,6 +40,7 @@ int main(int argc, char* argv[]) {
 
 	inicializar_criterios();
 
+	ejemplo_aplanar();
 	//iniciar_ejecutador();
 
 	//inicializar_kernel();

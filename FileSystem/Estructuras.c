@@ -314,7 +314,48 @@ int ejemplo_bitarray(){
 	sleep(2);
 
 }
+//--------------------------APLANAR LISTAS-----------------------
+char* aplanar(char** lista){
+	int size=0;
 
+	while(*(lista+size))
+		size++;
+
+
+    int sum = 0;
+    int count = 0;
+    printf("Length %d\n",size);
+    for (int i=0; i<size; i++) {
+//            printf("Element #%d - %s\n", i, lista[i]);
+            sum += strlen(lista[i]);
+    }
+    sum++;  // Make room for terminating null character
+
+    char* buf;
+    if ((buf = calloc(sum, sizeof(char))) != NULL) {
+            for (int i=0; i<size; i++) {
+                    memcpy(buf+count, lista[i], strlen(lista[i]));
+                    count += strlen(lista[i]);
+            }
+            printf("Output Buffer: %s\n", buf);
+    }
+    return buf;
+
+}
+void ejemplo_aplanar(){
+	char* a="Hola ";
+	char* b="como ";
+	char* c="te ";
+	char* d="va";
+	char** array =malloc(sizeof(char*)*5);
+	*array=a;
+	*(array+1)=b;
+	*(array+2)=c;
+	*(array+3)=d;
+	*(array+4)=NULL;
+	printf("La lista aplanada es %s\n",aplanar(array));
+
+}
 //---------------------------TMP Y BIN---------------------------
 char* pasar_a_string(char** lista_strings) {
 	char* algo = "HOLA";
