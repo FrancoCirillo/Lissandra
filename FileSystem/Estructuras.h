@@ -50,7 +50,7 @@ t_bitarray* levantar_bitmap();
 void 		actualizar_bitmap(t_bitarray*);
 int 		cant_bloques_disp();
 void 		eliminar_bitarray(t_bitarray*);
-int bloque_esta_ocupado(t_bitarray* bitmap,int nro_bloque);
+int bloque_esta_ocupado(t_bitarray*, int);
 int 		siguiente_bloque_disponible(); //NO VALIDA SI HAY BLOQUES DISPONIBLES
 void 		ocupar_bloque(int);
 void 		liberar_bloque(int);
@@ -59,7 +59,7 @@ void 		liberar_bloque(int);
 void leer_metadata_FS();		//es un único archivo
 
 
-void  crear_directorio(char *,char *);
+void  crear_directorio(char*, char*);
 void  eliminar_directorio(char*); //TODO hacer
 FILE* crear_archivo(char*, char*, char*);
 
@@ -83,15 +83,14 @@ void  crear_bloques();
 char* formatear_registro(registro_t*);
 char* obtener_ruta_bloque(int);
 
-void escribir_registro_bloque(registro_t*, char*, char*); //---> NO ME RECONOCE REGISTRO_T
-int puede_crear_particiones(instr_t* );
+void escribir_registro_bloque(registro_t*, char*, char*);
+int puede_crear_particiones(instr_t*);
 int cant_bloques_disponibles();
 void restar_bloques_disponibles(int);
 void incremetar_bloques_disponibles(int);
 
-registro_t* obtener_reg(char* buffer);
-void imprimir_reg_fs(registro_t *registro);
-
+registro_t* obtener_reg(char*);
+void imprimir_reg_fs(registro_t*);
 
 
 int archivo_inicializar(FILE*);
