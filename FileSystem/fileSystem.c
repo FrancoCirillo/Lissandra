@@ -4,21 +4,22 @@
 
 int main() {
 
-	printf("\n\n************PROCESO FILESYSTEM************\n\n");
-	inicializar_FS();
-
-	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
-
-	inicializar_conexiones();
-	//testeo
-	ejemplo_instr_create();
-	ejemplo_instr_insert();
-
-	//leer_memtable();
-
-	//registro_t* reg;
-
-	finalizar_FS();
+//	printf("\n\n************PROCESO FILESYSTEM************\n\n");
+//	inicializar_FS();
+//
+//	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
+//
+//	inicializar_conexiones();
+//	//testeo
+//	ejemplo_instr_create();
+//	ejemplo_instr_insert();
+//
+//	//leer_memtable();
+//
+//	//registro_t* reg;
+//
+//	finalizar_FS();
+	ejemplo_bitarray();
 	return 0;
 
 }
@@ -35,6 +36,7 @@ void inicializar_FS() {
 	crear_bloques(); //inicializa tambien la var globlal de bloques disp.
 	inicializar_bitmap();
 	loggear_FS("-----------Fin inicialización LFS-----------");
+
 }
 
 void finalizar_FS() {
@@ -103,9 +105,9 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 		respuesta = execute_drop(instr, remitente);
 		break;
 
-	case CODIGO_VALUE:
+/*	case CODIGO_VALUE:
 			enviar_tamanio_value(remitente);
-			break;
+			break;*/
 
 	default:
 		//verrrr
@@ -369,9 +371,9 @@ void enviar_tamanio_value(char* remitente){
     t_list *listaParam = list_create();
     char* tamanioValue = string_from_format("%d", config_FS.tamanio_value);
     list_add(listaParam, tamanioValue);
-    instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
+    //instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
 	puts("Enviando tamanio del value");
-    enviar_request(miInstruccion, conexionMemoriaN);
+    //enviar_request(miInstruccion, conexionMemoriaN);
     puts("Tamanio del value enviado");
 }
 
