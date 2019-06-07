@@ -95,37 +95,34 @@ registro_t* pasar_a_registro(instr_t* instr) {
 }
 
 //NUMERO DE DUMP
-t_dictionary* tablas_nro_dump;
-sem_t mutex_tablas_nro_dump;
-void resetear_numero_dump(char* tabla){
+void resetear_numero_dump(char* tabla) {
 	int * rdo;
 	sem_wait(&mutex_tablas_nro_dump);
-	rdo=dictionary_get(tablas_nro_dump,tabla);
-	(*rdo)=0;
+	rdo=dictionary_get(tablas_nro_dump, tabla);
+	(*rdo) = 0;
 	sem_post(&mutex_tablas_nro_dump);
 }
-int siguiente_nro_dump(char* tabla){
-	int * rdo;
+
+int siguiente_nro_dump(char* tabla) {
+	int* rdo;
 	sem_wait(&mutex_tablas_nro_dump);
-	rdo=dictionary_get(tablas_nro_dump,tabla);
+	rdo = dictionary_get(tablas_nro_dump, tabla);
 	(*rdo)++;
 	sem_post(&mutex_tablas_nro_dump);
 
 	return *rdo;
 }
-void agregar_a_contador_dumpeo(char* nombre_tabla){//SE DEBE LLAMAR AL CREAR LA TABLA!
-	int* valor_inicial=malloc(sizeof(int));
-	*valor_inicial=0;
+
+void agregar_a_contador_dumpeo(char* nombre_tabla) {//SE DEBE LLAMAR AL CREAR LA TABLA!
+	int* valor_inicial = malloc(sizeof(int));
+	*valor_inicial = 0;
 	sem_wait(&mutex_tablas_nro_dump);
 	dictionary_put(tablas_nro_dump,nombre_tabla,valor_inicial);
 	sem_post(&mutex_tablas_nro_dump);
 }
-void inicializar_sems(){
-	sem_init(&mutex_tablas_nro_dump,0,1);
-	tablas_nro_dump=dictionary_create();
-}
+
 void ejemplo_nro_dump(){
-	inicializar_sems();
+	iniciar_semaforos();
 	agregar_a_contador_dumpeo("Tabla1");
 	agregar_a_contador_dumpeo("Tabla2");
 	agregar_a_contador_dumpeo("Tabla53");

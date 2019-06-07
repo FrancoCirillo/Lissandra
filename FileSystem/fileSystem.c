@@ -65,6 +65,8 @@ void iniciar_semaforos() {
 	sem_init(&mutex_memtable, 0, 1);
 	sem_init(&mutex_log, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
+	sem_init(&mutex_tablas_nro_dump,0,1);
+	tablas_nro_dump = dictionary_create();
 }
 
 void iniciar_rutas(){
@@ -148,6 +150,7 @@ int execute_create(instr_t* instruccion, char* remitente) {
 			return ERROR_CREATE;
 		}
 		agregar_tabla(tabla); //la agrega a la mem
+		agregar_a_contador_dumpeo(tabla);
 		crear_directorio(g_ruta.tablas, tabla);
 		crear_particiones(instruccion);
 		crear_metadata(instruccion);
