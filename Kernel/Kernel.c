@@ -27,13 +27,15 @@ void* consola(void* c){
 
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
 	inicializar_semaforos();
 
 	inicializarConfiguracion();
 
 	iniciar_log();
+
+	check_inicial(argc, argv);
 
 	inicializar_criterios();
 
@@ -56,28 +58,29 @@ int main() {
 	 */
 }
 void inicializar_kernel(){
+
 	t_list *listaParam = list_create();
 	list_add(listaParam, "Kernel");
-	list_add(listaParam, IP_KERNEL);
-	list_add(listaParam, "4444");
+	list_add(listaParam, miIPKernel);
+	list_add(listaParam, configuracion.puerto);
 	instr_t *miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_requestRecibido;
 
 	identificador *idsNuevasConexiones = malloc(sizeof(identificador));
-	int conexion_con_memoria_3 = crear_conexion(configuracion.MEMORIA_3_IP, configuracion.PUERTO_MEMORIA, IP_KERNEL, g_logger, &mutex_log);
+	int conexion_con_memoria_3 = crear_conexion(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, miIPKernel, g_logger, &mutex_log);
 	enviar_request(miInstruccion, conexion_con_memoria_3);
 	idsNuevasConexiones->fd_in = 0; //Por las moscas
 	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
-	strcpy(idsNuevasConexiones->ip_proceso, configuracion.MEMORIA_3_IP);
+	strcpy(idsNuevasConexiones->ip_proceso, configuracion.MEMORIA_1_IP);
 	idsNuevasConexiones->fd_out = conexion_con_memoria_3;
 
 	sem_wait(&mutex_conexiones_actuales);
-	dictionary_put(conexionesActuales, "Memoria_3", idsNuevasConexiones);
+	dictionary_put(conexionesActuales, "Memoria_1", idsNuevasConexiones);
 	sem_post(&mutex_conexiones_actuales);
 
-	int listenner = iniciar_servidor(IP_KERNEL, "4444", g_logger, &mutex_log);
+	int listenner = iniciar_servidor(miIPKernel, configuracion.puerto, g_logger, &mutex_log);
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
 
 }
@@ -236,7 +239,7 @@ int obtener_codigo_request(){
 
 void continuar_ejecucion(){
 	loggear("Enviando senial en 1 segundo");
-	sleep(1);
+//	sleep(1);
 	pthread_mutex_lock(&lock_ejecutar);
 	pthread_cond_signal(&cond_ejecutar);
 	pthread_mutex_unlock(&lock_ejecutar);
@@ -496,11 +499,11 @@ void responderHandshake(identificador *idsConexionEntrante)
 {
 	t_list *listaParam = list_create();
 	list_add(listaParam, "Kernel");  //Tabla
-	list_add(listaParam, IP_KERNEL); //Key
-	list_add(listaParam, "4444");
+	list_add(listaParam, miIPKernel); //Key
+	list_add(listaParam, configuracion.puerto);
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_KERNEL, g_logger, &mutex_log);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, g_logger, &mutex_log);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
@@ -509,10 +512,11 @@ void recibi_respuesta(instr_t* respuesta){
 	imprimir_instruccion(respuesta);
 
 	//	list_add(respuesta->parametros,"1");
-
 	sem_wait(&mutex_diccionario_enviados);
+	printf("El ultimo parametro de la instruccion es %s\n", (char*)obtener_ultimo_parametro(respuesta));
 	hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
-	loggear("Hilo obtenido y removido del diccionario!");
+	if(h!=NULL) loggear("Hilo obtenido y removido del diccionario!");
+	else loggear("El hilo no existe");
 	sem_post(&mutex_diccionario_enviados);
 
 	loggear("Asigno respuesta y revivo hilo");
@@ -602,7 +606,7 @@ void inicializarConfiguracion() {
 	configuracion.ip = obtener_por_clave(rutaConfiguracion, "IP");
 	configuracion.puerto = obtener_por_clave(rutaConfiguracion, "PUERTO");
 	configuracion.rutaLog = obtener_por_clave(rutaConfiguracion, "rutaLog");
-	configuracion.MEMORIA_3_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_3_IP");
+	configuracion.MEMORIA_1_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_1_IP");
 	configuracion.MEMORIA_8_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_8_IP");
 	configuracion.MEMORIA_9_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_9_IP");
 	configuracion.PUERTO_MEMORIA = obtener_por_clave(rutaConfiguracion, "PUERTO_MEMORIA");
@@ -719,3 +723,18 @@ void* consola(void* c){
 	}
 }*/
 
+void check_inicial(int argc, char* argv[])
+{
+	if(argc>2){
+		log_error(g_logger, "Uso: kernel <IP>, IP vacio => IP = 127.0.0.4");
+		exit(0);
+	}
+	if(strlen(argv[1])<2){
+		puts("IP 127.0.0.4");
+		miIPKernel = IP_KERNEL;
+	}
+	else if(argc==2){
+		printf("IP %s\n", argv[1]);
+		miIPKernel = argv[1];
+	}
+}

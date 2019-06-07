@@ -37,8 +37,8 @@ char *obtener_por_clave(char *ruta, char *clave);
 
 identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
-char miIPMemoria[18];
-char nombreDeMemoria[12];
+char* miIPMemoria;
+char* nombreDeMemoria;
 int listenner;
 int tamanioValue;
 int tamanioRegistro;
@@ -48,7 +48,7 @@ int cantidadDeSectores;
 	/* CONEXIONES */
 
 void inicializar_estructuras_conexiones();
-void empezar_conexiones(char *argv[]);
+void empezar_conexiones();
 void (*callback)(instr_t *instruccion, char *remitente);
 
 	/* PROCESO MEMORIA */
