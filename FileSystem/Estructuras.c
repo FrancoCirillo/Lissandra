@@ -187,7 +187,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
 
 //---------------------------BITARRAY---------------------------
 char* ruta_bitmap="archivo.bitmap";
-int cantidad_bloques=80;
+int cantidad_bloques=8000;
 
 void inicializar_bitmap() {
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "w+");
@@ -202,12 +202,14 @@ t_bitarray* get_bitmap(){
 	//puts("Getting bitmap...");
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "r");
 	char*bitmap=malloc(cantidad_bloques/8+((cantidad_bloques% 8)!=0)+1);
+	printf("Se reservaron %d, bytes\n",cantidad_bloques/8+((cantidad_bloques% 8)!=0)+1);
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cantidad_bloques/8, archivo_bitmap);
 	bitmap[cantidad_bloques/8]='\0';
 
-	//printf("Bitmap is %s\n",bitmap);
+	printf("Bitmap is %d\n",strlen(bitmap));
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cantidad_bloques/8, LSB_FIRST);
-	//free(bitmap);
+	fclose(archivo_bitmap);
+	free(bitmap);
 	return bitarray;
 }
 void actualizar_bitmap(t_bitarray* bitarray) {
@@ -222,13 +224,14 @@ int cant_bloques_disp() {
 	int nro_bloque = 0;
 	int cantidad_disponible=0;
 	t_bitarray* bitmap=get_bitmap();
-	while(nro_bloque < cantidad_bloques){
+	while(nro_bloque <= cantidad_bloques){
 		if(!bloque_esta_ocupado(bitmap, nro_bloque)){
 			cantidad_disponible++;
 		}
 		nro_bloque++;
 	}
 	eliminar_bitarray(bitmap);
+
 	return cantidad_disponible;
 }
 
