@@ -202,7 +202,7 @@ int execute_select(instr_t* instruccion, char* remitente) {
 	puts("Se tiene el registro mas reciente");
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 1)); //Key
-	list_add(listaParam, "Value predefinido.");	// cambiar (cuando ande) por list_add(listaParam, registro_reciente->value; //Value
+	list_add(listaParam, "V");	// cambiar (cuando ande) por list_add(listaParam, registro_reciente->value; //Value
 	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
 	return CODIGO_EXITO;
 }
