@@ -201,9 +201,9 @@ void inicializar_bitmap() {
 t_bitarray* get_bitmap(){
 	//puts("Getting bitmap...");
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "r");
-	char*bitmap=malloc(cantidad_bloques/8+1);
+	char*bitmap=malloc(cantidad_bloques/8+((cantidad_bloques% 8)!=0)+1);
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cantidad_bloques/8, archivo_bitmap);
-	bitmap[cantidad_bloques/8+1]='\0';
+	bitmap[cantidad_bloques/8]='\0';
 
 	//printf("Bitmap is %s\n",bitmap);
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cantidad_bloques/8, LSB_FIRST);
