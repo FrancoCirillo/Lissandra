@@ -40,10 +40,10 @@ int main(int argc, char* argv[]) {
 
 	inicializar_criterios();
 
-	ejemplo_aplanar();
-	//iniciar_ejecutador();
 
-	//inicializar_kernel();
+	iniciar_ejecutador();
+
+	inicializar_kernel();
 	//iniciar_consola();
 
 	loggear("### FINALIZANDO KERNEL ###");
@@ -124,7 +124,6 @@ void procesar_instruccion_consola(char *instruccion){
 	char*  codigo=malloc(sizeof(char)*12);
 	sprintf(codigo,"%d",obtener_codigo_request());
 	list_add(nueva_instruccion->parametros,codigo);
-
 
 	list_add(p->instrucciones,nueva_instruccion);
 	p->size++;
