@@ -9,6 +9,8 @@ int main() {
 
 	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 
+	inicializar_conexiones();
+	//testeo
 	ejemplo_instr_create();
 	ejemplo_instr_insert();
 
@@ -23,11 +25,13 @@ int main() {
 
 void inicializar_FS() {
 	iniciar_semaforos();
+	iniciar_logger();
 	loggear_FS("-----------INICIO PROCESO-----------");
 	inicializar_configuracion();
 	iniciar_rutas();
 	inicializar_memtable();
 	inicializar_directorios();
+	puts("Directorios listossssssss");
 	crear_bloques(); //inicializa tambien la var globlal de bloques disp.
 	inicializar_bitmap();
 	loggear_FS("-----------Fin inicialización LFS-----------");
@@ -65,38 +69,43 @@ void finalizar_rutas(){
 
 //------------MANEJO INSTRUCCIONES-----------------
 
-void evaluar_instruccion(instr_t* instr) {
+void evaluar_instruccion(instr_t* instr, char* remitente) {
 
 	int respuesta = 0;
-
+	int codigoNeto = instr->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 	//Aca pasar el nombre de la tabla a Mayuscula. y nos desligamos de esto en el resto de los pasos.
 
-	switch (instr->codigo_operacion) {
+	switch (codigoNeto) {
 
 	case CODIGO_CREATE:
 		loggear_FS("Me llego una instruccion CREATE.");
-		respuesta = execute_create(instr);
+		respuesta = execute_create(instr, remitente);
 		break;
 
 	case CODIGO_INSERT:
 		loggear_FS("Me llego una instruccion INSERT.");
-		respuesta = execute_insert(instr);
+		respuesta = ejecutar_instruccion_insert(instr, remitente);
+		//respuesta = execute_insert(mensaje->instruccion);
 		break;
 
 	case CODIGO_SELECT:
 		loggear_FS("Me llego una instruccion SELECT.");
-		respuesta = execute_select(instr);
+		respuesta = execute_select(instr, remitente);
 		break;
 
 	case CODIGO_DESCRIBE:
 		loggear_FS("Me llego una instruccion DESCRIBE.");
-		//respuesta = execute_describe(instr);
+		respuesta = execute_describe(instr, remitente);
 		break;
 
 	case CODIGO_DROP:
 		loggear_FS("Me llego una instruccion DROP.");
-		//respuesta = execute_drop(instr);
+		respuesta = execute_drop(instr, remitente);
 		break;
+
+	case CODIGO_VALUE:
+			enviar_tamanio_value(remitente);
+			break;
 
 	default:
 		//verrrr
@@ -113,69 +122,110 @@ void evaluar_instruccion(instr_t* instr) {
 	loggear_FS("Finalizó la ejecución de la instrucción.");
 }
 
-int execute_create(instr_t* instr) {
-	char* tabla = obtener_nombre_tabla(instr);
+int execute_create(instr_t* instruccion, char* remitente) {
+	char* tabla = obtener_nombre_tabla(instruccion);
 	//TODO string_to_upper(tabla);
+	t_list *listaParam = list_create();
 	if (!existe_tabla(tabla)) {
-		if(!puede_crear_particiones(instr)) {
-			loggear_FS_error("No hay bloques disponibles para crear las particiones.", instr);
+		if(!puede_crear_particiones(instruccion)) {
+			char* cadena = string_from_format("No hay bloques disponibles para crear las particiones de la tabla'%s'.", tabla); //TODO: free
+			list_add(listaParam, cadena);
+			imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
 			return ERROR_CREATE;
 		}
 		agregar_tabla(tabla); //la agrega a la mem
 		crear_directorio(g_ruta.tablas, tabla);
-		crear_particiones(instr);
-		crear_metadata(instr);
-		char* mensaje = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
-		loggear_FS(mensaje);
-		free(mensaje);
+		crear_particiones(instruccion);
+		crear_metadata(instruccion);
+		char* cadena = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 		return CODIGO_EXITO;
 	} else {
-		loggear_FS_error("Error al crear la tabla, la tabla ya existe en el FS.", instr);
+		char* cadena = string_from_format("Error al crear la tabla '%s', ya existe en el FS.", tabla); //TODO: free
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
 		return ERROR_CREATE;
 	}
 }
 
 
-int execute_insert(instr_t* instr) { //no esta chequeado
-	char* tabla = obtener_nombre_tabla(instr);
+t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequeado
+	t_list *listaParam = list_create();
+	char* tabla = obtener_nombre_tabla(instruccion);
 	//string_to_upper(tabla);
-	registro_t* registro = pasar_a_registro(instr); //VALIDAR SI TAM_VALUE ES MAYOR AL MAX_TAM_VALUE
+	registro_t* registro = pasar_a_registro(instruccion); //VALIDAR SI TAM_VALUE ES MAYOR AL MAX_TAM_VALUE
+
 	if (!existe_tabla(tabla)) {
-		loggear_FS_error("La tabla no existe en el File System.", instr);
-		free(registro);
-		return ERROR_INSERT;
+		//TODO: free
+		char* cadena = string_from_format("No se pudo insertar %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
+		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
+		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
+		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
+		*codOp = ERROR_INSERT;
+
+		list_add(listaParam, cadena);
+		return listaParam;
+
 	} else {
 		agregar_registro(tabla, registro);
+
+		char* cadena = string_from_format("Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
+		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 1)); //Key
+		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 2)); //Value
+		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
+		*codOp = CODIGO_EXITO;
+
+		list_add(listaParam, cadena);
+		return listaParam;
 	}
-	return CODIGO_EXITO;
 }
 
 
-int execute_select(instr_t* instr) {
-	char* tabla = obtener_nombre_tabla(instr);
+int execute_select(instr_t* instruccion, char* remitente) {
+	char* tabla = obtener_nombre_tabla(instruccion);
+	t_list *listaParam = list_create();
 	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
-		return ERROR_SELECT; //TODO log: no existe tabla
+		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
+		return ERROR_SELECT;
 	}
-	registro_t* registro = pasar_a_registro(instr);
+	registro_t* registro = pasar_a_registro(instruccion);
 	int key = registro->key;
 	t_list* registros_key = obtener_registros_key(tabla, key);
 	if(list_is_empty(registros_key)){
+		char* cadena = string_from_format("No se encontraron registros con la key '%s'", (char *)list_get(instruccion->parametros, 1)); //TODO: free
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 		return ERROR_SELECT;
-		//TODO log: no se encontraron registros con esa key
 	}
 	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
+	list_add(listaParam, (char *)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
+	list_add(listaParam, (char *)list_get(instruccion->parametros, 1)); //Key
+	list_add(listaParam, "V");	// cambiar (cuando ande) por list_add(listaParam, registro_reciente->value; //Value
+	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
 	return CODIGO_EXITO;
 }
 
-int execute_drop(instr_t* instr) {
-	char* tabla = obtener_nombre_tabla(instr);
+int execute_drop(instr_t* instruccion, char* remitente) {
+	char* tabla = obtener_nombre_tabla(instruccion);
+	t_list *listaParam = list_create();
+
+
 	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
-		return ERROR_DROP; //TODO log:no existe tabla
+		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
+		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
+		list_add(listaParam, cadena);
+		return ERROR_DROP;
 	}
 	eliminar_tabla_de_mem(tabla);
 	eliminar_directorio(tabla); //adentro tiene un eliminar_archivos(tabla)
+	char* cadena = string_from_format("Se eliminpo correctamente la tabla '%s'", tabla); //TODO: free
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+	list_add(listaParam, cadena);
 	return CODIGO_EXITO;
 }
 
@@ -242,7 +292,7 @@ void ejemplo_instr_insert() {
 	list_add(instr->parametros, "1234");
 	list_add(instr->parametros, "Hola");
 
-	evaluar_instruccion(instr);
+	evaluar_instruccion(instr, 0);
 
 	contestar(instr);  //Libera memoria del mje
 
@@ -268,7 +318,7 @@ void ejemplo_instr_create() {
 	list_add(instr->parametros, "5");
 	list_add(instr->parametros, "20000");
 
-	evaluar_instruccion(instr);
+	evaluar_instruccion(instr, 0);
 
 	contestar(instr);  //Libera memoria del mje
 
@@ -297,3 +347,118 @@ void contestar(instr_t * instr) {
 	free(instr);
 }
 
+void inicializar_conexiones(){
+	puts("Inicializando conexiones");
+	conexionesActuales = dictionary_create();
+	callback = evaluar_instruccion;
+	puts("callback creado");
+	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT, g_logger, &mutex_log);
+	puts("Servidor iniciado");
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS, g_logger, &mutex_log);
+}
+
+void enviar_tamanio_value(char* remitente){
+	int conexionMemoriaN = obtener_fd_out(remitente);
+    t_list *listaParam = list_create();
+    char* tamanioValue = string_from_format("%d", config_FS.tamanio_value);
+    list_add(listaParam, tamanioValue);
+    instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
+	puts("Enviando tamanio del value");
+    enviar_request(miInstruccion, conexionMemoriaN);
+    puts("Tamanio del value enviado");
+}
+
+void responderHandshake(identificador *idsConexionEntrante)
+{
+	t_list *listaParam = list_create();
+	list_add(listaParam, "FileSystem");
+	list_add(listaParam, IP_FILESYSTEM);
+	list_add(listaParam, config_FS.puerto_escucha); //TODO configuracion.PUERTO
+	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_FILESYSTEM, g_logger, &mutex_log);
+	enviar_request(miInstruccion, fd_saliente);
+	idsConexionEntrante->fd_out = fd_saliente;
+}
+
+int obtener_fd_out(char *proceso)
+{
+	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if (idsProceso->fd_out == 0)
+	{ //Es la primera vez que se le quiere enviar algo a proceso
+		responderHandshake(idsProceso);
+	}
+	return idsProceso->fd_out;
+}
+
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente)
+{
+	list_add(listaParam, obtener_ultimo_parametro(instruccion));
+	instr_t *miInstruccion;
+	switch (quien_pidio(instruccion))
+	{
+
+	case CONSOLA_KERNEL:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
+		int conexionReceptor1 = obtener_fd_out(remitente);
+		enviar_request(miInstruccion, conexionReceptor1);
+		break;
+	case CONSOLA_MEMORIA:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_MEMORIA, listaParam);
+		int conexionReceptor2 = obtener_fd_out(remitente);
+		enviar_request(miInstruccion, conexionReceptor2);
+		break;
+	default:
+		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
+		//Se pidio desde la consola de FS
+		if (codigoOperacion == DEVOLUCION_SELECT)
+		{
+			imprimir_registro(miInstruccion);
+		}
+		if (codigoOperacion == CODIGO_EXITO)
+		{
+			loggear_exito_proceso(miInstruccion, g_logger, &mutex_log);
+		}
+		if (codigoOperacion > BASE_COD_ERROR)
+		{
+			loggear_error_proceso(miInstruccion, g_logger, &mutex_log);
+		}
+		break;
+	}
+}
+
+int ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
+	cod_op codOp;
+	t_list* resultadoInsert;
+
+	if(quien_pidio(instruccion) == CONSOLA_FS){
+		resultadoInsert = list_duplicate(execute_insert(instruccion, &codOp));
+
+		imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
+		return (int) codOp;
+	}
+	else{
+		resultadoInsert = execute_insert(instruccion, &codOp);
+		if(codOp == ERROR_INSERT){
+			instruccion->codigo_operacion = CONSOLA_MEM_INSERT; //Para que el error se mustre en la memoria
+			imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
+		}
+			return (int) codOp;
+	}
+}
+
+int execute_describe(instr_t* instruccion, char* remitente){
+	t_list *listaParam = list_create();
+	char* tabla = obtener_nombre_tabla(instruccion);
+	char* blockSize = string_from_format("%d", 12);
+	char* blocks = string_from_format("%d", 64);
+	char* magicNumber = string_from_format("%s", "LISSANDRA");
+
+	list_add(listaParam, tabla);
+	list_add(listaParam, blockSize);
+	list_add(listaParam, blocks);
+
+	list_add(listaParam, magicNumber);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+	return CODIGO_EXITO;
+}

@@ -478,19 +478,14 @@ void crear_bloque(char * nombre) {
 }
 
 void loggear_FS(char *valor) {
-	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_INFO);
-
 	sem_wait(&mutex_log);
 	log_info(g_logger, valor);
 	sem_post(&mutex_log);
 
 	printf("--------------\n");
-
-	log_destroy(g_logger);
 }
 
 void loggear_FS_error(char *valor, instr_t* i) {
-	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_INFO);
 
 	sem_wait(&mutex_log);
 	log_error(g_logger, valor);
@@ -500,7 +495,6 @@ void loggear_FS_error(char *valor, instr_t* i) {
 
 	printf("--------------\n");
 
-	log_destroy(g_logger);
 	//Esto no genera memory leak, pisa el parametro bien. testeado!
 }
 
@@ -521,6 +515,10 @@ void inicializar_configuracion(void) {
 	config_FS.tiempo_dump = (mseg_t)config_get_int_value(g_config, "TIEMPO_DUMP");
 
 	loggear_FS("Se leyó el archivo de configuración");
+}
+
+void iniciar_logger(){
+	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_INFO);
 }
 
 void actualizar_tiempo_dump_config(mseg_t value) {

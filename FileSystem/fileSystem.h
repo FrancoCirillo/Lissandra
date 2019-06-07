@@ -117,13 +117,13 @@ char* obtener_registro_mas_reciente(t_list*);
 t_list* obtener_registros_key(char*, uint16_t);
 
 /*MANEJO INTRUCCIONES*/
-void evaluar_instruccion(instr_t*);
-int execute_create(instr_t*);
-int execute_insert(instr_t*);
-int execute_select(instr_t*);
-int execute_describe(instr_t*); //TODO hacer
-int execute_drop(instr_t*);
-
+void evaluar_instruccion(instr_t* instr, char* remitente);
+int execute_create(instr_t*, char* remitente);
+t_list* execute_insert(instr_t*, cod_op* codOp);
+int execute_select(instr_t*, char* remitente);
+int execute_describe(instr_t*, char* remitente); //TODO hacer
+int execute_drop(instr_t*, char* remitente);
+int ejecutar_instruccion_insert(instr_t* instruccion, char* remitente);
 /*EJEMPLO INTRUCCIONES*/ //para testeo
 void ejemplo_instr_create();
 void ejemplo_instr_insert();
@@ -139,5 +139,13 @@ char* concat3(char*, char*, char*);
 //eliminar
 //void response(remitente_t*);
 void contestar(instr_t *);
+
+/* CONEXIONES */
+t_dictionary *conexionesActuales;
+void (*callback)(instr_t *instruccion, char *remitente);
+void inicializar_conexiones();
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
+int obtener_fd_out(char *proceso);
+void enviar_tamanio_value(char* remitente);
 
 #endif /* FILE_SYSTEM_H */

@@ -20,10 +20,9 @@
 #include "registros.h"
 
 							/*Globales*/
+void iniciar_logger();
 int   bloques_disponibles;
 int   un_num_bloque;
-
-
 							/*ARCHIVOS*/
 
 void  loggear_FS(char*);
