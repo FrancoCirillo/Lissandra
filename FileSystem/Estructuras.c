@@ -122,11 +122,11 @@ registro_t* obtener_reg(char* buffer) {
 	registro_t* registro = malloc(sizeof(registro_t));
 	char* token = malloc(sizeof(int));
 
-	char* actual = strtok(bufferCopy, " ");
+	char* actual = strtok(bufferCopy, ";");
 	token = strdup(actual);
 	registro->timestamp = string_a_mseg(token);
 
-	actual = strtok(NULL, " ");
+	actual = strtok(NULL, ";");
 	token = strdup(actual);
 	registro->key = (uint16_t)atoi(token);
 
