@@ -25,28 +25,6 @@ void* consola(void* c){
 	}
 
 }
-t_dictionary* tablas_nro_dump;
-sem_t mutex_tablas_nro_dump;
-int siguiente_nro_dump(char* tabla){
-	int * rdo;
-	sem_wait(&mutex_tablas_nro_dump);
-	rdo=dictionary_get(tablas_nro_dump,tabla);
-	(*rdo)++;
-	sem_post(&mutex_tablas_nro_dump);
-
-	return *rdo;
-}
-void agregar_a_contador_dumpeo(char* nombre_tabla){//Cuando se crea la tabla
-	int* valor_inicial=malloc(sizeof(int));
-	*valor_inicial=0;
-	sem_wait(&mutex_tablas_nro_dump);
-	dictionary_put(tablas_nro_dump,nombre_tabla,valor_inicial);
-	sem_post(&mutex_tablas_nro_dump);
-}
-void inicializar_sems(){
-	sem_init(&mutex_tablas_nro_dump,0,1);
-	tablas_nro_dump=dictionary_create();
-}
 
 int main(int argc, char* argv[]) {
 
@@ -64,17 +42,6 @@ int main(int argc, char* argv[]) {
 
 	//inicializar_kernel();
 	//iniciar_consola();
-
-	inicializar_sems();
-	agregar_a_contador_dumpeo("Tabla1");
-	agregar_a_contador_dumpeo("Tabla2");
-	agregar_a_contador_dumpeo("Tabla53");
-	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
-	printf("El siguiente numero de dump para la tabla2 es %d\n",siguiente_nro_dump("Tabla2"));
-	printf("El siguiente numero de dump para la tabla2 es %d\n",siguiente_nro_dump("Tabla2"));
-	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
-	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
-
 
 	loggear("### FINALIZANDO KERNEL ###");
 	sleep(2);

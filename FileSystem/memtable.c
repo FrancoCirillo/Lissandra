@@ -94,13 +94,54 @@ registro_t* pasar_a_registro(instr_t* instr) {
 	return registro;
 }
 
-int obtener_num_sig_dumpeo(char* tabla) {
-	return 1;
+//NUMERO DE DUMP
+t_dictionary* tablas_nro_dump;
+sem_t mutex_tablas_nro_dump;
+void resetear_numero_dump(char* tabla){
+	int * rdo;
+	sem_wait(&mutex_tablas_nro_dump);
+	rdo=dictionary_get(tablas_nro_dump,tabla);
+	(*rdo)=0;
+	sem_post(&mutex_tablas_nro_dump);
+}
+int siguiente_nro_dump(char* tabla){
+	int * rdo;
+	sem_wait(&mutex_tablas_nro_dump);
+	rdo=dictionary_get(tablas_nro_dump,tabla);
+	(*rdo)++;
+	sem_post(&mutex_tablas_nro_dump);
+
+	return *rdo;
+}
+void agregar_a_contador_dumpeo(char* nombre_tabla){//SE DEBE LLAMAR AL CREAR LA TABLA!
+	int* valor_inicial=malloc(sizeof(int));
+	*valor_inicial=0;
+	sem_wait(&mutex_tablas_nro_dump);
+	dictionary_put(tablas_nro_dump,nombre_tabla,valor_inicial);
+	sem_post(&mutex_tablas_nro_dump);
+}
+void inicializar_sems(){
+	sem_init(&mutex_tablas_nro_dump,0,1);
+	tablas_nro_dump=dictionary_create();
+}
+void ejemplo_nro_dump(){
+	inicializar_sems();
+	agregar_a_contador_dumpeo("Tabla1");
+	agregar_a_contador_dumpeo("Tabla2");
+	agregar_a_contador_dumpeo("Tabla53");
+	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
+	printf("El siguiente numero de dump para la tabla2 es %d\n",siguiente_nro_dump("Tabla2"));
+	printf("El siguiente numero de dump para la tabla2 es %d\n",siguiente_nro_dump("Tabla2"));
+	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
+	resetear_numero_dump("Tabla1");
+	printf("Se resetea numero de dump\n");
+	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
+
 }
 
 void dumpear_tabla(char* tabla, void* registros) {
 
-	int nro_dump = obtener_num_sig_dumpeo(tabla);
+	int nro_dump = siguiente_nro_dump(tabla);
 	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 	char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 	FILE* temporal = crear_tmp(tabla, nombre_tmp);
@@ -152,7 +193,7 @@ void dumpeo() {    //Version sin uso del diccionario.
 
 void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
 	if (!strcmp(ext, "tmp")) {
-		char* n = string_itoa(obtener_num_sig_dumpeo(tabla));
+		char* n = string_itoa(siguiente_nro_dump(tabla));
 		n = concat("Dump_", n);
 		FILE * f = crear_archivo(n, tabla, ext);
 		//escribir(f,registros);
