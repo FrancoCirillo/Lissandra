@@ -7,6 +7,8 @@
 
 
 t_dictionary* memtable;
+t_dictionary* tablas_nro_dump;
+sem_t mutex_tablas_nro_dump;
 
 // --------FUNCIONES DE MEMTABLE--------
 void inicializar_memtable();
@@ -32,7 +34,9 @@ int  existe_tabla(char*);
 void agregar_tabla(char*);
 void eliminar_tabla_de_mem(char*);
 
-int obtener_num_sig_dumpeo(char*);  //TODO hacer
+void agregar_a_contador_dumpeo(char*);
+int siguiente_nro_dump(char*);
+void agregar_a_contador_dumpeo(char*);
 void dumpear_tabla(char*, void*);
 void dumpear(t_dictionary*);
 void dumpeo();

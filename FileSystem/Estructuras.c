@@ -382,7 +382,7 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	char** bloques_ant = config_get_array_value(archivo, "BLOCKS");
 	char** bloques_tot = agregar_bloque_bloques(bloques_ant, nro_bloque);
 	char* string_bloques_tot = pasar_a_string(bloques_tot);
-	config_set_value(archivo, "BLOCKS", bloques_tot);
+	config_set_value(archivo, "BLOCKS", string_bloques_tot);
 	config_destroy(archivo);
 	//free(string_bloques_tot);
 	return 1;
@@ -424,32 +424,32 @@ int espacio_restante_bloque(char* ruta_archivo) {
 //*****************************************************************
 
 
-int cant_bloques_disponibles(){
+int cant_bloques_disponibles() {
 	sem_wait(&mutex_cant_bloques);
-	int cantidad= bloques_disponibles;
+	int cantidad = bloques_disponibles;
 	sem_post(&mutex_cant_bloques);
 
 	return cantidad;
 }
-void restar_bloques_disponibles(int num){
+void restar_bloques_disponibles(int num) {
 	sem_wait(&mutex_cant_bloques);
-	bloques_disponibles= bloques_disponibles - num;
+	bloques_disponibles = bloques_disponibles - num;
 	sem_post(&mutex_cant_bloques);
 
 }
-void incremetar_bloques_disponibles(int num){
+void incremetar_bloques_disponibles(int num) {
 	sem_wait(&mutex_cant_bloques);
-	bloques_disponibles= bloques_disponibles + num;
+	bloques_disponibles = bloques_disponibles + num;
 	sem_post(&mutex_cant_bloques);
 
 }
 
-int puede_crear_particiones(instr_t* i){
+int puede_crear_particiones(instr_t* i) {
 	int particiones = atoi(obtener_parametro(i, 2));
 	int resultado;
 	sem_wait(&mutex_cant_bloques);
-	resultado = (bloques_disponibles>=particiones);
-	if(resultado){
+	resultado = (bloques_disponibles >= particiones);
+	if(resultado) {
 		bloques_disponibles= bloques_disponibles - particiones;// Esto reserva la cantidad de bloques para que finalice bien el CREATE.
 	}
 	sem_post(&mutex_cant_bloques);
@@ -462,7 +462,7 @@ void crear_particiones(instr_t* instr) {
 	int cantidad = atoi(obtener_parametro(instr, 2));
 	char* tabla = obtener_nombre_tabla(instr);
 	char* nomb_part ;
-	for(int num = 1; num <= cantidad; num++) {
+	for(int num = 0; num < cantidad; num++) {
 		nomb_part = string_from_format("Part_%d", num);
 		FILE* archivo_binario = crear_archivo(nomb_part, tabla, ".bin");
 		archivo_inicializar(archivo_binario);
