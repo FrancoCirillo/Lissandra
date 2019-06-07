@@ -52,12 +52,11 @@ void responderHandshake(identificador *idsConexionEntrante)
 }
 
 //TODO: Cambiar para usar un IP decente (esta con argv para testing)
-void enviar_datos_a_FS(char *argv[])
+void enviar_datos_a_FS()
 {
 		t_list *listaParam = list_create();
 
 		printf(COLOR_ANSI_VERDE "	PROCESO %s\n" COLOR_ANSI_RESET, nombreDeMemoria);
-		sprintf(miIPMemoria, "127.0.0.%s", argv[1]);
 		printf("IP Memoria: %s.\n", miIPMemoria);
 
 		list_add(listaParam, nombreDeMemoria);

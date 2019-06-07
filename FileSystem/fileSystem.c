@@ -2,7 +2,7 @@
 
 #include "fileSystem.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
 //	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 //	inicializar_FS();
@@ -24,15 +24,27 @@ int main() {
 
 }
 
-void inicializar_FS() {
+void inicializar_FS(int argc, char* argv[]) {
 	iniciar_semaforos();
 	iniciar_logger();
+	if(argc>2){
+		log_error(g_logger, "Uso: fileSystem <IP>, IP vacio => IP = 127.0.0.2");
+		exit(0);
+	}
+	if(strlen(argv[1])<2){
+		puts("IP 127.0.0.2");
+		miIP = IP_FILESYSTEM;
+	}
+	else if(argc==2){
+		printf("IP %s\n", argv[1]);
+		miIP = argv[1];
+	}
+
 	loggear_FS("-----------INICIO PROCESO-----------");
 	inicializar_configuracion();
 	iniciar_rutas();
 	inicializar_memtable();
 	inicializar_directorios();
-	puts("Directorios listossssssss");
 	crear_bloques(); //inicializa tambien la var globlal de bloques disp.
 	inicializar_bitmap();
 	loggear_FS("-----------Fin inicialización LFS-----------");
@@ -361,7 +373,7 @@ void inicializar_conexiones(){
 	conexionesActuales = dictionary_create();
 	callback = evaluar_instruccion;
 	puts("callback creado");
-	int listenner = iniciar_servidor(IP_FILESYSTEM, PORT, g_logger, &mutex_log);
+	int listenner = iniciar_servidor(miIP, config_FS.puerto_escucha, g_logger, &mutex_log);
 	puts("Servidor iniciado");
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS, g_logger, &mutex_log);
 }
@@ -381,11 +393,11 @@ void responderHandshake(identificador *idsConexionEntrante)
 {
 	t_list *listaParam = list_create();
 	list_add(listaParam, "FileSystem");
-	list_add(listaParam, IP_FILESYSTEM);
-	list_add(listaParam, config_FS.puerto_escucha); //TODO configuracion.PUERTO
+	list_add(listaParam, miIP);
+	list_add(listaParam, config_FS.puerto_escucha);
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, IP_FILESYSTEM, g_logger, &mutex_log);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIP, g_logger, &mutex_log);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
