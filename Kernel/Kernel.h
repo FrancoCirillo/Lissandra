@@ -43,7 +43,7 @@ typedef struct config{
 	char* rutaLog;
 	char* ip;
 	char* puerto;
-	char* MEMORIA_3_IP;
+	char* MEMORIA_1_IP;
 	char* MEMORIA_8_IP;
 	char* MEMORIA_9_IP;
 	char* PUERTO_MEMORIA;
@@ -118,12 +118,13 @@ void inicializar_semaforos();
 //Conexiones Franquito
 config_t configuracion;
 t_dictionary *conexionesActuales;
+void check_inicial(int argc, char* argv[]);
 void (*callback)(instr_t *instruccion, char *remitente);
 void ejecutar_requestRecibido(instr_t * instruccion,char* remitente);
 void enviar_a(instr_t* i,char* destino);
 int obtener_fd_out(char *proceso);
 void responderHandshake(identificador *idsConexionEntrante);
-
+char* miIPKernel;
 
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);

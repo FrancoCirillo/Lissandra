@@ -71,9 +71,9 @@ void inicializar_estructuras_conexiones()
 	callback = ejecutar_instruccion;
 }
 
-void empezar_conexiones(char *argv[])
+void empezar_conexiones()
 {
-	enviar_datos_a_FS(argv);
+	enviar_datos_a_FS();
 	listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO, g_logger, &mutex_log);
 	pedir_tamanio_value();
 }
@@ -151,17 +151,18 @@ void iniciar_ejecutador_journal(){
 
 void check_inicial(int argc, char* argv[])
 {
-	if (argc < 2 || strcmp(argv[1], "4") == 0 || strcmp(argv[1], "2") == 0)
-	{
-		puts("Uso: MEMORIA <NUMERERO-DE-MEMORIA>");
-
-		puts("No se puede elegir el numero 4 porque es el IP que (Por el momento, testing) usa el Kernel");
-		puts("Tampoco se puede elegir el numero 2 porque es el IP que (Por el momento, testing) usa el FS");
-
-		puts("\nMockKernel por el momento usa las memorias 3 y/u 8 y/o 9");
+	if(argc>2){
+		log_error(g_logger, "Uso: Memoria <IP>, IP vacio => IP = 127.0.0.3");
 		exit(0);
 	}
-
-	sprintf(nombreDeMemoria, "Memoria_%s", argv[1]);
+	if(strlen(argv[1])<2){
+		puts("IP 127.0.0.3");
+		miIPMemoria = IP_MEMORIA;
+	}
+	else if(argc==2){
+		printf("IP %s\n", argv[1]);
+		miIPMemoria = argv[1];
+	}
+	nombreDeMemoria = string_from_format("Memoria_%d", configuracion.MEMORY_NUMBER);
 }
 

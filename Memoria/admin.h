@@ -42,12 +42,11 @@ extern t_config *g_config;
 extern config configuracion;
 extern int tamanioValue;
 extern int tamanioRegistro;
-extern char nombreDeMemoria[12];
 extern bool* sectorOcupado;
 extern int cantidadDeSectores;
 extern t_dictionary *conexionesActuales;
-extern char miIPMemoria[18];
-extern char nombreDeMemoria[12];
+extern char* miIPMemoria;
+extern char* nombreDeMemoria;
 extern identificador *idsNuevasConexiones;
 
 extern t_dictionary *tablaDeSegmentos;

@@ -142,6 +142,7 @@ char* concat3(char*, char*, char*);
 void contestar(instr_t *);
 
 /* CONEXIONES */
+char* miIP;
 t_dictionary *conexionesActuales;
 void (*callback)(instr_t *instruccion, char *remitente);
 void inicializar_conexiones();
