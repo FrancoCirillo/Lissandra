@@ -31,7 +31,7 @@ int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
-void  eliminar_directorio(char* tabla){
+void  eliminar_directorio(char* tabla) { //TODO hacer despues
 
 }
 
@@ -74,12 +74,12 @@ char* formatear_registro(registro_t* registro) {
 	uint16_t key = registro->key;
 	char* value = registro->value;
 	char* ts = mseg_a_string(registro->timestamp);
-	return string_from_format("%s;%d;%s", ts, key, value);
+	return string_from_format("%s;%d;%s\n", ts, key, value);
 }
 
 int tam_registro(registro_t* registro) {
 	char* registro_formateado = formatear_registro(registro);
-	int tam_registro = sizeof(registro_formateado); //strlen(registro_formateado);
+	int tam_registro = strlen(registro_formateado);
 	free(registro_formateado);
 	return tam_registro;
 }
@@ -147,7 +147,7 @@ void imprimir_reg_fs(registro_t *registro)
 	puts("");
 }
 
-t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
+t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=1, .tmp=0
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
@@ -161,9 +161,11 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
 		switch(caracter_leido) {
 		case '\n': //tengo un registro completo
 			registro = obtener_reg(buffer);
-			if(registro->key == key)
+			if(registro->key == key) {
 				list_add(registros, registro); //lo agrego solo si tiene la key que busco
-			free(registro);
+				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
+			}
+				free(registro);
 			break;
 		case EOF: //se me acabo el archivo
 			fclose(archivo_bloque);
@@ -186,58 +188,63 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
 }
 
 //---------------------------BITARRAY---------------------------
-char* ruta_bitmap="archivo.bitmap";
-int cantidad_bloques=8000;
-int cant_bytes(){
+char* ruta_bitmap = "archivo.bitmap";
+int cantidad_bloques = 8000;
+
+int cant_bytes() {
 	return (cantidad_bloques+7)/8;
 }
+
 void inicializar_bitmap() {
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "w+");
 	//char* bitmap = string_repeat(0, cant_bytes());
-	printf("Iniciando bitmap con %d bloques, bytes %d\n",cantidad_bloques,cant_bytes());
+	printf("Iniciando bitmap con %d bloques, bytes %d\n", cantidad_bloques,cant_bytes());
 	//fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
 
 	fclose(archivo_bitmap);
 	truncate(ruta_bitmap,cant_bytes());
 	//free(bitmap);
 }
-void chequear_bitmap(t_bitarray* b){
+
+void chequear_bitmap(t_bitarray* bitarray) {
 	int i=0;
 	puts("\n###CHEQUEANDO BITMAP");
 	while(i < cantidad_bloques){
-		if(bloque_esta_ocupado(b, i))
-			printf("%d,",i);
+		if(bloque_esta_ocupado(bitarray, i))
+			printf("%d,", i);
 		i++;
 	}
 	puts("\n#### FIN CHEQUEO");
 }
-t_bitarray* get_bitmap(){
+
+t_bitarray* get_bitmap() {
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "r");
 	char*bitmap=malloc(cant_bytes()+1);
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cant_bytes()+1, archivo_bitmap);
-	bitmap[cant_bytes()]=0;
+	bitmap[cant_bytes()] = 0;
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cant_bytes(), LSB_FIRST);
 	fclose(archivo_bitmap);
 	//TODO free(bitmap);
 
 	return bitarray;
 }
+
 void actualizar_bitmap(t_bitarray* bitarray) {
 	FILE* bitmap = fopen(ruta_bitmap, "w+");
 	printf("Escrbiendo archivo %d bytes\n",strlen(bitarray->bitarray));
-	fwrite(bitarray->bitarray, sizeof(char) , sizeof(char)*cant_bytes(),bitmap);
+	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
 	puts("Cerrando archivo");
 	fclose(bitmap);
 }
 
 int cant_bloques_disp() {
 	int nro_bloque = 0;
-	int cantidad_disponible=0;
-	t_bitarray* bitmap=get_bitmap();
-	while(nro_bloque < cantidad_bloques){
-		if(!bloque_esta_ocupado(bitmap, nro_bloque)){
+	int cantidad_disponible = 0;
+	t_bitarray* bitmap = get_bitmap();
+	while(nro_bloque < cantidad_bloques) {
+		if(!bloque_esta_ocupado(bitmap, nro_bloque)) {
 			cantidad_disponible++;
-		}else{
+		} else {
 			//printf(" %d,",nro_bloque);
 		}
 		nro_bloque++;
@@ -247,11 +254,11 @@ int cant_bloques_disp() {
 	return cantidad_disponible;
 }
 
-void eliminar_bitarray(t_bitarray* bitarray){
+void eliminar_bitarray(t_bitarray* bitarray) {
 	bitarray_destroy(bitarray);
 }
 
-int bloque_esta_ocupado(t_bitarray* bitmap,int nro_bloque) {
+int bloque_esta_ocupado(t_bitarray* bitmap, int nro_bloque) {
 	int test = bitarray_test_bit(bitmap, nro_bloque);
 	//printf("El valor del bloque %d, es %d\n",nro_bloque,test);
 	return test;
@@ -259,10 +266,10 @@ int bloque_esta_ocupado(t_bitarray* bitmap,int nro_bloque) {
 
 int siguiente_bloque_disponible() {
 	int nro_bloque = 0;
-	t_bitarray* bitmap=get_bitmap();
+	t_bitarray* bitmap = get_bitmap();
 	while(nro_bloque < cantidad_bloques && bloque_esta_ocupado(bitmap,nro_bloque))
 		nro_bloque++;
-	if(nro_bloque==cantidad_bloques){
+	if(nro_bloque == cantidad_bloques) {
 		return -1;
 	}
 	eliminar_bitarray(bitmap);
@@ -309,14 +316,16 @@ int ejemplo_bitarray(){
 }
 
 //---------------------------TMP Y BIN---------------------------
-char* pasar_a_string(char** a) {
+char* pasar_a_string(char** lista_strings) {
 	char* algo = "HOLA";
 	return algo;
 }
 
-char* agregar_bloque_bloques(char* lista_bloques, int bloque) {
-	char* algo = "HOLA";
-	return algo;
+char** agregar_bloque_bloques(char** lista_s_bloques, int bloque) {
+	char* s_bloque = string_itoa(bloque);
+	string_append(lista_s_bloques, bloque);
+	free(s_bloque);
+	return lista_s_bloques;
 }
 
 FILE* crear_tmp(char* tabla, char* nombre_tmp){
@@ -330,10 +339,11 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	}
 	t_config* archivo = config_create(ruta_archivo);
 	char** bloques_ant = config_get_array_value(archivo, "BLOCKS");
-	char* string_bloques_ant = pasar_a_string(bloques_ant); //posiblemente hay que hacer free
-	char* bloques_tot = agregar_bloque_bloques(string_bloques_ant, nro_bloque);
+	char** bloques_tot = agregar_bloque_bloques(bloques_ant, nro_bloque);
+	char* string_bloques_tot = pasar_a_string(bloques_tot);
 	config_set_value(archivo, "BLOCKS", bloques_tot);
 	config_destroy(archivo);
+	//free(string_bloques_tot);
 	return 1;
 }
 

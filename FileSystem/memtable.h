@@ -32,7 +32,7 @@ int  existe_tabla(char*);
 void agregar_tabla(char*);
 void eliminar_tabla_de_mem(char*);
 
-
+int obtener_num_sig_dumpeo(char*);  //TODO hacer
 void dumpear_tabla(char*, void*);
 void dumpear(t_dictionary*);
 void dumpeo();
@@ -41,7 +41,5 @@ void dumpeo();
 void pasar_a_archivo(char*, t_list*, char*);
 void escribir(FILE*, t_list*);
 //void bajar_tabla(mem_tabla_t* t)
-
-int obtener_num_sig_dumpeo(char*); //TODO hacer
 
 #endif /* MEMTABLE_H_ */

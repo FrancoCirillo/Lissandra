@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <sys/types.h>
 #include <math.h>
 #include <inttypes.h>
 #include "Estructuras.h"
@@ -108,8 +109,8 @@ char* obtener_nombre_tabla(instr_t*);
 /*FUNCIONES DE BLOQUES*/
 //importante:NO ME RECONOCE REGISTRO_T
 
-registro_t* leer_binario(char*, uint16_t); //TODO hacer
-t_list* leer_archivos_temporales(char*, uint16_t); //TODO hacer
+t_list* leer_binario(char*, uint16_t);
+t_list* leer_archivos_temporales(char*, uint16_t); //TODO hacer bien
 void escribir_bloque(registro_t*);
 void eliminar_archivos(char*); //TODO hacer
 
