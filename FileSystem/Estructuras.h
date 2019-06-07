@@ -18,9 +18,8 @@
 
 							/*Globales*/
 int bloques_disponibles;
-
 sem_t mutex_cant_bloques;
-
+void iniciar_logger();
 							/*ARCHIVOS*/
 
 void  loggear_FS(char*);

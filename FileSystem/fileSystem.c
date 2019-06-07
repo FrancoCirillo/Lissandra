@@ -20,6 +20,7 @@ int main() {
 
 void inicializar_FS() {
 	iniciar_semaforos();
+	iniciar_logger();
 	loggear_FS("-----------INICIO PROCESO-----------");
 	inicializar_configuracion();
 	iniciar_rutas();
@@ -147,30 +148,30 @@ int execute_create(instr_t* instruccion, char* remitente) {
 t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequeado
 	t_list *listaParam = list_create();
 	char* tabla = obtener_nombre_tabla(instruccion);
-	char* cadena = string_new();
-	list_add(listaParam, cadena);
 	//string_to_upper(tabla);
 	registro_t* registro = pasar_a_registro(instruccion); //VALIDAR SI TAM_VALUE ES MAYOR AL MAX_TAM_VALUE
 
 	if (!existe_tabla(tabla)) {
 		//TODO: free
-		string_append_with_format(&cadena, "No se pudo insertar %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
-		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 1)); //Key
-		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 2)); //Value
-		string_append_with_format(&cadena, "%"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
+		char* cadena = string_from_format("No se pudo insertar %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
+		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
+		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
+		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
 		*codOp = ERROR_INSERT;
 
+		list_add(listaParam, cadena);
 		return listaParam;
 
 	} else {
 		agregar_registro(tabla, registro);
 
-		string_append_with_format(&cadena, "Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
+		char* cadena = string_from_format("Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
 		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 1)); //Key
 		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 2)); //Value
-		string_append_with_format(&cadena, "%"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
+		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
 		*codOp = CODIGO_EXITO;
 
+		list_add(listaParam, cadena);
 		return listaParam;
 	}
 }
@@ -200,7 +201,7 @@ int execute_select(instr_t* instruccion, char* remitente) {
 	registro_t* registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 1)); //Key
-	list_add(listaParam, "Buenas soy un value");						//Value //TODO: usar registro_reciente->value
+	list_add(listaParam, registro_reciente->value);						//Value
 	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
 	return CODIGO_EXITO;
 }
@@ -208,19 +209,20 @@ int execute_select(instr_t* instruccion, char* remitente) {
 int execute_drop(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list *listaParam = list_create();
-	char* cadena = string_new();
-	list_add(listaParam, cadena);
+
 
 	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
-		string_append_with_format(&cadena, "No existe la tabla '%s'", tabla); //TODO: free
+		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
 		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
+		list_add(listaParam, cadena);
 		return ERROR_DROP;
 	}
 	eliminar_tabla_de_mem(tabla);
 	eliminar_directorio(tabla); //adentro tiene un eliminar_archivos(tabla)
-	string_append_with_format(&cadena, "Se eliminpo correctamente la tabla '%s'", tabla); //TODO: free
+	char* cadena = string_from_format("Se eliminpo correctamente la tabla '%s'", tabla); //TODO: free
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+	list_add(listaParam, cadena);
 	return CODIGO_EXITO;
 }
 
@@ -351,7 +353,6 @@ void contestar(instr_t * instr) {
 
 void inicializar_conexiones(){
 	puts("Inicializando conexiones");
-	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_INFO);
 	conexionesActuales = dictionary_create();
 	callback = evaluar_instruccion;
 	puts("callback creado");
@@ -436,11 +437,18 @@ int ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 
 	if(quien_pidio(instruccion) == CONSOLA_FS){
 		puts("Ejecutando instruccion Insert");
-		resultadoInsert = execute_insert(instruccion, &codOp);
+		resultadoInsert = list_duplicate(execute_insert(instruccion, &codOp));
+		void imprimir(char* a){
+			puts("aasassasaas");
+			printf("%s\n",a);
+		}
+		list_iterate(resultadoInsert, (void*)imprimir);
+		puts("assdfasldfjas");
 		imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
 		return (int) codOp;
 	}
 	else{
+		puts("No lo pidio FS");
 		resultadoInsert = execute_insert(instruccion, &codOp);
 		if(codOp == ERROR_INSERT){
 			instruccion->codigo_operacion = CONSOLA_MEM_INSERT; //Para que el error se mustre en la memoria
