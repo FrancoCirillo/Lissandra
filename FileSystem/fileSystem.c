@@ -19,7 +19,7 @@ int main() {
 //	//registro_t* reg;
 //
 //	finalizar_FS();
-	ejemplo_bitarray();
+//	ejemplo_bitarray();
 	return 0;
 
 }
@@ -195,24 +195,29 @@ int execute_select(instr_t* instruccion, char* remitente) {
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 		return ERROR_SELECT;
 	}
+	puts("Existe tabla");
 	registro_t* registro = pasar_a_registro(instruccion);
+	puts("Pasar a resgistro");
 	int key = registro->key;
 	t_list* registros_key = obtener_registros_key(tabla, key);
-	if(list_is_empty(registros_key)){
+	puts("obtener registros key");
+	if(list_is_empty(registros_key)) {
 		puts("No hay registros en la key");
 		char* cadena = string_from_format("No se encontraron registros con la key '%s'", (char *)list_get(instruccion->parametros, 1)); //TODO: free
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
+		//borrar_lista_registros(registros_key);
 		return ERROR_SELECT;
 	}
 	puts("Select realizado");
-	printf("Tabla %s\n", (char *)list_get(instruccion->parametros, 0));
-	printf("Tabla %s\n", (char *)list_get(instruccion->parametros, 1));
+	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 0));
+	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 1));
 //	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select, TODO: no anda
-	list_add(listaParam, (char *)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
-	list_add(listaParam, (char *)list_get(instruccion->parametros, 1)); //Key
+	list_add(listaParam, (char*)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
+	list_add(listaParam, (char*)list_get(instruccion->parametros, 1)); //Key
 	list_add(listaParam, "V");	// cambiar (cuando ande) por value_registro_reciente; //Value
 	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
+	//borrar_lista_registros(registros_key);
 	return CODIGO_EXITO;
 }
 
@@ -249,22 +254,56 @@ int obtener_particion_key(char* tabla, int key) {
 	return key % cant_particiones;
 }
 
-registro_t* leer_binario(char* p1, uint16_t p2){
-	return NULL;
+t_list* leer_binario(char* tabla, uint16_t key) {
+	int particion = obtener_particion_key(tabla, key);
+	char* ruta_bin = string_from_format("%s%s/%d.bin", g_ruta.tablas, tabla, particion);
+	t_list* registro_key = buscar_key_en_bloques(ruta_bin, key, 0);
+	free(ruta_bin);
+	return registro_key;
+}
+
+t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
+	t_list* registros = crear_lista_registros();
+	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
+	DIR* directorio = opendir(ruta_tabla);
+	if (directorio == NULL) {
+	 printf("Error: No se puede abrir el directorio\n");
+	 exit(2);
+	 }
+
+	struct dirent* directorio_leido;
+	while((directorio_leido = readdir(directorio)) != NULL) {
+//		printf("%d\t%d\t%d\t%s\n", directorio_leido->d_ino,
+//								   directorio_leido->d_off,
+//								   directorio_leido->d_reclen,
+//								   directorio_leido->d_name);
+		char* nombre_archivo = directorio_leido->d_name;
+		if(string_ends_with(nombre_archivo, "tmp")) {
+			char* ruta_tmp = string_from_format("%s%s", ruta_tabla, nombre_archivo);
+			t_list* registros_tmp = buscar_key_en_bloques(ruta_tmp, key, 0);
+			list_add_all(registros, registros_tmp);
+		}
+	}
+	free(ruta_tabla);
+	closedir(directorio);
+	return registros;
 }
 
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
-	registro_t* registro_bin = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
+	t_list* registro_bin = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
 
 	t_list* registros_totales = crear_lista_registros(); //free
 	list_add_all(registros_totales, registros_mem);
 	list_add_all(registros_totales, registros_temp);
-	list_add(registros_totales, registro_bin);
+	list_add_all(registros_totales, registro_bin);
+
+	borrar_lista_registros(registros_mem);
+	borrar_lista_registros(registros_temp);
+	borrar_lista_registros(registro_bin);
 	return registros_totales;
 }
-
 
 char* obtener_registro_mas_reciente(t_list* registros_de_key) {
 	list_sort(registros_de_key, &es_registro_mas_reciente);
@@ -276,10 +315,6 @@ _Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
 	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
 	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
 	return (_Bool)(ts_un_registro > ts_otro_registro);
-}
-
-t_list* leer_archivos_temporales(char* tabla, uint16_t key) { //TODO hacer
-	return crear_lista_registros();
 }
 
 
