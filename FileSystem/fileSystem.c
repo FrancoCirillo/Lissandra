@@ -199,9 +199,10 @@ int execute_select(instr_t* instruccion, char* remitente) {
 		return ERROR_SELECT;
 	}
 	registro_t* registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select
+	puts("Se tiene el registro mas reciente");
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
 	list_add(listaParam, (char *)list_get(instruccion->parametros, 1)); //Key
-	list_add(listaParam, registro_reciente->value);						//Value
+	list_add(listaParam, "Value predefinido.");	// cambiar (cuando ande) por list_add(listaParam, registro_reciente->value; //Value
 	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
 	return CODIGO_EXITO;
 }
@@ -436,19 +437,12 @@ int ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 	t_list* resultadoInsert;
 
 	if(quien_pidio(instruccion) == CONSOLA_FS){
-		puts("Ejecutando instruccion Insert");
 		resultadoInsert = list_duplicate(execute_insert(instruccion, &codOp));
-		void imprimir(char* a){
-			puts("aasassasaas");
-			printf("%s\n",a);
-		}
-		list_iterate(resultadoInsert, (void*)imprimir);
-		puts("assdfasldfjas");
+
 		imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
 		return (int) codOp;
 	}
 	else{
-		puts("No lo pidio FS");
 		resultadoInsert = execute_insert(instruccion, &codOp);
 		if(codOp == ERROR_INSERT){
 			instruccion->codigo_operacion = CONSOLA_MEM_INSERT; //Para que el error se mustre en la memoria
