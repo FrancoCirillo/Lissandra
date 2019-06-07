@@ -187,17 +187,19 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key) {
 
 //---------------------------BITARRAY---------------------------
 char* ruta_bitmap="archivo.bitmap";
-int cantidad_bloques=80;
+int cantidad_bloques=8000;
 int cant_bytes(){
-	return (cantidad_bloques+7)/8+1;
+	return (cantidad_bloques+7)/8;
 }
 void inicializar_bitmap() {
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "w+");
-	char* bitmap = string_repeat(0, cant_bytes()+1);
-	printf("Iniciando bitmap con %d bloques",cantidad_bloques);
-	fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
+	//char* bitmap = string_repeat(0, cant_bytes());
+	printf("Iniciando bitmap con %d bloques, bytes %d\n",cantidad_bloques,cant_bytes());
+	//fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
+
 	fclose(archivo_bitmap);
-	free(bitmap);
+	truncate(ruta_bitmap,cant_bytes());
+	//free(bitmap);
 }
 void chequear_bitmap(t_bitarray* b){
 	int i=0;
@@ -216,7 +218,7 @@ t_bitarray* get_bitmap(){
 	bitmap[cant_bytes()]=0;
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cant_bytes(), LSB_FIRST);
 	fclose(archivo_bitmap);
-	//free(bitmap);
+	//TODO free(bitmap);
 
 	return bitarray;
 }
@@ -270,7 +272,7 @@ int siguiente_bloque_disponible() {
 
 void ocupar_bloque(int nro_bloque) {
 	t_bitarray* bitarray = get_bitmap();
-	printf("Bitmap levantado, seteando valor para bloque %d\n",nro_bloque);
+	printf("\nBitmap levantado, seteando valor para bloque %d\n",nro_bloque);
 	bitarray_set_bit(bitarray, nro_bloque);
 	puts("Actualizando bitmap");
 	actualizar_bitmap(bitarray);
@@ -297,6 +299,7 @@ int ejemplo_bitarray(){
 	ocupar_bloque(1);
 	ocupar_bloque(3);
 	ocupar_bloque(4);
+	ocupar_bloque(54);
 	printf("\nPost ocupar cantidad de bloques disponibles %d",cant_bloques_disp());
 	printf("\nPrimer bloque disponible: %d\n",siguiente_bloque_disponible());
 	liberar_bloque(3);
