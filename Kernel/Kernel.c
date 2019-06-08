@@ -407,12 +407,12 @@ instr_t *validar(instr_t * i){
 	instr_t* mensaje_error=malloc(sizeof(instr_t));
 	mensaje_error->timestamp=i->timestamp;
 	char* mensaje="ERROR!";
-	if(i->codigo_operacion!=2&&i->codigo_operacion!=3){
+	if(i->codigo_operacion!=2&&i->codigo_operacion!=3 && i->codigo_operacion!=1){
 		return NULL;
 	}
-	if(i->codigo_operacion==2){
+	if(i->codigo_operacion==2 || i->codigo_operacion==1){
 		if(existe_tabla(obtener_parametroN(i,0))){
-			loggear("Existe la tabla para el insert ");
+			loggear("Existe la tabla para el insert o select ");
 			return NULL;
 		}else{
 			mensaje_error->codigo_operacion=ERROR_INSERT;
