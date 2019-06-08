@@ -5,7 +5,7 @@
 int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
-	//inicializar_FS();
+	inicializar_FS();
 
 
 
@@ -13,9 +13,9 @@ int main(int argc, char* argv[]) {
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
 
 
-//	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
+	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 //
-	//inicializar_conexiones();
+	inicializar_conexiones();
 
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
@@ -36,7 +36,7 @@ void inicializar_FS(int argc, char* argv[]) {
 		puts("IP 127.0.0.2");
 		miIP = IP_FILESYSTEM;
 	}
-	else {
+	else{
 		printf("IP %s\n", argv[1]);
 		miIP = argv[1];
 	}
@@ -200,7 +200,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 		//return ERROR_SELECT;
 	}
-	puts("Existe tabla");
+	/*puts("Existe tabla");
 	registro_t* registro = pasar_a_registro(instruccion);
 	puts("Pasar a resgistro");
 	int key = registro->key;
@@ -214,6 +214,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		//borrar_lista_registros(registros_key);
 		//return ERROR_SELECT;
 	}
+	*/
 	puts("Select realizado");
 	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 0));
 	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 1));
@@ -410,9 +411,9 @@ void enviar_tamanio_value(char* remitente){
     t_list *listaParam = list_create();
     char* tamanioValue = string_from_format("%d", config_FS.tamanio_value);
     list_add(listaParam, tamanioValue);
-    //instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
+    instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
 	puts("Enviando tamanio del value");
-    //enviar_request(miInstruccion, conexionMemoriaN);
+    enviar_request(miInstruccion, conexionMemoriaN);
     puts("Tamanio del value enviado");
 }
 
