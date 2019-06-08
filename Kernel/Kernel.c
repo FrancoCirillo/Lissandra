@@ -86,6 +86,8 @@ void inicializar_kernel(){
 	callback = ejecutar_requestRecibido;
 
 	conectar_nueva_memoria(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, "Memoria_1");
+	conectar_nueva_memoria(configuracion.MEMORIA_8_IP, configuracion.PUERTO_MEMORIA, "Memoria_3");
+
 
 	int listenner = iniciar_servidor(miIPKernel, configuracion.puerto, g_logger, &mutex_log);
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
