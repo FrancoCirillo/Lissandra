@@ -14,7 +14,6 @@ sem_t mutex_tablas_nro_dump;
 void inicializar_memtable();
 void finalizar_memtable();
 void limpiar_memtable();
-void leer_memtable();
 
 // --------FUNCIONES DE REGISTROS--------
 t_list* 	crear_lista_registros();

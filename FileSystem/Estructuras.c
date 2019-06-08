@@ -626,11 +626,9 @@ void actualizar_tiempo_retardo_config(mseg_t value) {
 
 void inicializar_directorios() {
 
-	//crear_directorio("mnj/Lissandra_FS/", "Tablas");
 	crear_directorio(config_FS.punto_montaje, "Metadata");
 	crear_directorio(config_FS.punto_montaje, "Tablas");
 	crear_directorio(config_FS.punto_montaje, "Bloques");
-	//crear_directorio("mnj/Lissandra_FS/", "Bloques"); //vacias
 
 	loggear_FS("Directorios listos.");
 
@@ -638,10 +636,8 @@ void inicializar_directorios() {
 
 }
 
-void leer_metadata_FS() {  //esto se lee una vez.
-	//Lee del archivo de configuracion para crear el metadata.bin con sus datos correspondientes ademas de guardarlos en Metadata_FS.
+void leer_metadata_FS() {
 
-	//char* ruta = concat3(config_FS.punto_montaje, "Metadata", "Metadata.bin");
 	FILE* archivo = fopen(g_ruta.metadata, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
 	Metadata_FS.block_size = config_get_int_value(g_config, "BLOCK_SIZE");
 	Metadata_FS.blocks = config_get_int_value(g_config, "BLOCKS");
@@ -654,6 +650,5 @@ void leer_metadata_FS() {  //esto se lee una vez.
 	fclose(archivo);
 	loggear_FS(mensaje);
 	free(mensaje);
-	//free(ruta);
 }
 

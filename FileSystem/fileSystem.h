@@ -100,10 +100,10 @@ void iniciar_rutas();
 void finalizar_rutas();
 
 /*FUNCIONES AUXILIARES*/
-char* obtener_parametro(instr_t*, int);
-int   obtener_particion_key(char*, int);
-_Bool es_registro_mas_reciente(void*, void*);
-char* obtener_nombre_tabla(instr_t*);
+char*	 obtener_parametro(instr_t*, int);
+int  	 obtener_particion_key(char*, int);
+_Bool 	 es_registro_mas_reciente(void*, void*);
+char*	 obtener_nombre_tabla(instr_t*);
 
 
 /*FUNCIONES DE BLOQUES*/
@@ -111,43 +111,44 @@ char* obtener_nombre_tabla(instr_t*);
 
 t_list* leer_binario(char*, uint16_t);
 t_list* leer_archivos_temporales(char*, uint16_t); //TODO hacer bien
-void escribir_bloque(registro_t*);
-void eliminar_archivos(char*); //TODO hacer
+void 	escribir_bloque(registro_t*);
+void 	eliminar_archivos(char*); //TODO hacer
 
-char* obtener_registro_mas_reciente(t_list*);
+char* 	obtener_registro_mas_reciente(t_list*);
 t_list* obtener_registros_key(char*, uint16_t);
 
 /*MANEJO INTRUCCIONES*/
-void evaluar_instruccion(instr_t* instr, char* remitente);
-int execute_create(instr_t*, char* remitente);
+void 	evaluar_instruccion(instr_t* instr, char* remitente);
+void 	execute_create(instr_t*, char* remitente);
 t_list* execute_insert(instr_t*, cod_op* codOp);
-int execute_select(instr_t*, char* remitente);
-int execute_describe(instr_t*, char* remitente); //TODO hacer
-int execute_drop(instr_t*, char* remitente);
-int ejecutar_instruccion_insert(instr_t* instruccion, char* remitente);
+void 	execute_select(instr_t*, char* remitente);
+void 	execute_describe(instr_t*, char* remitente); //TODO hacer
+void 	execute_drop(instr_t*, char* remitente);
+void 	ejecutar_instruccion_insert(instr_t* instruccion, char* remitente);
+
 /*EJEMPLO INTRUCCIONES*/ //para testeo
-void ejemplo_instr_create();
-void ejemplo_instr_insert();
-void ejemplo_instr_select();
-void ejemplo_instr_describe();
-void ejemplo_instr_drop();
+void 	ejemplo_instr_create();
+void 	ejemplo_instr_insert();
+void 	ejemplo_instr_select();
+void 	ejemplo_instr_describe();
+void 	ejemplo_instr_drop();
 
 /*MANEJO DE CADENAS*/
-char* concat(char*, char*);
-char* concat3(char*, char*, char*);
+char* 	concat(char*, char*);
+char* 	concat3(char*, char*, char*);
 
 /*Comunicación*/
 //eliminar
 //void response(remitente_t*);
-void contestar(instr_t *);
+void 	liberar_memoria_instr(instr_t *);
 
 /* CONEXIONES */
 char* miIP;
 t_dictionary *conexionesActuales;
 void (*callback)(instr_t *instruccion, char *remitente);
-void inicializar_conexiones();
-void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
-int obtener_fd_out(char *proceso);
-void enviar_tamanio_value(char* remitente);
+void 	inicializar_conexiones();
+void 	imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
+int 	obtener_fd_out(char *proceso);
+void 	enviar_tamanio_value(char* remitente);
 
 #endif /* FILE_SYSTEM_H */

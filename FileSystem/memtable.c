@@ -2,7 +2,6 @@
 
 #include "memtable.h"
 
-//Nada de esto esta probado.
 
 void inicializar_memtable() {
 	memtable = dictionary_create();
@@ -13,6 +12,10 @@ void finalizar_memtable() { //Borra y libera todos los registros y tablas.
 	//IMPORTANTE: la variable global no se puede usar a menos que hagan otro diccionary_create
 	dictionary_destroy_and_destroy_elements(memtable, &borrar_lista_registros);
 }
+
+//////////////////////////////
+
+
 
 void borrar_lista_registros(void* registros) {
 	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
@@ -204,19 +207,4 @@ void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
 		//ver en compactacion como podemos reutilizar esto..
 	}
 }
-
-
-//********************************************************
-//TESTEO  DAI
-
-//void leer_memtable(){
-//	int cant = memtable->table_current_size;
-//	for (int i =0; i<cant;i++ ){
-//
-//
-//	}
-//
-//}
-
-
 
