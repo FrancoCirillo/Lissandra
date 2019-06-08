@@ -2,6 +2,52 @@
 
 #include "fileSystem.h"
 
+//void prueba(registro_t* registro, char* ruta_bloque) {
+//	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
+//	puts("Abri archivo");
+//	char* string_registro = formatear_registro(registro);
+//	printf("Formatee Registro: %sEsto deberia aparecer abajo", string_registro);
+//	txt_write_in_file(archivo_bloque, string_registro);
+//	puts("Escribi bloque");
+//	txt_close_file(archivo_bloque);
+//	puts("Cerre archivo");
+//	free(string_registro);
+//}
+//
+//registro_t* prueba2(uint16_t key, int tipo_archivo) {
+//	int nro_bloque = 5;
+//	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+//	printf("Ruta prueba 2: %s\n", ruta_bloque);
+//	FILE* archivo_bloque = fopen(ruta_bloque, "r");
+//	puts("AbroArchivo");
+//	registro_t* registro;
+//	int status = 1;
+//	char* buffer = string_new();
+//	while(status) {
+//		char caracter_leido = fgetc(archivo_bloque);
+//		printf("Leo caracter %c\n", caracter_leido);
+//		char* s_caracter;
+//		switch(caracter_leido) {
+//		case '\n':
+//			puts("tengoUnRegistroCompleto");
+//			registro = obtener_reg(buffer);
+//			if(registro->key == key) {
+//				free(buffer);
+//				status = tipo_archivo;
+//			}
+//			free(registro);
+//			break;
+//		default:
+//			s_caracter = string_from_format("%c", caracter_leido);
+//			strcat(buffer, s_caracter);
+//			printf("concateno caracter %s, me queda %s\n", s_caracter, buffer);
+////			free(s_caracter);
+//			break;
+//		}
+//	}
+//	return registro;
+//}
+
 int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
@@ -16,11 +62,41 @@ int main(int argc, char* argv[]) {
 	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 //
 	inicializar_conexiones();
-
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
+//	char* ruta_bloque = obtener_ruta_bloque(5);
+//
+//	registro_t* registro2 = malloc(sizeof(registro_t));
+//	registro2->key = 25;
+//	registro2->timestamp = 4324234;
+//	registro2->value = "HolaSoyOtraPrueba";
+//
+//	prueba(registro2, ruta_bloque);
+//
+//	registro_t* registro = malloc(sizeof(registro_t));
+//	registro->key = 32;
+//	registro->timestamp = 4324234;
+//	registro->value = "HolaSoyUnaPrueba";
+//
+//	prueba(registro, ruta_bloque);
+
+//	printf("Timestamp: %"PRIu64"\n",registro->timestamp);
+//	printf("Key: %d\n", registro->key);
+//	printf("Value: %s\n", registro->value);
+//	puts("");
+
+//	printf("\n\nRUTA BLOQUE: %s\n\n", ruta_bloque);
 
 
+//	registro_t* reg;
+//	puts("hice malloc");
+//	reg = prueba2(32, 0);
+//	puts("Voy a imprimir registros");
+
+//	printf("Timestamp: %"PRIu64"\n",reg->timestamp);
+//	printf("Key: %d\n", reg->key);
+//	printf("Value: %s\n", reg->value);
+//	puts("");
 
 	//finalizar_FS();
 //	ejemplo_bitarray();
@@ -131,7 +207,7 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 void execute_create(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	//TODO string_to_upper(tabla);
-	t_list *listaParam = list_create();
+	t_list* listaParam = list_create();
 	if (!existe_tabla(tabla)) {
 		if(!puede_crear_particiones(instruccion)) {
 			char* cadena = string_from_format("No hay bloques disponibles para crear las particiones de la tabla'%s'.", tabla); //TODO: free
@@ -200,7 +276,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 		//return ERROR_SELECT;
 	}
-	/*puts("Existe tabla");
+	puts("Existe tabla");
 	registro_t* registro = pasar_a_registro(instruccion);
 	puts("Pasar a resgistro");
 	int key = registro->key;
@@ -214,15 +290,16 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		//borrar_lista_registros(registros_key);
 		//return ERROR_SELECT;
 	}
-	*/
-	puts("Select realizado");
-	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 0));
-	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 1));
-//	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key); //respuesta del select, TODO: no anda
-	list_add(listaParam, (char*)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
-	list_add(listaParam, (char*)list_get(instruccion->parametros, 1)); //Key
-	list_add(listaParam, "V");	// cambiar (cuando ande) por value_registro_reciente; //Value
-	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
+
+//	puts("Select realizado");
+//	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 0));
+//	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 1));
+	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);//respuesta del select, TODO: no anda
+	printf("%s", value_registro_reciente);
+//	list_add(listaParam, (char*)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
+//	list_add(listaParam, (char*)list_get(instruccion->parametros, 1)); //Key
+//	list_add(listaParam, "V");	// cambiar (cuando ande) por value_registro_reciente; //Value
+//	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
 	//borrar_lista_registros(registros_key);
 	//return CODIGO_EXITO;
 }
@@ -298,7 +375,7 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
-	t_list* registro_bin = leer_binario(tabla, key); // int particion = obtener_particion_key(tabla, key);
+	t_list* registro_bin = leer_binario(tabla, key);
 
 	t_list* registros_totales = crear_lista_registros(); //free
 	list_add_all(registros_totales, registros_mem);

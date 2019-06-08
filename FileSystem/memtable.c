@@ -145,12 +145,15 @@ void dumpear_tabla(char* tabla, void* registros) {
 	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 	char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 	FILE* temporal = crear_tmp(tabla, nombre_tmp);
+	puts("Creando temporal");
 	int nro_bloque = archivo_inicializar(temporal);
+	puts("Inicializando temporal");
 	fclose(temporal);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
 	void escribir_reg_en_tmp(void* registro) {
-	escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp); //este warnings es porque esta comentado en estructuras.h
+	escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
+	puts("Escribi en bloque");
 	}
 
 	free(ruta_tmp);
@@ -175,7 +178,7 @@ void dumpeo() {    //Version sin uso del diccionario.
 
 	while (1) {
 		sleep(tiempo_dump);
-
+		puts("estoy dumpenado");
 		mem = memtable;
 
 		dumpear(mem);
