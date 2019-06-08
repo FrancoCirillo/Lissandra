@@ -485,10 +485,14 @@ instr_t* enviar_i(instr_t* i){
 int obtener_fd_memoria(instr_t *i){
 	char* memoria="Memoria_";
 	char* alias_memoria="";
+	int codigo_criterio;
 	//SIEMPRE el primer parametro es el nombre de la tabla que uso como key para determinar criterio
 	sem_wait(&mutex_diccionario_criterios);
-	int codigo_criterio=*(int*)dictionary_get(diccionario_criterios,(char*)obtener_parametroN(i,0));
-	sem_post(&mutex_diccionario_criterios);
+	if(i->codigo_operacion==4){//SI ES DESCRIBE USO SC
+		codigo_criterio=0;
+	}else{
+		codigo_criterio=*(int*)dictionary_get(diccionario_criterios,(char*)obtener_parametroN(i,0));
+	}sem_post(&mutex_diccionario_criterios);
 	//Obtengo la memoria segun el criterio
 	printf("Codigo de criterio es : %d \n",codigo_criterio);
 	loggear("Determinando criterio de tabla");
