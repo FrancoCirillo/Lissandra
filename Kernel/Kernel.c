@@ -82,30 +82,37 @@ int main(int argc, char* argv[]) {
 
 
 void inicializar_kernel(){
+	conexionesActuales = dictionary_create();
+	callback = ejecutar_requestRecibido;
 
+	conectar_nueva_memoria(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, "Memoria_1");
+
+	int listenner = iniciar_servidor(miIPKernel, configuracion.puerto, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
+
+}
+
+void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMemoria){
 	t_list *listaParam = list_create();
 	list_add(listaParam, "Kernel");
 	list_add(listaParam, miIPKernel);
 	list_add(listaParam, configuracion.puerto);
 	instr_t *miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	conexionesActuales = dictionary_create();
-	callback = ejecutar_requestRecibido;
+
+	int conexion_con_memoria_3 = crear_conexion(IPMemoria, PuertoMemoria, miIPKernel, g_logger, &mutex_log);
+
+	enviar_request(miInstruccion, conexion_con_memoria_3);
 
 	identificador *idsNuevasConexiones = malloc(sizeof(identificador));
-	int conexion_con_memoria_3 = crear_conexion(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, miIPKernel, g_logger, &mutex_log);
-	enviar_request(miInstruccion, conexion_con_memoria_3);
 	idsNuevasConexiones->fd_in = 0; //Por las moscas
-	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
-	strcpy(idsNuevasConexiones->ip_proceso, configuracion.MEMORIA_1_IP);
+	strcpy(idsNuevasConexiones->puerto, PuertoMemoria);
+	strcpy(idsNuevasConexiones->ip_proceso, IPMemoria);
 	idsNuevasConexiones->fd_out = conexion_con_memoria_3;
 
 	sem_wait(&mutex_conexiones_actuales);
-	dictionary_put(conexionesActuales, "Memoria_1", idsNuevasConexiones);
+	dictionary_put(conexionesActuales, NombreMemoria, idsNuevasConexiones);
 	sem_post(&mutex_conexiones_actuales);
-
-	int listenner = iniciar_servidor(miIPKernel, configuracion.puerto, g_logger, &mutex_log);
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
 
 }
 
