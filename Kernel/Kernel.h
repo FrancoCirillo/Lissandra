@@ -125,7 +125,7 @@ void enviar_a(instr_t* i,char* destino);
 int obtener_fd_out(char *proceso);
 void responderHandshake(identificador *idsConexionEntrante);
 char* miIPKernel;
-
+void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMemoria);
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
 proceso* obtener_sig_proceso();
