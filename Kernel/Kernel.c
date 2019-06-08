@@ -2,7 +2,27 @@
 
 #include "Kernel.h"
 char * codigo_envio;
+t_list* lista_tablas;
+sem_t mutex_lista_tablas;
+void agregar_tabla(char* tabla){
 
+	sem_wait(&mutex_lista_tablas);
+	list_add(lista_tablas,tabla);
+	sem_post(&mutex_lista_tablas);
+	loggear("Tabla agregada");
+}
+bool existe_tabla(char* tablaBuscada){
+	//puts("A");
+	bool existe(char*tabla){
+		return strcmp(tablaBuscada,tabla)==0;
+	}
+	//puts("B");
+	sem_wait(&mutex_lista_tablas);
+	char *rdo=list_find(lista_tablas,(void*)existe);
+	sem_post(&mutex_lista_tablas);
+	//puts("C");
+	return rdo!=NULL;
+}
 void iniciar_consola(){
 	sleep(1);
 	loggear("Se inicia consola");
@@ -40,7 +60,6 @@ int main(int argc, char* argv[]) {
 
 	inicializar_criterios();
 
-
 	iniciar_ejecutador();
 
 	inicializar_kernel();
@@ -51,13 +70,13 @@ int main(int argc, char* argv[]) {
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
 
-//	/*sleep(6);
-//	recibi_respuesta_fake1();
-//	//iniciar_consola();
-//	loggear("Recibi respuesta fake1 ejecutado!");
-//	sleep(6);
-//	recibi_respuesta_fake2();
-//	loggear("Recibi respuesta fake2 ejecutado!");
+	//	/*sleep(6);
+	//	recibi_respuesta_fake1();
+	//	//iniciar_consola();
+	//	loggear("Recibi respuesta fake1 ejecutado!");
+	//	sleep(6);
+	//	recibi_respuesta_fake2();
+	//	loggear("Recibi respuesta fake2 ejecutado!");
 
 }
 
@@ -166,10 +185,11 @@ instr_t* kernel_run(instr_t *i){
 		loggear("Se agrego una instruccion!");
 		//		imprimir_instruccion(nueva_instruccion);
 	}
+	printf("\n\nSize %d\n\n",p->size);
 	fclose(f);
 
 	encolar_proceso(p);
-//RESPUESTA
+	//RESPUESTA
 	instr_t * respuesta=malloc(sizeof(instr_t));
 	respuesta->codigo_operacion=0;
 	char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
@@ -243,7 +263,7 @@ int obtener_codigo_request(){
 
 void continuar_ejecucion(){
 	loggear("Enviando senial en 1 segundo");
-//	sleep(1);
+	//	sleep(1);
 	pthread_mutex_lock(&lock_ejecutar);
 	pthread_cond_signal(&cond_ejecutar);
 	pthread_mutex_unlock(&lock_ejecutar);
@@ -373,11 +393,46 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	if((respuesta=validar(i))!=NULL){
 		return respuesta;
 	}
+	if(i->codigo_operacion==CODIGO_CREATE){
+		if(!existe_tabla(obtener_parametroN(i,0))){
+			loggear("Agregando tabla a lista");
+			loggear(obtener_parametroN(i,0));
+			agregar_tabla(obtener_parametroN(i,0));
+		}
+	}
 	respuesta=enviar_i(i);
 	return respuesta;
 }
 instr_t *validar(instr_t * i){
-	return NULL;
+	instr_t* mensaje_error=malloc(sizeof(instr_t));
+	mensaje_error->timestamp=i->timestamp;
+	char* mensaje="ERROR!";
+	if(i->codigo_operacion!=2&&i->codigo_operacion!=3){
+		return NULL;
+	}
+	if(i->codigo_operacion==2){
+		if(existe_tabla(obtener_parametroN(i,0))){
+			loggear("Existe la tabla para el insert ");
+			return NULL;
+		}else{
+			mensaje_error->codigo_operacion=ERROR_INSERT;
+			printf("\nLa tabla %s no existe!\n",obtener_parametroN(i,0));
+			//mensaje="LA TABLA NO EXISTE!";
+		}
+	}
+	if(i->codigo_operacion==3){
+		if(!existe_tabla(obtener_parametroN(i,0))){
+			loggear("No existe tabla para el create");
+			return NULL;
+		}else{
+			//mensaje="LA TABLA YA EXISTE";
+			mensaje_error->codigo_operacion=ERROR_CREATE;
+		}
+	}
+	mensaje_error->parametros=list_create();
+	list_add(mensaje_error->parametros,mensaje);
+
+	return mensaje_error;
 }
 
 instr_t* enviar_i(instr_t* i){
@@ -537,6 +592,7 @@ void recibi_respuesta(instr_t* respuesta){
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
+		loggear("FIN DE PROCESO");
 		finalizar_proceso(p);
 	}else{
 		encolar_proceso(p);
@@ -649,8 +705,10 @@ void inicializar_semaforos(){
 	sem_init(&mutex_conexiones_actuales,0,1);
 	sem_init(&mutex_diccionario_criterios,0,1);
 	sem_init(&mutex_contador_ec,0,1);
+	sem_init(&mutex_lista_tablas,0,1);
 	diccionario_enviados=dictionary_create();
 	diccionario_criterios=dictionary_create();
+	lista_tablas=list_create();
 	puts("Semaforos inicializados");
 }
 void inicializar_criterios(){
