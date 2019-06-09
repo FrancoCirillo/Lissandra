@@ -131,6 +131,7 @@ instr_t* kernel_run(instr_t *i){
 		char* mensaje=" ARCHIVO NO ENCONTRADO!";
 		list_add(params,mensaje);
 		return respuesta;
+		//TODO FREES;
 
 	}
 	char line[64];
@@ -145,6 +146,14 @@ instr_t* kernel_run(instr_t *i){
 
 	while(fgets(line,sizeof(line),f)){
 		nueva_instruccion=leer_a_instruccion(line,CONSOLA_KERNEL);
+		if(!nueva_instruccion){//Input invalido
+			loggear("El archivo posee inputs invalidos");
+			respuesta->codigo_operacion=ERROR_RUN;
+			char* mensaje="EL ARCHIVO POSEE INPUTS INVALIDOS!";
+			list_add(params,mensaje);
+			//TODO FREES
+			return respuesta;
+		}
 		char*  codigo=malloc(sizeof(char)*12);
 		sprintf(codigo,"%d",obtener_codigo_request());
 		//		printf("EL codigo es %s",codigo);
