@@ -326,26 +326,31 @@ char* aplanar(char** lista){
     int count = 0;
     printf("Length %d\n",size);
     for (int i=0; i<size; i++) {
-//            printf("Element #%d - %s\n", i, lista[i]);
             sum += strlen(lista[i]);
     }
     sum++;  // Make room for terminating null character
+    sum+=1; //Sumo el espacio para corchete inicial, al final reemplazo ultima coma por ]
 
     char* buf;
-    if ((buf = calloc(sum, sizeof(char))) != NULL) {
-            for (int i=0; i<size; i++) {
-                    memcpy(buf+count, lista[i], strlen(lista[i]));
-                    count += strlen(lista[i]);
-            }
-            printf("Output Buffer: %s\n", buf);
-    }
+     if ((buf = calloc(sum, sizeof(char))) != NULL) {
+
+    	 *buf='[';
+    	 count++;
+             for (int i=0; i<size; i++) {
+                     memcpy(buf+count, lista[i], strlen(lista[i]));
+                     count += strlen(lista[i]) + 1;
+                     buf[count-1] = ',';
+             }
+             buf[count-1]=']';
+     }
+
     return buf;
 
 }
 void ejemplo_aplanar(){
-	char* a="Hola ";
-	char* b="como ";
-	char* c="te ";
+	char* a="Hola";
+	char* b="como";
+	char* c="te";
 	char* d="va";
 	char** array =malloc(sizeof(char*)*5);
 	*array=a;
