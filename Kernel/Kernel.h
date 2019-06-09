@@ -77,6 +77,7 @@ t_dictionary * diccionario_criterios;
 criterio* criterio_strong_hash_consistency;
 criterio* criterio_strong_consistency;
 criterio* criterio_eventual_consistency;
+t_list* lista_tablas;
 
 int total_hilos=0;
 int codigo_request=0;
@@ -94,7 +95,7 @@ sem_t mutex_codigo_request;
 sem_t mutex_conexiones_actuales;
 sem_t mutex_diccionario_criterios;
 sem_t mutex_contador_ec;
-
+sem_t mutex_lista_tablas;
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -149,6 +150,9 @@ void procesar_instruccion_consola(char *instruccion);
 void subir_cantidad_hilos();
 void bajar_cantidad_hilos();
 char* krn_concat(char* s1,char* s2);
-
+void agregar_tabla(char* tabla);
+bool existe_tabla(char* tablaBuscada);
+void iniciar_consola();
+void* consola(void* c);
 
 #endif /* kernel.h */

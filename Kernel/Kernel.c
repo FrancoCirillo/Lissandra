@@ -2,49 +2,6 @@
 
 #include "Kernel.h"
 char * codigo_envio;
-t_list* lista_tablas;
-sem_t mutex_lista_tablas;
-void agregar_tabla(char* tabla){
-
-	sem_wait(&mutex_lista_tablas);
-	list_add(lista_tablas,tabla);
-	sem_post(&mutex_lista_tablas);
-	loggear("Tabla agregada");
-}
-bool existe_tabla(char* tablaBuscada){
-	//puts("A");
-	bool existe(char*tabla){
-		return strcmp(tablaBuscada,tabla)==0;
-	}
-	//puts("B");
-	sem_wait(&mutex_lista_tablas);
-	char *rdo=list_find(lista_tablas,(void*)existe);
-	sem_post(&mutex_lista_tablas);
-	//puts("C");
-	return rdo!=NULL;
-}
-void iniciar_consola(){
-	sleep(1);
-	loggear("Se inicia consola");
-	pthread_t hilo_consola;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_create(&hilo_consola,&attr,consola,NULL);
-	pthread_join(hilo_consola,NULL);
-}
-void* consola(void* c){
-	char* instruccion;
-	while(1){
-		instruccion=readline("\n>>");
-		if(strcmp(instruccion,"close")==0){
-			loggear("##### FINALIZANDO KERNEL.... ###### \n");
-			return NULL;
-		}
-		printf("Procesando instruccion:: %s \n",instruccion);
-		procesar_instruccion_consola(instruccion);
-	}
-
-}
 
 int main(int argc, char* argv[]) {
 
@@ -60,24 +17,17 @@ int main(int argc, char* argv[]) {
 
 	inicializar_criterios();
 
-	iniciar_ejecutador();
 
-	inicializar_kernel();
+	ejemplo_aplanar();
+	//iniciar_ejecutador();
+
+	//inicializar_kernel();
 	//iniciar_consola();
 
 	loggear("### FINALIZANDO KERNEL ###");
 	sleep(2);
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
-
-	//	/*sleep(6);
-	//	recibi_respuesta_fake1();
-	//	//iniciar_consola();
-	//	loggear("Recibi respuesta fake1 ejecutado!");
-	//	sleep(6);
-	//	recibi_respuesta_fake2();
-	//	loggear("Recibi respuesta fake2 ejecutado!");
-
 }
 
 
@@ -746,58 +696,6 @@ void inicializar_criterios(){
 	criterio_strong_hash_consistency->mutex_criterio=sem[2];
 	loggear("Criterios inicializados!");
 }
-/*void recibi_respuesta_fake1(){
-	instr_t* rta=malloc(sizeof(instr_t));
-	t_list * params=list_create();
-	char* frase="Mensaje de respuesta MENSAJE 1";
-	rta->timestamp=123;
-	rta->codigo_operacion=0;
-
-	list_add(params,frase);
-	list_add(params,codigo_envio);
-	rta->parametros=params;
-
-	recibi_respuesta(rta);
-}
-void recibi_respuesta_fake2(){
-	instr_t* rta=malloc(sizeof(instr_t));
-	t_list * params=list_create();
-	char* frase="Mensaje de respuesta MENSAJE 2";
-	rta->timestamp=456;
-	rta->codigo_operacion=0;
-
-	list_add(params,frase);
-	list_add(params,codigo_envio);
-	rta->parametros=params;
-
-	recibi_respuesta(rta);
-}*/
-/*
-void iniciar_consola(){
-	sleep(1);
-	loggear("Se inicia consola");
-	pthread_t hilo_consola;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_create(&hilo_consola,&attr,consola,NULL);
-	pthread_join(hilo_consola,NULL);
-
-}
-void* consola(void* c){
-	char* instruccion;
-	while(1){
-		instruccion=readline("\n>>");
-		if(strcmp(instruccion,"close")==0){
-			loggear("##### FINALIZANDO KERNEL.... ###### \n");
-			return NULL;
-		}
-
-		printf("Procesando instruccion:: %s \n",instruccion);
-		procesar_instruccion_consola(instruccion);
-
-	}
-}*/
-
 void check_inicial(int argc, char* argv[])
 {
 	if(argc>2){
@@ -812,4 +710,45 @@ void check_inicial(int argc, char* argv[])
 		printf("IP %s\n", argv[1]);
 		miIPKernel = argv[1];
 	}
+}
+void agregar_tabla(char* tabla){
+
+	sem_wait(&mutex_lista_tablas);
+	list_add(lista_tablas,tabla);
+	sem_post(&mutex_lista_tablas);
+	loggear("Tabla agregada");
+}
+bool existe_tabla(char* tablaBuscada){
+	//puts("A");
+	bool existe(char*tabla){
+		return strcmp(tablaBuscada,tabla)==0;
+	}
+	//puts("B");
+	sem_wait(&mutex_lista_tablas);
+	char *rdo=list_find(lista_tablas,(void*)existe);
+	sem_post(&mutex_lista_tablas);
+	//puts("C");
+	return rdo!=NULL;
+}
+void iniciar_consola(){
+	sleep(1);
+	loggear("Se inicia consola");
+	pthread_t hilo_consola;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_consola,&attr,consola,NULL);
+	pthread_join(hilo_consola,NULL);
+}
+void* consola(void* c){
+	char* instruccion;
+	while(1){
+		instruccion=readline("\n>>");
+		if(strcmp(instruccion,"close")==0){
+			loggear("##### FINALIZANDO KERNEL.... ###### \n");
+			return NULL;
+		}
+		printf("Procesando instruccion:: %s \n",instruccion);
+		procesar_instruccion_consola(instruccion);
+	}
+
 }
