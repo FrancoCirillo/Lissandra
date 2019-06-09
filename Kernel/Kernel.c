@@ -135,7 +135,7 @@ void metricar(){
 
 	}
 }
-void metrics(){
+void metrics(){//TODO Porcentaje de uso por memoria
 	loggear("METRICS:");
 	//printf(" \n\n PRUEBA METRICS %"PRIu64", PRUEBA UN DIGITO MENOS %"PRIu64"",obtener_ts()/100,obtener_ts()/1000);
 	//Obtengo cantidad de instrucciones por tipo/tiempo para insert y select
@@ -152,9 +152,11 @@ void metrics(){
 		if(i->codigo_operacion==CODIGO_INSERT){
 			cantidad_inserts++;
 			tiempo_inserts+=(double)i->timestamp/(double)1000;
+			printf("El promedio del insert fue de %lf\n",tiempo_selects);
 		}else if(i->codigo_operacion==CODIGO_SELECT){
 			cantidad_selects++;
 			tiempo_selects+=(double)i->timestamp/(double)1000;
+			printf("El promedio del select fue de %lf\n",tiempo_selects);
 		}
 	}
 	list_destroy(lista_instrucciones_ejecutadas);
@@ -382,8 +384,8 @@ void* ejecutar_proceso(void* un_proceso){
 				//METRICS
 				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){
 					loggear("Se agrega a metricas");
-					//mseg_t tiempo_exec=respuesta->timestamp;
-					//printf("\n El tiempo que tardo en ejecutarse fue= %"PRIu64"\n Que es la diferencia entre %"PRIu64" y %"PRIu64"\n",tiempo_exec,respuesta->timestamp,instruccion_obtenida->timestamp);
+					mseg_t tiempo_exec=respuesta->timestamp;
+					printf("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec);
 					instruccion_obtenida->timestamp=respuesta->timestamp;
 					agregar_a_metricas(instruccion_obtenida);
 				}else{
