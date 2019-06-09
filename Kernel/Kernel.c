@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
 
 	inicializar_criterios();
 
+	iniciar_metricas();
 
 	iniciar_ejecutador();
 
@@ -28,8 +29,6 @@ int main(int argc, char* argv[]) {
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
 }
-
-
 void inicializar_kernel(){
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_requestRecibido;
@@ -115,6 +114,78 @@ void iniciar_ejecutador(){
 	pthread_create(&hilo_ejecutador,&attr,ejecutar,NULL);
 	pthread_detach(hilo_ejecutador);
 	loggear("Ejecutador iniciado");
+}
+void iniciar_metricas(){
+	loggear("Iniciando metricas");
+	pthread_t hilo_metricas;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_metricas,&attr,metricar,NULL);
+	loggear("Metricas iniciadas");
+
+}
+void metricar(){
+	while(1){
+		//actualizar_configuracion();
+		sem_wait(&mutex_configuracion);
+		int tiempo=configuracion.tiempoMetricas;
+		sem_post(&mutex_configuracion);
+		sleep(tiempo);
+		metrics();
+
+	}
+}
+void metrics(){
+	loggear("METRICS:");
+	//printf(" \n\n PRUEBA METRICS %"PRIu64", PRUEBA UN DIGITO MENOS %"PRIu64"",obtener_ts()/100,obtener_ts()/1000);
+	//Obtengo cantidad de instrucciones por tipo/tiempo para insert y select
+	int cantidad_inserts=0;
+	int cantidad_selects=0;
+	double tiempo_inserts=0;
+	double tiempo_selects=0;
+	double promedio_insert=0;
+	double promedio_selects=0;
+
+	sem_wait(&mutex_lista_instrucciones_ejecutadas);
+	for(int index=0;index<list_size(lista_instrucciones_ejecutadas);index++){
+		instr_t* i=(instr_t*)list_get(lista_instrucciones_ejecutadas,index);
+		if(i->codigo_operacion==CODIGO_INSERT){
+			cantidad_inserts++;
+			tiempo_inserts+=(double)i->timestamp/(double)1000;
+		}else if(i->codigo_operacion==CODIGO_SELECT){
+			cantidad_selects++;
+			tiempo_selects+=(double)i->timestamp/(double)1000;
+		}
+	}
+	list_destroy(lista_instrucciones_ejecutadas);
+	lista_instrucciones_ejecutadas=list_create();
+	sem_post(&mutex_lista_instrucciones_ejecutadas);
+
+	if(cantidad_inserts)
+		promedio_insert=(double)tiempo_inserts/(double)cantidad_inserts;
+	if(cantidad_selects)
+		promedio_selects=(double)tiempo_selects/(double)cantidad_selects;
+	printf("METRICS RESULTADO: \n \t Writes=%d Write Latency=%lf \n\t Reads=%d Reads Latency=%lf\n",cantidad_inserts,promedio_insert,cantidad_selects, promedio_selects);
+	//TODO memload
+}
+void agregar_a_metricas(instr_t* i){
+	sem_wait(&mutex_lista_instrucciones_ejecutadas);
+	list_add(lista_instrucciones_ejecutadas,i);
+	sem_post(&mutex_lista_instrucciones_ejecutadas);
+}
+instr_t* kernel_metrics(instr_t * i){
+	loggear("Ejecutando metricas");
+	metrics();
+
+	instr_t * respuesta=malloc(sizeof(instr_t));
+	respuesta->timestamp=i->timestamp;
+	t_list * params=list_create();
+	respuesta->parametros=params;
+	char* mensaje=" Ejecutando metricas!";
+	list_add(params,mensaje);
+	respuesta->codigo_operacion=0;
+
+	return respuesta;
 }
 instr_t* kernel_run(instr_t *i){
 	loggear("EJECUTANDO RUN!");
@@ -303,14 +374,22 @@ void* ejecutar_proceso(void* un_proceso){
 
 			instr_t* respuesta=ejecutar_instruccion(instruccion_obtenida);
 
-			//METRICS
-
-
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear("Se ejecuto correctamente la instruccion!, Respuesta=");
 				loggear(obtener_parametroN(respuesta,0));
 				loggear("Fin de instruccion");
+				//METRICS
+				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){
+					loggear("Se agrega a metricas");
+					//mseg_t tiempo_exec=respuesta->timestamp;
+					//printf("\n El tiempo que tardo en ejecutarse fue= %"PRIu64"\n Que es la diferencia entre %"PRIu64" y %"PRIu64"\n",tiempo_exec,respuesta->timestamp,instruccion_obtenida->timestamp);
+					instruccion_obtenida->timestamp=respuesta->timestamp;
+					agregar_a_metricas(instruccion_obtenida);
+				}else{
+					//TODO FREES
+				}
+
 			}else{
 
 				loggear("ERROR al ejecutar la instruccion, finalizando proceso");
@@ -361,6 +440,9 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	imprimir_instruccion(i);
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
+	}
+	if(i->codigo_operacion==CODIGO_METRICS){
+		return kernel_metrics(i);
 	}
 	if(i->codigo_operacion==CODIGO_ADD){
 		return kernel_add(i);
@@ -459,6 +541,7 @@ instr_t* enviar_i(instr_t* i){
 
 	loggear("Hilo despierto!");
 
+	h->respuesta->timestamp=obtener_ts()-i->timestamp;
 	return h->respuesta;
 }
 
@@ -514,7 +597,7 @@ int obtener_fd_memoria(instr_t *i){
 		return -100;
 	}
 	loggear("Memoria obtenida:");
-	//loggear(krn_concat(memoria,alias_memoria));
+	loggear(krn_concat(memoria,alias_memoria));
 
 	return obtener_fd_out(krn_concat(memoria,alias_memoria));
 }
@@ -522,7 +605,7 @@ char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
 	strcpy(rdo,s1);
 	strcat(rdo,s2);
-	loggear(rdo);
+//	loggear(rdo);
 	return rdo;
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
@@ -672,13 +755,17 @@ void inicializarConfiguracion() {
 	configuracion.MEMORIA_8_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_8_IP");
 	configuracion.MEMORIA_9_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_9_IP");
 	configuracion.PUERTO_MEMORIA = obtener_por_clave(rutaConfiguracion, "PUERTO_MEMORIA");
+	configuracion.tiempoMetricas = atoi(obtener_por_clave(rutaConfiguracion, "tiempoMetricas"));
+
 
 }
 void actualizar_configuracion(){
 	char* rutaConfiguracion = "Kernel.config";
+	sem_wait(&mutex_configuracion);
 	configuracion.quantum = atoi(obtener_por_clave(rutaConfiguracion, "quantum"));
 	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave(rutaConfiguracion, "gradoMultiprocesamiento"));
-
+	configuracion.tiempoMetricas = atoi(obtener_por_clave(rutaConfiguracion, "tiempoMetricas"));
+	sem_post(&mutex_configuracion);
 }
 void iniciar_log(){
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
@@ -708,9 +795,12 @@ void inicializar_semaforos(){
 	sem_init(&mutex_diccionario_criterios,0,1);
 	sem_init(&mutex_contador_ec,0,1);
 	sem_init(&mutex_lista_tablas,0,1);
+	sem_init(&mutex_configuracion,0,1);
+	sem_init(&mutex_lista_instrucciones_ejecutadas,0,1);
 	diccionario_enviados=dictionary_create();
-	diccionario_criterios=dictionary_create();
+	//diccionario_criterios=dictionary_create();
 	lista_tablas=list_create();
+	lista_instrucciones_ejecutadas=list_create();
 	puts("Semaforos inicializados");
 }
 void inicializar_criterios(){

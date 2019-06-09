@@ -47,6 +47,7 @@ typedef struct config{
 	char* MEMORIA_8_IP;
 	char* MEMORIA_9_IP;
 	char* PUERTO_MEMORIA;
+	int tiempoMetricas;
 }config_t;
 
 
@@ -78,6 +79,7 @@ criterio* criterio_strong_hash_consistency;
 criterio* criterio_strong_consistency;
 criterio* criterio_eventual_consistency;
 t_list* lista_tablas;
+t_list* lista_instrucciones_ejecutadas;
 
 int total_hilos=0;
 int codigo_request=0;
@@ -96,6 +98,8 @@ sem_t mutex_conexiones_actuales;
 sem_t mutex_diccionario_criterios;
 sem_t mutex_contador_ec;
 sem_t mutex_lista_tablas;
+sem_t mutex_configuracion;
+sem_t mutex_lista_instrucciones_ejecutadas;
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -109,12 +113,17 @@ void iniciar_consola();
 instr_t* kernel_run(instr_t *nombre_archivo);
 instr_t* kernel_add(instr_t *nombre_archivo);
 instr_t *validar(instr_t * i);
+void metricar();
+void metrics();
+instr_t* kernel_metrics(instr_t * i);
+
 //Inits
 void inicializar_kernel();
 void recibi_respuesta(instr_t* respuesta);
 void inicializar_criterios();
 void inicializarConfiguracion();
 void inicializar_semaforos();
+void iniciar_metricas();
 
 //Conexiones Franquito
 config_t configuracion;
@@ -154,5 +163,5 @@ void agregar_tabla(char* tabla);
 bool existe_tabla(char* tablaBuscada);
 void iniciar_consola();
 void* consola(void* c);
-
+void agregar_a_metricas(instr_t* i);
 #endif /* kernel.h */
