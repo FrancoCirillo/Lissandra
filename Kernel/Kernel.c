@@ -353,7 +353,7 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	}
 	if(i->codigo_operacion==CODIGO_CREATE){
 		if(!existe_tabla(obtener_parametroN(i,0))){
-			loggear("Agregando tabla a lista");
+			loggear("Agregando tabla a lista de tablas creadas");
 			loggear(obtener_parametroN(i,0));
 			agregar_tabla(obtener_parametroN(i,0));
 		}
@@ -414,6 +414,18 @@ instr_t* enviar_i(instr_t* i){
 
 	loggear("Determinando memoria para request");
 	int conexionMemoria = obtener_fd_memoria(i);
+	if(conexionMemoria<0){
+		loggear("No se pudo encontrar una memoria para el criterio indicado");
+		char* mensaje="No existe una memoria asignada para dicha instruccion";
+		instr_t* respuesta=malloc(sizeof(instr_t));
+		respuesta->timestamp=i->timestamp;
+		respuesta->codigo_operacion=1000;
+		t_list* params=list_create();
+		list_add(params,mensaje);
+		list_add(params,obtener_ultimo_parametro(i));
+		respuesta->parametros=params;
+		return respuesta;
+	}
 
 	loggear("ENVIANDO INSTRUCCION:  ");
 	enviar_request(i, conexionMemoria);
@@ -436,12 +448,14 @@ int obtener_fd_memoria(instr_t *i){
 	char* alias_memoria="";
 	int codigo_criterio;
 	//SIEMPRE el primer parametro es el nombre de la tabla que uso como key para determinar criterio
+
 	sem_wait(&mutex_diccionario_criterios);
-	if(i->codigo_operacion==4){//SI ES DESCRIBE USO SC
+	if(i->codigo_operacion==4){//SI ES DESCRIBE A SECAS USO SC
 		codigo_criterio=0;
 	}else{
 		codigo_criterio=*(int*)dictionary_get(diccionario_criterios,(char*)obtener_parametroN(i,0));
 	}sem_post(&mutex_diccionario_criterios);
+
 	//Obtengo la memoria segun el criterio
 	printf("Codigo de criterio es : %d \n",codigo_criterio);
 	loggear("Determinando criterio de tabla");
@@ -471,8 +485,15 @@ int obtener_fd_memoria(instr_t *i){
 		sem_post(&mutex_contador_ec);
 		sem_post(&criterio_eventual_consistency->mutex_criterio);
 		break;
+	default:
+		return -100;
+		break;
 	}//Ya obtuve el alias de la memoria
 
+	if(alias_memoria==NULL){
+		loggear("NO se pudo obtener la memoria para dicha instruccion");
+		return -100;
+	}
 	loggear("Memoria obtenida:");
 	//loggear(krn_concat(memoria,alias_memoria));
 
