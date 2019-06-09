@@ -120,6 +120,19 @@ instr_t* kernel_run(instr_t *i){
 	loggear("EJECUTANDO RUN!");
 	char* nombre_archivo=obtener_parametroN(i,0);
 	FILE *f=fopen(nombre_archivo,"r");
+	instr_t * respuesta=malloc(sizeof(instr_t));
+	respuesta->timestamp=i->timestamp;
+	t_list * params=list_create();
+	respuesta->parametros=params;
+
+	if(!f){
+		loggear("Archivo no encontrado!");
+		respuesta->codigo_operacion=ERROR_RUN;
+		char* mensaje=" ARCHIVO NO ENCONTRADO!";
+		list_add(params,mensaje);
+		return respuesta;
+
+	}
 	char line[64];
 	t_list* instrucciones = list_create();
 	proceso* p=malloc(sizeof(proceso));
@@ -148,13 +161,10 @@ instr_t* kernel_run(instr_t *i){
 
 	encolar_proceso(p);
 	//RESPUESTA
-	instr_t * respuesta=malloc(sizeof(instr_t));
+
 	respuesta->codigo_operacion=0;
 	char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
-	t_list * params=list_create();
 	list_add(params,mensaje);
-	respuesta->parametros=params;
-	respuesta->timestamp=i->timestamp;
 	loggear("FIN RUN!");
 	return respuesta;
 
