@@ -160,6 +160,7 @@ void finalizar_rutas(){
 }
 
 
+
 //------------MANEJO INSTRUCCIONES-----------------
 
 void evaluar_instruccion(instr_t* instr, char* remitente) {
