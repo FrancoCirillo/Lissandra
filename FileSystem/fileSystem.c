@@ -190,6 +190,8 @@ void finalizar_rutas(){
 	free(g_ruta.bitmap);
 }
 
+
+
 //------------MANEJO INSTRUCCIONES-----------------
 
 void evaluar_instruccion(instr_t* instr, char* remitente) {
