@@ -2,55 +2,95 @@
 
 #include "fileSystem.h"
 
-//void prueba(registro_t* registro, char* ruta_bloque) {
-//	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
-//	puts("Abri archivo");
-//	char* string_registro = formatear_registro(registro);
-//	printf("Formatee Registro: %sEsto deberia aparecer abajo", string_registro);
-//	txt_write_in_file(archivo_bloque, string_registro);
-//	puts("Escribi bloque");
-//	txt_close_file(archivo_bloque);
-//	puts("Cerre archivo");
-//	free(string_registro);
-//}
-//
-//registro_t* prueba2(uint16_t key, int tipo_archivo) {
-//	int nro_bloque = 5;
-//	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-//	printf("Ruta prueba 2: %s\n", ruta_bloque);
-//	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-//	puts("AbroArchivo");
-//	registro_t* registro;
-//	int status = 1;
-//	char* buffer = string_new();
-//	while(status) {
-//		char caracter_leido = fgetc(archivo_bloque);
-//		printf("Leo caracter %c\n", caracter_leido);
-//		char* s_caracter;
-//		switch(caracter_leido) {
-//		case '\n':
-//			puts("tengoUnRegistroCompleto");
-//			registro = obtener_reg(buffer);
-//			if(registro->key == key) {
-//				free(buffer);
-//				status = tipo_archivo;
-//			}
+void prueba(registro_t* registro, char* ruta_bloque) {
+	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
+	puts("Abri archivo");
+	char* string_registro = formatear_registro(registro);
+	printf("Formatee Registro: %sEsto deberia aparecer abajo\n", string_registro);
+	txt_write_in_file(archivo_bloque, string_registro);
+	puts("Escribi bloque");
+	txt_close_file(archivo_bloque);
+	puts("Cerre archivo");
+	free(string_registro);
+	puts("FIN FUNCION ESCRITURA");
+}
+
+/*t_list*/ registro_t* prueba2(uint16_t key, int tipo_archivo, int nro_bloque) {;
+	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+	printf("Obtengo la ruta del bloque: %s\n", ruta_bloque);
+	FILE* archivo_bloque = fopen(ruta_bloque, "r");
+	puts("Abro el bloque");
+	registro_t* registro = malloc(sizeof(registro));
+//	t_list* registros = crear_lista_registros();
+	int status = 1;
+	char* buffer = string_new();
+	char caracter_leido;
+	puts("Creo un buffer y entro al while");
+	while(status) {
+		puts("Entro al while");
+		caracter_leido = fgetc(archivo_bloque);
+		printf("Leo un caracter: %c\t", caracter_leido);
+		char* s_caracter;
+		switch(caracter_leido) {
+		case '\n': //tengo un registro completo
+			strcat(buffer, "\n");
+			puts("Obtuve un registro");
+			registro = obtener_reg(buffer);
+			puts("Paso de aca");
+			imprimir_reg_fs(registro);
+			if(registro->key == key) {
+				puts("El registro tiene la key que busco");
+				puts("ENCONTRE UN REGISTRO");
+//				list_add(registros, registro); //lo agrego solo si tiene la key que busco
+//				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
+				return registro;
+			} else
+				puts("El registro que encontre no es de la key que busco");
 //			free(registro);
-//			break;
-//		default:
-//			s_caracter = string_from_format("%c", caracter_leido);
-//			strcat(buffer, s_caracter);
-//			printf("concateno caracter %s, me queda %s\n", s_caracter, buffer);
-////			free(s_caracter);
-//			break;
-//		}
-//	}
-//	return registro;
-//}
+			break;
+		case EOF: //se me acabo el archivo
+			puts("Llegue al final del archivo");
+			fclose(archivo_bloque);
+			free(ruta_bloque);
+			puts("Busco un nuevo archivo");
+			nro_bloque = -1;
+//			nro_bloque = obtener_siguiente_bloque_archivo(nro_bloque);
+			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
+				puts("Encontre otro bloque");
+				ruta_bloque = obtener_ruta_bloque(nro_bloque);
+				archivo_bloque = fopen(ruta_bloque, "r");
+			} else {
+				status = 0; //corta el while
+				puts("No hay mas bloques, quiero salir del while");
+			}
+			break;
+		default:
+			s_caracter = string_from_format("%c", caracter_leido);
+			strcat(buffer, s_caracter);
+			printf("Concateno y me queda: %s\n", buffer);
+			free(s_caracter);
+			break;
+		}
+	}
+	puts("Return registro");
+	return registro;
+//	return registros;
+}
+
+void mostrar_contenido_archivo(char* ruta) {
+	puts("---LEO ARCHIVO COMPLETO---");
+	FILE* f = fopen(ruta, "r");
+	char caracter_leido = fgetc(f);
+	while(caracter_leido != EOF){
+		printf("%c", caracter_leido);
+		caracter_leido = fgetc(f);
+	}
+
+}
 
 int main(int argc, char* argv[]) {
 
-	printf("\n\n************PROCESO FILESYSTEM************\n\n");
+	printf("\n\n************PROCESO FILESYSTEM************	\n");
 	inicializar_FS();
 
 
@@ -61,45 +101,36 @@ int main(int argc, char* argv[]) {
 
 	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 //
-	inicializar_conexiones();
+//	inicializar_conexiones();
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
-//	char* ruta_bloque = obtener_ruta_bloque(5);
-//
-//	registro_t* registro2 = malloc(sizeof(registro_t));
-//	registro2->key = 25;
-//	registro2->timestamp = 4324234;
-//	registro2->value = "HolaSoyOtraPrueba";
-//
-//	prueba(registro2, ruta_bloque);
-//
-//	registro_t* registro = malloc(sizeof(registro_t));
-//	registro->key = 32;
-//	registro->timestamp = 4324234;
-//	registro->value = "HolaSoyUnaPrueba";
-//
-//	prueba(registro, ruta_bloque);
+	char* ruta_bloque = obtener_ruta_bloque(5);
 
-//	printf("Timestamp: %"PRIu64"\n",registro->timestamp);
-//	printf("Key: %d\n", registro->key);
-//	printf("Value: %s\n", registro->value);
-//	puts("");
+	registro_t* registro2 = malloc(sizeof(registro_t));
+	registro2->key = 25;
+	registro2->timestamp = 4324234;
+	registro2->value = "HolaSoyOtraPrueba";
 
-//	printf("\n\nRUTA BLOQUE: %s\n\n", ruta_bloque);
+	prueba(registro2, ruta_bloque);
 
+	registro_t* registro = malloc(sizeof(registro_t));
+	registro->key = 32;
+	registro->timestamp = 4324234;
+	registro->value = "HolaSoyUnaPrueba";
 
-//	registro_t* reg;
-//	puts("hice malloc");
-//	reg = prueba2(32, 0);
-//	puts("Voy a imprimir registros");
+	prueba(registro, ruta_bloque);
 
-//	printf("Timestamp: %"PRIu64"\n",reg->timestamp);
-//	printf("Key: %d\n", reg->key);
-//	printf("Value: %s\n", reg->value);
-//	puts("");
+	mostrar_contenido_archivo(ruta_bloque);
+
+	printf("\n\nRUTA BLOQUE: %s\n\n", ruta_bloque);
+
+	registro_t* reg = prueba2(32, 0, 5);
+
+	puts("Voy a imprimir registros");
+	imprimir_reg_fs(reg);
+
 
 	//finalizar_FS();
-//	ejemplo_bitarray();
 	return 0;
 
 }

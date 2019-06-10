@@ -130,24 +130,37 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 }
 
 registro_t* obtener_reg(char* buffer) {
+	puts("---OBTENER REGISTRO---");
 	char* bufferCopy = strdup(buffer);
+//	puts("1");
 	registro_t* registro = malloc(sizeof(registro_t));
+//	puts("2");
 	char* token = malloc(sizeof(int));
+//	puts("3");
 
 	char* actual = strtok(bufferCopy, ";");
+//	puts("4");
 	token = strdup(actual);
+//	puts("5");
 	registro->timestamp = string_a_mseg(token);
+//	puts("6");
 
 	actual = strtok(NULL, ";");
+//	puts("7");
 	token = strdup(actual);
+//	puts("8");
 	registro->key = (uint16_t)atoi(token);
+//	puts("9");
 
 	actual = strtok(NULL, "\n");
+//	puts("10");
 	token = strdup(actual);
-	registro->value = strdup(token);
+//	puts("11");
+	strcpy(registro->value, token);
+//	puts("12");
 
 	free(bufferCopy);
-
+	puts("Pase el registro formateado a registro");
 	return registro;
 }
 
@@ -160,10 +173,10 @@ void imprimir_reg_fs(registro_t *registro)
 }
 
 t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=1, .tmp=0
-	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, nro_bloque);
+	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-	registro_t* registro;
+	registro_t* registro = malloc(sizeof(registro));
 	t_list* registros = crear_lista_registros();
 	int status = 1;
 	char* buffer = string_new();
@@ -172,17 +185,17 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 		char* s_caracter;
 		switch(caracter_leido) {
 		case '\n': //tengo un registro completo
+			strcat(buffer, "\n");
 			registro = obtener_reg(buffer);
 			if(registro->key == key) {
 				list_add(registros, registro); //lo agrego solo si tiene la key que busco
 				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
 			}
-				free(registro);
 			break;
 		case EOF: //se me acabo el archivo
 			fclose(archivo_bloque);
-			free(ruta_bloque);
-			nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, nro_bloque);
+			int bloque_anterior = nro_bloque;
+			nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
 			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 				ruta_bloque = obtener_ruta_bloque(nro_bloque);
 				archivo_bloque = fopen(ruta_bloque, "r");
@@ -308,7 +321,7 @@ void liberar_bloque(int nro_bloque) {
 	//limpiar_bloque(nro_bloque); //deja vacio el archivo
 }
 
-int ejemplo_bitarray(){
+void ejemplo_bitarray(){
 	inicializar_bitmap();
 	puts("Iniciado!\n");
 	printf("Cantidad de bloques disponibles %d",cant_bloques_disp());
