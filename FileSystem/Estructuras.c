@@ -551,9 +551,12 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 }
 
 int archivo_inicializar(FILE* f) {
+	puts("-------------------Entre a archivo_inicializar-------------------");
 	int bloque_num = siguiente_bloque_disponible();
-	fprintf(f, "SIZE=%d\nBLOCKS=[%d\n", 0, bloque_num);
+	int respuesta = fprintf(f, "%s%d%s%d%s", "SIZE=", 0, "\nBLOCKS=[", bloque_num, "]\n");
 	// No hace el fclose(f);
+	printf("Respuesta: %d\n", respuesta);
+	printf("Numero de bloque: %d\n", bloque_num);
 	return bloque_num;
 }
 
