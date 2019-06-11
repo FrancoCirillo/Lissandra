@@ -131,15 +131,38 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 }
 
 int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
+	puts("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
 	t_config* archivo = config_create(ruta_archivo);
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
-	char* bloques = aplanar(lista_bloques);
-	config_destroy(archivo);
-	char c_bloque = nro_bloque + '0';
-    for(int i = 0; i < (strlen(bloques)-1); i++) {
-        if(c_bloque == bloques[i])
-            return bloques[i + 1] - '0';
+
+	if(nro_bloque == -1) {
+		char* bloque = *lista_bloques;
+		printf("Primer bloque como string: %s\n", bloque);
+		int mi_bloque = atoi(bloque);
+		printf("Primer bloque como int: %d\n", mi_bloque);
+		config_destroy(archivo);
+		return mi_bloque;
+	} else {
+		int bloques_usados = cantidad_bloques_usados(ruta_archivo);
+		char* mi_bloque = string_itoa(nro_bloque);
+		for(int tam = 0; *(lista_bloques + tam); tam++) {
+			printf("Entre al for, busco al bloque %s\n", mi_bloque);
+			char* bloque = *(lista_bloques + tam);
+			printf("Bloque como string: %s\n", bloque);
+//			char* sig_bloque = *(lista_bloques + tam +1);
+//			printf("Siguiente bloque como string: %s\n", sig_bloque);
+
+			if(string_equals_ignore_case(bloque, mi_bloque) && tam+1 < bloques_usados) {
+				printf("Entre al if\t%s\t%s\n", bloque, mi_bloque);
+				char* sig_bloque = *(lista_bloques + tam +1);
+				int bloque_siguiente = atoi(sig_bloque);
+				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
+				config_destroy(archivo);
+				return bloque_siguiente;
+			}
+		}
     }
+    config_destroy(archivo);
     return -1;
 }
 
@@ -450,7 +473,7 @@ void aumentar_tam_archivo(char* ruta_archivo, registro_t* registro) {
 }
 
 int cantidad_bloques_usados(char* ruta_archivo) {
-	puts("-------------------Entre a cantidad_bloques_usados-------------------");
+//	puts("-------------------Entre a cantidad_bloques_usados-------------------");
 	t_config* archivo = config_create(ruta_archivo);
 //	puts("config create");
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");

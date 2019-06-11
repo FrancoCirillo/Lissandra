@@ -201,11 +201,18 @@ void testMetadata(char* tabla){
 void pruebaTmp() {
 		char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1.tmp";
 
-		//---prueba de blocks archivo---
+//		---prueba de blocks archivo---
 		agregar_bloque_archivo(ruta_archivo, 6);
 		agregar_bloque_archivo(ruta_archivo, 35);
 		int cant = cantidad_bloques_usados(ruta_archivo);
 		printf("Bloques: %d\n", cant);
+
+		int primero = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
+		printf("PRIMER BLOQUE: %d\n", primero);
+		int sig = obtener_siguiente_bloque_archivo(ruta_archivo, 0);
+		printf("SIGUIENTE BLOQUE: %d\n", sig);
+		int ultimo = obtener_siguiente_bloque_archivo(ruta_archivo, 35);
+		printf("ULTIMO BLOQUE: %d\n", ultimo);
 
 		//---prueba de size archivo---
 		t_config* archivo = config_create(ruta_archivo);
@@ -232,8 +239,7 @@ int main(int argc, char* argv[]) {
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
 
-	pruebaTmp();
-
+//	algo();
 
 	//finalizar_FS();
 	return 0;
