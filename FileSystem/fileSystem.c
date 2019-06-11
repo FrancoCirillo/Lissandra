@@ -25,12 +25,14 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 	int status = 1;
 	char* buffer = string_new();
 	char caracter_leido;
+	char* s_caracter;
 	puts("Creo un buffer y entro al while");
+
 	while(status) {
 		puts("Entro al while");
 		caracter_leido = fgetc(archivo_bloque);
 		printf("Leo un caracter: %c\t", caracter_leido);
-		char* s_caracter;
+
 		switch(caracter_leido) {
 		case '\n': //tengo un registro completo
 			strcat(buffer, "\n");
@@ -38,6 +40,7 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 			registro = obtener_reg(buffer);
 			puts("Paso de aca");
 			imprimir_reg_fs(registro);
+
 			if(registro->key == key) {
 				puts("El registro tiene la key que busco");
 				puts("ENCONTRE UN REGISTRO");
@@ -48,6 +51,7 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 				puts("El registro que encontre no es de la key que busco");
 //			free(registro);
 			break;
+
 		case EOF: //se me acabo el archivo
 			puts("Llegue al final del archivo");
 			fclose(archivo_bloque);
@@ -55,6 +59,7 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 			puts("Busco un nuevo archivo");
 			nro_bloque = -1;
 //			nro_bloque = obtener_siguiente_bloque_archivo(nro_bloque);
+
 			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 				puts("Encontre otro bloque");
 				ruta_bloque = obtener_ruta_bloque(nro_bloque);
@@ -64,6 +69,7 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 				puts("No hay mas bloques, quiero salir del while");
 			}
 			break;
+
 		default:
 			s_caracter = string_from_format("%c", caracter_leido);
 			strcat(buffer, s_caracter);
@@ -88,47 +94,138 @@ void mostrar_contenido_archivo(char* ruta) {
 
 }
 
-int main(int argc, char* argv[]) {
-
-	printf("\n\n************PROCESO FILESYSTEM************	\n");
-	inicializar_FS();
-
-
-
-
-	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
-
-
-	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
-//
-//	inicializar_conexiones();
-	//ejemplo_instr_create();
-	//ejemplo_instr_insert();
+void algo(){
 	char* ruta_bloque = obtener_ruta_bloque(5);
 
+		registro_t* registro2 = malloc(sizeof(registro_t));
+		registro2->key = 25;
+		registro2->timestamp = 4324234;
+		registro2->value = "HolaSoyOtraPrueba";
+
+		prueba(registro2, ruta_bloque);
+
+		registro_t* registro = malloc(sizeof(registro_t));
+		registro->key = 32;
+		registro->timestamp = 4324234;
+		registro->value = "HolaSoyUnaPrueba";
+
+		prueba(registro, ruta_bloque);
+
+		mostrar_contenido_archivo(ruta_bloque);
+
+		printf("\n\nRUTA BLOQUE: %s\n\n", ruta_bloque);
+
+		registro_t* reg = prueba2(32, 0, 5);
+
+		puts("Voy a imprimir registros");
+		imprimir_reg_fs(reg);
+}
+
+void dump(char* tabla, void* registros) {
+	puts("-------------------Entre a dump-------------------");
+	int nro_dump = 1;
+	printf("Numero de Dump:%d\n", nro_dump);
+	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
+	printf("Nombre Temporal:%s\n", nombre_tmp);
+	char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
+	printf("Ruta Temporal: %s\n", ruta_tmp);
+	FILE* temporal = crear_tmp(tabla, nombre_tmp);
+	puts("Creando temporal");
+	int nro_bloque = archivo_inicializar(temporal);
+	puts("Inicializando temporal");
+
+	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+	printf("Obtengo ruta bloque: %s\n", ruta_bloque);
+
+	void escribir_reg_en_tmp(void* registro) {
+		puts("-------------------Entro a escribir_reg_en_tmp-------------------");
+		imprimir_reg_fs((registro_t*)registro);
+		printf("Ruta Bloque: %s\nRuta TMP:%s\n", ruta_bloque, ruta_tmp);
+		escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
+		puts("Escribi el registro en bloque");
+	}
+
+	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
+
+	free(ruta_tmp);
+	free(nombre_tmp);
+	free(ruta_bloque);
+	fclose(temporal);
+	puts("Cierro el temporal");
+}
+
+void pruebaDump() {
+	t_dictionary* mockMem = dictionary_create();
+
+	//--agrego una tabla---
+	t_list* registros = crear_lista_registros();
+	dictionary_put(mockMem, "tabla1", registros);
+	puts("Se agrego la tabla en la memtable.");
+
+	//--creo registros--
 	registro_t* registro2 = malloc(sizeof(registro_t));
 	registro2->key = 25;
 	registro2->timestamp = 4324234;
 	registro2->value = "HolaSoyOtraPrueba";
-
-	prueba(registro2, ruta_bloque);
+	puts("Cree un registro:");
+	imprimir_reg_fs(registro2);
 
 	registro_t* registro = malloc(sizeof(registro_t));
 	registro->key = 32;
 	registro->timestamp = 4324234;
 	registro->value = "HolaSoyUnaPrueba";
+	puts("Cree un registro:");
+	imprimir_reg_fs(registro);
 
-	prueba(registro, ruta_bloque);
+	//--agrego registros--
+	t_list* registros_tabla = dictionary_get(mockMem, "tabla1");
+	list_add(registros_tabla, registro);
+	list_add(registros_tabla, registro2);
+	puts("Se inserto el registro en la memtable.");
 
-	mostrar_contenido_archivo(ruta_bloque);
+	//--hago dump--
+	dictionary_iterator(mockMem, &dump);
+}
 
-	printf("\n\nRUTA BLOQUE: %s\n\n", ruta_bloque);
+void pruebaConfig() {
+	//	char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1";
+	//	puts("Ruta");
+	//	int cant = cantidad_bloques_usados(ruta_archivo);
+	//	puts("cant");
+	//	printf("Bloques: %d", cant);
 
-	registro_t* reg = prueba2(32, 0, 5);
+	//	char* a =  "[1,2,3,4]";
+	//	char** b = string_get_string_as_array(a);
+	//	char* miString = aplanar(b);
+	//	printf("%s\n", miString);
 
-	puts("Voy a imprimir registros");
-	imprimir_reg_fs(reg);
+		char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1";
+		t_config* archivo = config_create(ruta_archivo);
+		puts("Config create");
+	//	char** bloques_ant = config_get_array_value(archivo, "BLOCKS");
+	//	puts("Get bloques");
+		char* c = config_get_string_value(archivo, "SIZE");
+		printf("%s\n", c);
 
+	//	char* nro = string_itoa(10);
+	//	config_set_value(archivo, "SIZE", nro);
+}
+
+int main(int argc, char* argv[]) {
+
+	printf("\n\n************PROCESO FILESYSTEM************	\n");
+	inicializar_FS();
+
+	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
+
+	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
+
+//	inicializar_conexiones();
+	//ejemplo_instr_create();
+	//ejemplo_instr_insert();
+
+//	pruebaConfig();
+	pruebaDump();
 
 	//finalizar_FS();
 	return 0;

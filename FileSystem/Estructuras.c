@@ -78,6 +78,7 @@ char* formatear_registro(registro_t* registro) {
 }
 
 int tam_registro(registro_t* registro) {
+	puts("----------------------Entre a tam_registro---------------------");
 	char* registro_formateado = formatear_registro(registro);
 	int tam_registro = strlen(registro_formateado);
 	free(registro_formateado);
@@ -90,13 +91,26 @@ char* obtener_ruta_bloque(int nro_bloque) {
 }
 
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
+	puts("-----------Entre a escribir_registro_bloque-------------------");
 	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
 	char* string_registro = formatear_registro(registro);
+	printf("Formateo registro: %s\n", string_registro);
 
-	if(tam_registro(registro) <= espacio_restante_bloque(ruta_archivo))
+	int tam = strlen(string_registro);
+	printf("Tam registro: %d\n", tam);
+
+	int espBloque = espacio_restante_bloque(ruta_archivo);
+	printf("Espacio restante Bloque: %d\n", espBloque);
+
+
+	if(strlen(string_registro) <= espacio_restante_bloque(ruta_archivo)) {
 		txt_write_in_file(archivo_bloque, string_registro);
-	else if(cant_bloques_disp() == 0)
-				return; //TODO log: no hay bloques disponibles
+		puts("Escribo el registro completo");
+	}
+	else {
+		puts("No deberia entrar aca");
+		if(cant_bloques_disp() == 0)
+			return; //TODO log: no hay bloques disponibles
 
 		int tam_restante = espacio_restante_bloque(ruta_archivo);
 		char* primera_mitad_registro = string_substring_until(string_registro, tam_restante);
@@ -111,7 +125,9 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 		free(primera_mitad_registro);
 		free(nuevo_bloque);
 		free(mitad_restante_registro);
+	}
 
+	aumentar_tam_archivo(ruta_archivo, registro);
 	txt_close_file(archivo_bloque);
 	free(string_registro);
 }
@@ -340,29 +356,33 @@ void ejemplo_bitarray(){
 
 //--------------------------APLANAR LISTAS-----------------------
 char* aplanar(char** lista) {
-	int size = 0;
-
-	while(*(lista + size))
-		size++;
+	int tam = 0;
+	while(*(lista + tam))
+		tam++;
 
     int sum = 0;
     int count = 0;
-    printf("Length %d\n", size);
-    for (int i = 0; i < size; i++) {
+    printf("Length %d\n",tam);
+    for (int i = 0; i < tam; i++) {
 //            printf("Element #%d - %s\n", i, lista[i]);
             sum += strlen(lista[i]);
     }
     sum++;  // Make room for terminating null character
+    sum += 1; //Sumo el espacio para corchete inicial, al final reemplazo ultima coma por ]
 
-    char* buffer;
-    if ((buffer = calloc(sum, sizeof(char))) != NULL) {
-            for (int i = 0; i < size; i++) {
-                    memcpy(buffer + count, lista[i], strlen(lista[i]));
-                    count += strlen(lista[i]);
-            }
-            printf("Output Buffer: %s\n", buffer);
-    }
-    return buffer;
+    char* buf;
+     if ((buf = calloc(sum, sizeof(char))) != NULL) {
+
+    	 *buf='[';
+    	 count++;
+             for (int i = 0; i < tam; i++) {
+                     memcpy(buf+count, lista[i], strlen(lista[i]));
+                     count += strlen(lista[i]) + 1;
+                     buf[count-1] = ',';
+             }
+             buf[count-1]=']';
+     }
+    return buf;
 }
 
 void ejemplo_aplanar() {
@@ -409,9 +429,14 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 }
 
 int obtener_tam_archivo(char* ruta_archivo) {
+	puts("-------------------Entre a obtener_tam_archivo-------------------");
+	printf("Ruta archivo: %s\n", ruta_archivo);
 	t_config* archivo = config_create(ruta_archivo);
+	puts("Config create");
 	int tam_archivo = config_get_int_value(archivo, "SIZE");
+	puts("config_get_int_value");
 	config_destroy(archivo);
+	puts("Config destroy");
 	return tam_archivo;
 }
 
@@ -426,15 +451,28 @@ void aumentar_tam_archivo(char* ruta_archivo, registro_t* registro) {
 }
 
 int cantidad_bloques_usados(char* ruta_archivo) {
+	puts("-------------------Entre a cantidad_bloques_usados-------------------");
 	t_config* archivo = config_create(ruta_archivo);
+	puts("1");
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
+	puts("2");
 	char* bloques = aplanar(lista_bloques); //posiblemente hay que hacer free
+	puts("3");
 	config_destroy(archivo);
+	puts("4");
 	return strlen(bloques);
 }
 
 int espacio_restante_bloque(char* ruta_archivo) {
+	puts("-------------------Entre a espacio_restante_bloque-------------------");
+	int tamBloque = Metadata_FS.block_size;
+	printf("Tam bloque: %d\n", tamBloque);
+	int tamArchivo = obtener_tam_archivo(ruta_archivo);
+	printf("Tam archivo: %d\n", tamArchivo);
+	int bloquesUsados = cantidad_bloques_usados(ruta_archivo);
+	printf("Bloques usados: %d\n", bloquesUsados);
 	int espacio_disponible = cantidad_bloques_usados(ruta_archivo) * Metadata_FS.block_size - obtener_tam_archivo(ruta_archivo);
+	printf("Espacio Disponible: %d\n", espacio_disponible);
 	return espacio_disponible;
 }
 
@@ -513,9 +551,8 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 }
 
 int archivo_inicializar(FILE* f) {
-
 	int bloque_num = siguiente_bloque_disponible();
-	fprintf(f, "%s%d%s%d%s", "SIZE=", 0, "\nBLOCKS=[", bloque_num, "]\n");
+	fprintf(f, "SIZE=%d\nBLOCKS=[%d\n", 0, bloque_num);
 	// No hace el fclose(f);
 	return bloque_num;
 }
