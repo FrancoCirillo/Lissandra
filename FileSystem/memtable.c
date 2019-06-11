@@ -148,7 +148,7 @@ void dumpear_tabla(char* tabla, void* registros) {
 	puts("Creando temporal");
 	int nro_bloque = archivo_inicializar(temporal);
 	puts("Inicializando temporal");
-	fclose(temporal);
+
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
 	void escribir_reg_en_tmp(void* registro) {
@@ -156,10 +156,12 @@ void dumpear_tabla(char* tabla, void* registros) {
 	puts("Escribi en bloque");
 	}
 
+	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
+
 	free(ruta_tmp);
 	free(nombre_tmp);
 	free(ruta_bloque);
-	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
+	fclose(temporal);
 }
 
 void dumpear(t_dictionary* mem) {

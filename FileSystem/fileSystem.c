@@ -121,40 +121,40 @@ void algo(){
 		imprimir_reg_fs(reg);
 }
 
-void dump(char* tabla, void* registros) {
-	puts("-------------------Entre a dump-------------------");
-	int nro_dump = 1;
-	printf("Numero de Dump: %d\n", nro_dump);
-	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
-	printf("Nombre Temporal: %s\n", nombre_tmp);
-	char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
-	printf("Ruta Temporal: %s\n", ruta_tmp);
-	FILE* temporal = crear_tmp(tabla, nombre_tmp);
-	puts("Creando temporal");
-	int nro_bloque = archivo_inicializar(temporal);
-	puts("Inicializando temporal");
+void pruebaDump() {
+	void dump(char* tabla, void* registros) {
+		puts("-------------------Entre a dump-------------------");
+		int nro_dump = 1;
+		printf("Numero de Dump: %d\n", nro_dump);
+		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
+		printf("Nombre Temporal: %s\n", nombre_tmp);
+		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
+		printf("Ruta Temporal: %s\n", ruta_tmp);
+		FILE* temporal = crear_tmp(tabla, nombre_tmp);
+		puts("Creando temporal");
+		int nro_bloque = archivo_inicializar(temporal);
+		puts("Inicializando temporal");
 
-	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-	printf("Obtengo ruta bloque: %s\n", ruta_bloque);
+		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+		printf("Obtengo ruta bloque: %s\n", ruta_bloque);
 
-	void escribir_reg_en_tmp(void* registro) {
-		puts("-------------------Entro a escribir_reg_en_tmp-------------------");
-		imprimir_reg_fs((registro_t*)registro);
-		printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
-		escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
-		puts("Escribi el registro en bloque");
+		void escribir_reg_en_tmp(void* registro) {
+			puts("-------------------Entro a escribir_reg_en_tmp-------------------");
+			imprimir_reg_fs((registro_t*)registro);
+			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
+			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
+			puts("Escribi el registro en bloque");
+		}
+
+		list_iterate((t_list*)registros, &escribir_reg_en_tmp);
+
+		free(ruta_tmp);
+		free(nombre_tmp);
+		free(ruta_bloque);
+		fclose(temporal);
+		puts("Cierro el temporal");
 	}
 
-	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
-
-	free(ruta_tmp);
-	free(nombre_tmp);
-	free(ruta_bloque);
-	fclose(temporal);
-	puts("Cierro el temporal");
-}
-
-void pruebaDump() {
 	t_dictionary* mockMem = dictionary_create();
 
 	//--agrego una tabla---
@@ -198,28 +198,25 @@ void testMetadata(char* tabla){
 	printf("Tiempo de Compactacion: %d\n", tiempoComp);
 }
 
-void pruebaConfig() {
-	//	char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1";
-	//	puts("Ruta");
-	//	int cant = cantidad_bloques_usados(ruta_archivo);
-	//	puts("cant");
-	//	printf("Bloques: %d", cant);
+void pruebaTmp() {
+		char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1.tmp";
 
-	//	char* a =  "[1,2,3,4]";
-	//	char** b = string_get_string_as_array(a);
-	//	char* miString = aplanar(b);
-	//	printf("%s\n", miString);
+		//---prueba de blocks archivo---
+		agregar_bloque_archivo(ruta_archivo, 6);
+		agregar_bloque_archivo(ruta_archivo, 35);
+		int cant = cantidad_bloques_usados(ruta_archivo);
+		printf("Bloques: %d\n", cant);
 
-		char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1";
+		//---prueba de size archivo---
 		t_config* archivo = config_create(ruta_archivo);
 		puts("Config create");
-	//	char** bloques_ant = config_get_array_value(archivo, "BLOCKS");
-	//	puts("Get bloques");
-		char* c = config_get_string_value(archivo, "SIZE");
-		printf("%s\n", c);
+		char* nro = string_itoa(10);
+		config_set_value(archivo, "SIZE", nro);
+		config_save(archivo);
+		puts("Set value SIZE = 10");
 
-	//	char* nro = string_itoa(10);
-	//	config_set_value(archivo, "SIZE", nro);
+		int size = config_get_int_value(archivo, "SIZE");
+		printf("Tam archivo: %d\n", size);
 }
 
 int main(int argc, char* argv[]) {
@@ -235,14 +232,7 @@ int main(int argc, char* argv[]) {
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
 
-//	pruebaConfig();
-	pruebaDump();
-	mostrar_contenido_archivo("/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1.tmp");
-	mostrar_contenido_archivo("/home/utnso/lissandra-checkpoint/Bloques/0.bin");
-
-//	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1.tmp";
-//	FILE* f = fopen(ruta, "w+");
-//	fprintf(f, "%s", "hola");
+	pruebaTmp();
 
 
 	//finalizar_FS();
