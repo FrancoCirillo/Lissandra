@@ -124,9 +124,9 @@ void algo(){
 void dump(char* tabla, void* registros) {
 	puts("-------------------Entre a dump-------------------");
 	int nro_dump = 1;
-	printf("Numero de Dump:%d\n", nro_dump);
+	printf("Numero de Dump: %d\n", nro_dump);
 	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
-	printf("Nombre Temporal:%s\n", nombre_tmp);
+	printf("Nombre Temporal: %s\n", nombre_tmp);
 	char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 	printf("Ruta Temporal: %s\n", ruta_tmp);
 	FILE* temporal = crear_tmp(tabla, nombre_tmp);
@@ -140,7 +140,7 @@ void dump(char* tabla, void* registros) {
 	void escribir_reg_en_tmp(void* registro) {
 		puts("-------------------Entro a escribir_reg_en_tmp-------------------");
 		imprimir_reg_fs((registro_t*)registro);
-		printf("Ruta Bloque: %s\nRuta TMP:%s\n", ruta_bloque, ruta_tmp);
+		printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
 		escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 		puts("Escribi el registro en bloque");
 	}
@@ -187,6 +187,17 @@ void pruebaDump() {
 	dictionary_iterator(mockMem, &dump);
 }
 
+void testMetadata(char* tabla){
+	puts("-------------------Entro a imprimir metadata-------------------");
+	printf("Metadata de la tabla %s\n", tabla);
+	int part = obtener_part_metadata(tabla);
+	printf("Particiones: %d\n", part);
+	char* consist = obtener_consistencia_metadata(tabla);
+	printf("Consistencia: %s\n", consist);
+	int tiempoComp = obtener_tiempo_compactacion_metadata(tabla);
+	printf("Tiempo de Compactacion: %d\n", tiempoComp);
+}
+
 void pruebaConfig() {
 	//	char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1";
 	//	puts("Ruta");
@@ -213,7 +224,7 @@ void pruebaConfig() {
 
 int main(int argc, char* argv[]) {
 
-	printf("\n\n************PROCESO FILESYSTEM************	\n");
+	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	inicializar_FS();
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
@@ -226,6 +237,13 @@ int main(int argc, char* argv[]) {
 
 //	pruebaConfig();
 	pruebaDump();
+	mostrar_contenido_archivo("/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1.tmp");
+	mostrar_contenido_archivo("/home/utnso/lissandra-checkpoint/Bloques/0.bin");
+
+//	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1.tmp";
+//	FILE* f = fopen(ruta, "w+");
+//	fprintf(f, "%s", "hola");
+
 
 	//finalizar_FS();
 	return 0;

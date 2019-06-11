@@ -57,8 +57,7 @@ int obtener_part_metadata(char* tabla) {
 char* obtener_consistencia_metadata(char* tabla) {
 	t_config* metadata = obtener_metadata(tabla);
 	char* consistencia = config_get_string_value(metadata, "CONSISTENCY");
-	config_destroy(metadata);
-	return consistencia; //free(consistencia)?
+	return consistencia; //config_destroy(metadata);
 }
 
 int obtener_tiempo_compactacion_metadata(char* tabla) {
@@ -301,7 +300,7 @@ void eliminar_bitarray(t_bitarray* bitarray) {
 
 int bloque_esta_ocupado(t_bitarray* bitmap, int nro_bloque) {
 	int test = bitarray_test_bit(bitmap, nro_bloque);
-	//printf("El valor del bloque %d, es %d\n",nro_bloque,test);
+	//printf("El valor del bloque %d es %d\n", nro_bloque, test);
 	return test;
 }
 
@@ -432,11 +431,11 @@ int obtener_tam_archivo(char* ruta_archivo) {
 	puts("-------------------Entre a obtener_tam_archivo-------------------");
 	printf("Ruta archivo: %s\n", ruta_archivo);
 	t_config* archivo = config_create(ruta_archivo);
-	puts("Config create");
+//	puts("Config create");
 	int tam_archivo = config_get_int_value(archivo, "SIZE");
-	puts("config_get_int_value");
+//	puts("config_get_int_value");
 	config_destroy(archivo);
-	puts("Config destroy");
+//	puts("Config destroy");
 	return tam_archivo;
 }
 
@@ -453,13 +452,13 @@ void aumentar_tam_archivo(char* ruta_archivo, registro_t* registro) {
 int cantidad_bloques_usados(char* ruta_archivo) {
 	puts("-------------------Entre a cantidad_bloques_usados-------------------");
 	t_config* archivo = config_create(ruta_archivo);
-	puts("1");
+//	puts("config create");
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
-	puts("2");
+//	puts("config get array value");
 	char* bloques = aplanar(lista_bloques); //posiblemente hay que hacer free
-	puts("3");
+//	puts("aplanar");
 	config_destroy(archivo);
-	puts("4");
+//	puts("config destroy");
 	return strlen(bloques);
 }
 
@@ -471,7 +470,8 @@ int espacio_restante_bloque(char* ruta_archivo) {
 	printf("Tam archivo: %d\n", tamArchivo);
 	int bloquesUsados = cantidad_bloques_usados(ruta_archivo);
 	printf("Bloques usados: %d\n", bloquesUsados);
-	int espacio_disponible = cantidad_bloques_usados(ruta_archivo) * Metadata_FS.block_size - obtener_tam_archivo(ruta_archivo);
+	int espacio_disponible = tamBloque*bloquesUsados - tamArchivo;
+//	int espacio_disponible = cantidad_bloques_usados(ruta_archivo) * Metadata_FS.block_size - obtener_tam_archivo(ruta_archivo);
 	printf("Espacio Disponible: %d\n", espacio_disponible);
 	return espacio_disponible;
 }
@@ -521,7 +521,7 @@ void crear_particiones(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
 	char* nomb_part ;
 	for(int num = 0; num < cantidad; num++) {
-		nomb_part = string_from_format("Part_%d", num);
+		nomb_part = string_from_format("Part%d", num);
 		FILE* archivo_binario = crear_archivo(nomb_part, tabla, ".bin");
 		archivo_inicializar(archivo_binario);
 
@@ -553,9 +553,10 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 int archivo_inicializar(FILE* f) {
 	puts("-------------------Entre a archivo_inicializar-------------------");
 	int bloque_num = siguiente_bloque_disponible();
-	int respuesta = fprintf(f, "%s%d%s%d%s", "SIZE=", 0, "\nBLOCKS=[", bloque_num, "]\n");
+	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
+	txt_write_in_file(f, contenido);
+//	fprintf(f, "%s%d%s%d%s", "SIZE=", 0, "\nBLOCKS=[", bloque_num, "]\n");
 	// No hace el fclose(f);
-	printf("Respuesta: %d\n", respuesta);
 	printf("Numero de bloque: %d\n", bloque_num);
 	return bloque_num;
 }
