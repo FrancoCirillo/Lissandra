@@ -11,6 +11,7 @@ t_dictionary* tablas_nro_dump;
 sem_t mutex_tablas_nro_dump;
 
 // --------FUNCIONES DE MEMTABLE--------
+void levantar_tablas_directorio();
 void inicializar_memtable();
 void finalizar_memtable();
 void limpiar_memtable();

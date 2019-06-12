@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
 
-//	algo();
+	algo();
 
 	//finalizar_FS();
 	return 0;
@@ -300,10 +300,10 @@ void iniciar_semaforos() {
 }
 
 void iniciar_rutas(){
-	g_ruta.tablas = concat(config_FS.punto_montaje, "Tablas/");
-	g_ruta.bloques = concat(config_FS.punto_montaje, "Bloques/");
-	g_ruta.metadata = concat(config_FS.punto_montaje, "Metadata/Metadata.bin");
-	g_ruta.bitmap = concat(config_FS.punto_montaje, "Metadata/Bitmap.bin");
+	g_ruta.tablas = string_from_format("%sTablas/", config_FS.punto_montaje);
+	g_ruta.bloques = string_from_format("%sBloques/", config_FS.punto_montaje);
+	g_ruta.metadata = string_from_format("%sMetadata/Metadata.bin", config_FS.punto_montaje);
+	g_ruta.bitmap = string_from_format("%sMetadata/Bitmap.bin", config_FS.punto_montaje);
 }
 
 void finalizar_rutas(){
@@ -478,19 +478,13 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 }
 
 void execute_describe(instr_t* instruccion, char* remitente) {
-	typedef struct metadata_tabla_t {
-		char* tabla;
-		char* consistencia;
-		int particiones;
-		int tiempo_compactacion;
-	} metadata_tabla_t;
-
 	t_list* listaParam = list_create();
 	int parametros_instr = list_size(instruccion->parametros);
 
-	if(parametros_instr) { //DESCRIBE
-		char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas);
-		DIR* directorio = opendir(ruta_tabla);
+	if(!parametros_instr) { //DESCRIBE
+		char* ruta = string_from_format("%s", g_ruta.tablas);
+		printf("Ruta: %s\n", ruta);
+		DIR* directorio = opendir(ruta);
 		if (directorio == NULL) {
 			printf("Error: No se puede abrir el directorio\n");
 			exit(2);
@@ -499,47 +493,39 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		struct dirent* directorio_leido;
 		while((directorio_leido = readdir(directorio)) != NULL) {
 			char* tabla = directorio_leido->d_name;
-//			imprimirMetadata(tabla);
-			char* consistencia = obtener_consistencia_metadata(tabla);
-			int particiones = obtener_part_metadata(tabla);
-			int tiempo_comp = obtener_tiempo_compactacion_metadata(tabla);
+			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
+				imprimirMetadata(tabla);
+				char* consistencia = obtener_consistencia_metadata(tabla);
+				char* particiones = string_itoa(obtener_part_metadata(tabla));
+				char* tiempo_comp = string_itoa(obtener_tiempo_compactacion_metadata(tabla));
 
-			list_add(listaParam, tabla);
-			list_add(listaParam, consistencia);
-			list_add(listaParam, particiones);
-			list_add(listaParam, tiempo_comp);
+				list_add(listaParam, tabla);
+				list_add(listaParam, consistencia);
+				list_add(listaParam, particiones);
+				list_add(listaParam, tiempo_comp);
+			}
 		}
-		free(ruta_tabla);
+		imprimir_donde_corresponda(CODIGO_DESCRIBE, instruccion, listaParam, remitente);
+		free(ruta);
 		closedir(directorio);
 
 	} else { //DESCRIBE tabla1
 		char* tabla = obtener_nombre_tabla(instruccion);
-		char* remitente;
-		if(!existe_tabla(tabla))
+		if(!existe_tabla(tabla)) {
 			imprimir_donde_corresponda(ERROR_DESCRIBE, instruccion, listaParam, remitente);
+			return;
+		}
 		char* consistencia = obtener_consistencia_metadata(tabla);
-		int particiones = obtener_part_metadata(tabla);
-		int tiempo_comp = obtener_tiempo_compactacion_metadata(tabla);
+		char* particiones = string_itoa(obtener_part_metadata(tabla));
+		char* tiempo_comp = string_itoa(obtener_tiempo_compactacion_metadata(tabla));
+		imprimirMetadata(tabla);
 
 		list_add(listaParam, tabla);
 		list_add(listaParam, consistencia);
 		list_add(listaParam, particiones);
 		list_add(listaParam, tiempo_comp);
+		imprimir_donde_corresponda(CODIGO_DESCRIBE, instruccion, listaParam, remitente);
 	}
-
-	//	t_list *listaParam = list_create();
-	//	char* tabla = obtener_nombre_tabla(instruccion);
-	//	char* blockSize = string_from_format("%d", 12);
-	//	char* blocks = string_from_format("%d", 64);
-	//	char* magicNumber = string_from_format("%s", "LISSANDRA");
-	//
-	//	list_add(listaParam, tabla);
-	//	list_add(listaParam, blockSize);
-	//	list_add(listaParam, blocks);
-	//
-	//	list_add(listaParam, magicNumber);
-	//	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
-	//	//return CODIGO_EXITO;
 }
 
 char* obtener_nombre_tabla(instr_t* instr) { //Azul: aca se puede hacer el string_to_upper();
@@ -668,21 +654,6 @@ void ejemplo_instr_create() {
 	loggear_FS("Se libero la memoria de la instruccion");
 }
 
-char* concat(char *s1, char *s2) {
-	char *result = malloc(strlen(s1) + strlen(s2) + 1);
-	strcpy(result, s1);
-	strcat(result, s2);
-	return result;
-}
-
-char* concat3(char *s1, char *s2, char * s3) {
-	char *result = malloc(strlen(s1) + strlen(s2) + strlen(s3) + 1);
-	strcpy(result, s1);
-	strcat(result, s2);
-	strcat(result, s3);
-	return result;
-}
-
 void liberar_memoria_instr(instr_t * instr) {  //Para testeo. Fran libera todo con sus conexiones.
 	list_clean(instr->parametros);
 	free(instr->parametros);
@@ -733,7 +704,7 @@ int obtener_fd_out(char *proceso)
 	return idsProceso->fd_out;
 }
 
-void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente)
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list* listaParam, char* remitente)
 {
 	list_add(listaParam, obtener_ultimo_parametro(instruccion));
 	instr_t *miInstruccion;
@@ -772,16 +743,14 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 	cod_op codOp;
 	t_list* resultadoInsert;
+	int tam_value = strlen(obtener_parametro(instruccion, 2));
 
-
-	//PARA VALIDAR MAX. Copiado de Fran.
-//	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
-//	{
-//		char cadena[500];
-//		t_list *listaParam = list_create();
-//		sprintf(cadena, "El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
-//		list_add(listaParam, cadena);
-//		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam);}
+	if(tam_value > config_FS.tamanio_value) {
+		t_list *listaParam = list_create();
+		char* cadena = string_from_format("El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)", tam_value, config_FS.tamanio_value);
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
+	}
 
 	if(quien_pidio(instruccion) == CONSOLA_FS){
 		resultadoInsert = list_duplicate(execute_insert(instruccion, &codOp));

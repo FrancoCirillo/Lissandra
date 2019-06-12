@@ -168,20 +168,32 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 
 registro_t* obtener_reg(char* buffer) {
 	puts("---OBTENER REGISTRO---");
+	puts("Buffer Copy:");
 	char* bufferCopy = strdup(buffer);
+	puts("Malloc registro:");
 	registro_t* registro = malloc(sizeof(registro_t));
+	puts("Malloc token");
 	char* token = malloc(sizeof(int));
 
+	puts("Strtok:");
 	char* actual = strtok(bufferCopy, ";");
+	puts("Strdup:");
 	token = strdup(actual);
+	puts("Timestamp:");
 	registro->timestamp = string_a_mseg(token);
 
+	puts("Strtok:");
 	actual = strtok(NULL, ";");
+	puts("Strtok:");
 	token = strdup(actual);
+	puts("Key:");
 	registro->key = (uint16_t)atoi(token);
 
+	puts("Strtok");
 	actual = strtok(NULL, "\n");
+	puts("Strdup");
 	token = strdup(actual);
+	puts("Value:");
 	strcpy(registro->value, token);
 
 	free(bufferCopy);
@@ -383,18 +395,6 @@ char* aplanar(char** lista) {
     }
     return buf;
 }
-void ejemplo_aplanar(){
-	char* a="Hola";
-	char* b="como";
-	char* c="te";
-	char* d="va";
-	char** array =malloc(sizeof(char*)*5);
-	*array=a;
-	*(array+1)=b;
-	*(array+2)=c;
-	*(array+3)=d;
-	*(array+4)=NULL;
-	printf("La lista aplanada es %s\n",aplanar(array));
 
 void ejemplo_aplanar() {
 	char* a = "Hola ";
@@ -408,8 +408,8 @@ void ejemplo_aplanar() {
 	*(array + 3) = d;
 	*(array + 4) = NULL;
 	printf("La lista aplanada es %s\n", aplanar(array));
-
 }
+
 //---------------------------TMP Y BIN---------------------------
 char* agregar_bloque_bloques(char** lista_s_bloques, int bloque) {
 	puts("-------------------Entre a agregar_bloque_bloques-------------------");
@@ -595,23 +595,21 @@ FILE* crear_archivo(char* nombre, char* tabla, char* ext) {
 	return archivo;
 }
 
-void crear_directorio(char* ruta, char * nomb) {
+void crear_directorio(char* ruta, char * nombre) {
 
 	//string_to_upper(nomb);   //No me funciona (??) TODO ver
-	char* ruta_dir = concat(ruta, nomb);
-	char* mje = malloc(sizeof(char) * (60 + strlen(ruta_dir)));
+	char* ruta_dir = string_from_format("%s%s", ruta, nombre);
 	if (!mkdir(ruta_dir, S_IRWXU)) {
-		sprintf(mje, "Se creó correctamente la carpeta \"%s\" en el directorio %s", nomb, ruta);
-		loggear_FS(mje);
+		char* mensaje = string_from_format("Se creó correctamente la carpeta \"%s\" en el directorio %s", nombre, ruta);
+		loggear_FS(mensaje);
 		free(ruta_dir);
-		free(mje);
+		free(mensaje);
 	} else {
-		sprintf(mje, "No se creó la carpeta \"%s\". Ya existe.", nomb);
-		loggear_FS(mje);
+		char* mensaje = string_from_format("No se creó la carpeta \"%s\". Ya existe.", nombre);
+		loggear_FS(mensaje);
 		free(ruta_dir);
-		free(mje);
+		free(mensaje);
 	}
-	//Concat hace un malloc. Aca tiene que haber un free
 }
 
 void crear_bloques() {  //Los bloques van a partir del numero 0.
@@ -689,9 +687,9 @@ void actualizar_tiempo_dump_config(mseg_t value) {
 
 	config_save(g_config);
 
-	char* mje = concat("Se actualizo el tiempo de dumpeo en el archivo de configuracion. Nuevo valor: ", val);
-	loggear_FS(mje);
-	free(mje);
+	char* mensaje = string_from_format("Se actualizo el tiempo de dumpeo en el archivo de configuracion. Nuevo valor: %s", val);
+	loggear_FS(mensaje);
+	free(mensaje);
 	free(val);
 }
 
@@ -705,9 +703,9 @@ void actualizar_tiempo_retardo_config(mseg_t value) {
 
 	config_save(g_config);
 
-	char* mje = concat("Se actualizo el tiempo de retardo en el archivo de configuracion. Nuevo valor: ", val);
-	loggear_FS(mje);
-	free(mje);
+	char* mensaje = string_from_format("Se actualizo el tiempo de retardo en el archivo de configuracion. Nuevo valor: %s", val);
+	loggear_FS(mensaje);
+	free(mensaje);
 	free(val);
 
 }
