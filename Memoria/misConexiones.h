@@ -24,5 +24,10 @@ void responderHandshake(identificador *idsConexionEntrante);
 void enviar_datos_a_FS();
 void pedir_tamanio_value();
 void actualizar_tamanio_value(instr_t* instruccion);
-
+/* GOSSIPING */
+void ejecutar_instruccion_gossip();
+void *ejecutar_gossiping();
+void devolver_gossip(instr_t* instruccion, char* remitente);
+t_list *conexiones_para_gossiping();
+void actualizar_tabla_gossiping(instr_t* instruccion);
 #endif /* MISCONEXIONES_H_ */

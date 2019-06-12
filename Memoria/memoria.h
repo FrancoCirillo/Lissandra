@@ -56,6 +56,7 @@ void inicializar_estructuras_memoria();
 void ejecutar_instruccion(instr_t *instruccion, char *remitente);
 void inicializar_semaforos();
 void iniciar_ejecutador_journal();
+void iniciar_ejecutador_gossiping();
 
 	/* TESTING */
 

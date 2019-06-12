@@ -131,6 +131,14 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			actualizar_tamanio_value(instruccion);
 			inicializar_estructuras_memoria();
 			break;
+
+		case PETICION_GOSSIP:
+			devolver_gossip(instruccion, remitente);
+			break;
+
+		case RECEPCION_GOSSIP:
+			actualizar_tabla_gossiping(instruccion);
+			break;
 		default:
 			loggear_info(g_logger,&mutex_log, string_from_format("El comando no pertenece a la memoria"));
 			break;
@@ -146,7 +154,17 @@ void iniciar_ejecutador_journal(){
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador_journal,&attr, &ejecutar_journal, NULL);
 	pthread_detach(hilo_ejecutador_journal);
-	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador iniciado journal"));
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador journal iniciado"));
+}
+
+void iniciar_ejecutador_gossiping(){
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Iniciando ejecutador gossiping"));
+	pthread_t hilo_ejecutador_gossiping;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_ejecutador_gossiping,&attr, &ejecutar_gossiping, NULL);
+	pthread_detach(hilo_ejecutador_gossiping);
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador gossiping iniciado"));
 }
 
 void check_inicial(int argc, char* argv[])

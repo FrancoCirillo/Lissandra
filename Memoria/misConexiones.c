@@ -94,3 +94,82 @@ void actualizar_tamanio_value(instr_t* instruccion){
 
 
 }
+
+void devolver_gossip(instr_t *instruccion, char *remitente){
+	int conexionRemitente = obtener_fd_out(remitente);
+	t_list* tablaGossiping = conexiones_para_gossiping();
+
+	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
+
+	enviar_request(miInstruccion, conexionRemitente);
+
+	actualizar_tabla_gossiping(instruccion);
+
+}
+
+void actualizar_tabla_gossiping(instr_t* instruccion){
+
+	int i = 0;
+	char* nombre;
+	char* ip;
+	char* puerto;
+
+	void acutalizar_tabla(char* parametro){
+		if(i % 3 == 0){
+			if(!dictionary_has_key(conexionesActuales, parametro)){
+				nombre = strdup(parametro);
+				i++;
+			}
+			else{
+				i+=3;
+			}
+		}
+		if(i % 3 == 1){
+			ip = strdup(parametro);
+			i++;
+		}
+		if(i % 3 == 2){
+			puerto = strdup(parametro);
+
+			identificador identificadores = {
+					.fd_out = 0,
+					.fd_in = 0,
+					.ip_proceso = *ip,
+					.puerto = *puerto
+			};
+
+			identificador* idsConexionesActuales = malloc(sizeof(identificadores));
+			memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
+
+			dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
+			i++;
+		}
+	}
+
+	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
+}
+
+t_list *conexiones_para_gossiping(){
+
+
+	t_list *tablaGossiping = list_create();
+
+	void juntar_ip_y_puerto(char* nombre, identificador* ids){
+		list_add(tablaGossiping, nombre);
+		list_add(tablaGossiping, ids->ip_proceso);
+		list_add(tablaGossiping, ids->puerto);
+	}
+
+	dictionary_iterator(conexionesActuales, (void *)juntar_ip_y_puerto);
+
+	return tablaGossiping;
+
+}
+
+void ejecutar_instruccion_gossip(){
+	loggear_info(g_logger, &mutex_log, string_from_format("Ejecutando instruccion Gossip"));
+
+
+}
+
+

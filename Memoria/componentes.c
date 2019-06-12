@@ -487,6 +487,17 @@ void *ejecutar_journal()
 	}
 }
 
+void *ejecutar_gossiping()
+{
+	while(1)
+	{
+		usleep(configuracion.RETARDO_GOSSIPING * 1000);
+		ejecutar_instruccion_gossip();
+	}
+}
+
+
+
 int eliminar_tabla(instr_t* instruccion)
 {
 	char* tablaABorrar = (char*)list_get(instruccion->parametros, 0);
