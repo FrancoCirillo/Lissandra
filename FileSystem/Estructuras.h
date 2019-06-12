@@ -92,7 +92,6 @@ void incremetar_bloques_disponibles(int);
 
 int 		obtener_siguiente_bloque_archivo(char*, int);
 registro_t* obtener_reg(char*);
-void 		imprimir_reg_fs(registro_t*);
 t_list*		buscar_key_en_bloques(char*, uint16_t, int);
 
 

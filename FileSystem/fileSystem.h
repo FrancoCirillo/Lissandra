@@ -92,7 +92,15 @@ t_log* g_logger;
 t_config* g_config;
 t_config* meta_config;
 
+/*TESTS*/
+void imprimir_reg_fs(registro_t*);
+void imprimirContenidoArchivo(char*);
+void imprimirMetadata(char*);
+void pruebaDump();
+void pruebaTmp();
 
+
+/*INICIALIZACION Y FINALIZACION*/
 void inicializar_FS();
 void finalizar_FS();
 void iniciar_semaforos();
@@ -123,7 +131,7 @@ void 	execute_create(instr_t*, char* remitente);
 t_list* execute_insert(instr_t*, cod_op* codOp);
 void 	execute_select(instr_t*, char* remitente);
 void 	execute_describe(instr_t*, char* remitente); //TODO hacer
-void 	execute_drop(instr_t*, char* remitente);
+void 	execute_drop(instr_t*, char* remitente); //TODO completar
 void 	ejecutar_instruccion_insert(instr_t* instruccion, char* remitente);
 
 /*EJEMPLO INTRUCCIONES*/ //para testeo
@@ -134,8 +142,8 @@ void 	ejemplo_instr_describe();
 void 	ejemplo_instr_drop();
 
 /*MANEJO DE CADENAS*/
-char* 	concat(char*, char*);
-char* 	concat3(char*, char*, char*);
+char* 	concat(char*, char*); //TODO borrar
+char* 	concat3(char*, char*, char*); //TODO borra
 
 /*Comunicación*/
 //eliminar

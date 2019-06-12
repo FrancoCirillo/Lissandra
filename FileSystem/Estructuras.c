@@ -189,14 +189,6 @@ registro_t* obtener_reg(char* buffer) {
 	return registro;
 }
 
-void imprimir_reg_fs(registro_t *registro)
-{
-	printf("Timestamp: %"PRIu64"\n",registro->timestamp);
-	printf("Key: %d\n", registro->key);
-	printf("Value: %s\n", registro->value);
-	puts("");
-}
-
 t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=1, .tmp=0
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);

@@ -83,16 +83,7 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 //	return registros;
 }
 
-void mostrar_contenido_archivo(char* ruta) {
-	puts("---LEO ARCHIVO COMPLETO---");
-	FILE* f = fopen(ruta, "r");
-	char caracter_leido = fgetc(f);
-	while(caracter_leido != EOF){
-		printf("%c", caracter_leido);
-		caracter_leido = fgetc(f);
-	}
 
-}
 
 void algo(){
 	char* ruta_bloque = obtener_ruta_bloque(5);
@@ -111,7 +102,7 @@ void algo(){
 
 		prueba(registro, ruta_bloque);
 
-		mostrar_contenido_archivo(ruta_bloque);
+		imprimirContenidoArchivo(ruta_bloque);
 
 		printf("\n\nRUTA BLOQUE: %s\n\n", ruta_bloque);
 
@@ -119,6 +110,56 @@ void algo(){
 
 		puts("Voy a imprimir registros");
 		imprimir_reg_fs(reg);
+}
+
+
+int main(int argc, char* argv[]) {
+
+	printf("\n\n************PROCESO FILESYSTEM************\n\n");
+	inicializar_FS();
+
+	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
+
+	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
+
+//	inicializar_conexiones();
+	//ejemplo_instr_create();
+	//ejemplo_instr_insert();
+
+//	algo();
+
+	//finalizar_FS();
+	return 0;
+
+}
+
+//------------------------TESTS------------------------
+void imprimirContenidoArchivo(char* ruta) {
+	puts("---LEO ARCHIVO COMPLETO---");
+	FILE* f = fopen(ruta, "r");
+	char caracter_leido = fgetc(f);
+	while(caracter_leido != EOF){
+		printf("%c", caracter_leido);
+		caracter_leido = fgetc(f);
+	}
+}
+
+void imprimir_reg_fs(registro_t* registro) {
+	printf("Timestamp: %"PRIu64"\n",registro->timestamp);
+	printf("Key: %d\n", registro->key);
+	printf("Value: %s\n", registro->value);
+	puts("");
+}
+
+void imprimirMetadata(char* tabla){
+	puts("-------------------Entro a imprimir metadata-------------------");
+	printf("Metadata de la tabla %s\n", tabla);
+	int part = obtener_part_metadata(tabla);
+	printf("Particiones: %d\n", part);
+	char* consist = obtener_consistencia_metadata(tabla);
+	printf("Consistencia: %s\n", consist);
+	int tiempoComp = obtener_tiempo_compactacion_metadata(tabla);
+	printf("Tiempo de Compactacion: %d\n", tiempoComp);
 }
 
 void pruebaDump() {
@@ -187,17 +228,6 @@ void pruebaDump() {
 	dictionary_iterator(mockMem, &dump);
 }
 
-void testMetadata(char* tabla){
-	puts("-------------------Entro a imprimir metadata-------------------");
-	printf("Metadata de la tabla %s\n", tabla);
-	int part = obtener_part_metadata(tabla);
-	printf("Particiones: %d\n", part);
-	char* consist = obtener_consistencia_metadata(tabla);
-	printf("Consistencia: %s\n", consist);
-	int tiempoComp = obtener_tiempo_compactacion_metadata(tabla);
-	printf("Tiempo de Compactacion: %d\n", tiempoComp);
-}
-
 void pruebaTmp() {
 		char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1.tmp";
 
@@ -226,26 +256,8 @@ void pruebaTmp() {
 		printf("Tam archivo: %d\n", size);
 }
 
-int main(int argc, char* argv[]) {
 
-	printf("\n\n************PROCESO FILESYSTEM************\n\n");
-	inicializar_FS();
-
-	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
-
-	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
-
-//	inicializar_conexiones();
-	//ejemplo_instr_create();
-	//ejemplo_instr_insert();
-
-//	algo();
-
-	//finalizar_FS();
-	return 0;
-
-}
-
+//------------INICIALIZACION Y FINALIZACION-----------------
 void inicializar_FS(int argc, char* argv[]) {
 	iniciar_semaforos();
 	iniciar_logger();
@@ -345,7 +357,6 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 	default:
 		loggear_FS("Me llego una instruccion invalida dentro del File System.");
 	}
-
 }
 
 void execute_create(instr_t* instruccion, char* remitente) {
@@ -375,7 +386,6 @@ void execute_create(instr_t* instruccion, char* remitente) {
 		imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
 	}
 }
-
 
 t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequeado
 	t_list *listaParam = list_create();
@@ -407,7 +417,6 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 		return listaParam;
 	}
 }
-
 
 void execute_select(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
@@ -466,6 +475,71 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 	list_add(listaParam, cadena);
 	//return CODIGO_EXITO;
+}
+
+void execute_describe(instr_t* instruccion, char* remitente) {
+	typedef struct metadata_tabla_t {
+		char* tabla;
+		char* consistencia;
+		int particiones;
+		int tiempo_compactacion;
+	} metadata_tabla_t;
+
+	t_list* listaParam = list_create();
+	int parametros_instr = list_size(instruccion->parametros);
+
+	if(parametros_instr) { //DESCRIBE
+		char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas);
+		DIR* directorio = opendir(ruta_tabla);
+		if (directorio == NULL) {
+			printf("Error: No se puede abrir el directorio\n");
+			exit(2);
+		}
+
+		struct dirent* directorio_leido;
+		while((directorio_leido = readdir(directorio)) != NULL) {
+			char* tabla = directorio_leido->d_name;
+//			imprimirMetadata(tabla);
+			char* consistencia = obtener_consistencia_metadata(tabla);
+			int particiones = obtener_part_metadata(tabla);
+			int tiempo_comp = obtener_tiempo_compactacion_metadata(tabla);
+
+			list_add(listaParam, tabla);
+			list_add(listaParam, consistencia);
+			list_add(listaParam, particiones);
+			list_add(listaParam, tiempo_comp);
+		}
+		free(ruta_tabla);
+		closedir(directorio);
+
+	} else { //DESCRIBE tabla1
+		char* tabla = obtener_nombre_tabla(instruccion);
+		char* remitente;
+		if(!existe_tabla(tabla))
+			imprimir_donde_corresponda(ERROR_DESCRIBE, instruccion, listaParam, remitente);
+		char* consistencia = obtener_consistencia_metadata(tabla);
+		int particiones = obtener_part_metadata(tabla);
+		int tiempo_comp = obtener_tiempo_compactacion_metadata(tabla);
+
+		list_add(listaParam, tabla);
+		list_add(listaParam, consistencia);
+		list_add(listaParam, particiones);
+		list_add(listaParam, tiempo_comp);
+	}
+
+	//	t_list *listaParam = list_create();
+	//	char* tabla = obtener_nombre_tabla(instruccion);
+	//	char* blockSize = string_from_format("%d", 12);
+	//	char* blocks = string_from_format("%d", 64);
+	//	char* magicNumber = string_from_format("%s", "LISSANDRA");
+	//
+	//	list_add(listaParam, tabla);
+	//	list_add(listaParam, blockSize);
+	//	list_add(listaParam, blocks);
+	//
+	//	list_add(listaParam, magicNumber);
+	//	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+	//	//return CODIGO_EXITO;
 }
 
 char* obtener_nombre_tabla(instr_t* instr) { //Azul: aca se puede hacer el string_to_upper();
@@ -546,8 +620,6 @@ _Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
 
 
 //------------EJEMPLO INSTRUCCIONES----------------
-
-
 void ejemplo_instr_insert() {
 
 	//INSERT
@@ -727,18 +799,4 @@ void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 	}
 }
 
-void execute_describe(instr_t* instruccion, char* remitente){
-	t_list *listaParam = list_create();
-	char* tabla = obtener_nombre_tabla(instruccion);
-	char* blockSize = string_from_format("%d", 12);
-	char* blocks = string_from_format("%d", 64);
-	char* magicNumber = string_from_format("%s", "LISSANDRA");
 
-	list_add(listaParam, tabla);
-	list_add(listaParam, blockSize);
-	list_add(listaParam, blocks);
-
-	list_add(listaParam, magicNumber);
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
-	//return CODIGO_EXITO;
-}
