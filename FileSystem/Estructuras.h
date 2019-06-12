@@ -65,7 +65,8 @@ FILE* crear_archivo(char*, char*, char*);
 
 
 //TEMPORALES Y BINARIOS
-char*  aplanar(char**); //TODO mejorar
+int    obtener_ultimo_bloque(char*);
+char*  aplanar(char**);
 char*  agregar_bloque_bloques(char**, int);
 int    agregar_bloque_archivo(char*, int);
 FILE*  crear_tmp(char*, char*);

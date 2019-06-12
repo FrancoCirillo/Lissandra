@@ -15,13 +15,14 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 //	puts("FIN FUNCION ESCRITURA");
 }
 
-/*t_list*/ registro_t* prueba2(uint16_t key, int tipo_archivo, int nro_bloque) {;
+t_list* pruebaLeer(char* ruta_archivo, uint16_t key, int tipo_archivo) {
+	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 //	printf("Obtengo la ruta del bloque: %s\n", ruta_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
 //	puts("Abro el bloque");
 //	registro_t* reg;
-//	t_list* registros = crear_lista_registros();
+	t_list* registros = crear_lista_registros();
 	int status = 1;
 	char* buffer = string_new();
 	char caracter_leido;
@@ -44,14 +45,13 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 			if(registro->key == key) {
 //				puts("El registro tiene la key que busco");
 //				puts("ENCONTRE UN REGISTRO");
-//				list_add(registros, registro); //lo agrego solo si tiene la key que busco
-//				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
-				return registro;
+				list_add(registros, registro); //lo agrego solo si tiene la key que busco
+				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
 			} else
 				puts("El registro que encontre no es de la key que busco");
 //			free(registro);
-			printf("El contenido del buffer es: %s\n", buffer);
 			strcpy(buffer, "");
+			printf("El contenido del buffer es: %s\n", buffer);
 			break;
 
 		case EOF: //se me acabo el archivo
@@ -59,8 +59,8 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 			fclose(archivo_bloque);
 			free(ruta_bloque);
 //			puts("Busco un nuevo archivo");
-			nro_bloque = -1;
-//			nro_bloque = obtener_siguiente_bloque_archivo(nro_bloque);
+			int bloque_anterior = nro_bloque;
+			nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
 
 			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 				puts("Encontre otro bloque");
@@ -80,12 +80,39 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 			break;
 		}
 	}
-	puts("Return registro");
-//	return registro;
-//	return registros;
+	return registros;
 }
 
-void pruebaEscrituraYLecturaBloques(){
+t_list* listaRegistros() {
+	t_list* registros = crear_lista_registros();
+
+	registro_t* registro1 = obtener_reg("43242345;253;registro1\n");
+	registro_t* registro2 = obtener_reg("43242345;43;registro2\n");
+	registro_t* registro3 = obtener_reg("43242345;54;registro3\n");
+	registro_t* registro4 = obtener_reg("43242345;5;registro4\n");
+	registro_t* registro5 = obtener_reg("99992999;5;registro5\n");
+	registro_t* registro6 = obtener_reg("33242345;34;registro6\n");
+	registro_t* registro7 = obtener_reg("43224345;64;registro7\n");
+	registro_t* registro8 = obtener_reg("43224345;11;registro8\n");
+	registro_t* registro9 = obtener_reg("43224345;34;registro9\n");
+	registro_t* registro10 = obtener_reg("23224345;5;registro10\n");
+
+	list_add(registros, registro1);
+	list_add(registros, registro2);
+	list_add(registros, registro3);
+	list_add(registros, registro4);
+	list_add(registros, registro5);
+	list_add(registros, registro6);
+	list_add(registros, registro7);
+	list_add(registros, registro8);
+	list_add(registros, registro9);
+	list_add(registros, registro10);
+
+	return registros;
+}
+
+void pruebaEscrituraYLecturaBloques() {
+
 	char* ruta_bloque = obtener_ruta_bloque(5);
 
 		registro_t* registro2 = malloc(sizeof(registro_t));
@@ -106,12 +133,11 @@ void pruebaEscrituraYLecturaBloques(){
 
 		printf("\n\nRUTA BLOQUE: %s\n\n", ruta_bloque);
 
-		registro_t* reg = prueba2(32, 0, 5);
+//		registro_t* reg = pruebaLeer(32, 0, 5);
 
 		puts("Voy a imprimir registros");
-		imprimir_reg_fs(reg);
+//		imprimir_reg_fs(reg);
 }
-
 
 int main(int argc, char* argv[]) {
 
@@ -120,13 +146,30 @@ int main(int argc, char* argv[]) {
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
 
-	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
+//	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 
-	inicializar_conexiones();
+//	inicializar_conexiones();
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
-
 //	pruebaEscrituraYLecturaBloques();
+	pruebaDump();
+
+	char* bloque0 = obtener_ruta_bloque(0);
+	printf("\n\nRuta bloque 0: %s\n", bloque0);
+	imprimirContenidoArchivo(bloque0);
+
+	char* bloque1 = obtener_ruta_bloque(1);
+	printf("\n\nRuta bloque 1: %s\n", bloque1);
+	imprimirContenidoArchivo(bloque1);
+
+	char* bloque2 = obtener_ruta_bloque(2);
+	printf("\n\nRuta bloque 2: %s\n", bloque2);
+	imprimirContenidoArchivo(bloque2);
+
+	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
+	t_list* registros = pruebaLeer(ruta, 5, 1);
+	list_iterate(registros, &imprimir_reg_fs);
+
 
 	//finalizar_FS();
 	return 0;
@@ -138,10 +181,13 @@ void imprimirContenidoArchivo(char* ruta) {
 	puts("---LEO ARCHIVO COMPLETO---");
 	FILE* f = fopen(ruta, "r");
 	char caracter_leido = fgetc(f);
+	int leidos = 0;
 	while(caracter_leido != EOF){
 		printf("%c", caracter_leido);
 		caracter_leido = fgetc(f);
+		leidos++;
 	}
+	printf("\nLeidos: %d\n", leidos);
 }
 
 void imprimir_reg_fs(registro_t* registro) {
@@ -169,21 +215,19 @@ void pruebaDump() {
 		int nro_dump = 1;
 		printf("Numero de Dump: %d\n", nro_dump);
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
-		printf("Nombre Temporal: %s\n", nombre_tmp);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 		printf("Ruta Temporal: %s\n", ruta_tmp);
 		FILE* temporal = crear_tmp(tabla, nombre_tmp);
-		puts("Creando temporal");
 		int nro_bloque = archivo_inicializar(temporal);
-		puts("Inicializando temporal");
-
-		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-		printf("Obtengo ruta bloque: %s\n", ruta_bloque);
+		printf("Al temporal %s se le asigno el bloque %d\n", nombre_tmp, nro_bloque);
 
 		void escribir_reg_en_tmp(void* registro) {
 			puts("-------------------Entro a escribir_reg_en_tmp-------------------");
 			imprimir_reg_fs((registro_t*)registro);
-			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
+			int bloque = obtener_ultimo_bloque(ruta_tmp);
+			char* ruta_bloque = obtener_ruta_bloque(bloque);
+//			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
+
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 			puts("Escribi el registro en bloque");
 		}
@@ -192,16 +236,20 @@ void pruebaDump() {
 
 		free(ruta_tmp);
 		free(nombre_tmp);
-		free(ruta_bloque);
 		fclose(temporal);
 		puts("Cierro el temporal");
 	}
 
 	t_dictionary* mockMem = dictionary_create();
 
-	//--agrego una tabla---
+	//--agrego una tabla con registros---
+	t_list* reg = listaRegistros();
+	dictionary_put(mockMem, "TABLA1", reg);
+	puts("Se agrego la tabla en la memtable.");
+
+	//--agrego otra tabla--
 	t_list* registros = crear_lista_registros();
-	dictionary_put(mockMem, "tabla1", registros);
+	dictionary_put(mockMem, "TABLA2", registros);
 	puts("Se agrego la tabla en la memtable.");
 
 	//--creo registros--
@@ -220,7 +268,7 @@ void pruebaDump() {
 	imprimir_reg_fs(registro);
 
 	//--agrego registros--
-	t_list* registros_tabla = dictionary_get(mockMem, "tabla1");
+	t_list* registros_tabla = dictionary_get(mockMem, "TABLA2");
 	list_add(registros_tabla, registro);
 	list_add(registros_tabla, registro2);
 	puts("Se inserto el registro en la memtable.");
@@ -230,7 +278,7 @@ void pruebaDump() {
 }
 
 void pruebaTmp() {
-		char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/tabla1/Dump1.tmp";
+		char* ruta_archivo = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
 
 //		---prueba de blocks archivo---
 		agregar_bloque_archivo(ruta_archivo, 6);
@@ -362,7 +410,6 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 
 void execute_create(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
-	//TODO string_to_upper(tabla);
 	t_list* listaParam = list_create();
 	if (!existe_tabla(tabla)) {
 		if(!puede_crear_particiones(instruccion)) {
@@ -391,7 +438,6 @@ void execute_create(instr_t* instruccion, char* remitente) {
 t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequeado
 	t_list *listaParam = list_create();
 	char* tabla = obtener_nombre_tabla(instruccion);
-	//string_to_upper(tabla);
 	registro_t* registro = pasar_a_registro(instruccion); //VALIDAR SI TAM_VALUE ES MAYOR AL MAX_TAM_VALUE
 
 	if (!existe_tabla(tabla)) {
@@ -422,7 +468,6 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 void execute_select(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list *listaParam = list_create();
-	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
 		puts("No existe la tabla");
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
@@ -462,8 +507,6 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list *listaParam = list_create();
 
-
-	//string_to_upper(tabla);
 	if (!existe_tabla(tabla)) {
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
 		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
