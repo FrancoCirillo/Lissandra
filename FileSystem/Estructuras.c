@@ -168,33 +168,34 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 
 registro_t* obtener_reg(char* buffer) {
 	puts("---OBTENER REGISTRO---");
-	puts("Buffer Copy:");
+//	puts("Buffer Copy:");
 	char* bufferCopy = strdup(buffer);
-	puts("Malloc registro:");
+//	puts("Malloc registro:");
 	registro_t* registro = malloc(sizeof(registro_t));
-	puts("Malloc token");
+//	puts("Malloc token");
 	char* token = malloc(sizeof(int));
 
-	puts("Strtok:");
+//	puts("Strtok:");
 	char* actual = strtok(bufferCopy, ";");
-	puts("Strdup:");
+//	puts("Strdup:");
 	token = strdup(actual);
-	puts("Timestamp:");
+//	puts("Timestamp:");
 	registro->timestamp = string_a_mseg(token);
 
-	puts("Strtok:");
+//	puts("Strtok:");
 	actual = strtok(NULL, ";");
-	puts("Strtok:");
+//	puts("Strtok:");
 	token = strdup(actual);
-	puts("Key:");
+//	puts("Key:");
 	registro->key = (uint16_t)atoi(token);
 
-	puts("Strtok");
-	actual = strtok(NULL, "\n");
-	puts("Strdup");
+//	puts("Strtok");
+	actual = strtok(NULL, "\"");
+//	puts("Strdup");
 	token = strdup(actual);
-	puts("Value:");
-	strcpy(registro->value, token);
+//	puts("Value:");
+	registro->value = token;
+//	strcpy(registro->value, token);
 
 	free(bufferCopy);
 	puts("Pase el registro formateado a registro");
@@ -209,32 +210,39 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 	t_list* registros = crear_lista_registros();
 	int status = 1;
 	char* buffer = string_new();
+	char* s_caracter;
+
 	while(status) {
 		char caracter_leido = fgetc(archivo_bloque);
-		char* s_caracter;
+
 		switch(caracter_leido) {
 		case '\n': //tengo un registro completo
 			strcat(buffer, "\n");
 			registro = obtener_reg(buffer);
+
 			if(registro->key == key) {
 				list_add(registros, registro); //lo agrego solo si tiene la key que busco
 				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
 			}
+			strcpy(buffer, "");
 			break;
+
 		case EOF: //se me acabo el archivo
 			fclose(archivo_bloque);
+			free(ruta_bloque);
 			int bloque_anterior = nro_bloque;
 			nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
+
 			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 				ruta_bloque = obtener_ruta_bloque(nro_bloque);
 				archivo_bloque = fopen(ruta_bloque, "r");
 			} else
 				status = 0; //corta el while
 			break;
+
 		default:
 			s_caracter = string_from_format("%c", caracter_leido);
 			strcat(buffer, s_caracter);
-			free(s_caracter);
 			break;
 		}
 	}
@@ -595,7 +603,7 @@ FILE* crear_archivo(char* nombre, char* tabla, char* ext) {
 	return archivo;
 }
 
-void crear_directorio(char* ruta, char * nombre) {
+void crear_directorio(char* ruta, char* nombre) {
 
 	//string_to_upper(nomb);   //No me funciona (??) TODO ver
 	char* ruta_dir = string_from_format("%s%s", ruta, nombre);

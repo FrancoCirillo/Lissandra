@@ -5,7 +5,10 @@
 
 void inicializar_memtable() {
 	memtable = dictionary_create();
-	levantar_tablas_directorio();
+	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas);
+	DIR* directorio = opendir(ruta_tabla);
+	if (directorio != NULL)
+		levantar_tablas_directorio(directorio);
 	loggear_FS("Se inicializó la memtable.");
 }
 
@@ -14,14 +17,8 @@ void finalizar_memtable() { //Borra y libera todos los registros y tablas.
 	dictionary_destroy_and_destroy_elements(memtable, &borrar_lista_registros);
 }
 
-void levantar_tablas_directorio() {
-	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas);
-	DIR* directorio = opendir(ruta_tabla);
-	if (directorio == NULL) {
-		printf("Error: No se puede abrir el directorio\n");
-		exit(2);
-	}
-
+void levantar_tablas_directorio(DIR* directorio) {
+	puts("Entre a levantar_tablas_directorio");
 	struct dirent* directorio_leido;
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		char* tabla = directorio_leido->d_name;
