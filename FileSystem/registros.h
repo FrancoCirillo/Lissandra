@@ -9,9 +9,9 @@
 #define REGISTROS_H_
 
 typedef struct registro_t {
+	mseg_t timestamp;
 	uint16_t key;
 	char* value;
-	mseg_t timestamp;
 } registro_t;
 
 

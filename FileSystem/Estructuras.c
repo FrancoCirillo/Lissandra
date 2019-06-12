@@ -183,7 +183,7 @@ registro_t* obtener_reg(char* buffer) {
 	token = strdup(actual);
 	registro->key = (uint16_t)atoi(token);
 
-	actual = strtok(NULL, "\"");
+	actual = strtok(NULL, "\n");
 	token = strdup(actual);
 	registro->value = token;
 
