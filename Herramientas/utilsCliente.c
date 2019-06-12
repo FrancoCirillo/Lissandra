@@ -3,7 +3,7 @@
 #include "utilsCliente.h"
 
 //Conecta el socket_cliente con el Servidor con ip ip y puerto puerto.
-int crear_conexion(char *ip, char *puerto, char *miIP, t_log* logger, sem_t* mutex_log)
+int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar, t_log* logger, sem_t* mutex_log)
 {
 	struct addrinfo hints; //Es para pasarle nuestras preferencias a getaddrinfo
 	struct addrinfo *server_info;
@@ -39,8 +39,12 @@ int crear_conexion(char *ip, char *puerto, char *miIP, t_log* logger, sem_t* mut
 	//ai_addr contiene el puerto e ip del servidor
 	if (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
 	{
-		loggear_warning(logger, mutex_log, string_from_format("El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n"));
-		while (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1);
+		puts("No se pudo conectar");
+		if(flagReintentar){
+			loggear_warning(logger, mutex_log, string_from_format("El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n"));
+			while (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1);
+		}
+		else return -1;
 	}
 	freeaddrinfo(server_info);
 

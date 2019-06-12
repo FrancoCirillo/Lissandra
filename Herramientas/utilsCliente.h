@@ -16,6 +16,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-int crear_conexion(char *ip, char *puerto, char *miIP, t_log* logger, sem_t* mutex_log);
+int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar, t_log* logger, sem_t* mutex_log);
 
 #endif /* UTILS_CLIENTE_ */

@@ -492,6 +492,7 @@ void *ejecutar_gossiping()
 	while(1)
 	{
 		usleep(configuracion.RETARDO_GOSSIPING * 1000);
+		puts("Ejec gosssippinggggg");
 		ejecutar_instruccion_gossip();
 	}
 }

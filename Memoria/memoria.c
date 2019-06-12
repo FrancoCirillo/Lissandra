@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 //	iniciar_ejecutador_journal(); Piden desactivarlo en el checkpoint presencial
 
 	inicializar_estructuras_memoria();
+	iniciar_ejecutador_gossiping();
 
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA, g_logger, &mutex_log);
 	//config_destroy(g_config);

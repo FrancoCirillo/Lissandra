@@ -50,7 +50,7 @@ void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMe
 	instr_t *miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
 
-	int conexion_con_memoria_3 = crear_conexion(IPMemoria, PuertoMemoria, miIPKernel, g_logger, &mutex_log);
+	int conexion_con_memoria_3 = crear_conexion(IPMemoria, PuertoMemoria, miIPKernel, 1, g_logger, &mutex_log);
 
 	enviar_request(miInstruccion, conexion_con_memoria_3);
 
@@ -649,7 +649,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	list_add(listaParam, configuracion.puerto);
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, g_logger, &mutex_log);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, 1, g_logger, &mutex_log);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
