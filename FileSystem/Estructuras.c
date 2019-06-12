@@ -383,6 +383,18 @@ char* aplanar(char** lista) {
     }
     return buf;
 }
+void ejemplo_aplanar(){
+	char* a="Hola";
+	char* b="como";
+	char* c="te";
+	char* d="va";
+	char** array =malloc(sizeof(char*)*5);
+	*array=a;
+	*(array+1)=b;
+	*(array+2)=c;
+	*(array+3)=d;
+	*(array+4)=NULL;
+	printf("La lista aplanada es %s\n",aplanar(array));
 
 void ejemplo_aplanar() {
 	char* a = "Hola ";

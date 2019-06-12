@@ -3,29 +3,6 @@
 #include "Kernel.h"
 char * codigo_envio;
 
-void iniciar_consola(){
-	sleep(1);
-	loggear("Se inicia consola");
-	pthread_t hilo_consola;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_create(&hilo_consola,&attr,consola,NULL);
-	pthread_join(hilo_consola,NULL);
-}
-void* consola(void* c){
-	char* instruccion;
-	while(1){
-		instruccion=readline("\n>>");
-		if(strcmp(instruccion,"close")==0){
-			loggear("##### FINALIZANDO KERNEL.... ###### \n");
-			return NULL;
-		}
-		printf("Procesando instruccion:: %s \n",instruccion);
-		procesar_instruccion_consola(instruccion);
-	}
-
-}
-
 int main(int argc, char* argv[]) {
 
 
@@ -40,6 +17,7 @@ int main(int argc, char* argv[]) {
 
 	inicializar_criterios();
 
+	iniciar_metricas();
 
 	iniciar_ejecutador();
 
@@ -50,43 +28,41 @@ int main(int argc, char* argv[]) {
 	sleep(2);
 	loggear("### KERNEL FINALIZADO ###");
 	return 0;
+}
+void inicializar_kernel(){
+	conexionesActuales = dictionary_create();
+	callback = ejecutar_requestRecibido;
 
-//	/*sleep(6);
-//	recibi_respuesta_fake1();
-//	//iniciar_consola();
-//	loggear("Recibi respuesta fake1 ejecutado!");
-//	sleep(6);
-//	recibi_respuesta_fake2();
-//	loggear("Recibi respuesta fake2 ejecutado!");
+	conectar_nueva_memoria(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, "Memoria_1");
+	conectar_nueva_memoria(configuracion.MEMORIA_8_IP, configuracion.PUERTO_MEMORIA, "Memoria_3");
+
+
+	int listenner = iniciar_servidor(miIPKernel, configuracion.puerto, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
 
 }
 
-
-void inicializar_kernel(){
-
+void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMemoria){
 	t_list *listaParam = list_create();
 	list_add(listaParam, "Kernel");
 	list_add(listaParam, miIPKernel);
 	list_add(listaParam, configuracion.puerto);
 	instr_t *miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	conexionesActuales = dictionary_create();
-	callback = ejecutar_requestRecibido;
+
+	int conexion_con_memoria_3 = crear_conexion(IPMemoria, PuertoMemoria, miIPKernel, g_logger, &mutex_log);
+
+	enviar_request(miInstruccion, conexion_con_memoria_3);
 
 	identificador *idsNuevasConexiones = malloc(sizeof(identificador));
-	int conexion_con_memoria_3 = crear_conexion(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, miIPKernel, g_logger, &mutex_log);
-	enviar_request(miInstruccion, conexion_con_memoria_3);
 	idsNuevasConexiones->fd_in = 0; //Por las moscas
-	strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_MEMORIA);
-	strcpy(idsNuevasConexiones->ip_proceso, configuracion.MEMORIA_1_IP);
+	strcpy(idsNuevasConexiones->puerto, PuertoMemoria);
+	strcpy(idsNuevasConexiones->ip_proceso, IPMemoria);
 	idsNuevasConexiones->fd_out = conexion_con_memoria_3;
 
 	sem_wait(&mutex_conexiones_actuales);
-	dictionary_put(conexionesActuales, "Memoria_1", idsNuevasConexiones);
+	dictionary_put(conexionesActuales, NombreMemoria, idsNuevasConexiones);
 	sem_post(&mutex_conexiones_actuales);
-
-	int listenner = iniciar_servidor(miIPKernel, configuracion.puerto, g_logger, &mutex_log);
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
 
 }
 
@@ -139,10 +115,98 @@ void iniciar_ejecutador(){
 	pthread_detach(hilo_ejecutador);
 	loggear("Ejecutador iniciado");
 }
+void iniciar_metricas(){
+	loggear("Iniciando metricas");
+	pthread_t hilo_metricas;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_metricas,&attr,metricar,NULL);
+	loggear("Metricas iniciadas");
+
+}
+void metricar(){
+	while(1){
+		//actualizar_configuracion();
+		sem_wait(&mutex_configuracion);
+		int tiempo=configuracion.tiempoMetricas;
+		sem_post(&mutex_configuracion);
+		sleep(tiempo);
+		metrics();
+
+	}
+}
+void metrics(){//TODO Porcentaje de uso por memoria
+	loggear("METRICS:");
+	//printf(" \n\n PRUEBA METRICS %"PRIu64", PRUEBA UN DIGITO MENOS %"PRIu64"",obtener_ts()/100,obtener_ts()/1000);
+	//Obtengo cantidad de instrucciones por tipo/tiempo para insert y select
+	int cantidad_inserts=0;
+	int cantidad_selects=0;
+	double tiempo_inserts=0;
+	double tiempo_selects=0;
+	double promedio_insert=0;
+	double promedio_selects=0;
+
+	sem_wait(&mutex_lista_instrucciones_ejecutadas);
+	for(int index=0;index<list_size(lista_instrucciones_ejecutadas);index++){
+		instr_t* i=(instr_t*)list_get(lista_instrucciones_ejecutadas,index);
+		if(i->codigo_operacion==CODIGO_INSERT){
+			cantidad_inserts++;
+			tiempo_inserts+=(double)i->timestamp/(double)1000;
+			printf("El promedio del insert fue de %lf\n",tiempo_selects);
+		}else if(i->codigo_operacion==CODIGO_SELECT){
+			cantidad_selects++;
+			tiempo_selects+=(double)i->timestamp/(double)1000;
+			printf("El promedio del select fue de %lf\n",tiempo_selects);
+		}
+	}
+	list_destroy(lista_instrucciones_ejecutadas);
+	lista_instrucciones_ejecutadas=list_create();
+	sem_post(&mutex_lista_instrucciones_ejecutadas);
+
+	if(cantidad_inserts)
+		promedio_insert=(double)tiempo_inserts/(double)cantidad_inserts;
+	if(cantidad_selects)
+		promedio_selects=(double)tiempo_selects/(double)cantidad_selects;
+	printf("METRICS RESULTADO: \n \t Writes=%d Write Latency=%lf \n\t Reads=%d Reads Latency=%lf\n",cantidad_inserts,promedio_insert,cantidad_selects, promedio_selects);
+	//TODO memload
+}
+void agregar_a_metricas(instr_t* i){
+	sem_wait(&mutex_lista_instrucciones_ejecutadas);
+	list_add(lista_instrucciones_ejecutadas,i);
+	sem_post(&mutex_lista_instrucciones_ejecutadas);
+}
+instr_t* kernel_metrics(instr_t * i){
+	loggear("Ejecutando metricas");
+	metrics();
+
+	instr_t * respuesta=malloc(sizeof(instr_t));
+	respuesta->timestamp=i->timestamp;
+	t_list * params=list_create();
+	respuesta->parametros=params;
+	char* mensaje=" Ejecutando metricas!";
+	list_add(params,mensaje);
+	respuesta->codigo_operacion=0;
+
+	return respuesta;
+}
 instr_t* kernel_run(instr_t *i){
 	loggear("EJECUTANDO RUN!");
 	char* nombre_archivo=obtener_parametroN(i,0);
 	FILE *f=fopen(nombre_archivo,"r");
+	instr_t * respuesta=malloc(sizeof(instr_t));
+	respuesta->timestamp=i->timestamp;
+	t_list * params=list_create();
+	respuesta->parametros=params;
+
+	if(!f){
+		loggear("Archivo no encontrado!");
+		respuesta->codigo_operacion=ERROR_RUN;
+		char* mensaje=" ARCHIVO NO ENCONTRADO!";
+		list_add(params,mensaje);
+		return respuesta;
+		//TODO FREES;
+
+	}
 	char line[64];
 	t_list* instrucciones = list_create();
 	proceso* p=malloc(sizeof(proceso));
@@ -155,6 +219,14 @@ instr_t* kernel_run(instr_t *i){
 
 	while(fgets(line,sizeof(line),f)){
 		nueva_instruccion=leer_a_instruccion(line,CONSOLA_KERNEL);
+		if(!nueva_instruccion){//Input invalido
+			loggear("El archivo posee inputs invalidos");
+			respuesta->codigo_operacion=ERROR_RUN;
+			char* mensaje="EL ARCHIVO POSEE INPUTS INVALIDOS!";
+			list_add(params,mensaje);
+			//TODO FREES
+			return respuesta;
+		}
 		char*  codigo=malloc(sizeof(char)*12);
 		sprintf(codigo,"%d",obtener_codigo_request());
 		//		printf("EL codigo es %s",codigo);
@@ -166,17 +238,15 @@ instr_t* kernel_run(instr_t *i){
 		loggear("Se agrego una instruccion!");
 		//		imprimir_instruccion(nueva_instruccion);
 	}
+	printf("\n\nSize %d\n\n",p->size);
 	fclose(f);
 
 	encolar_proceso(p);
-//RESPUESTA
-	instr_t * respuesta=malloc(sizeof(instr_t));
+	//RESPUESTA
+
 	respuesta->codigo_operacion=0;
 	char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
-	t_list * params=list_create();
 	list_add(params,mensaje);
-	respuesta->parametros=params;
-	respuesta->timestamp=i->timestamp;
 	loggear("FIN RUN!");
 	return respuesta;
 
@@ -243,7 +313,7 @@ int obtener_codigo_request(){
 
 void continuar_ejecucion(){
 	loggear("Enviando senial en 1 segundo");
-//	sleep(1);
+	//	sleep(1);
 	pthread_mutex_lock(&lock_ejecutar);
 	pthread_cond_signal(&cond_ejecutar);
 	pthread_mutex_unlock(&lock_ejecutar);
@@ -306,14 +376,22 @@ void* ejecutar_proceso(void* un_proceso){
 
 			instr_t* respuesta=ejecutar_instruccion(instruccion_obtenida);
 
-			//METRICS
-
-
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear("Se ejecuto correctamente la instruccion!, Respuesta=");
 				loggear(obtener_parametroN(respuesta,0));
 				loggear("Fin de instruccion");
+				//METRICS
+				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){
+					loggear("Se agrega a metricas");
+					mseg_t tiempo_exec=respuesta->timestamp;
+					printf("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec);
+					instruccion_obtenida->timestamp=respuesta->timestamp;
+					agregar_a_metricas(instruccion_obtenida);
+				}else{
+					//TODO FREES
+				}
+
 			}else{
 
 				loggear("ERROR al ejecutar la instruccion, finalizando proceso");
@@ -365,6 +443,9 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
 	}
+	if(i->codigo_operacion==CODIGO_METRICS){
+		return kernel_metrics(i);
+	}
 	if(i->codigo_operacion==CODIGO_ADD){
 		return kernel_add(i);
 	}if(i->codigo_operacion==CODIGO_CREATE){
@@ -373,11 +454,46 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	if((respuesta=validar(i))!=NULL){
 		return respuesta;
 	}
+	if(i->codigo_operacion==CODIGO_CREATE){
+		if(!existe_tabla(obtener_parametroN(i,0))){
+			loggear("Agregando tabla a lista de tablas creadas");
+			loggear(obtener_parametroN(i,0));
+			agregar_tabla(obtener_parametroN(i,0));
+		}
+	}
 	respuesta=enviar_i(i);
 	return respuesta;
 }
 instr_t *validar(instr_t * i){
-	return NULL;
+	instr_t* mensaje_error=malloc(sizeof(instr_t));
+	mensaje_error->timestamp=i->timestamp;
+	char* mensaje="ERROR!";
+	if(i->codigo_operacion!=2&&i->codigo_operacion!=3 && i->codigo_operacion!=1){
+		return NULL;
+	}
+	if(i->codigo_operacion==2 || i->codigo_operacion==1){
+		if(existe_tabla(obtener_parametroN(i,0))){
+			loggear("Existe la tabla para el insert o select ");
+			return NULL;
+		}else{
+			mensaje_error->codigo_operacion=ERROR_INSERT;
+			printf("\nLa tabla %s no existe!\n",obtener_parametroN(i,0));
+			//mensaje="LA TABLA NO EXISTE!";
+		}
+	}
+	if(i->codigo_operacion==3){
+		if(!existe_tabla(obtener_parametroN(i,0))){
+			loggear("No existe tabla para el create");
+			return NULL;
+		}else{
+			//mensaje="LA TABLA YA EXISTE";
+			mensaje_error->codigo_operacion=ERROR_CREATE;
+		}
+	}
+	mensaje_error->parametros=list_create();
+	list_add(mensaje_error->parametros,mensaje);
+
+	return mensaje_error;
 }
 
 instr_t* enviar_i(instr_t* i){
@@ -401,6 +517,18 @@ instr_t* enviar_i(instr_t* i){
 
 	loggear("Determinando memoria para request");
 	int conexionMemoria = obtener_fd_memoria(i);
+	if(conexionMemoria<0){
+		loggear("No se pudo encontrar una memoria para el criterio indicado");
+		char* mensaje="No existe una memoria asignada para dicha instruccion";
+		instr_t* respuesta=malloc(sizeof(instr_t));
+		respuesta->timestamp=i->timestamp;
+		respuesta->codigo_operacion=1000;
+		t_list* params=list_create();
+		list_add(params,mensaje);
+		list_add(params,obtener_ultimo_parametro(i));
+		respuesta->parametros=params;
+		return respuesta;
+	}
 
 	loggear("ENVIANDO INSTRUCCION:  ");
 	enviar_request(i, conexionMemoria);
@@ -415,16 +543,23 @@ instr_t* enviar_i(instr_t* i){
 
 	loggear("Hilo despierto!");
 
+	h->respuesta->timestamp=obtener_ts()-i->timestamp;
 	return h->respuesta;
 }
 
 int obtener_fd_memoria(instr_t *i){
 	char* memoria="Memoria_";
 	char* alias_memoria="";
+	int codigo_criterio;
 	//SIEMPRE el primer parametro es el nombre de la tabla que uso como key para determinar criterio
+
 	sem_wait(&mutex_diccionario_criterios);
-	int codigo_criterio=*(int*)dictionary_get(diccionario_criterios,(char*)obtener_parametroN(i,0));
-	sem_post(&mutex_diccionario_criterios);
+	if(i->codigo_operacion==4){//SI ES DESCRIBE A SECAS USO SC
+		codigo_criterio=0;
+	}else{
+		codigo_criterio=*(int*)dictionary_get(diccionario_criterios,(char*)obtener_parametroN(i,0));
+	}sem_post(&mutex_diccionario_criterios);
+
 	//Obtengo la memoria segun el criterio
 	printf("Codigo de criterio es : %d \n",codigo_criterio);
 	loggear("Determinando criterio de tabla");
@@ -454,10 +589,17 @@ int obtener_fd_memoria(instr_t *i){
 		sem_post(&mutex_contador_ec);
 		sem_post(&criterio_eventual_consistency->mutex_criterio);
 		break;
+	default:
+		return -100;
+		break;
 	}//Ya obtuve el alias de la memoria
 
+	if(alias_memoria==NULL){
+		loggear("NO se pudo obtener la memoria para dicha instruccion");
+		return -100;
+	}
 	loggear("Memoria obtenida:");
-	//loggear(krn_concat(memoria,alias_memoria));
+	loggear(krn_concat(memoria,alias_memoria));
 
 	return obtener_fd_out(krn_concat(memoria,alias_memoria));
 }
@@ -465,7 +607,7 @@ char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
 	strcpy(rdo,s1);
 	strcat(rdo,s2);
-	loggear(rdo);
+//	loggear(rdo);
 	return rdo;
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
@@ -537,6 +679,7 @@ void recibi_respuesta(instr_t* respuesta){
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
+		loggear("FIN DE PROCESO");
 		finalizar_proceso(p);
 	}else{
 		encolar_proceso(p);
@@ -614,13 +757,17 @@ void inicializarConfiguracion() {
 	configuracion.MEMORIA_8_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_8_IP");
 	configuracion.MEMORIA_9_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_9_IP");
 	configuracion.PUERTO_MEMORIA = obtener_por_clave(rutaConfiguracion, "PUERTO_MEMORIA");
+	configuracion.tiempoMetricas = atoi(obtener_por_clave(rutaConfiguracion, "tiempoMetricas"));
+
 
 }
 void actualizar_configuracion(){
 	char* rutaConfiguracion = "Kernel.config";
+	sem_wait(&mutex_configuracion);
 	configuracion.quantum = atoi(obtener_por_clave(rutaConfiguracion, "quantum"));
 	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave(rutaConfiguracion, "gradoMultiprocesamiento"));
-
+	configuracion.tiempoMetricas = atoi(obtener_por_clave(rutaConfiguracion, "tiempoMetricas"));
+	sem_post(&mutex_configuracion);
 }
 void iniciar_log(){
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
@@ -649,8 +796,13 @@ void inicializar_semaforos(){
 	sem_init(&mutex_conexiones_actuales,0,1);
 	sem_init(&mutex_diccionario_criterios,0,1);
 	sem_init(&mutex_contador_ec,0,1);
+	sem_init(&mutex_lista_tablas,0,1);
+	sem_init(&mutex_configuracion,0,1);
+	sem_init(&mutex_lista_instrucciones_ejecutadas,0,1);
 	diccionario_enviados=dictionary_create();
-	diccionario_criterios=dictionary_create();
+	//diccionario_criterios=dictionary_create();
+	lista_tablas=list_create();
+	lista_instrucciones_ejecutadas=list_create();
 	puts("Semaforos inicializados");
 }
 void inicializar_criterios(){
@@ -675,58 +827,6 @@ void inicializar_criterios(){
 	criterio_strong_hash_consistency->mutex_criterio=sem[2];
 	loggear("Criterios inicializados!");
 }
-/*void recibi_respuesta_fake1(){
-	instr_t* rta=malloc(sizeof(instr_t));
-	t_list * params=list_create();
-	char* frase="Mensaje de respuesta MENSAJE 1";
-	rta->timestamp=123;
-	rta->codigo_operacion=0;
-
-	list_add(params,frase);
-	list_add(params,codigo_envio);
-	rta->parametros=params;
-
-	recibi_respuesta(rta);
-}
-void recibi_respuesta_fake2(){
-	instr_t* rta=malloc(sizeof(instr_t));
-	t_list * params=list_create();
-	char* frase="Mensaje de respuesta MENSAJE 2";
-	rta->timestamp=456;
-	rta->codigo_operacion=0;
-
-	list_add(params,frase);
-	list_add(params,codigo_envio);
-	rta->parametros=params;
-
-	recibi_respuesta(rta);
-}*/
-/*
-void iniciar_consola(){
-	sleep(1);
-	loggear("Se inicia consola");
-	pthread_t hilo_consola;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_create(&hilo_consola,&attr,consola,NULL);
-	pthread_join(hilo_consola,NULL);
-
-}
-void* consola(void* c){
-	char* instruccion;
-	while(1){
-		instruccion=readline("\n>>");
-		if(strcmp(instruccion,"close")==0){
-			loggear("##### FINALIZANDO KERNEL.... ###### \n");
-			return NULL;
-		}
-
-		printf("Procesando instruccion:: %s \n",instruccion);
-		procesar_instruccion_consola(instruccion);
-
-	}
-}*/
-
 void check_inicial(int argc, char* argv[])
 {
 	if(argc>2){
@@ -741,4 +841,45 @@ void check_inicial(int argc, char* argv[])
 		printf("IP %s\n", argv[1]);
 		miIPKernel = argv[1];
 	}
+}
+void agregar_tabla(char* tabla){
+
+	sem_wait(&mutex_lista_tablas);
+	list_add(lista_tablas,tabla);
+	sem_post(&mutex_lista_tablas);
+	loggear("Tabla agregada");
+}
+bool existe_tabla(char* tablaBuscada){
+	//puts("A");
+	bool existe(char*tabla){
+		return strcmp(tablaBuscada,tabla)==0;
+	}
+	//puts("B");
+	sem_wait(&mutex_lista_tablas);
+	char *rdo=list_find(lista_tablas,(void*)existe);
+	sem_post(&mutex_lista_tablas);
+	//puts("C");
+	return rdo!=NULL;
+}
+void iniciar_consola(){
+	sleep(1);
+	loggear("Se inicia consola");
+	pthread_t hilo_consola;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_consola,&attr,consola,NULL);
+	pthread_join(hilo_consola,NULL);
+}
+void* consola(void* c){
+	char* instruccion;
+	while(1){
+		instruccion=readline("\n>>");
+		if(strcmp(instruccion,"close")==0){
+			loggear("##### FINALIZANDO KERNEL.... ###### \n");
+			return NULL;
+		}
+		printf("Procesando instruccion:: %s \n",instruccion);
+		procesar_instruccion_consola(instruccion);
+	}
+
 }
