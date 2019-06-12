@@ -167,38 +167,26 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 }
 
 registro_t* obtener_reg(char* buffer) {
+
 	puts("---OBTENER REGISTRO---");
-//	puts("Buffer Copy:");
 	char* bufferCopy = strdup(buffer);
-//	puts("Malloc registro:");
 	registro_t* registro = malloc(sizeof(registro_t));
-//	puts("Malloc token");
 	char* token = malloc(sizeof(int));
 
-//	puts("Strtok:");
 	char* actual = strtok(bufferCopy, ";");
-//	puts("Strdup:");
 	token = strdup(actual);
-//	puts("Timestamp:");
 	registro->timestamp = string_a_mseg(token);
 
-//	puts("Strtok:");
 	actual = strtok(NULL, ";");
-//	puts("Strtok:");
 	token = strdup(actual);
-//	puts("Key:");
 	registro->key = (uint16_t)atoi(token);
 
-//	puts("Strtok");
-	actual = strtok(NULL, "\"");
-//	puts("Strdup");
+	actual = strtok(NULL, "\n");
 	token = strdup(actual);
-//	puts("Value:");
 	registro->value = token;
-//	strcpy(registro->value, token);
 
 	free(bufferCopy);
-	puts("Pase el registro formateado a registro");
+	puts("Registro obtenido");
 	return registro;
 }
 

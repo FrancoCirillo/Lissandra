@@ -2,11 +2,24 @@
 
 #include "fileSystem.h"
 
+registro_t *crear_registro(mseg_t timestampNuevo, uint16_t keyNueva, char *valueNuevo) {
+
+	registro_t registroCreado = {
+		.timestamp = timestampNuevo,
+		.key = keyNueva,
+		.value = valueNuevo};
+
+	registro_t *miReg = malloc(sizeof(registroCreado));
+	memcpy(miReg, &registroCreado, sizeof(registroCreado));
+
+	return miReg;
+}
+
 void prueba(registro_t* registro, char* ruta_bloque) {
 	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
 //	puts("Abri archivo");
 	char* string_registro = formatear_registro(registro);
-//	printf("Formatee Registro: %sEsto deberia aparecer abajo\n", string_registro);
+//	printf("Formatee Registro: %s Esto deberia aparecer abajo\n", string_registro);
 	txt_write_in_file(archivo_bloque, string_registro);
 //	puts("Escribi bloque");
 	txt_close_file(archivo_bloque);
@@ -15,12 +28,12 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 //	puts("FIN FUNCION ESCRITURA");
 }
 
-/*t_list*/ registro_t* prueba2(uint16_t key, int tipo_archivo, int nro_bloque) {;
+/*t_list*/ registro_t* prueba2(uint16_t keyBuscada, int tipo_archivo, int nro_bloque) {
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 //	printf("Obtengo la ruta del bloque: %s\n", ruta_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
 //	puts("Abro el bloque");
-//	registro_t* reg;
+	registro_t* registro = NULL;
 //	t_list* registros = crear_lista_registros();
 	int status = 1;
 	char* buffer = string_new();
@@ -38,20 +51,21 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 		case '\n': //tengo un registro completo
 			strcat(buffer, "\n");
 //			puts("Obtuve un registro");
-			registro_t* registro = obtener_reg(buffer);
+			registro = obtener_reg(buffer);
 //			imprimir_reg_fs(registro);
 
-			if(registro->key == key) {
+			printf("El contenido del buffer es: %s\n", buffer);
+			strcpy(buffer, "");
+
+			if(registro->key == keyBuscada) {
 //				puts("El registro tiene la key que busco");
 //				puts("ENCONTRE UN REGISTRO");
 //				list_add(registros, registro); //lo agrego solo si tiene la key que busco
 //				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
 				return registro;
 			} else
-				puts("El registro que encontre no es de la key que busco");
+				puts("El registro que encontre no es de la key que busco\n");
 //			free(registro);
-			printf("El contenido del buffer es: %s\n", buffer);
-			strcpy(buffer, "");
 			break;
 
 		case EOF: //se me acabo el archivo
@@ -81,52 +95,57 @@ void prueba(registro_t* registro, char* ruta_bloque) {
 		}
 	}
 	puts("Return registro");
-//	return registro;
+	return registro;
 //	return registros;
 }
 
 void pruebaEscrituraYLecturaBloques(){
 	char* ruta_bloque = obtener_ruta_bloque(5);
 
-		registro_t* registro2 = malloc(sizeof(registro_t));
-		registro2->key = 25;
-		registro2->timestamp = 4324234;
-		registro2->value = "HolaSoyOtraPrueba";
+	registro_t* registro2 = crear_registro(12345678, 25, "HolaSoyUnaPrueba");
+	prueba(registro2, ruta_bloque);
 
-		prueba(registro2, ruta_bloque);
+	registro_t* registro1 = crear_registro(87654321, 32, "HolaSoyOtraPrueba");
+	prueba(registro1, ruta_bloque);
 
-		registro_t* registro = malloc(sizeof(registro_t));
-		registro->key = 32;
-		registro->timestamp = 4324234;
-		registro->value = "HolaSoyUnaPrueba";
+//	registro_t* registro2 = malloc(sizeof(registro_t));
+//	registro2->key = 25;
+//	registro2->timestamp = 4324234;
+//	registro2->value = "HolaSoyOtraPrueba";
+//	prueba(registro2, ruta_bloque);
+//
+//	registro_t* registro = malloc(sizeof(registro_t));
+//	registro->key = 32;
+//	registro->timestamp = 4324234;
+//	registro->value = "HolaSoyUnaPrueba";
+//	prueba(registro, ruta_bloque);
 
-		prueba(registro, ruta_bloque);
+	puts("");
+	imprimirContenidoArchivo(ruta_bloque);
 
-		imprimirContenidoArchivo(ruta_bloque);
+	printf("\n\nRUTA BLOQUE: %s\n\n\n", ruta_bloque);
 
-		printf("\n\nRUTA BLOQUE: %s\n\n", ruta_bloque);
+	registro_t* reg = prueba2(32, 0, 5);
 
-		registro_t* reg = prueba2(32, 0, 5);
-
-		puts("Voy a imprimir registros");
-		imprimir_reg_fs(reg);
+	puts("Imprimir registro encontrado (key 32):");
+	imprimir_reg_fs(reg);
 }
 
 
 int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
-	inicializar_FS();
+	inicializar_FS(argc, argv);
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
 
 	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 
-	inicializar_conexiones();
+	//inicializar_conexiones();
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
 
-//	pruebaEscrituraYLecturaBloques();
+	pruebaEscrituraYLecturaBloques();
 
 	//finalizar_FS();
 	return 0;
@@ -205,17 +224,11 @@ void pruebaDump() {
 	puts("Se agrego la tabla en la memtable.");
 
 	//--creo registros--
-	registro_t* registro2 = malloc(sizeof(registro_t));
-	registro2->key = 25;
-	registro2->timestamp = 4324234;
-	registro2->value = "HolaSoyOtraPrueba";
+	registro_t* registro2 = crear_registro(4324234, 25, "HolaSoyOtraPrueba");
 	puts("Cree un registro:");
 	imprimir_reg_fs(registro2);
 
-	registro_t* registro = malloc(sizeof(registro_t));
-	registro->key = 32;
-	registro->timestamp = 4324234;
-	registro->value = "HolaSoyUnaPrueba";
+	registro_t* registro = crear_registro(4324234, 32, "HolaSoyUnaPrueba");
 	puts("Cree un registro:");
 	imprimir_reg_fs(registro);
 
