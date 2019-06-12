@@ -122,12 +122,11 @@ int main(int argc, char* argv[]) {
 
 	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 
-//	inicializar_conexiones();
+	inicializar_conexiones();
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
 
-	pruebaEscrituraYLecturaBloques();
-
+//	pruebaEscrituraYLecturaBloques();
 
 	//finalizar_FS();
 	return 0;
@@ -530,8 +529,22 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 	}
 }
 
-char* obtener_nombre_tabla(instr_t* instr) { //Azul: aca se puede hacer el string_to_upper();
-	return obtener_parametro(instr, 0);
+char* to_upper(char* str){
+	char* upr = "";
+	char ch;
+	int tam = strlen(str);
+	for(int i = 0; i < tam; i++) {
+//		printf("%c\n", *(str+i));
+		ch = toupper((char)*(str+i));
+		upr = string_from_format("%s%c", upr, ch);
+//		printf("%s\n", upr);
+	}
+	return upr;
+}
+
+char* obtener_nombre_tabla(instr_t* instr) {
+	char* tabla = obtener_parametro(instr, 0);
+	return to_upper(tabla);
 }
 
 char* obtener_parametro(instr_t * instr, int index) {

@@ -108,10 +108,11 @@ void iniciar_rutas();
 void finalizar_rutas();
 
 /*FUNCIONES AUXILIARES*/
-char*	 obtener_parametro(instr_t*, int);
-int  	 obtener_particion_key(char*, int);
-_Bool 	 es_registro_mas_reciente(void*, void*);
-char*	 obtener_nombre_tabla(instr_t*);
+char* 	to_upper(char*);
+char*	obtener_parametro(instr_t*, int);
+int  	obtener_particion_key(char*, int);
+_Bool 	es_registro_mas_reciente(void*, void*);
+char*	obtener_nombre_tabla(instr_t*);
 
 
 /*FUNCIONES DE BLOQUES*/
