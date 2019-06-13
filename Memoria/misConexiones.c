@@ -127,44 +127,51 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 	loggear_debug(debug_logger,&mutex_log, string_from_format("Actualizando tabla de gossiping"));
 
+	int saltearProximos = 0;
 	int i = 0;
 	char* nombre;
 	char* ip;
 	char* puerto;
 
 	void acutalizar_tabla(char* parametro){
-		if(i % 3 == 0){
-			if(!dictionary_has_key(conexionesActuales, parametro)){
-				nombre = strdup(parametro);
-				loggear_info(debug_logger,&mutex_log, string_from_format("No conocia al proceso %s", parametro));
-				i++;
+		saltearProximos--;
+		printf("Saltear Proximos = %d\n", saltearProximos);
+		if(saltearProximos <= 0){
+			if(i % 3 == 0){
+				if(!dictionary_has_key(conexionesActuales, parametro)){
+					nombre = strdup(parametro);
+					loggear_info(debug_logger,&mutex_log, string_from_format("No conocia al proceso %s", parametro));
+					i++;
+					saltearProximos = 0;
+				}
+				else{
+					loggear_info(debug_logger,&mutex_log, string_from_format("Ya tenia el proceso %s en la tabla", parametro));
+					i+=3;
+					saltearProximos = 3;
+				}
 			}
-			else{
-				loggear_info(debug_logger,&mutex_log, string_from_format("Ya tenia el proceso %s en la tabla", parametro));
-				i+=3;
-			}
-		}
-		if(i % 3 == 1){
-			ip = strdup(parametro);
-			loggear_debug(debug_logger,&mutex_log, string_from_format("Su ip es %s", ip));
-			i++;
-		}
-		if(i % 3 == 2){
-			puerto = strdup(parametro);
-			loggear_debug(debug_logger,&mutex_log, string_from_format("Su puerto es %s", puerto));
-			identificador identificadores = {
-					.fd_out = 0,
-					.fd_in = 0,
-					.ip_proceso = *ip,
-					.puerto = *puerto
-			};
+				else if(i % 3 == 1){
+					ip = strdup(parametro);
+					loggear_debug(debug_logger,&mutex_log, string_from_format("Su ip es %s", ip));
+					i++;
+				}
+					else if(i % 3 == 2){
+						puerto = strdup(parametro);
+						loggear_debug(debug_logger,&mutex_log, string_from_format("Su puerto es %s", puerto));
+						identificador identificadores = {
+								.fd_out = 0,
+								.fd_in = 0,
+								.ip_proceso = *ip,
+								.puerto = *puerto
+						};
 
-			identificador* idsConexionesActuales = malloc(sizeof(identificadores));
-			memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
+						identificador* idsConexionesActuales = malloc(sizeof(identificadores));
+						memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
 
-			loggear_debug(debug_logger,&mutex_log, string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", parametro));
-			dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
-			i++;
+						loggear_debug(debug_logger,&mutex_log, string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", parametro));
+						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
+						i++;
+					}
 		}
 	}
 
