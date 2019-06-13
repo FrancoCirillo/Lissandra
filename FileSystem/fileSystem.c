@@ -26,22 +26,28 @@ int main(int argc, char* argv[]) {
 //	pruebaGeneral();
 //	inicializar_conexiones();
 
-	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Part0.bin";
-	imprimirContenidoArchivo(ruta0bin);
-	char* ruta1bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Part1.bin";
-	imprimirContenidoArchivo(ruta1bin);
-	char* ruta2bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Part2.bin";
-	imprimirContenidoArchivo(ruta2bin);
-	char* ruta3bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Part3.bin";
-	imprimirContenidoArchivo(ruta3bin);
 
-	pruebaGeneral();
+	char* tabla = "TABLA1";
+	pasar_a_tmpc(tabla);
+
+
+//	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
+//	imprimirContenidoArchivo(ruta0bin);
+//	char* ruta1bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part1.bin";
+//	imprimirContenidoArchivo(ruta1bin);
+//	char* ruta2bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part2.bin";
+//	imprimirContenidoArchivo(ruta2bin);
+//	char* ruta3bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part3.bin";
+//	imprimirContenidoArchivo(ruta3bin);
+
+//	pruebaGeneral();
 //	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
 //	imprimirContenidoArchivo(rutaDump1);
 	//finalizar_FS();
 
 	return 0;
 }
+
 
 //------------------------TESTS------------------------
 void imprimirContenidoArchivo(char* ruta) {

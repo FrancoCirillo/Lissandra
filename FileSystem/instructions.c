@@ -74,24 +74,24 @@ int eliminar_dir(char* tabla) {
 	int eliminado = -1;
 
 	if (directorio){
-		struct dirent* dirent;
+		struct dirent* directorioAEliminar;
 		eliminado = 0;
 
-		while (!eliminado && (dirent = readdir(directorio))){
+		while (!eliminado && (directorioAEliminar = readdir(directorio))){
 			int removed = -1;
 			char* buffer;
 			size_t length;
 
 			//Se saltean "." y ".." por la recursividad
-			if (!strcmp(dirent->d_name, ".") || !strcmp(dirent->d_name, ".."))
+			if (!strcmp(directorioAEliminar->d_name, ".") || !strcmp(directorioAEliminar->d_name, ".."))
 				continue;
 
-			length = pathLen + strlen(dirent->d_name) + 2;
+			length = pathLen + strlen(directorioAEliminar->d_name) + 2;
 			buffer = malloc(length);
 
 			if(buffer){
 				struct stat statbuf;
-				snprintf(buffer, length, "%s/%s", rutaTabla, dirent->d_name);
+				snprintf(buffer, length, "%s/%s", rutaTabla, directorioAEliminar->d_name);
 
 				if (!stat(buffer, &statbuf))
 				{
