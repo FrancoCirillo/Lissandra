@@ -5,6 +5,10 @@
 
 void inicializar_memtable() {
 	memtable = dictionary_create();
+	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas);
+	DIR* directorio = opendir(ruta_tabla);
+	if (directorio != NULL)
+		levantar_tablas_directorio(directorio);
 	loggear_FS("Se inicializó la memtable.");
 }
 
@@ -13,9 +17,17 @@ void finalizar_memtable() { //Borra y libera todos los registros y tablas.
 	dictionary_destroy_and_destroy_elements(memtable, &borrar_lista_registros);
 }
 
-//////////////////////////////
-
-
+void levantar_tablas_directorio(DIR* directorio) {
+	puts("Entre a levantar_tablas_directorio");
+	struct dirent* directorio_leido;
+	while((directorio_leido = readdir(directorio)) != NULL) {
+		char* tabla = directorio_leido->d_name;
+		if(!string_contains(tabla, ".")) {
+			t_list* registros = crear_lista_registros();
+			dictionary_put(memtable, tabla, registros);
+		}
+	}
+}
 
 void borrar_lista_registros(void* registros) {
 	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
@@ -41,6 +53,10 @@ int existe_tabla(char* tabla) {
 	return dictionary_has_key(memtable, tabla);
 }
 
+char* obtener_ruta_tabla(char* tabla) {
+	return string_from_format("%s%s", g_ruta.tablas, tabla);
+}
+
 void eliminar_tabla_de_mem(char* tabla){
 	dictionary_remove_and_destroy(memtable, tabla, &borrar_lista_registros);
 }
@@ -62,32 +78,17 @@ void agregar_registro(char* tabla, registro_t* registro) {
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {
+	puts("---Estoy buscando en la memtable---");
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 
 	_Bool es_key_registro(void* registro){
 		uint16_t key_registro = ((registro_t*)registro)->key;
 		return key_registro == key;
 	}
-
-	return list_filter(registros_tabla, &es_key_registro);
+	t_list* registros = list_filter(registros_tabla, &es_key_registro);
+	printf("Tam de lista mem: %d\n", list_size(registros));
+	return registros;
 }
-
-//TODO borrar cuando se resuelva
-//registro_t* obtener_registro_mas_reciente(t_list* registros_de_key) {
-//	list_sort(registros_de_key, &es_registro_mas_reciente);
-//	return list_get(registros_de_key, 0);
-//}
-//
-//_Bool es_registro_mas_reciente(void* un_registro, void* otro_registro) {
-//	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
-//	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
-//	return (_Bool)(ts_un_registro > ts_otro_registro);
-//}
-//
-//registro_t* leer_binario(char* tabla, uint16_t key) { //TODO hacer
-//	registro_t* unRegistro;
-//	return unRegistro;
-//}
 
 registro_t* pasar_a_registro(instr_t* instr) {
 	registro_t* registro = malloc(sizeof(registro_t));
@@ -145,25 +146,27 @@ void dumpear_tabla(char* tabla, void* registros) {
 	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 	char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 	FILE* temporal = crear_tmp(tabla, nombre_tmp);
+	puts("Creando temporal");
 	int nro_bloque = archivo_inicializar(temporal);
-	fclose(temporal);
+	puts("Inicializando temporal");
+
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
 	void escribir_reg_en_tmp(void* registro) {
-	escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp); //este warnings es porque esta comentado en estructuras.h
+	escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
+	puts("Escribi en bloque");
 	}
+
+	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
 
 	free(ruta_tmp);
 	free(nombre_tmp);
 	free(ruta_bloque);
-	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
+	fclose(temporal);
 }
 
 void dumpear(t_dictionary* mem) {
 	dictionary_iterator(memtable, &dumpear_tabla);
-
-	//de cada tabla de esa mem, que no es la mem que sigue usando, bajar a los .tmp correspondientes.
-	//Ver bien como hacer esto..
 }
 
 void dumpeo() {    //Version sin uso del diccionario.
@@ -175,7 +178,7 @@ void dumpeo() {    //Version sin uso del diccionario.
 
 	while (1) {
 		sleep(tiempo_dump);
-
+		puts("estoy dumpenado");
 		mem = memtable;
 
 		dumpear(mem);
@@ -191,20 +194,20 @@ void dumpeo() {    //Version sin uso del diccionario.
 }
 
 
-void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
-	if (!strcmp(ext, "tmp")) {
-		char* n = string_itoa(siguiente_nro_dump(tabla));
-		n = concat("Dump_", n);
-		FILE * f = crear_archivo(n, tabla, ext);
-		//escribir(f,registros);
-		//Escribir tiene que hacer el fclose(f);
-		//hacer eso cuando lo implementemos.
-		fclose(f);
-		free(n);
-	} else if (!strcmp(ext, "tmpc")) { //ver si sirve de algo hacerlo polimorfico asi.
-		//
-	} else {
-		//ver en compactacion como podemos reutilizar esto..
-	}
-}
+//void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
+//	if (!strcmp(ext, "tmp")) {
+//		char* n = string_itoa(siguiente_nro_dump(tabla));
+//		n = concat("Dump_", n);
+//		FILE * f = crear_archivo(n, tabla, ext);
+//		//escribir(f,registros);
+//		//Escribir tiene que hacer el fclose(f);
+//		//hacer eso cuando lo implementemos.
+//		fclose(f);
+//		free(n);
+//	} else if (!strcmp(ext, "tmpc")) { //ver si sirve de algo hacerlo polimorfico asi.
+//		//
+//	} else {
+//		//ver en compactacion como podemos reutilizar esto..
+//	}
+//}
 

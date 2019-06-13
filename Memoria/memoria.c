@@ -112,7 +112,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			ejecutar_instruccion_create(instruccion);
 			break;
 		case CODIGO_DESCRIBE:
-			ejecutar_instruccion_describe(instruccion);
+			ejecutar_instruccion_describe(instruccion, remitente);
 			break;
 		case CODIGO_DROP:
 			ejecutar_instruccion_drop(instruccion);

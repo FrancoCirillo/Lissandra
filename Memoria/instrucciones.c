@@ -167,13 +167,27 @@ void ejecutar_instruccion_create(instr_t *instruccion)
 	}
 }
 
-void ejecutar_instruccion_describe(instr_t *instruccion)
+void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente)
 {
-	log_info(g_logger, "Ejecutando instruccion Describe");
-	int conexionFS = obtener_fd_out("FileSystem");
-	usleep(configuracion.RETARDO_FS * 1000);
-	if(enviar_request(instruccion, conexionFS)==-1){
-		log_error(g_logger, "No se envio el Describe al FS");
+	if(remitente == 0 || strcmp(remitente, "Kernel") == 0){
+		log_info(g_logger, "Ejecutando instruccion Describe");
+		int conexionFS = obtener_fd_out("FileSystem");
+		usleep(configuracion.RETARDO_FS * 1000);
+		if(enviar_request(instruccion, conexionFS)==-1){
+			log_error(g_logger, "No se envio el Describe al FS");
+		}
+	}
+	else {
+		if(quien_pidio(instruccion) == CONSOLA_KERNEL){
+			int conexionFS = obtener_fd_out("Kernel");
+			if(enviar_request(instruccion, conexionFS)==-1){
+				log_error(g_logger, "No se envio la metadata al Kenel");
+			}
+		}
+		else{
+			loggear_exito_proceso(instruccion, g_logger, &mutex_log);
+		}
+
 	}
 }
 
