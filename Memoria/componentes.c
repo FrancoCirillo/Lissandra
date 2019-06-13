@@ -492,7 +492,7 @@ void *ejecutar_gossiping()
 	while(1)
 	{
 		usleep(configuracion.RETARDO_GOSSIPING * 1000);
-		puts("Ejec gosssippinggggg");
+		loggear_debug(g_logger, &mutex_log, string_from_format("Realizando gossiping programado"));
 		ejecutar_instruccion_gossip();
 	}
 }

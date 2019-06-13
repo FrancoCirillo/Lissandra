@@ -187,9 +187,11 @@ t_list *conexiones_para_gossiping(){
 	t_list *tablaGossiping = list_create();
 
 	void juntar_ip_y_puerto(char* nombre, identificador* ids){
-		list_add(tablaGossiping, nombre);
-		list_add(tablaGossiping, ids->ip_proceso);
-		list_add(tablaGossiping, ids->puerto);
+		if(strcmp(nombre, "FileSystem")!=0 && strcmp(nombre, nombreDeMemoria)!=0){
+			list_add(tablaGossiping, nombre);
+			list_add(tablaGossiping, ids->ip_proceso);
+			list_add(tablaGossiping, ids->puerto);
+		}
 	}
 
 	dictionary_iterator(conexionesActuales, (void *)juntar_ip_y_puerto);
@@ -219,8 +221,6 @@ void ejecutar_instruccion_gossip(){
 	list_add(listaParam, miIPMemoria);
 	list_add(listaParam, configuracion.PUERTO);
 
-	instr_t * miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaParam);
-
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
 		printf("IP seed: %s\n", unaIP);
@@ -243,7 +243,6 @@ void ejecutar_instruccion_gossip(){
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaParam);
 				enviar_request(peticionDeSuTabla, conexion);
-
 
 				puts("Peticion de gossiping enviada");
 			}
