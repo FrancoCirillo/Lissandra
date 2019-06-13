@@ -11,6 +11,7 @@ t_dictionary* tablas_nro_dump;
 sem_t mutex_tablas_nro_dump;
 
 // --------FUNCIONES DE MEMTABLE--------
+void levantar_tablas_directorio();
 void inicializar_memtable();
 void finalizar_memtable();
 void limpiar_memtable();
@@ -32,9 +33,10 @@ t_list* 	obtener_registros_mem(char*, uint16_t);
 int  existe_tabla(char*);
 void agregar_tabla(char*);
 void eliminar_tabla_de_mem(char*);
+char* obtener_ruta_tabla(char*);
 
 void agregar_a_contador_dumpeo(char*);
-int siguiente_nro_dump(char*);
+int  siguiente_nro_dump(char*);
 void agregar_a_contador_dumpeo(char*);
 void dumpear_tabla(char*, void*);
 void dumpear(t_dictionary*);

@@ -388,7 +388,11 @@ void loggear_error_proceso(instr_t *miInstruccion, t_log* logger, sem_t *mutex_l
 void loggear_exito_proceso(instr_t *miInstruccion, t_log* logger, sem_t* mutex_log)
 {
 
-	loggear_info(logger, mutex_log, string_from_format("%s\n", (char *)list_get(miInstruccion->parametros, 0)));
+	void mostrar(char* parametro){
+		loggear_info(logger, mutex_log, string_from_format(parametro));
+	}
+
+	list_iterate(miInstruccion->parametros, (void*) mostrar);
 }
 
 void imprimir_conexiones(t_dictionary *conexAc)

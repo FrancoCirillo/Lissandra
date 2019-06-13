@@ -9,5 +9,6 @@
 void compactar();
 void compactador();
 
+void pasar_a_tmpc(char* tabla);
 
 #endif /* COMPACTADOR_H_ */
