@@ -24,11 +24,11 @@ int main(int argc, char* argv[]) {
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
 //	pruebaGeneral();
-//	inicializar_conexiones();
+	inicializar_conexiones();
 
 
-	char* tabla = "TABLA1";
-	pasar_a_tmpc(tabla);
+//	char* tabla = "TABLA1";
+//	pasar_a_tmpc(tabla);
 
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
@@ -436,7 +436,10 @@ int obtener_fd_out(char *proceso)
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list* listaParam, char* remitente)
 {
-	list_add(listaParam, obtener_ultimo_parametro(instruccion));
+	void *ultimoParametro = obtener_ultimo_parametro(instruccion);
+	if (ultimoParametro != NULL){
+		list_add(listaParam, (char*)ultimoParametro);
+	}
 	instr_t *miInstruccion;
 	switch (quien_pidio(instruccion))
 	{

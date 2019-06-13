@@ -278,7 +278,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 	t_list* listaParam = list_create();
 	int parametros_instr = list_size(instruccion->parametros);
 
-	if(!parametros_instr) { //DESCRIBE
+	if(parametros_instr <=1) { //DESCRIBE
 		char* ruta = string_from_format("%s", g_ruta.tablas);
 		printf("Ruta: %s\n", ruta);
 		DIR* directorio = opendir(ruta);
@@ -302,6 +302,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 				list_add(listaParam, tiempo_comp);
 			}
 		}
+		puts("Tablas leidas, enviando");
 		imprimir_donde_corresponda(CODIGO_DESCRIBE, instruccion, listaParam, remitente);
 		free(ruta);
 		closedir(directorio);
