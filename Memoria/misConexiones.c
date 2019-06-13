@@ -5,12 +5,20 @@
 int obtener_fd_out(char *proceso)
 {
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if(idsProceso == NULL){
+		loggear_error(debug_logger,&mutex_log, string_from_format("Se desconoce completamente el proceso %s", proceso));
+		return 0;
+	}
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
+
+		loggear_info(debug_logger,&mutex_log, string_from_format("Es la primera vez que se quiere enviar algo al proceso %s", proceso));
 		responderHandshake(idsProceso);
 		return idsProceso->fd_out;
 	}
 	//	La conexion en el fd_out %d ya existia
+	loggear_info(debug_logger,&mutex_log, string_from_format("Ya existia la conexion con el proceso %s", proceso));
+	loggear_info(debug_logger,&mutex_log, string_from_format("Tiene el fd_out %d", idsProceso->fd_out));
 	return idsProceso->fd_out;
 }
 
@@ -52,6 +60,12 @@ void responderHandshake(identificador *idsConexionEntrante)
 	idsConexionEntrante->fd_out = fd_saliente;
 }
 
+void enviar_datos(char* remitente){
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Enviando datos a %s", remitente));
+	obtener_fd_out(remitente);
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Datos enviados"));
+}
+
 void enviar_datos_a_FS()
 {
 		t_list *listaParam = list_create();
@@ -76,38 +90,42 @@ void enviar_datos_a_FS()
 
 void pedir_tamanio_value(){
 
-	puts("obteniendo fd out");
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Pidiendo tamanio value"));
 	int conexionFS = obtener_fd_out("FileSystem");
-	puts("fd out obtenido");
 	t_list* listaParam = list_create();
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
-	puts("Instruccion creada");
 	enviar_request(miInstruccion, conexionFS);
-	puts("Request enviada");
-
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Tamanio del value pedido"));
 }
 
 void actualizar_tamanio_value(instr_t* instruccion){
-
 	tamanioValue = atoi((char*) list_get(instruccion->parametros, 0));
-	printf("Tamanio del value recibido: %d\n", tamanioValue);
-
-
+	loggear_info(g_logger,&mutex_log, string_from_format("Tamanio del value recibido: %d\n", tamanioValue));
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Devolviendo el gossip"));
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Datos enviados"));
 	t_list* tablaGossiping = conexiones_para_gossiping();
 
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
+
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Envio mi tabla de datos enviada"));
+
 
 	actualizar_tabla_gossiping(instruccion);
 
 }
 
 void actualizar_tabla_gossiping(instr_t* instruccion){
+
+
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Actualizando tabla de gossiping"));
 
 	int i = 0;
 	char* nombre;
@@ -118,19 +136,22 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 		if(i % 3 == 0){
 			if(!dictionary_has_key(conexionesActuales, parametro)){
 				nombre = strdup(parametro);
+				loggear_info(debug_logger,&mutex_log, string_from_format("No conocia al proceso %s", parametro));
 				i++;
 			}
 			else{
+				loggear_info(debug_logger,&mutex_log, string_from_format("Ya tenia el proceso %s en la tabla", parametro));
 				i+=3;
 			}
 		}
 		if(i % 3 == 1){
 			ip = strdup(parametro);
+			loggear_debug(debug_logger,&mutex_log, string_from_format("Su ip es %s", ip));
 			i++;
 		}
 		if(i % 3 == 2){
 			puerto = strdup(parametro);
-
+			loggear_debug(debug_logger,&mutex_log, string_from_format("Su puerto es %s", puerto));
 			identificador identificadores = {
 					.fd_out = 0,
 					.fd_in = 0,
@@ -141,6 +162,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 			identificador* idsConexionesActuales = malloc(sizeof(identificadores));
 			memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
 
+			loggear_debug(debug_logger,&mutex_log, string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", parametro));
 			dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
 			i++;
 		}
@@ -187,7 +209,7 @@ void ejecutar_instruccion_gossip(){
 	list_add(listaParam, miIPMemoria);
 	list_add(listaParam, configuracion.PUERTO);
 
-	instr_t * miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+	instr_t * miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaParam);
 
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
@@ -206,7 +228,14 @@ void ejecutar_instruccion_gossip(){
 			int conexion = crear_conexion(unaIP, puertosSeeds[i], miIPMemoria, 0, g_logger, &mutex_log);
 			if(conexion != -1){
 				puts("Conexion creada");
+
+				instr_t * miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 				enviar_request(miInstruccion, conexion);
+				instr_t * peticionDeSuTabla = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaParam);
+				enviar_request(peticionDeSuTabla, conexion);
+
+
+				puts("Peticion de gossiping enviada");
 			}
 		}
 		i++;

@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
 	empezar_conexiones(argv);
 //	iniciar_ejecutador_journal(); Piden desactivarlo en el checkpoint presencial
 
-	inicializar_estructuras_memoria();
 	iniciar_ejecutador_gossiping();
 
 	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA, g_logger, &mutex_log);
@@ -47,7 +46,7 @@ void inicializar_configuracion()
 void iniciar_log()
 {
 	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
-	debug_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 0, LOG_LEVEL_TRACE);
+	debug_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
 }
 
 char *obtener_por_clave(char *ruta, char *clave)
@@ -90,6 +89,7 @@ void inicializar_estructuras_memoria()
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Me llego una instruccion con el codOp %d", instruccion->codigo_operacion));
 	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 	sem_wait(&mutex_journal);
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
@@ -140,6 +140,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 		case RECEPCION_GOSSIP:
 			actualizar_tabla_gossiping(instruccion);
 			break;
+
 		default:
 			loggear_info(g_logger,&mutex_log, string_from_format("El comando no pertenece a la memoria"));
 			break;
