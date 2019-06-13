@@ -130,7 +130,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 
 int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 //	puts("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
-	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
+//	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
 	t_config* archivo = config_create(ruta_archivo);
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
 
@@ -268,7 +268,7 @@ void chequear_bitmap(t_bitarray* bitarray) {
 
 t_bitarray* get_bitmap() {
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "r");
-	char*bitmap=malloc(cant_bytes()+1);
+	char* bitmap = malloc(cant_bytes() + 1);
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cant_bytes()+1, archivo_bitmap);
 	bitmap[cant_bytes()] = 0;
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cant_bytes(), LSB_FIRST);
@@ -280,9 +280,9 @@ t_bitarray* get_bitmap() {
 
 void actualizar_bitmap(t_bitarray* bitarray) {
 	FILE* bitmap = fopen(ruta_bitmap, "w+");
-	printf("Escribiendo archivo %d bytes\n", strlen(bitarray->bitarray));
+//	printf("Escribiendo archivo %d bytes\n", strlen(bitarray->bitarray));
 	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
-	puts("Cerrando archivo");
+//	puts("Cerrando archivo");
 	fclose(bitmap);
 }
 
@@ -337,7 +337,7 @@ void ocupar_bloque(int nro_bloque) {
 }
 
 void liberar_bloque(int nro_bloque) {
-	printf("Liberando bloque %d\n",nro_bloque);
+//	printf("Liberando bloque %d\n",nro_bloque);
 	t_bitarray* bitarray = get_bitmap();
 	bitarray_clean_bit(bitarray, nro_bloque);
 	actualizar_bitmap(bitarray);
@@ -436,6 +436,7 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	char* bloques_tot = agregar_bloque_bloques(bloques_ant, nro_bloque);
 	config_set_value(archivo, "BLOCKS", bloques_tot);
 	config_save(archivo);
+	restar_bloques_disponibles(1);
 	config_destroy(archivo);
 	free(bloques_tot);
 	return 1;
@@ -494,7 +495,7 @@ int cantidad_bloques_usados(char* ruta_archivo) {
 	int cant_bloques = 0;
 	while(*(lista_bloques + cant_bloques))
 		cant_bloques++;
-    printf("Cantidad de Bloques usados: %d\n",cant_bloques);
+//    printf("Cantidad de Bloques usados: %d\n",cant_bloques);
 	return cant_bloques;
 }
 
@@ -509,6 +510,22 @@ int espacio_restante_bloque(char* ruta_archivo) {
 //	int espacio_disponible = cantidad_bloques_usados(ruta_archivo) * Metadata_FS.block_size - obtener_tam_archivo(ruta_archivo);
 	printf("Espacio Disponible: %d\n", espacio_disponible);
 	return espacio_disponible;
+}
+
+void liberar_bloques(char* ruta_archivo) {
+	int nro_bloque = -1;
+	int bloque = obtener_siguiente_bloque_archivo(ruta_archivo, nro_bloque);
+//	printf("Nro bloque: %d\t Nro siguiente: %d\n", nro_bloque, bloque);
+	do {
+		liberar_bloque(bloque);
+		incremetar_bloques_disponibles(1);
+//		printf("Libere el bloque: %d\n", bloque);
+		bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque);
+//		printf("Nro siguiente: %d\n", bloque);
+
+	}
+	while (bloque > 0);
+//	puts("sali del while");
 }
 
 //*****************************************************************
@@ -590,6 +607,7 @@ int archivo_inicializar(FILE* f) {
 	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
 	txt_write_in_file(f, contenido);
 	ocupar_bloque(bloque_num);
+	restar_bloques_disponibles(1);
 
 //	printf("Numero de bloque: %d\n", bloque_num);
 	return bloque_num;

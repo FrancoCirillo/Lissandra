@@ -24,21 +24,8 @@ int main(int argc, char* argv[]) {
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
 
-//	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
-
 	inicializar_conexiones();
 
-	//ejemplo_instr_create();
-	//ejemplo_instr_insert();
-//	pruebaGeneral();
-
-//	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/TABLA4/Part0.bin";
-////	imprimirContenidoArchivo(ruta);
-//	FILE* archivo = fopen(ruta, "w");
-//	archivo_inicializar(archivo);
-//	imprimirContenidoArchivo(ruta);
-//	t_list* registros = leer_archivos_temporales("TABLA1", 5);
-//	list_iterate(registros, &imprimirRegistro);
 
 	//finalizar_FS();
 
