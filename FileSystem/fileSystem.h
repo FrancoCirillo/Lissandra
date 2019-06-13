@@ -125,11 +125,6 @@ int  	obtener_particion_key(char*, int);
 char*	obtener_nombre_tabla(instr_t*);
 _Bool 	es_registro_mas_reciente(void*, void*);
 
-
-/*MANEJO DE CADENAS*/
-char* 	concat(char*, char*); //TODO borrar
-char* 	concat3(char*, char*, char*); //TODO borra
-
 /*Comunicación*/
 //eliminar
 //void response(remitente_t*);

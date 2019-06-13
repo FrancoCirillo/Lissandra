@@ -36,7 +36,7 @@ void eliminar_tabla_de_mem(char*);
 char* obtener_ruta_tabla(char*);
 
 void agregar_a_contador_dumpeo(char*);
-int siguiente_nro_dump(char*);
+int  siguiente_nro_dump(char*);
 void agregar_a_contador_dumpeo(char*);
 void dumpear_tabla(char*, void*);
 void dumpear(t_dictionary*);

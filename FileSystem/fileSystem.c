@@ -23,10 +23,21 @@ int main(int argc, char* argv[]) {
 	inicializar_FS(argc, argv);
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
+//	pruebaGeneral();
+//	inicializar_conexiones();
 
-	inicializar_conexiones();
+	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Part0.bin";
+	imprimirContenidoArchivo(ruta0bin);
+	char* ruta1bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Part1.bin";
+	imprimirContenidoArchivo(ruta1bin);
+	char* ruta2bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Part2.bin";
+	imprimirContenidoArchivo(ruta2bin);
+	char* ruta3bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Part3.bin";
+	imprimirContenidoArchivo(ruta3bin);
 
-
+	pruebaGeneral();
+//	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
+//	imprimirContenidoArchivo(rutaDump1);
 	//finalizar_FS();
 
 	return 0;
@@ -102,7 +113,7 @@ void pruebaDump() {
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 		printf("Ruta Temporal: %s\n", ruta_tmp);
 		FILE* temporal = crear_tmp(tabla, nombre_tmp);
-		int nro_bloque = archivo_inicializar(temporal);
+		int nro_bloque = archivo_inicializar(temporal); //TODO
 		printf("Al temporal %s se le asigno el bloque %d\n", nombre_tmp, nro_bloque);
 
 		void escribir_reg_en_tmp(void* registro) {
@@ -270,6 +281,7 @@ t_list* leer_binario(char* tabla, uint16_t key) {
 	puts("---Estoy buscando en el binario---");
 	int particion = obtener_particion_key(tabla, key);
 	char* ruta_bin = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, particion);
+	imprimirContenidoArchivo(ruta_bin);
 	t_list* registro_key = buscar_key_en_bloques(ruta_bin, key, 0);
 	free(ruta_bin);
 	printf("Tam de lista binarios: %d\n", list_size(registro_key));
@@ -288,11 +300,12 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 
 	struct dirent* directorio_leido;
 	while((directorio_leido = readdir(directorio)) != NULL) {
-//		printf("%s\n", directorio_leido->d_name);
+		printf("Directorio leido: %s\n", directorio_leido->d_name);
 		char* nombre_archivo = directorio_leido->d_name;
 		if(string_ends_with(nombre_archivo, "tmp")) {
 			char* ruta_tmp = string_from_format("%s%s", ruta_tabla, nombre_archivo);
-//			printf("%s\n", ruta_tmp);
+			printf("RUTA:%s\n", ruta_tmp);
+//			imprimirContenidoArchivo(ruta_tmp);
 			t_list* registros_tmp = buscar_key_en_bloques(ruta_tmp, key, 1);
 			list_add_all(registros, registros_tmp);
 		}

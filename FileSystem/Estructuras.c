@@ -192,6 +192,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 	puts("Entre a buscar_key_en_bloques");
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+imprimirContenidoArchivo(ruta_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
 	t_list* registros = crear_lista_registros();
 	int status = 1;
@@ -222,6 +223,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 
 			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 				ruta_bloque = obtener_ruta_bloque(nro_bloque);
+	imprimirContenidoArchivo(ruta_bloque);
 				archivo_bloque = fopen(ruta_bloque, "r");
 			} else
 				status = 0; //corta el while
@@ -267,6 +269,7 @@ void chequear_bitmap(t_bitarray* bitarray) {
 }
 
 t_bitarray* get_bitmap() {
+	puts("Get bitmap");
 	FILE* archivo_bitmap = fopen(ruta_bitmap, "r");
 	char* bitmap = malloc(cant_bytes() + 1);
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cant_bytes()+1, archivo_bitmap);
@@ -314,6 +317,7 @@ int bloque_esta_ocupado(t_bitarray* bitmap, int nro_bloque) {
 }
 
 int siguiente_bloque_disponible() {
+	puts("Entre a sig bloque disp");
 	int nro_bloque = 0;
 	t_bitarray* bitmap = get_bitmap();
 	while(nro_bloque < cantidad_bloques && bloque_esta_ocupado(bitmap,nro_bloque))
