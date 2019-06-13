@@ -7,18 +7,21 @@ C_SRCS += \
 ../Estructuras.c \
 ../compactador.c \
 ../fileSystem.c \
+../instructions.c \
 ../memtable.c 
 
 OBJS += \
 ./Estructuras.o \
 ./compactador.o \
 ./fileSystem.o \
+./instructions.o \
 ./memtable.o 
 
 C_DEPS += \
 ./Estructuras.d \
 ./compactador.d \
 ./fileSystem.d \
+./instructions.d \
 ./memtable.d 
 
 

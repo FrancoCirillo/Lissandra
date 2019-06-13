@@ -27,6 +27,7 @@ int main(int argc, char* argv[]) {
 //	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
 
 	inicializar_conexiones();
+
 	//ejemplo_instr_create();
 	//ejemplo_instr_insert();
 //	pruebaGeneral();
@@ -38,9 +39,10 @@ int main(int argc, char* argv[]) {
 //	imprimirContenidoArchivo(ruta);
 //	t_list* registros = leer_archivos_temporales("TABLA1", 5);
 //	list_iterate(registros, &imprimirRegistro);
-	//finalizar_FS();
-	return 0;
 
+	//finalizar_FS();
+
+	return 0;
 }
 
 //------------------------TESTS------------------------
@@ -218,6 +220,7 @@ void pruebaGeneral() {
 }
 
 //------------INICIALIZACION Y FINALIZACION-----------------
+
 void inicializar_FS(int argc, char* argv[]) {
 	iniciar_semaforos();
 	iniciar_logger();
@@ -274,233 +277,7 @@ void finalizar_rutas(){
 }
 
 
-//------------MANEJO INSTRUCCIONES-----------------
-
-void evaluar_instruccion(instr_t* instr, char* remitente) {
-
-	int codigoNeto = instr->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
-
-	//TODO Aca pasar el nombre de la tabla a Mayuscula. y nos desligamos de esto en el resto de los pasos.
-
-	switch (codigoNeto) {
-
-	case CODIGO_CREATE:
-		loggear_FS("Me llego una instruccion CREATE.");
-		execute_create(instr, remitente);
-		break;
-
-	case CODIGO_INSERT:
-		loggear_FS("Me llego una instruccion INSERT.");
-		ejecutar_instruccion_insert(instr, remitente);
-		break;
-
-	case CODIGO_SELECT:
-		loggear_FS("Me llego una instruccion SELECT.");
-		execute_select(instr, remitente);
-		break;
-
-	case CODIGO_DESCRIBE:
-		loggear_FS("Me llego una instruccion DESCRIBE.");
-		execute_describe(instr, remitente);
-		break;
-
-	case CODIGO_DROP:
-		loggear_FS("Me llego una instruccion DROP.");
-		execute_drop(instr, remitente);
-		break;
-
-	case CODIGO_VALUE:
-		enviar_tamanio_value(remitente);
-		break;
-
-	default:
-		loggear_FS("Me llego una instruccion invalida dentro del File System.");
-	}
-}
-
-void execute_create(instr_t* instruccion, char* remitente) {
-	char* tabla = obtener_nombre_tabla(instruccion);
-	t_list* listaParam = list_create();
-	if (!existe_tabla(tabla)) {
-		if(!puede_crear_particiones(instruccion)) {
-			char* cadena = string_from_format("No hay bloques disponibles para crear las particiones de la tabla'%s'.", tabla); //TODO: free
-			list_add(listaParam, cadena);
-			free(cadena);
-			imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
-		}
-		agregar_tabla(tabla); //la agrega a la mem
-		agregar_a_contador_dumpeo(tabla);
-		crear_directorio(g_ruta.tablas, tabla);
-		crear_particiones(instruccion);
-		crear_metadata(instruccion);
-		char* cadena = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
-		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
-
-	} else {
-		char* cadena = string_from_format("Error al crear la tabla '%s', ya existe en el FS.", tabla); //TODO: free
-		list_add(listaParam, cadena);
-		free(cadena);
-		imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
-	}
-}
-
-t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequeado
-	t_list *listaParam = list_create();
-	char* tabla = obtener_nombre_tabla(instruccion);
-	registro_t* registro = pasar_a_registro(instruccion); //VALIDAR SI TAM_VALUE ES MAYOR AL MAX_TAM_VALUE
-
-	if (!existe_tabla(tabla)) {
-		//TODO: free
-		char* cadena = string_from_format("No se pudo insertar %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
-		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
-		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
-		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
-		*codOp = ERROR_INSERT;
-
-		list_add(listaParam, cadena);
-		return listaParam;
-
-	} else {
-		agregar_registro(tabla, registro);
-
-		char* cadena = string_from_format("Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
-		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 1)); //Key
-		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 2)); //Value
-		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
-		*codOp = CODIGO_EXITO;
-
-		list_add(listaParam, cadena);
-		return listaParam;
-	}
-}
-
-void execute_select(instr_t* instruccion, char* remitente) {
-	char* tabla = obtener_nombre_tabla(instruccion);
-	t_list *listaParam = list_create();
-	if (!existe_tabla(tabla)) {
-		puts("No existe la tabla");
-		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
-		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-	}
-	puts("Existe tabla");
-	int key = (uint16_t)atoi(obtener_parametro(instruccion, 1));
-	t_list* registros_key = obtener_registros_key(tabla, key);
-
-	if(list_is_empty(registros_key)) {
-		puts("No hay registros de la key");
-		char* cadena = string_from_format("No se encontraron registros con la key '%d'", key); //TODO: free
-		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-	} else {
-		puts("Registro encontrados");
-		char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);//respuesta del select, TODO: no anda
-//		printf("Value %s\n", value_registro_reciente);
-
-		list_add(listaParam, tabla);
-		list_add(listaParam, string_itoa(key));
-		list_add(listaParam, value_registro_reciente);
-		imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
-	}
-	borrar_lista_registros(registros_key);
-}
-
-void execute_drop(instr_t* instruccion, char* remitente) {
-	char* tabla = obtener_nombre_tabla(instruccion);
-	t_list *listaParam = list_create();
-
-	if (!existe_tabla(tabla)) {
-		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
-		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
-		list_add(listaParam, cadena);
-		//return ERROR_DROP;
-	}
-	eliminar_tabla_de_mem(tabla);
-	eliminar_directorio(tabla); //adentro tiene un eliminar_archivos(tabla)
-	char* cadena = string_from_format("Se eliminpo correctamente la tabla '%s'", tabla); //TODO: free
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
-	list_add(listaParam, cadena);
-	//return CODIGO_EXITO;
-}
-
-void execute_describe(instr_t* instruccion, char* remitente) {
-	t_list* listaParam = list_create();
-	int parametros_instr = list_size(instruccion->parametros);
-
-	if(!parametros_instr) { //DESCRIBE
-		char* ruta = string_from_format("%s", g_ruta.tablas);
-		printf("Ruta: %s\n", ruta);
-		DIR* directorio = opendir(ruta);
-		if (directorio == NULL) {
-			printf("Error: No se puede abrir el directorio\n");
-			exit(2);
-		}
-
-		struct dirent* directorio_leido;
-		while((directorio_leido = readdir(directorio)) != NULL) {
-			char* tabla = directorio_leido->d_name;
-			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
-				imprimirMetadata(tabla);
-				char* consistencia = obtener_consistencia_metadata(tabla);
-				char* particiones = string_itoa(obtener_part_metadata(tabla));
-				char* tiempo_comp = string_itoa(obtener_tiempo_compactacion_metadata(tabla));
-
-				list_add(listaParam, tabla);
-				list_add(listaParam, consistencia);
-				list_add(listaParam, particiones);
-				list_add(listaParam, tiempo_comp);
-			}
-		}
-		imprimir_donde_corresponda(CODIGO_DESCRIBE, instruccion, listaParam, remitente);
-		free(ruta);
-		closedir(directorio);
-
-	} else { //DESCRIBE tabla1
-		char* tabla = obtener_nombre_tabla(instruccion);
-		if(!existe_tabla(tabla)) {
-			imprimir_donde_corresponda(ERROR_DESCRIBE, instruccion, listaParam, remitente);
-			return;
-		}
-		char* consistencia = obtener_consistencia_metadata(tabla);
-		char* particiones = string_itoa(obtener_part_metadata(tabla));
-		char* tiempo_comp = string_itoa(obtener_tiempo_compactacion_metadata(tabla));
-		imprimirMetadata(tabla);
-
-		list_add(listaParam, tabla);
-		list_add(listaParam, consistencia);
-		list_add(listaParam, particiones);
-		list_add(listaParam, tiempo_comp);
-		imprimir_donde_corresponda(CODIGO_DESCRIBE, instruccion, listaParam, remitente);
-	}
-}
-
-char* to_upper(char* str){
-	char* upr = "";
-	char ch;
-	int tam = strlen(str);
-	for(int i = 0; i < tam; i++) {
-//		printf("%c\n", *(str+i));
-		ch = toupper((char)*(str+i));
-		upr = string_from_format("%s%c", upr, ch);
-//		printf("%s\n", upr);
-	}
-	return upr;
-}
-
-char* obtener_nombre_tabla(instr_t* instr) {
-	char* tabla = obtener_parametro(instr, 0);
-	return to_upper(tabla);
-}
-
-char* obtener_parametro(instr_t * instr, int index) {
-	return (char*) list_get(instr->parametros, index);
-}
-
-int obtener_particion_key(char* tabla, int key) {
-	int cant_particiones = obtener_part_metadata(tabla);
-	return key % cant_particiones;
-}
+//------------FUNCIONES DE BLOQUES------------
 
 t_list* leer_binario(char* tabla, uint16_t key) {
 	puts("---Estoy buscando en el binario---");
@@ -539,6 +316,12 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 	return registros;
 }
 
+char* obtener_registro_mas_reciente(t_list* registros_de_key) {
+	list_sort(registros_de_key, &es_registro_mas_reciente);
+	registro_t* registro = list_get(registros_de_key, 0);
+	return registro->value;
+}
+
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
@@ -555,10 +338,34 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	return registros_totales;
 }
 
-char* obtener_registro_mas_reciente(t_list* registros_de_key) {
-	list_sort(registros_de_key, &es_registro_mas_reciente);
-	registro_t* registro = list_get(registros_de_key, 0);
-	return registro->value;
+
+//------------FUNCIONES AUXILIARES------------
+
+char* to_upper(char* str){
+	char* upr = "";
+	char ch;
+	int tam = strlen(str);
+	for(int i = 0; i < tam; i++) {
+//		printf("%c\n", *(str+i));
+		ch = toupper((char)*(str+i));
+		upr = string_from_format("%s%c", upr, ch);
+//		printf("%s\n", upr);
+	}
+	return upr;
+}
+
+char* obtener_nombre_tabla(instr_t* instr) {
+	char* tabla = obtener_parametro(instr, 0);
+	return to_upper(tabla);
+}
+
+char* obtener_parametro(instr_t * instr, int index) {
+	return (char*) list_get(instr->parametros, index);
+}
+
+int obtener_particion_key(char* tabla, int key) {
+	int cant_particiones = obtener_part_metadata(tabla);
+	return key % cant_particiones;
 }
 
 _Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
@@ -568,56 +375,10 @@ _Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
 }
 
 
-//------------EJEMPLO INSTRUCCIONES----------------
-void ejemplo_instr_insert() {
+//------------CONEXIONES----------------
 
-	//INSERT
-	//[TABLA] [KEY] “[VALUE]” [Timestamp]
-
-	loggear_FS("Ejecutamos Instruccion INSERT");
-	instr_t* instr = malloc(sizeof(instr_t));
-	instr->timestamp = obtener_ts();
-	instr->codigo_operacion = CODIGO_INSERT;
-	instr->parametros = list_create();
-
-	list_add(instr->parametros, "Como PCs en el agua");
-	list_add(instr->parametros, "1234");
-	list_add(instr->parametros, "Hola");
-
-	evaluar_instruccion(instr, 0);
-
-	liberar_memoria_instr(instr);  //Libera memoria del mje
-
-	loggear_FS("Se libero la memoria de la instruccion");
-}
-
-void ejemplo_instr_create() {
-
-	//CREATE
-	//[TABLA]
-	//[TIPO_CONSISTENCIA]
-	//[NUMERO_PARTICIONES]
-	//[COMPACTION_TIME]
-
-	loggear_FS("Ejecutamos Instruccion CREATE");
-	instr_t* instr = malloc(sizeof(instr_t));
-	instr->timestamp = obtener_ts();
-	instr->codigo_operacion = CODIGO_CREATE;
-	instr->parametros = list_create();
-
-	list_add(instr->parametros, "Como PCs en el agua");
-	list_add(instr->parametros, "SC");
-	list_add(instr->parametros, "5");
-	list_add(instr->parametros, "20000");
-
-	evaluar_instruccion(instr, 0);
-
-	liberar_memoria_instr(instr);  //Libera memoria del mje
-
-	loggear_FS("Se libero la memoria de la instruccion");
-}
-
-void liberar_memoria_instr(instr_t * instr) {  //Para testeo. Fran libera todo con sus conexiones.
+void liberar_memoria_instr(instr_t * instr) {
+	//Para testeo. Fran libera todo con sus conexiones.
 	list_clean(instr->parametros);
 	free(instr->parametros);
 	free(instr);
@@ -703,32 +464,5 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 	}
 }
 
-void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
-	cod_op codOp;
-	t_list* resultadoInsert;
-	int tam_value = strlen(obtener_parametro(instruccion, 2));
-
-	if(tam_value > config_FS.tamanio_value) {
-		t_list *listaParam = list_create();
-		char* cadena = string_from_format("El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)", tam_value, config_FS.tamanio_value);
-		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-	}
-
-	if(quien_pidio(instruccion) == CONSOLA_FS){
-		resultadoInsert = list_duplicate(execute_insert(instruccion, &codOp));
-
-		imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
-		//return (int) codOp;
-	}
-	else{
-		resultadoInsert = execute_insert(instruccion, &codOp);
-		if(codOp == ERROR_INSERT){
-			instruccion->codigo_operacion = CONSOLA_MEM_INSERT; //Para que el error se mustre en la memoria
-			imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
-		}
-			//return (int) codOp;
-	}
-}
 
 

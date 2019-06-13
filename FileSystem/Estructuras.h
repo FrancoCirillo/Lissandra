@@ -1,9 +1,4 @@
-/*
- * Estructuras.h
- *
- *  Created on: 16 may. 2019
- *      Author: utnso
- */
+//--------estructuras.h--------
 
 #ifndef ESTRUCTURAS_H_
 #define ESTRUCTURAS_H_

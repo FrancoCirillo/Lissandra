@@ -53,6 +53,10 @@ int existe_tabla(char* tabla) {
 	return dictionary_has_key(memtable, tabla);
 }
 
+char* obtener_ruta_tabla(char* tabla) {
+	return string_from_format("%s%s", g_ruta.tablas, tabla);
+}
+
 void eliminar_tabla_de_mem(char* tabla){
 	dictionary_remove_and_destroy(memtable, tabla, &borrar_lista_registros);
 }

@@ -26,7 +26,7 @@
 #include "Estructuras.h"
 #include "compactador.h"
 #include "memtable.h"
-
+#include "instructions.h"
 #include "registros.h"
 
 //ORDEN PARAMETROS
@@ -109,17 +109,7 @@ void iniciar_semaforos();
 void iniciar_rutas();
 void finalizar_rutas();
 
-/*FUNCIONES AUXILIARES*/
-char* 	to_upper(char*);
-char*	obtener_parametro(instr_t*, int);
-int  	obtener_particion_key(char*, int);
-_Bool 	es_registro_mas_reciente(void*, void*);
-char*	obtener_nombre_tabla(instr_t*);
-
-
 /*FUNCIONES DE BLOQUES*/
-//importante:NO ME RECONOCE REGISTRO_T
-
 t_list* leer_binario(char*, uint16_t);
 t_list* leer_archivos_temporales(char*, uint16_t); //TODO hacer bien
 void 	escribir_bloque(registro_t*);
@@ -128,21 +118,13 @@ void 	eliminar_archivos(char*); //TODO hacer
 char* 	obtener_registro_mas_reciente(t_list*);
 t_list* obtener_registros_key(char*, uint16_t);
 
-/*MANEJO INTRUCCIONES*/
-void 	evaluar_instruccion(instr_t* instr, char* remitente);
-void 	execute_create(instr_t*, char* remitente);
-t_list* execute_insert(instr_t*, cod_op* codOp);
-void 	execute_select(instr_t*, char* remitente);
-void 	execute_describe(instr_t*, char* remitente); //TODO hacer
-void 	execute_drop(instr_t*, char* remitente); //TODO completar
-void 	ejecutar_instruccion_insert(instr_t* instruccion, char* remitente);
+/*FUNCIONES AUXILIARES*/
+char* 	to_upper(char*);
+char*	obtener_parametro(instr_t*, int);
+int  	obtener_particion_key(char*, int);
+char*	obtener_nombre_tabla(instr_t*);
+_Bool 	es_registro_mas_reciente(void*, void*);
 
-/*EJEMPLO INTRUCCIONES*/ //para testeo
-void 	ejemplo_instr_create();
-void 	ejemplo_instr_insert();
-void 	ejemplo_instr_select();
-void 	ejemplo_instr_describe();
-void 	ejemplo_instr_drop();
 
 /*MANEJO DE CADENAS*/
 char* 	concat(char*, char*); //TODO borrar

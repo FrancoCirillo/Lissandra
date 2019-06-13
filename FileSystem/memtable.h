@@ -33,6 +33,7 @@ t_list* 	obtener_registros_mem(char*, uint16_t);
 int  existe_tabla(char*);
 void agregar_tabla(char*);
 void eliminar_tabla_de_mem(char*);
+char* obtener_ruta_tabla(char*);
 
 void agregar_a_contador_dumpeo(char*);
 int siguiente_nro_dump(char*);

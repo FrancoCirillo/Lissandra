@@ -1,9 +1,4 @@
-/*
- * Estructuras.c
- *
- *  Created on: 16 may. 2019
- *      Author: utnso
- */
+//--------estructuras.c--------
 
 #include "Estructuras.h"
 
@@ -27,12 +22,13 @@
 //1) Ver si el g_logger global no hace problemas..
 //	 Si se crea una vez sola o ahi en el loggear_FS esta bien.
 
+
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
-void  eliminar_directorio(char* tabla) { //TODO hacer despues
-
+void  eliminar_directorio(char* tabla) {
+	//TODO hacer despues
 }
 
 //---------------------------METADATA---------------------------
@@ -255,7 +251,7 @@ void inicializar_bitmap() {
 	//fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
 
 	fclose(archivo_bitmap);
-	truncate(ruta_bitmap,cant_bytes());
+	truncate(ruta_bitmap, cant_bytes());
 	//free(bitmap);
 }
 
@@ -284,7 +280,7 @@ t_bitarray* get_bitmap() {
 
 void actualizar_bitmap(t_bitarray* bitarray) {
 	FILE* bitmap = fopen(ruta_bitmap, "w+");
-	printf("Escribiendo archivo %d bytes\n",strlen(bitarray->bitarray));
+	printf("Escribiendo archivo %d bytes\n", strlen(bitarray->bitarray));
 	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
 	puts("Cerrando archivo");
 	fclose(bitmap);
