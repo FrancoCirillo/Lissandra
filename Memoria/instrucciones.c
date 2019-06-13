@@ -185,7 +185,7 @@ void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente)
 			}
 		}
 		else{
-			puts("Me llego la metadata");
+			loggear_exito_proceso(instruccion, g_logger, &mutex_log);
 		}
 
 	}
