@@ -15,88 +15,65 @@ registro_t *crear_registro(mseg_t timestampNuevo, uint16_t keyNueva, char *value
 	return miReg;
 }
 
-void prueba(registro_t* registro, char* ruta_bloque) {
-	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
-//	puts("Abri archivo");
-	char* string_registro = formatear_registro(registro);
-//	printf("Formatee Registro: %s Esto deberia aparecer abajo\n", string_registro);
-	txt_write_in_file(archivo_bloque, string_registro);
-//	puts("Escribi bloque");
-	txt_close_file(archivo_bloque);
-//	puts("Cerre archivo");
-	free(string_registro);
-//	puts("FIN FUNCION ESCRITURA");
+
+
+int main(int argc, char* argv[]) {
+
+	printf("\n\n************PROCESO FILESYSTEM************\n\n");
+	inicializar_FS(argc, argv);
+
+	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
+
+//	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
+
+	inicializar_conexiones();
+	//ejemplo_instr_create();
+	//ejemplo_instr_insert();
+//	pruebaGeneral();
+
+//	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/TABLA4/Part0.bin";
+////	imprimirContenidoArchivo(ruta);
+//	FILE* archivo = fopen(ruta, "w");
+//	archivo_inicializar(archivo);
+//	imprimirContenidoArchivo(ruta);
+//	t_list* registros = leer_archivos_temporales("TABLA1", 5);
+//	list_iterate(registros, &imprimirRegistro);
+	//finalizar_FS();
+	return 0;
+
 }
 
-t_list* pruebaLeer(char* ruta_archivo, uint16_t key, int tipo_archivo) {
-	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
-	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-//	printf("Obtengo la ruta del bloque: %s\n", ruta_bloque);
-	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-//	puts("Abro el bloque");
-//	registro_t* reg;
-	t_list* registros = crear_lista_registros();
-	int status = 1;
-	char* buffer = string_new();
-	char caracter_leido;
-	char* s_caracter;
-//	puts("Creo un buffer y entro al while");
-//	printf("El contenido del buffer es: %s\n", buffer);
-
-	while(status) {
-//		puts("Entro al while");
-		caracter_leido = fgetc(archivo_bloque);
-//		printf("Leo un caracter: %c\t", caracter_leido);
-
-		switch(caracter_leido) {
-		case '\n': //tengo un registro completo
-			strcat(buffer, "\n");
-//			puts("Obtuve un registro");
-			registro_t* registro = obtener_reg(buffer);
-//			imprimir_reg_fs(registro);
-
-			printf("El contenido del buffer es: %s\n", buffer);
-			strcpy(buffer, "");
-
-			if(registro->key == key) {
-//				puts("El registro tiene la key que busco");
-//				puts("ENCONTRE UN REGISTRO");
-				list_add(registros, registro); //lo agrego solo si tiene la key que busco
-				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
-			} else
-				puts("El registro que encontre no es de la key que busco\n");
-//			free(registro);
-			strcpy(buffer, "");
-			printf("El contenido del buffer es: %s\n", buffer);
-			break;
-
-		case EOF: //se me acabo el archivo
-//			puts("Llegue al final del archivo");
-			fclose(archivo_bloque);
-			free(ruta_bloque);
-//			puts("Busco un nuevo archivo");
-			int bloque_anterior = nro_bloque;
-			nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
-
-			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
-				puts("Encontre otro bloque");
-				ruta_bloque = obtener_ruta_bloque(nro_bloque);
-				archivo_bloque = fopen(ruta_bloque, "r");
-			} else {
-				status = 0; //corta el while
-				puts("No hay mas bloques, quiero salir del while");
-			}
-			break;
-
-		default:
-			s_caracter = string_from_format("%c", caracter_leido);
-			strcat(buffer, s_caracter);
-//			printf("Concateno y me queda: %s\n", buffer);
-//			free(s_caracter);
-			break;
-		}
+//------------------------TESTS------------------------
+void imprimirContenidoArchivo(char* ruta) {
+	puts("---LEO ARCHIVO COMPLETO---");
+	FILE* f = fopen(ruta, "r");
+	char caracter_leido = fgetc(f);
+	int leidos = 0;
+	while(caracter_leido != EOF){
+		printf("%c", caracter_leido);
+		caracter_leido = fgetc(f);
+		leidos++;
 	}
-	return registros;
+	printf("\nLeidos: %d\n", leidos);
+}
+
+void imprimirRegistro(registro_t* registro) {
+	puts("REGISTRO:");
+	printf("Timestamp: %"PRIu64"\n",registro->timestamp);
+	printf("Key: %d\n", registro->key);
+	printf("Value: %s\n", registro->value);
+	puts("");
+}
+
+void imprimirMetadata(char* tabla){
+	puts("-------------------Entro a imprimir metadata-------------------");
+	printf("Metadata de la tabla %s\n", tabla);
+	int part = obtener_part_metadata(tabla);
+	printf("Particiones: %d\n", part);
+	char* consist = obtener_consistencia_metadata(tabla);
+	printf("Consistencia: %s\n", consist);
+	int tiempoComp = obtener_tiempo_compactacion_metadata(tabla);
+	printf("Tiempo de Compactacion: %d\n", tiempoComp);
 }
 
 t_list* listaRegistros() {
@@ -127,108 +104,6 @@ t_list* listaRegistros() {
 	return registros;
 }
 
-void pruebaEscrituraYLecturaBloques() {
-
-	char* ruta_bloque = obtener_ruta_bloque(5);
-
-	registro_t* registro2 = crear_registro(12345678, 25, "HolaSoyUnaPrueba");
-	prueba(registro2, ruta_bloque);
-
-	registro_t* registro1 = crear_registro(87654321, 32, "HolaSoyOtraPrueba");
-	prueba(registro1, ruta_bloque);
-
-//	registro_t* registro2 = malloc(sizeof(registro_t));
-//	registro2->key = 25;
-//	registro2->timestamp = 4324234;
-//	registro2->value = "HolaSoyOtraPrueba";
-//	prueba(registro2, ruta_bloque);
-//
-//	registro_t* registro = malloc(sizeof(registro_t));
-//	registro->key = 32;
-//	registro->timestamp = 4324234;
-//	registro->value = "HolaSoyUnaPrueba";
-//	prueba(registro, ruta_bloque);
-
-	puts("");
-	imprimirContenidoArchivo(ruta_bloque);
-
-	printf("\n\nRUTA BLOQUE: %s\n\n\n", ruta_bloque);
-
-//		registro_t* reg = pruebaLeer(32, 0, 5);
-
-		puts("Voy a imprimir registros");
-//		imprimir_reg_fs(reg);
-}
-
-int main(int argc, char* argv[]) {
-
-	printf("\n\n************PROCESO FILESYSTEM************\n\n");
-	inicializar_FS(argc, argv);
-
-	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
-
-//	un_num_bloque = 0; //da bloques provisorios. bitmap no esta desarrollado.
-
-//	inicializar_conexiones();
-	//ejemplo_instr_create();
-	//ejemplo_instr_insert();
-//	pruebaEscrituraYLecturaBloques();
-	pruebaDump();
-
-	char* bloque0 = obtener_ruta_bloque(0);
-	printf("\n\nRuta bloque 0: %s\n", bloque0);
-	imprimirContenidoArchivo(bloque0);
-
-	char* bloque1 = obtener_ruta_bloque(1);
-	printf("\n\nRuta bloque 1: %s\n", bloque1);
-	imprimirContenidoArchivo(bloque1);
-
-	char* bloque2 = obtener_ruta_bloque(2);
-	printf("\n\nRuta bloque 2: %s\n", bloque2);
-	imprimirContenidoArchivo(bloque2);
-
-	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
-	t_list* registros = pruebaLeer(ruta, 5, 1);
-	list_iterate(registros, &imprimir_reg_fs);
-
-	//finalizar_FS();
-	return 0;
-
-}
-
-//------------------------TESTS------------------------
-void imprimirContenidoArchivo(char* ruta) {
-	puts("---LEO ARCHIVO COMPLETO---");
-	FILE* f = fopen(ruta, "r");
-	char caracter_leido = fgetc(f);
-	int leidos = 0;
-	while(caracter_leido != EOF){
-		printf("%c", caracter_leido);
-		caracter_leido = fgetc(f);
-		leidos++;
-	}
-	printf("\nLeidos: %d\n", leidos);
-}
-
-void imprimir_reg_fs(registro_t* registro) {
-	puts("REGISTRO:");
-	printf("Timestamp: %"PRIu64"\n",registro->timestamp);
-	printf("Key: %d\n", registro->key);
-	printf("Value: %s\n", registro->value);
-	puts("");
-}
-
-void imprimirMetadata(char* tabla){
-	puts("-------------------Entro a imprimir metadata-------------------");
-	printf("Metadata de la tabla %s\n", tabla);
-	int part = obtener_part_metadata(tabla);
-	printf("Particiones: %d\n", part);
-	char* consist = obtener_consistencia_metadata(tabla);
-	printf("Consistencia: %s\n", consist);
-	int tiempoComp = obtener_tiempo_compactacion_metadata(tabla);
-	printf("Tiempo de Compactacion: %d\n", tiempoComp);
-}
-
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
 		puts("-------------------Entre a dump-------------------");
@@ -243,7 +118,7 @@ void pruebaDump() {
 
 		void escribir_reg_en_tmp(void* registro) {
 			puts("-------------------Entro a escribir_reg_en_tmp-------------------");
-			imprimir_reg_fs((registro_t*)registro);
+			imprimirRegistro((registro_t*)registro);
 			int bloque = obtener_ultimo_bloque(ruta_tmp);
 			char* ruta_bloque = obtener_ruta_bloque(bloque);
 //			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
@@ -275,11 +150,11 @@ void pruebaDump() {
 	//--creo registros--
 	registro_t* registro2 = crear_registro(4324234, 25, "HolaSoyOtraPrueba");
 	puts("Cree un registro:");
-	imprimir_reg_fs(registro2);
+	imprimirRegistro(registro2);
 
 	registro_t* registro = crear_registro(4324234, 32, "HolaSoyUnaPrueba");
 	puts("Cree un registro:");
-	imprimir_reg_fs(registro);
+	imprimirRegistro(registro);
 
 	//--agrego registros--
 	t_list* registros_tabla = dictionary_get(mockMem, "TABLA2");
@@ -319,6 +194,28 @@ void pruebaTmp() {
 		printf("Tam archivo: %d\n", size);
 }
 
+void pruebaGeneral() {
+	pruebaDump();
+
+	char* bloque0 = obtener_ruta_bloque(0);
+	printf("\n\nRuta bloque 0: %s\n", bloque0);
+	imprimirContenidoArchivo(bloque0);
+
+	char* bloque1 = obtener_ruta_bloque(1);
+	printf("\n\nRuta bloque 1: %s\n", bloque1);
+	imprimirContenidoArchivo(bloque1);
+
+	char* bloque2 = obtener_ruta_bloque(2);
+	printf("\n\nRuta bloque 2: %s\n", bloque2);
+	imprimirContenidoArchivo(bloque2);
+
+	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
+	t_list* registros = buscar_key_en_bloques(ruta, 34, 1);
+	puts("Estos son los registros que encontre:");
+	list_iterate(registros, &imprimirRegistro);
+	char* value = obtener_registro_mas_reciente(registros);
+	printf("\nVALUE DEL REGISTRO MAS RECIENTE: %s\n", value);
+}
 
 //------------INICIALIZACION Y FINALIZACION-----------------
 void inicializar_FS(int argc, char* argv[]) {
@@ -375,7 +272,6 @@ void finalizar_rutas(){
 	free(g_ruta.metadata);
 	free(g_ruta.bitmap);
 }
-
 
 
 //------------MANEJO INSTRUCCIONES-----------------
@@ -487,34 +383,27 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		//return ERROR_SELECT;
 	}
 	puts("Existe tabla");
-	registro_t* registro = pasar_a_registro(instruccion);
-	puts("Pasar a resgistro");
-	int key = registro->key;
+	int key = (uint16_t)atoi(obtener_parametro(instruccion, 1));
 	t_list* registros_key = obtener_registros_key(tabla, key);
-	puts("obtener registros key");
+
 	if(list_is_empty(registros_key)) {
-		puts("No hay registros en la key");
-		char* cadena = string_from_format("No se encontraron registros con la key '%s'", (char *)list_get(instruccion->parametros, 1)); //TODO: free
+		puts("No hay registros de la key");
+		char* cadena = string_from_format("No se encontraron registros con la key '%d'", key); //TODO: free
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		//borrar_lista_registros(registros_key);
-		//return ERROR_SELECT;
-	}
+	} else {
+		puts("Registro encontrados");
+		char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);//respuesta del select, TODO: no anda
+//		printf("Value %s\n", value_registro_reciente);
 
-//	puts("Select realizado");
-//	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 0));
-//	printf("Tabla %s\n", (char*)list_get(instruccion->parametros, 1));
-	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);//respuesta del select, TODO: no anda
-	printf("%s", value_registro_reciente);
-//	list_add(listaParam, (char*)list_get(instruccion->parametros, 0)); //Tabla //TODO: Usar los campos de registro_reciente (declaratividad)
-//	list_add(listaParam, (char*)list_get(instruccion->parametros, 1)); //Key
-//	list_add(listaParam, "V");	// cambiar (cuando ande) por value_registro_reciente; //Value
-//	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
-	//borrar_lista_registros(registros_key);
-	//return CODIGO_EXITO;
+		list_add(listaParam, tabla);
+		list_add(listaParam, string_itoa(key));
+		list_add(listaParam, value_registro_reciente);
+		imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
+	}
+	borrar_lista_registros(registros_key);
 }
 
 void execute_drop(instr_t* instruccion, char* remitente) {
@@ -614,14 +503,17 @@ int obtener_particion_key(char* tabla, int key) {
 }
 
 t_list* leer_binario(char* tabla, uint16_t key) {
+	puts("---Estoy buscando en el binario---");
 	int particion = obtener_particion_key(tabla, key);
-	char* ruta_bin = string_from_format("%s%s/%d.bin", g_ruta.tablas, tabla, particion);
+	char* ruta_bin = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, particion);
 	t_list* registro_key = buscar_key_en_bloques(ruta_bin, key, 0);
 	free(ruta_bin);
+	printf("Tam de lista binarios: %d\n", list_size(registro_key));
 	return registro_key;
 }
 
 t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
+	puts("---Estoy buscando en los temporales---");
 	t_list* registros = crear_lista_registros();
 	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
 	DIR* directorio = opendir(ruta_tabla);
@@ -632,19 +524,18 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 
 	struct dirent* directorio_leido;
 	while((directorio_leido = readdir(directorio)) != NULL) {
-//		printf("%d\t%d\t%d\t%s\n", directorio_leido->d_ino,
-//								   directorio_leido->d_off,
-//								   directorio_leido->d_reclen,
-//								   directorio_leido->d_name);
+//		printf("%s\n", directorio_leido->d_name);
 		char* nombre_archivo = directorio_leido->d_name;
 		if(string_ends_with(nombre_archivo, "tmp")) {
 			char* ruta_tmp = string_from_format("%s%s", ruta_tabla, nombre_archivo);
-			t_list* registros_tmp = buscar_key_en_bloques(ruta_tmp, key, 0);
+//			printf("%s\n", ruta_tmp);
+			t_list* registros_tmp = buscar_key_en_bloques(ruta_tmp, key, 1);
 			list_add_all(registros, registros_tmp);
 		}
 	}
 	free(ruta_tabla);
 	closedir(directorio);
+	printf("Tam de lista temporales: %d\n", list_size(registros));
 	return registros;
 }
 
@@ -658,9 +549,9 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	list_add_all(registros_totales, registros_temp);
 	list_add_all(registros_totales, registro_bin);
 
-	borrar_lista_registros(registros_mem);
-	borrar_lista_registros(registros_temp);
-	borrar_lista_registros(registro_bin);
+//	borrar_lista_registros(registros_mem);
+//	borrar_lista_registros(registros_temp);
+//	borrar_lista_registros(registro_bin);
 	return registros_totales;
 }
 

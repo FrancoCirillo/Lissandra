@@ -74,14 +74,16 @@ void agregar_registro(char* tabla, registro_t* registro) {
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {
+	puts("---Estoy buscando en la memtable---");
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 
 	_Bool es_key_registro(void* registro){
 		uint16_t key_registro = ((registro_t*)registro)->key;
 		return key_registro == key;
 	}
-
-	return list_filter(registros_tabla, &es_key_registro);
+	t_list* registros = list_filter(registros_tabla, &es_key_registro);
+	printf("Tam de lista mem: %d\n", list_size(registros));
+	return registros;
 }
 
 registro_t* pasar_a_registro(instr_t* instr) {

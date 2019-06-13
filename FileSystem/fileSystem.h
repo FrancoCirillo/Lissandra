@@ -93,11 +93,13 @@ t_config* g_config;
 t_config* meta_config;
 
 /*TESTS*/
-void imprimir_reg_fs(registro_t*);
-void imprimirContenidoArchivo(char*);
-void imprimirMetadata(char*);
-void pruebaDump();
-void pruebaTmp();
+void	imprimirRegistro(registro_t*);
+void	imprimirContenidoArchivo(char*);
+void	imprimirMetadata(char*);
+t_list*	listaRegistros();
+void	pruebaDump();
+void	pruebaTmp();
+void	pruebaGeneral();
 
 
 /*INICIALIZACION Y FINALIZACION*/

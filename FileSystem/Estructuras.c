@@ -67,7 +67,6 @@ int obtener_tiempo_compactacion_metadata(char* tabla) {
 	return tiempo_compactacion;
 }
 
-
 //---------------------------BLOQUES---------------------------
 char* formatear_registro(registro_t* registro) {
 	uint16_t key = registro->key;
@@ -134,32 +133,33 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 }
 
 int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
-	puts("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
+//	puts("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
+	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
 	t_config* archivo = config_create(ruta_archivo);
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
 
 	if(nro_bloque == -1) {
-		char* bloque = *lista_bloques;
-		printf("Primer bloque como string: %s\n", bloque);
+		char* bloque = lista_bloques[0];
+//		printf("Primer bloque como string: %s\n", bloque);
 		int mi_bloque = atoi(bloque);
-		printf("Primer bloque como int: %d\n", mi_bloque);
+//		printf("Primer bloque como int: %d\n", mi_bloque);
 		config_destroy(archivo);
 		return mi_bloque;
 	} else {
 		int bloques_usados = cantidad_bloques_usados(ruta_archivo);
 		char* mi_bloque = string_itoa(nro_bloque);
 		for(int tam = 0; *(lista_bloques + tam); tam++) {
-			printf("Entre al for, busco al bloque %s\n", mi_bloque);
+//			printf("Entre al for, busco al bloque %s\n", mi_bloque);
 			char* bloque = *(lista_bloques + tam);
-			printf("Bloque como string: %s\n", bloque);
+//			printf("Bloque como string: %s\n", bloque);
 //			char* sig_bloque = *(lista_bloques + tam +1);
 //			printf("Siguiente bloque como string: %s\n", sig_bloque);
 
 			if(string_equals_ignore_case(bloque, mi_bloque) && tam+1 < bloques_usados) {
-				printf("Entre al if\t%s\t%s\n", bloque, mi_bloque);
+//				printf("Entre al if\t%s\t%s\n", bloque, mi_bloque);
 				char* sig_bloque = *(lista_bloques + tam +1);
 				int bloque_siguiente = atoi(sig_bloque);
-				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
+//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
 				config_destroy(archivo);
 				return bloque_siguiente;
 			}
@@ -192,23 +192,24 @@ registro_t* obtener_reg(char* buffer) {
 	return registro;
 }
 
-t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=1, .tmp=0
+t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=0, .tmp=1
+	puts("Entre a buscar_key_en_bloques");
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-	registro_t* registro = malloc(sizeof(registro));
 	t_list* registros = crear_lista_registros();
 	int status = 1;
 	char* buffer = string_new();
 	char* s_caracter;
+	char caracter_leido;
 
 	while(status) {
-		char caracter_leido = fgetc(archivo_bloque);
+		caracter_leido = fgetc(archivo_bloque);
 
 		switch(caracter_leido) {
 		case '\n': //tengo un registro completo
 			strcat(buffer, "\n");
-			registro = obtener_reg(buffer);
+			registro_t* registro = obtener_reg(buffer);
 
 			if(registro->key == key) {
 				list_add(registros, registro); //lo agrego solo si tiene la key que busco
@@ -240,8 +241,8 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 }
 
 //---------------------------BITARRAY---------------------------
-char* ruta_bitmap = "archivo.bitmap";
-int cantidad_bloques = 8000;
+char* ruta_bitmap = "/home/utnso/lissandra-checkpoint/Metadata/Bitmap.bin";
+int cantidad_bloques = 800; //Metadata_FS.blocks;
 
 int cant_bytes() {
 	return (cantidad_bloques+7)/8;
@@ -283,7 +284,7 @@ t_bitarray* get_bitmap() {
 
 void actualizar_bitmap(t_bitarray* bitarray) {
 	FILE* bitmap = fopen(ruta_bitmap, "w+");
-	printf("Escrbiendo archivo %d bytes\n",strlen(bitarray->bitarray));
+	printf("Escribiendo archivo %d bytes\n",strlen(bitarray->bitarray));
 	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
 	puts("Cerrando archivo");
 	fclose(bitmap);
@@ -514,11 +515,9 @@ int espacio_restante_bloque(char* ruta_archivo) {
 	return espacio_disponible;
 }
 
-
 //*****************************************************************
 //De aca para abajo estan corregidos y funcionan sin memory leaks.
 //*****************************************************************
-
 
 int cant_bloques_disponibles() {
 	sem_wait(&mutex_cant_bloques);
@@ -527,12 +526,14 @@ int cant_bloques_disponibles() {
 
 	return cantidad;
 }
+
 void restar_bloques_disponibles(int num) {
 	sem_wait(&mutex_cant_bloques);
 	bloques_disponibles = bloques_disponibles - num;
 	sem_post(&mutex_cant_bloques);
 
 }
+
 void incremetar_bloques_disponibles(int num) {
 	sem_wait(&mutex_cant_bloques);
 	bloques_disponibles = bloques_disponibles + num;
@@ -552,23 +553,22 @@ int puede_crear_particiones(instr_t* i) {
 	return resultado;
 }
 
-
 void crear_particiones(instr_t* instr) {
-
 	int cantidad = atoi(obtener_parametro(instr, 2));
 	char* tabla = obtener_nombre_tabla(instr);
 	char* nomb_part ;
+
 	for(int num = 0; num < cantidad; num++) {
 		nomb_part = string_from_format("Part%d", num);
 		FILE* archivo_binario = crear_archivo(nomb_part, tabla, ".bin");
 		archivo_inicializar(archivo_binario);
-
 		free(nomb_part);
 		fclose(archivo_binario);
 	}
-	char * mje= string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
-	loggear_FS(mje);
-	free(mje);
+
+	char* mensaje= string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
+	loggear_FS(mensaje);
+	free(mensaje);
 }
 
 void crear_metadata(instr_t* instr) {
@@ -589,7 +589,7 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 }
 
 int archivo_inicializar(FILE* f) {
-//	puts("-------------------Entre a archivo_inicializar-------------------");
+	puts("-------------------Entre a archivo_inicializar-------------------");
 	int bloque_num = siguiente_bloque_disponible();
 	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
 	txt_write_in_file(f, contenido);
@@ -636,7 +636,7 @@ void crear_bloques() {  //Los bloques van a partir del numero 0.
 	loggear_FS("Se crearon los bloques del File System.");
 }
 
-void crear_bloque(char * nombre) {
+void crear_bloque(char* nombre) {
 	char* ruta = malloc(sizeof(char) * (strlen(g_ruta.bloques) + strlen(nombre) + strlen(".bin")) + 1);
 	sprintf(ruta, "%s%s%s", g_ruta.bloques, nombre, ".bin");
 	FILE* f = fopen(ruta, "w+");
@@ -644,7 +644,7 @@ void crear_bloque(char * nombre) {
 	fclose(f);
 }
 
-void loggear_FS(char *valor) {
+void loggear_FS(char* valor) {
 	sem_wait(&mutex_log);
 	log_info(g_logger, valor);
 	sem_post(&mutex_log);
@@ -652,7 +652,7 @@ void loggear_FS(char *valor) {
 	printf("--------------\n");
 }
 
-void loggear_FS_error(char *valor, instr_t* i) {
+void loggear_FS_error(char* valor, instr_t* i) {
 
 	sem_wait(&mutex_log);
 	log_error(g_logger, valor);
