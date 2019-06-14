@@ -1,5 +1,4 @@
-/*COMPACTADOR*/
-
+//--------compactador.h--------
 
 #ifndef COMPACTADOR_H_
 #define COMPACTADOR_H_

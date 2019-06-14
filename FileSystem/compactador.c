@@ -1,4 +1,4 @@
-/*COMPACTADOR*/
+//--------compactador.c--------
 
 #include "compactador.h"
 
