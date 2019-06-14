@@ -550,7 +550,7 @@ int carpeta_esta_vacia(char* ruta_carpeta) {
 			break;
 	}
 	closedir(carpeta);
-	if (n <= 3) //Directorio vacio (siempre estan . y ..)
+	if (n <= 3) //Directorio vacio (siempre estan . y ..) el 3 es para que funcione con el bitmap, que tiene el archivo de metadata tambien
 		return 1;
 	else
 		return 0; //Tiene archivos
