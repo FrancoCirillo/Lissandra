@@ -54,7 +54,7 @@ void leer_metadata_FS();		//es un único archivo
 
 
 void  crear_directorio(char*, char*);
-void  eliminar_directorio(char*); //TODO hacer
+int   eliminar_directorio(char*);
 int   carpeta_esta_vacia(char*);
 FILE* crear_archivo(char*, char*, char*);
 
@@ -69,7 +69,7 @@ void escribir_registro_bloque(registro_t*, char*, char*);
 int  puede_crear_particiones(instr_t*);
 int  cant_bloques_disponibles();
 void restar_bloques_disponibles(int);
-void incremetar_bloques_disponibles(int);
+void incrementar_bloques_disponibles(int);
 
 registro_t* obtener_reg(char*);
 t_list*		buscar_key_en_bloques(char*, uint16_t, int);

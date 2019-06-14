@@ -2,124 +2,6 @@
 
 #include "instructions.h"
 
-
-//------------------------------------PRUEBASSSSSS------------------------------------
-
-
-//int main(int argc, char* argv[]) {
-//
-//	printf("\n\n************PROCESO FILESYSTEM************\n\n");
-//	inicializar_FS(argc, argv);
-//
-//		instr_t* instCreate = leer_a_instruccion("CREATE TABLA1 SC 1 60000", CONSOLA_FS);
-//		prueba_create(instCreate);
-//
-//		puts("");
-//
-//		instCreate = leer_a_instruccion("CREATE TABLA20 SC 1 60000", CONSOLA_FS);
-//		prueba_create(instCreate);
-//
-//		puts("");
-//
-//		instr_t* instDrop = leer_a_instruccion("DROP TABLA20", CONSOLA_FS);
-//		prueba_drop(instDrop);
-//
-//		puts("");
-//
-//	return 0;
-//}
-
-void prueba_create(instr_t* instruccion) {
-	puts("\n-----CREATE-----");
-	char* tabla = obtener_nombre_tabla(instruccion);
-	if (!existe_tabla(tabla)) {
-		if(!puede_crear_particiones(instruccion))
-			printf("No hay bloques disponibles para crear las particiones de la tabla'%s'.\n", tabla);
-
-		agregar_tabla(tabla); //la agrega a la mem
-		agregar_a_contador_dumpeo(tabla);
-		crear_directorio(g_ruta.tablas, tabla);
-		crear_particiones(instruccion);
-		crear_metadata(instruccion);
-		printf("Se creo el directorio, el metadata y las particiones de la tabla: %s\n", tabla);
-	}
-	else
-		printf("Error al crear la tabla '%s', ya existe en el FS.", tabla);
-}
-
-void prueba_drop(instr_t* instruccion) {
-	puts("\n-----DROP-----");
-	char* tabla = obtener_nombre_tabla(instruccion);
-
-	if (!existe_tabla(tabla))
-		printf("No existe la tabla '%s'\n", tabla);
-
-	eliminar_tabla_de_mem(tabla);
-	int resultadoDrop = eliminar_dir(tabla);
-
-	if(!resultadoDrop)
-		printf("Se elimino correctamente la tabla '%s'\n", tabla);
-	else
-		printf("La tabla '%s' no pudo ser eliminada\n", tabla);
-
-}
-
-int eliminar_dir(char* tabla) {
-	char* rutaTabla = obtener_ruta_tabla(tabla);
-	printf("Ruta: %s\n", rutaTabla);
-	//eliminar_archivos(tabla);
-
-	DIR* directorio = opendir(rutaTabla);
-	size_t pathLen = strlen(rutaTabla);
-	int eliminado = -1;
-
-	if (directorio){
-		struct dirent* directorioAEliminar;
-		eliminado = 0;
-
-		while (!eliminado && (directorioAEliminar = readdir(directorio))){
-			int removed = -1;
-			char* buffer;
-			size_t length;
-
-			//Se saltean "." y ".." por la recursividad
-			if (!strcmp(directorioAEliminar->d_name, ".") || !strcmp(directorioAEliminar->d_name, ".."))
-				continue;
-
-			length = pathLen + strlen(directorioAEliminar->d_name) + 2;
-			buffer = malloc(length);
-
-			if(buffer){
-				struct stat statbuf;
-				snprintf(buffer, length, "%s/%s", rutaTabla, directorioAEliminar->d_name);
-
-				if (!stat(buffer, &statbuf))
-				{
-					if (S_ISDIR(statbuf.st_mode))
-						removed = eliminar_dir(buffer);
-	                else
-	                   removed = unlink(buffer);
-				}
-				free(buffer);
-			}
-			eliminado = removed;
-		}
-		closedir(directorio);
-	}
-
-	if (!eliminado)
-	      eliminado = rmdir(rutaTabla);
-
-	return eliminado;
-}
-
-
-
-
-//-----------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------
-
-
 void evaluar_instruccion(instr_t* instr, char* remitente) {
 
 	int codigoNeto = instr->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
@@ -258,11 +140,13 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
+		return;
 	}
-	eliminar_tabla_de_mem(tabla);
-	int resultadoDrop = eliminar_dir(tabla);
 
-	if(!resultadoDrop){
+	eliminar_tabla_de_mem(tabla);
+	int resultadoDrop = eliminar_directorio(tabla);
+
+	if(resultadoDrop == 0){
 		char* cadena = string_from_format("Se elimino correctamente la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
@@ -357,52 +241,3 @@ void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 }
 
 
-//------------EJEMPLOS INSTRUCCIONES------------
-
-void ejemplo_instr_insert() {
-
-	//INSERT
-	//[TABLA] [KEY] “[VALUE]” [Timestamp]
-
-	loggear_FS("Ejecutamos Instruccion INSERT");
-	instr_t* instr = malloc(sizeof(instr_t));
-	instr->timestamp = obtener_ts();
-	instr->codigo_operacion = CODIGO_INSERT;
-	instr->parametros = list_create();
-
-	list_add(instr->parametros, "Como PCs en el agua");
-	list_add(instr->parametros, "1234");
-	list_add(instr->parametros, "Hola");
-
-	evaluar_instruccion(instr, 0);
-
-	liberar_memoria_instr(instr);  //Libera memoria del mje
-
-	loggear_FS("Se libero la memoria de la instruccion");
-}
-
-void ejemplo_instr_create() {
-
-	//CREATE
-	//[TABLA]
-	//[TIPO_CONSISTENCIA]
-	//[NUMERO_PARTICIONES]
-	//[COMPACTION_TIME]
-
-	loggear_FS("Ejecutamos Instruccion CREATE");
-	instr_t* instr = malloc(sizeof(instr_t));
-	instr->timestamp = obtener_ts();
-	instr->codigo_operacion = CODIGO_CREATE;
-	instr->parametros = list_create();
-
-	list_add(instr->parametros, "Como PCs en el agua");
-	list_add(instr->parametros, "SC");
-	list_add(instr->parametros, "5");
-	list_add(instr->parametros, "20000");
-
-	evaluar_instruccion(instr, 0);
-
-	liberar_memoria_instr(instr);  //Libera memoria del mje
-
-	loggear_FS("Se libero la memoria de la instruccion");
-}

@@ -16,16 +16,16 @@ registro_t *crear_registro(mseg_t timestampNuevo, uint16_t keyNueva, char *value
 }
 
 
-
 int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	inicializar_FS(argc, argv);
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
-//	pruebaGeneral();
-//	inicializar_conexiones();
 
+//	pruebaGeneral();
+
+	inicializar_conexiones();
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin);
@@ -39,6 +39,7 @@ int main(int argc, char* argv[]) {
 //	pruebaGeneral();
 //	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
 //	imprimirContenidoArchivo(rutaDump1);
+
 	//finalizar_FS();
 
 	return 0;
@@ -46,6 +47,7 @@ int main(int argc, char* argv[]) {
 
 
 //------------------------TESTS------------------------
+
 void imprimirContenidoArchivo(char* ruta) {
 	puts("---LEO ARCHIVO COMPLETO---");
 	FILE* f = fopen(ruta, "r");

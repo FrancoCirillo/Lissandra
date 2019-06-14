@@ -1,10 +1,10 @@
-/*MEMTABLE*/
+//--------memtable.h--------
+
 #ifndef MEMTABLE_H_
 #define MEMTABLE_H_
 
 #include "fileSystem.h"
 #include "registros.h"
-
 
 t_dictionary* memtable;
 t_dictionary* tablas_nro_dump;

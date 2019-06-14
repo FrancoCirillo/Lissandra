@@ -1,4 +1,4 @@
-/*MEMTABLE*/
+//--------memtable.c--------
 
 #include "memtable.h"
 
@@ -24,7 +24,7 @@ void levantar_tablas_directorio(DIR* directorio) {
 		if(!string_contains(tabla, ".")) {
 			t_list* registros = crear_lista_registros();
 			dictionary_put(memtable, tabla, registros);
-			agregar_a_contador_dumpeo(tabla);
+			//agregar_a_contador_dumpeo(tabla);	//TODO: da seg fault
 		}
 	}
 }

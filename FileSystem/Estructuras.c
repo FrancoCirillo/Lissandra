@@ -27,8 +27,50 @@ int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
-void  eliminar_directorio(char* tabla) {
-	//TODO hacer despues
+
+int eliminar_directorio(char* tabla) {
+	char* ruta_tabla = obtener_ruta_tabla(tabla);
+
+	DIR* directorio = opendir(ruta_tabla);
+	if(directorio == NULL)
+		return -1;
+
+	size_t path_len = strlen(ruta_tabla);
+	int eliminado = -1;
+
+	if(directorio){
+		struct dirent* dir_a_eliminar;
+		eliminado = 0;
+
+		while (!eliminado && (dir_a_eliminar = readdir(directorio))){
+			int removed = -1;
+
+			//Se saltean "." y ".." por la recursividad
+			if (!strcmp(dir_a_eliminar->d_name, ".") || !strcmp(dir_a_eliminar->d_name, ".."))
+				continue;
+
+			size_t length = path_len + strlen(dir_a_eliminar->d_name) + 2;
+			char* arch_a_eliminar = malloc(length);
+
+			if(arch_a_eliminar){
+				snprintf(arch_a_eliminar, length, "%s/%s", ruta_tabla, dir_a_eliminar->d_name);
+
+            	if(!string_ends_with(arch_a_eliminar, "Metadata"))
+            		liberar_bloques(arch_a_eliminar);
+
+            	removed = unlink(arch_a_eliminar);
+
+            	free(arch_a_eliminar);
+			}
+			eliminado = removed;
+		}
+		closedir(directorio);
+	}
+
+	if(!eliminado)
+	     eliminado = rmdir(ruta_tabla);
+
+	return eliminado;
 }
 
 //---------------------------METADATA---------------------------
@@ -272,10 +314,11 @@ void chequear_bitmap(t_bitarray* bitarray) {
 }
 
 t_bitarray* get_bitmap() {
-	puts("Get bitmap");
+	//puts("Get bitmap");
 	FILE* archivo_bitmap = fopen(g_ruta.bitmap, "r");
 	char* bitmap = malloc(cant_bytes() + 1);
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cant_bytes()+1, archivo_bitmap);
+	//TODO: resultado_read
 	bitmap[cant_bytes()] = 0;
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cant_bytes(), LSB_FIRST);
 	fclose(archivo_bitmap);
@@ -523,7 +566,7 @@ void liberar_bloques(char* ruta_archivo) {
 //	printf("Nro bloque: %d\t Nro siguiente: %d\n", nro_bloque, bloque);
 	do {
 		liberar_bloque(bloque);
-		incremetar_bloques_disponibles(1);
+		incrementar_bloques_disponibles(1);
 //		printf("Libere el bloque: %d\n", bloque);
 		bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque);
 //		printf("Nro siguiente: %d\n", bloque);
@@ -571,7 +614,7 @@ void restar_bloques_disponibles(int num) {
 
 }
 
-void incremetar_bloques_disponibles(int num) {
+void incrementar_bloques_disponibles(int num) {
 	sem_wait(&mutex_cant_bloques);
 	bloques_disponibles = bloques_disponibles + num;
 	sem_post(&mutex_cant_bloques);
