@@ -303,7 +303,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 			}
 		}
 		puts("Tablas leidas, enviando");
-		imprimir_donde_corresponda(CODIGO_DESCRIBE, instruccion, listaParam, remitente);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 		free(ruta);
 		closedir(directorio);
 
@@ -322,7 +322,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		list_add(listaParam, consistencia);
 		list_add(listaParam, particiones);
 		list_add(listaParam, tiempo_comp);
-		imprimir_donde_corresponda(CODIGO_DESCRIBE, instruccion, listaParam, remitente);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 	}
 }
 
