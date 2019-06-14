@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
 
 	iniciar_ejecutador();
 
+	iniciar_ejecutador_gossiping();
+
 	inicializar_kernel();
 	//iniciar_consola();
 
@@ -33,12 +35,10 @@ void inicializar_kernel(){
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_requestRecibido;
 
-	conectar_nueva_memoria(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, "Memoria_1");
-	conectar_nueva_memoria(configuracion.MEMORIA_8_IP, configuracion.PUERTO_MEMORIA, "Memoria_3");
-
+//	conectar_nueva_memoria(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, "Memoria_1");
 
 	int listenner = iniciar_servidor(miIPKernel, configuracion.puerto, g_logger, &mutex_log);
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, &mutex_diccionario_conexiones, CONSOLA_KERNEL, g_logger, &mutex_log);
 
 }
 
@@ -60,9 +60,9 @@ void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMe
 	strcpy(idsNuevasConexiones->ip_proceso, IPMemoria);
 	idsNuevasConexiones->fd_out = conexion_con_memoria_3;
 
-	sem_wait(&mutex_conexiones_actuales);
+	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_put(conexionesActuales, NombreMemoria, idsNuevasConexiones);
-	sem_post(&mutex_conexiones_actuales);
+	sem_post(&mutex_diccionario_conexiones);
 
 }
 
@@ -84,7 +84,7 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 		loggear("Instruccion generada, encolando proceso...");
 		encolar_proceso(p);
 	}else{//Es una respuesta
-		recibi_respuesta(instruccion);
+		recibi_respuesta(instruccion, remitente);
 	}
 
 }
@@ -634,7 +634,9 @@ void enviar_a(instr_t* i,char* destino){
 }
 int obtener_fd_out(char *proceso)
 {
+	sem_wait(&mutex_diccionario_conexiones);
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	sem_post(&mutex_diccionario_conexiones);
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);
@@ -653,29 +655,34 @@ void responderHandshake(identificador *idsConexionEntrante)
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
-void recibi_respuesta(instr_t* respuesta){
+void recibi_respuesta(instr_t* respuesta, char* remitente){
 	loggear("Instruccion recibida: ");
 	imprimir_instruccion(respuesta);
 
-	//	list_add(respuesta->parametros,"1");
-	sem_wait(&mutex_diccionario_enviados);
-	printf("El ultimo parametro de la instruccion es %s\n", (char*)obtener_ultimo_parametro(respuesta));
-	hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
-	if(h!=NULL) loggear("Hilo obtenido y removido del diccionario!");
-	else loggear("El hilo no existe");
-	sem_post(&mutex_diccionario_enviados);
+	if(respuesta->codigo_operacion==PETICION_GOSSIP)
+		devolver_gossip(respuesta, remitente);
+	else if (respuesta->codigo_operacion==RECEPCION_GOSSIP)
+		actualizar_tabla_gossiping(respuesta);
+	else{
+		//	list_add(respuesta->parametros,"1");
+		sem_wait(&mutex_diccionario_enviados);
+		printf("El ultimo parametro de la instruccion es %s\n", (char*)obtener_ultimo_parametro(respuesta));
+		hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
+		if(h!=NULL) loggear("Hilo obtenido y removido del diccionario!");
+		else loggear("El hilo no existe");
+		sem_post(&mutex_diccionario_enviados);
 
-	loggear("Asigno respuesta y revivo hilo");
-	h->respuesta=respuesta;
+		loggear("Asigno respuesta y revivo hilo");
+		h->respuesta=respuesta;
 
-	pthread_mutex_lock(h->mutex_t);
-	pthread_cond_signal(h->cond_t);
-	pthread_mutex_unlock(h->mutex_t);
+		pthread_mutex_lock(h->mutex_t);
+		pthread_cond_signal(h->cond_t);
+		pthread_mutex_unlock(h->mutex_t);
 
-	loggear("Hilo revivido!");
-	//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
-	//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
-
+		loggear("Hilo revivido!");
+		//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
+		//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
+	}
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
@@ -754,9 +761,8 @@ void inicializarConfiguracion() {
 	configuracion.puerto = obtener_por_clave(rutaConfiguracion, "PUERTO");
 	configuracion.rutaLog = obtener_por_clave(rutaConfiguracion, "rutaLog");
 	configuracion.MEMORIA_1_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_1_IP");
-	configuracion.MEMORIA_8_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_8_IP");
-	configuracion.MEMORIA_9_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_9_IP");
 	configuracion.PUERTO_MEMORIA = obtener_por_clave(rutaConfiguracion, "PUERTO_MEMORIA");
+	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave(rutaConfiguracion, "RETARDO_GOSSIPING"));
 	configuracion.tiempoMetricas = atoi(obtener_por_clave(rutaConfiguracion, "tiempoMetricas"));
 
 
@@ -770,7 +776,7 @@ void actualizar_configuracion(){
 	sem_post(&mutex_configuracion);
 }
 void iniciar_log(){
-	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
+	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_TRACE);
 }
 void loggear(char *valor) {
 	sem_wait(&mutex_log);
@@ -793,12 +799,13 @@ void inicializar_semaforos(){
 	sem_init(&mutex_cantidad_hilos,0,1);
 	sem_init(&mutex_diccionario_enviados,0,1);
 	sem_init(&mutex_codigo_request,0,1);
-	sem_init(&mutex_conexiones_actuales,0,1);
+	sem_init(&mutex_diccionario_conexiones,0,1);
 	sem_init(&mutex_diccionario_criterios,0,1);
 	sem_init(&mutex_contador_ec,0,1);
 	sem_init(&mutex_lista_tablas,0,1);
 	sem_init(&mutex_configuracion,0,1);
 	sem_init(&mutex_lista_instrucciones_ejecutadas,0,1);
+	sem_init(&mutex_diccionario_conexiones,0,1);
 	diccionario_enviados=dictionary_create();
 	//diccionario_criterios=dictionary_create();
 	lista_tablas=list_create();
@@ -882,4 +889,199 @@ void* consola(void* c){
 		procesar_instruccion_consola(instruccion);
 	}
 
+}
+
+void iniciar_ejecutador_gossiping(){
+	loggear_debug(g_logger, &mutex_log, string_from_format("Iniciando ejecutador gossiping"));
+	pthread_t hilo_ejecutador_gossiping;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_ejecutador_gossiping,&attr, &ejecutar_gossiping, NULL);
+	pthread_detach(hilo_ejecutador_gossiping);
+	loggear_debug(g_logger, &mutex_log, string_from_format("Ejecutador gossiping iniciado"));
+}
+
+void *ejecutar_gossiping()
+{
+	while(1)
+	{
+		usleep(configuracion.RETARDO_GOSSIPING * 1000);
+		loggear_debug(g_logger, &mutex_log, string_from_format("Realizando gossiping programado"));
+		ejecutar_instruccion_gossip();
+		loggear_debug(g_logger, &mutex_log, string_from_format("Fin gossiping programado"));
+	}
+}
+
+void devolver_gossip(instr_t *instruccion, char *remitente){
+	loggear_debug(g_logger,&mutex_log, string_from_format("Devolviendo el gossip"));
+	loggear_debug(g_logger,&mutex_log, string_from_format("Enviando datos a %s", remitente));
+	int conexionRemitente = obtener_fd_out(remitente);
+	loggear_debug(g_logger,&mutex_log, string_from_format("Datos enviados"));
+	t_list* tablaGossiping = conexiones_para_gossiping();
+
+	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
+
+
+	loggear_debug(g_logger,&mutex_log, string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
+	enviar_request(miInstruccion, conexionRemitente);
+	loggear_debug(g_logger,&mutex_log, string_from_format("Envio mi tabla de datos enviada"));
+
+
+	actualizar_tabla_gossiping(instruccion);
+
+}
+
+void actualizar_tabla_gossiping(instr_t* instruccion){
+
+
+	loggear_debug(g_logger,&mutex_log, string_from_format("Actualizando tabla de gossiping"));
+
+	int saltearProximos = 0;
+	int i = 0;
+	char* nombre;
+	char* ip;
+	char* puerto;
+
+	void acutalizar_tabla(char* parametro){
+		saltearProximos--;
+		printf("Saltear Proximos = %d\n", saltearProximos);
+		if(saltearProximos <= 0){
+			if(i % 3 == 0){
+				sem_wait(&mutex_diccionario_conexiones);
+				if(strcmp("Kernel", parametro)!=0 && !dictionary_has_key(conexionesActuales, parametro)){
+					sem_post(&mutex_diccionario_conexiones);
+					nombre = strdup(parametro);
+					loggear_info(g_logger,&mutex_log, string_from_format("No conocia al proceso %s", parametro));
+					i++;
+					saltearProximos = 0;
+				}
+				else{
+					sem_post(&mutex_diccionario_conexiones);
+					loggear_info(g_logger,&mutex_log, string_from_format("Ya tenia el proceso %s en la tabla", parametro));
+					i+=3;
+					saltearProximos = 3;
+				}
+			}
+				else if(i % 3 == 1){
+					ip = strdup(parametro);
+					loggear_debug(g_logger,&mutex_log, string_from_format("Su ip es %s", ip));
+					i++;
+				}
+					else if(i % 3 == 2){
+						puerto = strdup(parametro);
+						loggear_debug(g_logger,&mutex_log, string_from_format("Su puerto es %s", puerto));
+						identificador identificadores = {
+								.fd_out = 0,
+								.fd_in = 0,
+								.ip_proceso = *ip,
+								.puerto = *puerto
+						};
+
+						identificador* idsConexionesActuales = malloc(sizeof(identificadores));
+						memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
+
+						loggear_debug(g_logger,&mutex_log, string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
+						sem_wait(&mutex_diccionario_conexiones);
+						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
+						sem_post(&mutex_diccionario_conexiones);
+						i++;
+					}
+		}
+	}
+
+	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
+
+	loggear_debug(g_logger,&mutex_log, string_from_format("CONEXIONES ACTUALES:"));
+	sem_wait(&mutex_diccionario_conexiones);
+	imprimir_conexiones(conexionesActuales);
+	sem_post(&mutex_diccionario_conexiones);
+}
+
+t_list *conexiones_para_gossiping(){
+
+
+	t_list *tablaGossiping = list_create();
+
+	void juntar_ip_y_puerto(char* nombre, identificador* ids){
+		if(strcmp(nombre, "Kernel")!=0){
+			list_add(tablaGossiping, nombre);
+			list_add(tablaGossiping, ids->ip_proceso);
+			list_add(tablaGossiping, ids->puerto);
+		}
+	}
+
+	sem_wait(&mutex_diccionario_conexiones);
+	dictionary_iterator(conexionesActuales, (void *)juntar_ip_y_puerto);
+	sem_post(&mutex_diccionario_conexiones);
+
+	return tablaGossiping;
+
+}
+
+void enviar_lista_gossiping(int conexionVieja){
+	puts("Enviando lista de gossiping");
+	t_list* listaGossiping= conexiones_para_gossiping();
+	instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
+	enviar_request(miInstruccion, conexionVieja);
+	puts("Lista de gossiping enviada");
+}
+
+void ejecutar_instruccion_gossip(){
+
+	t_list *listaParam = list_create();
+	list_add(listaParam, "Kernel");
+	list_add(listaParam, miIPKernel);
+	list_add(listaParam, configuracion.puerto);
+
+	printf("IP seed: %s\n", configuracion.MEMORIA_1_IP);
+	printf("Puerto seed: %s\n", configuracion.PUERTO_MEMORIA);
+	char* nombreProceso = nombre_para_ip_y_puerto(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA);
+	if(nombreProceso != NULL){
+		puts("Encontre la key (el nombre del proceso)");
+		int conexionVieja = obtener_fd_out(nombreProceso);
+		enviar_lista_gossiping(conexionVieja);
+		puts("Lista de gossiping enviada a la conexion vieja");
+	}
+
+	else{
+		puts("Ese IP (y puerto) no estaban en las conexiones conocidas");
+		int conexion = crear_conexion(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, miIPKernel, 0, g_logger, &mutex_log);
+		if(conexion != -1){
+			puts("Conexion creada");
+
+			instr_t * miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+			enviar_request(miInstruccion, conexion);
+			instr_t * peticionDeSuTabla = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaParam);
+			enviar_request(peticionDeSuTabla, conexion);
+
+			puts("Peticion de gossiping enviada");
+		}
+	}
+
+	loggear_info(g_logger, &mutex_log, string_from_format("Ejecutando instruccion Gossip"));
+
+
+}
+
+bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado){
+	return (strcmp(ids->ip_proceso, ipBuscado)==0) && (strcmp(ids->puerto, puertoBuscado)==0);
+}
+
+char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
+
+	char* nombreEncontrado = NULL;
+
+	void su_nombre(char* nombre, identificador* ids){
+		printf("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado);
+		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
+			nombreEncontrado = strdup(nombre);
+			printf("Nombre encontrado! : %s\n", nombreEncontrado);
+		}
+	}
+
+	sem_wait(&mutex_diccionario_conexiones);
+	dictionary_iterator(conexionesActuales, (void *)su_nombre);
+	sem_post(&mutex_diccionario_conexiones);
+
+	return nombreEncontrado;
 }

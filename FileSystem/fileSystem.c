@@ -263,6 +263,7 @@ void iniciar_semaforos() {
 	sem_init(&mutex_log, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
 	sem_init(&mutex_tablas_nro_dump,0,1);
+	sem_init(&mutex_diccionario_conexiones,0,1);
 	tablas_nro_dump = dictionary_create();
 }
 
@@ -397,7 +398,7 @@ void inicializar_conexiones(){
 	puts("callback creado");
 	int listenner = iniciar_servidor(miIP, config_FS.puerto_escucha, g_logger, &mutex_log);
 	puts("Servidor iniciado");
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, &mutex_diccionario_conexiones, CONSOLA_FS, g_logger, &mutex_log);
 }
 
 void enviar_tamanio_value(char* remitente){

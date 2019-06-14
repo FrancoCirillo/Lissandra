@@ -494,6 +494,7 @@ void *ejecutar_gossiping()
 		usleep(configuracion.RETARDO_GOSSIPING * 1000);
 		loggear_debug(g_logger, &mutex_log, string_from_format("Realizando gossiping programado"));
 		ejecutar_instruccion_gossip();
+		loggear_debug(g_logger, &mutex_log, string_from_format("Fin gossip programado"));
 	}
 }
 

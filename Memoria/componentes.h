@@ -13,6 +13,7 @@
 
 void *memoriaPrincipal;
 t_dictionary *tablaDeSegmentos;
+sem_t mutex_diccionario_conexiones;
 
 /* MEMORIA PRINCIPAL */
 void gran_malloc_inicial();

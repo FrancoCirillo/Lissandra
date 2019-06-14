@@ -44,9 +44,8 @@ typedef struct config{
 	char* ip;
 	char* puerto;
 	char* MEMORIA_1_IP;
-	char* MEMORIA_8_IP;
-	char* MEMORIA_9_IP;
 	char* PUERTO_MEMORIA;
+	int RETARDO_GOSSIPING;
 	int tiempoMetricas;
 }config_t;
 
@@ -94,12 +93,13 @@ sem_t mutex_log;
 sem_t semaforo_procesos_ready;
 sem_t mutex_diccionario_enviados;
 sem_t mutex_codigo_request;
-sem_t mutex_conexiones_actuales;
+sem_t mutex_diccionario_conexiones;
 sem_t mutex_diccionario_criterios;
 sem_t mutex_contador_ec;
 sem_t mutex_lista_tablas;
 sem_t mutex_configuracion;
 sem_t mutex_lista_instrucciones_ejecutadas;
+sem_t mutex_diccionario_conexiones;
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -119,7 +119,7 @@ instr_t* kernel_metrics(instr_t * i);
 
 //Inits
 void inicializar_kernel();
-void recibi_respuesta(instr_t* respuesta);
+void recibi_respuesta(instr_t* respuesta, char* remitente);
 void inicializar_criterios();
 void inicializarConfiguracion();
 void inicializar_semaforos();
@@ -164,4 +164,16 @@ bool existe_tabla(char* tablaBuscada);
 void iniciar_consola();
 void* consola(void* c);
 void agregar_a_metricas(instr_t* i);
+
+//Gossiping
+void iniciar_ejecutador_gossiping();
+void *ejecutar_gossiping();
+void ejecutar_instruccion_gossip();
+char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado);
+bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado);
+void enviar_lista_gossiping(int conexionVieja);
+t_list *conexiones_para_gossiping();
+void actualizar_tabla_gossiping(instr_t* instruccion);
+void devolver_gossip(instr_t *instruccion, char *remitente);
+
 #endif /* kernel.h */

@@ -24,7 +24,7 @@ int server_fd;
 
 void imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr);
 int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir, t_log *logger, sem_t *mutex_log);
-int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), t_dictionary *conexionesConocidas, int queConsola, t_log *logger, sem_t* mutex_log);
+int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), t_dictionary *conexionesConocidas, sem_t* mutex_diccionarioConexiones, int queConsola, t_log *logger, sem_t* mutex_log);
 char *ip_cliente(struct sockaddr_storage remoteaddr);
 
 #endif /* UTILS_SERVIDOR */

@@ -13,11 +13,11 @@ int main(int argc, char *argv[])
 
 	inicializar_estructuras_conexiones();
 	empezar_conexiones(argv);
-//	iniciar_ejecutador_journal(); Piden desactivarlo en el checkpoint presencial
+//	iniciar_ejecutador_journal();
 
 	iniciar_ejecutador_gossiping();
 
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, &mutex_diccionario_conexiones, CONSOLA_MEMORIA, g_logger, &mutex_log);
 	//config_destroy(g_config);
 
 	return 0;
@@ -62,6 +62,7 @@ void inicializar_semaforos()
 {
 	sem_init(&mutex_log, 0,1);
 	sem_init(&mutex_journal, 0, 1);
+	sem_init(&mutex_diccionario_conexiones, 0, 1);
 }
 
 void inicializar_estructuras_conexiones()

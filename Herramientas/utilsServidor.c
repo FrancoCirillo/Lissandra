@@ -50,6 +50,7 @@ int vigilar_conexiones_entrantes(
 		int listener,
 		void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente),
 		t_dictionary *conexionesConocidas,
+		sem_t *mutex_diccionario_conexiones,
 		int queConsola,
 		t_log *logger,
 		sem_t *mutex_log)
@@ -114,14 +115,17 @@ int vigilar_conexiones_entrantes(
 							char *quienEs = (char *)list_get(instruccion_handshake->parametros, 0); //El nombre
 							loggear_debug(logger, mutex_log, string_from_format("Se conecto %s\n", quienEs));
 
+							sem_wait(mutex_diccionario_conexiones);
 							if (dictionary_get(conexionesConocidas, quienEs) != NULL)
 							{ //Ya lo conocia, no tenia su fd_in
 								identificador *miIdentificador = (identificador *)dictionary_get(conexionesConocidas, quienEs);
 								miIdentificador->fd_in = newfd;
 								dictionary_put(conexionesConocidas, quienEs, miIdentificador); //TODO: Hace falta? O al cambiar lo apuntado por el puntero ya esta?
+								sem_post(mutex_diccionario_conexiones);
 							}
 							else
 							{ //No lo conocia
+								sem_post(mutex_diccionario_conexiones);
 								char *suIP = (char *)list_get(instruccion_handshake->parametros, 1);	 //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
 								char *suPuerto = (char *)list_get(instruccion_handshake->parametros, 2); //Su Puerto
 								identificador *idsNuevaConexion = malloc(sizeof(identificador));
@@ -129,7 +133,9 @@ int vigilar_conexiones_entrantes(
 								strcpy(idsNuevaConexion->ip_proceso, suIP);
 								idsNuevaConexion->fd_in = newfd;
 								idsNuevaConexion->fd_out = 0;
+								sem_wait(mutex_diccionario_conexiones);
 								dictionary_put(conexionesConocidas, quienEs, idsNuevaConexion);
+								sem_post(mutex_diccionario_conexiones);
 							}
 							char* auxFd = string_from_format("%d", newfd);
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
@@ -158,7 +164,9 @@ int vigilar_conexiones_entrantes(
 						{
 							loggear_warning(logger,mutex_log, string_from_format("El cliente '%s'se desconecto\n", quienLoEnvia));
 							FD_CLR(i, &master);
+							sem_wait(mutex_diccionario_conexiones);
 							dictionary_remove(conexionesConocidas, quienLoEnvia); //No and_destroy porque se libera solo afuera del else
+							sem_post(mutex_diccionario_conexiones);
 						}
 
 						else
@@ -174,6 +182,8 @@ int vigilar_conexiones_entrantes(
 	return 0;
 }
 
+
+//TODO Unused code
 char *ip_cliente(struct sockaddr_storage remoteaddr)
 {
 	char remoteIP[INET6_ADDRSTRLEN];
