@@ -239,7 +239,7 @@ imprimirContenidoArchivo(ruta_bloque);
 }
 
 //---------------------------BITARRAY---------------------------
-char* ruta_bitmap = "/home/utnso/lissandra-checkpoint/Metadata/Bitmap.bin";
+char* ruta_bitmap = "/home/utnso/lissandra-checkpoint/Metadata/Bitmap.bin"; //TODO esto ya esta en g_ruta.bitmap
 int cantidad_bloques = 800; //Metadata_FS.blocks;
 
 int cant_bytes() {
@@ -247,14 +247,21 @@ int cant_bytes() {
 }
 
 void inicializar_bitmap() {
-	FILE* archivo_bitmap = fopen(ruta_bitmap, "w+");
-	//char* bitmap = string_repeat(0, cant_bytes());
-	printf("Iniciando bitmap con %d bloques, bytes %d\n", cantidad_bloques,cant_bytes());
-	//fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
+//	puts("inicializar bitmap");
+	char* ruta_metadata = "/home/utnso/lissandra-checkpoint/Metadata/"; //TODO, poner en una variable en algun lado
+//	printf("Ruta metadata: %s\n", ruta_metadata);
+	if(carpeta_esta_vacia(ruta_metadata)) {
+		FILE* archivo_bitmap = fopen(g_ruta.bitmap, "w+");
+		//char* bitmap = string_repeat(0, cant_bytes());
+		printf("Iniciando bitmap con %d bloques, bytes %d\n", cantidad_bloques,cant_bytes());
+		//fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
 
-	fclose(archivo_bitmap);
-	truncate(ruta_bitmap, cant_bytes());
-	//free(bitmap);
+		fclose(archivo_bitmap);
+		truncate(g_ruta.bitmap, cant_bytes());
+		//free(bitmap);
+	}
+	else
+		puts("Bitmap ya creado");
 }
 
 void chequear_bitmap(t_bitarray* bitarray) {
@@ -327,7 +334,6 @@ int siguiente_bloque_disponible() {
 	}
 	eliminar_bitarray(bitmap);
 	return nro_bloque;
-
 }
 
 void ocupar_bloque(int nro_bloque) {
@@ -532,6 +538,25 @@ void liberar_bloques(char* ruta_archivo) {
 //	puts("sali del while");
 }
 
+//---------------------------DIRECTORIOS---------------------------
+int carpeta_esta_vacia(char* ruta_carpeta) {
+//	puts("Carpeta esta vacia");
+	int n = 0;
+	DIR* carpeta = opendir(ruta_carpeta); //No valido que no existe, siempre va a existir
+	struct dirent* contenido;
+
+	while ((contenido = readdir(carpeta)) != NULL) {
+		if(++n > 3)
+			break;
+	}
+	closedir(carpeta);
+	if (n <= 3) //Directorio vacio (siempre estan . y ..)
+		return 1;
+	else
+		return 0; //Tiene archivos
+}
+
+
 //*****************************************************************
 //De aca para abajo estan corregidos y funcionan sin memory leaks.
 //*****************************************************************
@@ -642,16 +667,20 @@ void crear_directorio(char* ruta, char* nombre) {
 }
 
 void crear_bloques() {  //Los bloques van a partir del numero 0.
-
-	int cantidad = Metadata_FS.blocks;
-	bloques_disponibles = cantidad;
-	char* num;
-	for (int i = 0; i <= cantidad; i++) {
-		num = string_itoa(i);
-		crear_bloque(num);
-		free(num);
-	}
-	loggear_FS("Se crearon los bloques del File System.");
+	char* ruta_bloques = string_from_format("%s", g_ruta.bloques);
+	if(carpeta_esta_vacia(ruta_bloques)) {
+		puts("La carpeta no esta creada");
+		int cantidad = Metadata_FS.blocks;
+		bloques_disponibles = cantidad;
+		char* num;
+		for (int i = 0; i <= cantidad; i++) {
+			num = string_itoa(i);
+			crear_bloque(num);
+			free(num);
+		}
+		loggear_FS("Se crearon los bloques del File System.");
+	} else
+		loggear_FS("No se crearon los bloques, ya existen.");
 }
 
 void crear_bloque(char* nombre) {
