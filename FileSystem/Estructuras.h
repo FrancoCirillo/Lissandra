@@ -56,6 +56,7 @@ void leer_metadata_FS();		//es un único archivo
 
 void  crear_directorio(char*, char*);
 void  eliminar_directorio(char*); //TODO hacer
+int   carpeta_esta_vacia(char*);
 FILE* crear_archivo(char*, char*, char*);
 
 //BLOQUES
