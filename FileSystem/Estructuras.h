@@ -16,8 +16,7 @@
 
 							/*Globales*/
 void iniciar_logger();
-int   bloques_disponibles;
-int   un_num_bloque;
+int  bloques_disponibles;
 							/*ARCHIVOS*/
 
 void  loggear_FS(char*);
@@ -65,6 +64,7 @@ void  crear_bloques();
 char* formatear_registro(registro_t*);
 char* obtener_ruta_bloque(int);
 
+void inicializar_bloques_disp();
 void escribir_registro_bloque(registro_t*, char*, char*);
 int  puede_crear_particiones(instr_t*);
 int  cant_bloques_disponibles();

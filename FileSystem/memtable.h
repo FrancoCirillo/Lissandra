@@ -30,6 +30,8 @@ void  agregar_tabla(char*);
 void  eliminar_tabla_de_mem(char*);
 char* obtener_ruta_tabla(char*);
 
+void inicializar_tablas_nro_dump();
+void finalizar_tablas_nro_dump();
 void agregar_a_contador_dumpeo(char*);
 int  siguiente_nro_dump(char*);
 void dumpear_tabla(char*, void*);

@@ -2,7 +2,6 @@
 
 #include "memtable.h"
 
-
 void inicializar_memtable() {
 	memtable = dictionary_create();
 	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas);
@@ -25,6 +24,7 @@ void levantar_tablas_directorio(DIR* directorio) {
 		if(!string_contains(tabla, ".")) {
 			t_list* registros = crear_lista_registros();
 			dictionary_put(memtable, tabla, registros);
+			agregar_a_contador_dumpeo(tabla);
 		}
 	}
 }
@@ -115,6 +115,18 @@ int siguiente_nro_dump(char* tabla) {
 	sem_post(&mutex_tablas_nro_dump);
 
 	return *rdo;
+}
+
+void inicializar_tablas_nro_dump() {
+	tablas_nro_dump = dictionary_create();
+}
+
+void finalizar_tablas_nro_dump() {
+//	void destroyer(void* value){
+//		free(value);
+//	}
+
+	dictionary_destroy_and_destroy_elements(tablas_nro_dump, &free);
 }
 
 void agregar_a_contador_dumpeo(char* nombre_tabla) {//SE DEBE LLAMAR AL CREAR LA TABLA!
