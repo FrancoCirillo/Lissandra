@@ -32,11 +32,13 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 	switch (quien_pidio(instruccion))
 	{
 	case CONSOLA_KERNEL:
+		loggear_debug(debug_logger, &mutex_log, string_from_format("Enviando instruccion al Kernel"));
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
 		enviar_request(miInstruccion, conexionKernel);
 		break;
 	default:
+		loggear_debug(debug_logger, &mutex_log, string_from_format("Loggeando resultado instruccion"));
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		if (codigoOperacion == CODIGO_EXITO)
 			loggear_exito_proceso(miInstruccion, g_logger, &mutex_log);
