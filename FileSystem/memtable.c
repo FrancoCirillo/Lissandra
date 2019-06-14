@@ -121,7 +121,7 @@ void agregar_a_contador_dumpeo(char* nombre_tabla) {//SE DEBE LLAMAR AL CREAR LA
 	int* valor_inicial = malloc(sizeof(int));
 	*valor_inicial = 0;
 	sem_wait(&mutex_tablas_nro_dump);
-	dictionary_put(tablas_nro_dump,nombre_tabla,valor_inicial);
+	dictionary_put(tablas_nro_dump, nombre_tabla, valor_inicial);
 	sem_post(&mutex_tablas_nro_dump);
 }
 
@@ -142,27 +142,29 @@ void ejemplo_nro_dump(){
 
 void dumpear_tabla(char* tabla, void* registros) {
 
-	int nro_dump = siguiente_nro_dump(tabla);
-	char* nombre_tmp = string_from_format("Dump%d", nro_dump);
-	char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
-	FILE* temporal = crear_tmp(tabla, nombre_tmp);
-	puts("Creando temporal");
-	int nro_bloque = archivo_inicializar(temporal);
-	puts("Inicializando temporal");
+	if(!list_is_empty((t_list*)registros)) { //Si se hicieron inserts
+		int nro_dump = siguiente_nro_dump(tabla);
+		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
+		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
+		FILE* temporal = crear_tmp(tabla, nombre_tmp);
+		puts("Creando temporal");
+		int nro_bloque = archivo_inicializar(temporal);
+		puts("Inicializando temporal");
 
-	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
-	void escribir_reg_en_tmp(void* registro) {
-	escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
-	puts("Escribi en bloque");
+		void escribir_reg_en_tmp(void* registro) {
+			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
+			puts("Escribi en bloque");
+		}
+
+		list_iterate((t_list*)registros, &escribir_reg_en_tmp);
+
+		free(ruta_tmp);
+		free(nombre_tmp);
+		free(ruta_bloque);
+		fclose(temporal);
 	}
-
-	list_iterate((t_list*)registros, &escribir_reg_en_tmp);
-
-	free(ruta_tmp);
-	free(nombre_tmp);
-	free(ruta_bloque);
-	fclose(temporal);
 }
 
 void dumpear(t_dictionary* mem) {
