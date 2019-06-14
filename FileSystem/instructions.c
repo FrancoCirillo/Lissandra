@@ -49,10 +49,10 @@ void execute_create(instr_t* instruccion, char* remitente) {
 	t_list* listaParam = list_create();
 	if (!existe_tabla(tabla)) {
 		if(!puede_crear_particiones(instruccion)) {
-			char* cadena = string_from_format("No hay bloques disponibles para crear las particiones de la tabla'%s'.", tabla); //TODO: free
+			char* cadena = string_from_format("No hay bloques disponibles para crear las particiones de la tabla'%s'.", tabla);
 			list_add(listaParam, cadena);
-			free(cadena);
 			imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
+			free(cadena);
 		}
 		agregar_tabla(tabla); //la agrega a la mem
 		agregar_a_contador_dumpeo(tabla);
@@ -62,12 +62,13 @@ void execute_create(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
-
-	} else {
-		char* cadena = string_from_format("Error al crear la tabla '%s', ya existe en el FS.", tabla); //TODO: free
-		list_add(listaParam, cadena);
 		free(cadena);
+	}
+	else {
+		char* cadena = string_from_format("Error al crear la tabla '%s', ya existe en el FS.", tabla);
+		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
+		free(cadena);
 	}
 }
 
@@ -86,8 +87,8 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 
 		list_add(listaParam, cadena);
 		return listaParam;
-
-	} else {
+	}
+	else {
 		agregar_registro(tabla, registro);
 
 		char* cadena = string_from_format("Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
@@ -106,9 +107,10 @@ void execute_select(instr_t* instruccion, char* remitente) {
 	t_list *listaParam = list_create();
 	if (!existe_tabla(tabla)) {
 		puts("No existe la tabla");
-		char* cadena = string_from_format("No existe la tabla '%s'", tabla); //TODO: free
+		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
+		free(cadena);
 	}
 	puts("Existe tabla");
 	int key = (uint16_t)atoi(obtener_parametro(instruccion, 1));
@@ -116,10 +118,12 @@ void execute_select(instr_t* instruccion, char* remitente) {
 
 	if(list_is_empty(registros_key)) {
 		puts("No hay registros de la key");
-		char* cadena = string_from_format("No se encontraron registros con la key '%d'", key); //TODO: free
+		char* cadena = string_from_format("No se encontraron registros con la key '%d'", key);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-	} else {
+		free(cadena);
+	}
+	else {
 		puts("Registro encontrados");
 		char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);//respuesta del select, TODO: no anda
 //		printf("Value %s\n", value_registro_reciente);
@@ -128,6 +132,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		list_add(listaParam, string_itoa(key));
 		list_add(listaParam, value_registro_reciente);
 		imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
+		free(value_registro_reciente);
 	}
 	borrar_lista_registros(registros_key);
 }
@@ -140,6 +145,7 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
+		free(cadena);
 		return;
 	}
 
@@ -150,11 +156,13 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("Se elimino correctamente la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+		free(cadena);
 	}
 	else {
 		char* cadena = string_from_format("La tabla '%s' no pudo ser eliminada", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
+		free(cadena);
 	}
 }
 
@@ -162,7 +170,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 	t_list* listaParam = list_create();
 	int parametros_instr = list_size(instruccion->parametros);
 
-	if(parametros_instr <=1) { //DESCRIBE
+	if(parametros_instr == 0) { //DESCRIBE
 		char* ruta = string_from_format("%s", g_ruta.tablas);
 		printf("Ruta: %s\n", ruta);
 		DIR* directorio = opendir(ruta);
@@ -191,7 +199,8 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		free(ruta);
 		closedir(directorio);
 
-	} else { //DESCRIBE tabla1
+	}
+	else { //DESCRIBE <NOMBRE_TABLA>
 		char* tabla = obtener_nombre_tabla(instruccion);
 		if(!existe_tabla(tabla)) {
 			imprimir_donde_corresponda(ERROR_DESCRIBE, instruccion, listaParam, remitente);
@@ -207,6 +216,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		list_add(listaParam, particiones);
 		list_add(listaParam, tiempo_comp);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+		//TODO: free
 	}
 }
 
