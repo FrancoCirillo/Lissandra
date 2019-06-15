@@ -229,7 +229,7 @@ void inicializar_FS(int argc, char* argv[]) {
 	iniciar_semaforos();
 	iniciar_logger();
 
-	if(strlen(argv[1])<2){
+	if(argc == 1 || strlen(argv[1])<2){
 		puts("IP 127.0.0.2");
 		miIP = IP_FILESYSTEM;
 	}

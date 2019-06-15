@@ -842,7 +842,7 @@ void check_inicial(int argc, char* argv[])
 		log_error(g_logger, "Uso: kernel <IP>, IP vacio => IP = 127.0.0.4");
 		exit(0);
 	}
-	if(strlen(argv[1])<2){
+	if(argc ==1 || strlen(argv[1])<2 ){
 		puts("IP 127.0.0.4");
 		miIPKernel = IP_KERNEL;
 	}
