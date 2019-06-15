@@ -500,15 +500,14 @@ void *ejecutar_gossiping()
 
 
 
-int eliminar_tabla(instr_t* instruccion)
+void eliminar_tabla(instr_t* instruccion)
 {
 	char* tablaABorrar = (char*)list_get(instruccion->parametros, 0);
 	t_list* segmentoABorrar = segmento_de_esa_tabla(tablaABorrar);
-
-	dictionary_remove(tablaDeSegmentos, tablaABorrar);
-	list_destroy_and_destroy_elements(segmentoABorrar, (void*)free);
-
-	return 0;
+	if(segmentoABorrar !=NULL){
+		dictionary_remove(tablaDeSegmentos, tablaABorrar);
+		list_destroy_and_destroy_elements(segmentoABorrar, (void*)free);
+	}
 }
 
 

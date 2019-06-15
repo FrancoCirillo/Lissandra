@@ -34,7 +34,7 @@ bool memoria_esta_full();
 /* TABLA DE SEGMENTOS */
 void inicializar_tabla_segmentos();
 t_list * segmento_de_esa_tabla(char* tabla);
-int eliminar_tabla(instr_t* instruccion);
+void eliminar_tabla(instr_t* instruccion);
 
 /* GETTERS */
 
