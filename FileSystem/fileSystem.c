@@ -24,11 +24,7 @@ int main(int argc, char* argv[]) {
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
 //	pruebaGeneral();
-	inicializar_conexiones();
-
-
-//	char* tabla = "TABLA1";
-//	pasar_a_tmpc(tabla);
+//	inicializar_conexiones();
 
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
