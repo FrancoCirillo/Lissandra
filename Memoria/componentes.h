@@ -13,6 +13,7 @@
 
 void *memoriaPrincipal;
 t_dictionary *tablaDeSegmentos;
+sem_t mutex_diccionario_conexiones;
 
 /* MEMORIA PRINCIPAL */
 void gran_malloc_inicial();
@@ -75,4 +76,5 @@ void limpiar_segmentos();
 void mostrar_paginas(instr_t* instruccion);
 void imprimir_segmento(char* nombreSegmento, t_list* suTablaDePaginas);
 void imprimir_segmento_basico(char* nombreSegmento, t_list* suTablaDePaginas);
+
 #endif //COMPONENTES_H

@@ -236,4 +236,10 @@ void uint16_to_str(uint16_t key, char** keyChar);
 
 void* obtener_ultimo_parametro(instr_t* instruccion);
 
+/*
+ * Para trabajar mas comodos al leer un congfig usando config_get_array_value
+ * Devuelve una lista nueva.
+ */
+t_list* string_array_to_list(char** stringArray);
+
 #endif /* SERIALIZACIONES_H_ */

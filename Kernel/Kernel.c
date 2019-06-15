@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
 
 	iniciar_ejecutador();
 
+	iniciar_ejecutador_gossiping();
+
 	inicializar_kernel();
 	//iniciar_consola();
 
@@ -33,24 +35,19 @@ void inicializar_kernel(){
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_requestRecibido;
 
-	conectar_nueva_memoria(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, "Memoria_1");
-	conectar_nueva_memoria(configuracion.MEMORIA_8_IP, configuracion.PUERTO_MEMORIA, "Memoria_3");
-
+//	conectar_nueva_memoria(configuracion.MEMORIA_1_IP, configuracion.PUERTO_MEMORIA, "Memoria_1");
 
 	int listenner = iniciar_servidor(miIPKernel, configuracion.puerto, g_logger, &mutex_log);
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_KERNEL, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, &mutex_diccionario_conexiones, CONSOLA_KERNEL, g_logger, &mutex_log);
 
 }
 
 void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMemoria){
-	t_list *listaParam = list_create();
-	list_add(listaParam, "Kernel");
-	list_add(listaParam, miIPKernel);
-	list_add(listaParam, configuracion.puerto);
-	instr_t *miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
+
+	instr_t *miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 
 
-	int conexion_con_memoria_3 = crear_conexion(IPMemoria, PuertoMemoria, miIPKernel, g_logger, &mutex_log);
+	int conexion_con_memoria_3 = crear_conexion(IPMemoria, PuertoMemoria, miIPKernel, 1, g_logger, &mutex_log);
 
 	enviar_request(miInstruccion, conexion_con_memoria_3);
 
@@ -60,9 +57,9 @@ void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMe
 	strcpy(idsNuevasConexiones->ip_proceso, IPMemoria);
 	idsNuevasConexiones->fd_out = conexion_con_memoria_3;
 
-	sem_wait(&mutex_conexiones_actuales);
+	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_put(conexionesActuales, NombreMemoria, idsNuevasConexiones);
-	sem_post(&mutex_conexiones_actuales);
+	sem_post(&mutex_diccionario_conexiones);
 
 }
 
@@ -84,7 +81,7 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 		loggear("Instruccion generada, encolando proceso...");
 		encolar_proceso(p);
 	}else{//Es una respuesta
-		recibi_respuesta(instruccion);
+		recibi_respuesta(instruccion, remitente);
 	}
 
 }
@@ -120,11 +117,12 @@ void iniciar_metricas(){
 	pthread_t hilo_metricas;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
-	pthread_create(&hilo_metricas,&attr,metricar,NULL);
+	pthread_create(&hilo_metricas,&attr,&metricar,NULL);
+	pthread_detach(hilo_metricas);
 	loggear("Metricas iniciadas");
 
 }
-void metricar(){
+void *metricar(){
 	while(1){
 		//actualizar_configuracion();
 		sem_wait(&mutex_configuracion);
@@ -634,7 +632,13 @@ void enviar_a(instr_t* i,char* destino){
 }
 int obtener_fd_out(char *proceso)
 {
+	sem_wait(&mutex_diccionario_conexiones);
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	sem_post(&mutex_diccionario_conexiones);
+	if(idsProceso == NULL){
+		loggear_warning(g_logger,&mutex_log, string_from_format("Se desconoce completamente el proceso %s. fd_out devuelto incorrecto.", proceso));
+		return 0;
+	}
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);
@@ -643,39 +647,41 @@ int obtener_fd_out(char *proceso)
 }
 void responderHandshake(identificador *idsConexionEntrante)
 {
-	t_list *listaParam = list_create();
-	list_add(listaParam, "Kernel");  //Tabla
-	list_add(listaParam, miIPKernel); //Key
-	list_add(listaParam, configuracion.puerto);
-	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, g_logger, &mutex_log);
+	instr_t *miInstruccion = mis_datos(CODIGO_HANDSHAKE);
+
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, 1, g_logger, &mutex_log);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
-void recibi_respuesta(instr_t* respuesta){
+void recibi_respuesta(instr_t* respuesta, char* remitente){
 	loggear("Instruccion recibida: ");
 	imprimir_instruccion(respuesta);
 
-	//	list_add(respuesta->parametros,"1");
-	sem_wait(&mutex_diccionario_enviados);
-	printf("El ultimo parametro de la instruccion es %s\n", (char*)obtener_ultimo_parametro(respuesta));
-	hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
-	if(h!=NULL) loggear("Hilo obtenido y removido del diccionario!");
-	else loggear("El hilo no existe");
-	sem_post(&mutex_diccionario_enviados);
+	if(respuesta->codigo_operacion==PETICION_GOSSIP)
+		devolver_gossip(respuesta, remitente);
+	else if (respuesta->codigo_operacion==RECEPCION_GOSSIP)
+		actualizar_tabla_gossiping(respuesta);
+	else{
+		//	list_add(respuesta->parametros,"1");
+		sem_wait(&mutex_diccionario_enviados);
+		printf("El ultimo parametro de la instruccion es %s\n", (char*)obtener_ultimo_parametro(respuesta));
+		hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
+		if(h!=NULL) loggear("Hilo obtenido y removido del diccionario!");
+		else loggear("El hilo no existe");
+		sem_post(&mutex_diccionario_enviados);
 
-	loggear("Asigno respuesta y revivo hilo");
-	h->respuesta=respuesta;
+		loggear("Asigno respuesta y revivo hilo");
+		h->respuesta=respuesta;
 
-	pthread_mutex_lock(h->mutex_t);
-	pthread_cond_signal(h->cond_t);
-	pthread_mutex_unlock(h->mutex_t);
+		pthread_mutex_lock(h->mutex_t);
+		pthread_cond_signal(h->cond_t);
+		pthread_mutex_unlock(h->mutex_t);
 
-	loggear("Hilo revivido!");
-	//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
-	//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
-
+		loggear("Hilo revivido!");
+		//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
+		//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
+	}
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
@@ -753,10 +759,12 @@ void inicializarConfiguracion() {
 	configuracion.ip = obtener_por_clave(rutaConfiguracion, "IP");
 	configuracion.puerto = obtener_por_clave(rutaConfiguracion, "PUERTO");
 	configuracion.rutaLog = obtener_por_clave(rutaConfiguracion, "rutaLog");
-	configuracion.MEMORIA_1_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_1_IP");
-	configuracion.MEMORIA_8_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_8_IP");
-	configuracion.MEMORIA_9_IP = obtener_por_clave(rutaConfiguracion, "MEMORIA_9_IP");
-	configuracion.PUERTO_MEMORIA = obtener_por_clave(rutaConfiguracion, "PUERTO_MEMORIA");
+
+	configuracion.IP_SEEDS = string_array_to_list(config_get_array_value(g_config, "IP_SEEDS"));
+	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
+	imprimir_config_actual();
+
+	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave(rutaConfiguracion, "RETARDO_GOSSIPING"));
 	configuracion.tiempoMetricas = atoi(obtener_por_clave(rutaConfiguracion, "tiempoMetricas"));
 
 
@@ -770,7 +778,7 @@ void actualizar_configuracion(){
 	sem_post(&mutex_configuracion);
 }
 void iniciar_log(){
-	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_INFO);
+	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_TRACE);
 }
 void loggear(char *valor) {
 	sem_wait(&mutex_log);
@@ -793,12 +801,13 @@ void inicializar_semaforos(){
 	sem_init(&mutex_cantidad_hilos,0,1);
 	sem_init(&mutex_diccionario_enviados,0,1);
 	sem_init(&mutex_codigo_request,0,1);
-	sem_init(&mutex_conexiones_actuales,0,1);
+	sem_init(&mutex_diccionario_conexiones,0,1);
 	sem_init(&mutex_diccionario_criterios,0,1);
 	sem_init(&mutex_contador_ec,0,1);
 	sem_init(&mutex_lista_tablas,0,1);
 	sem_init(&mutex_configuracion,0,1);
 	sem_init(&mutex_lista_instrucciones_ejecutadas,0,1);
+	sem_init(&mutex_diccionario_conexiones,0,1);
 	diccionario_enviados=dictionary_create();
 	//diccionario_criterios=dictionary_create();
 	lista_tablas=list_create();
@@ -833,7 +842,7 @@ void check_inicial(int argc, char* argv[])
 		log_error(g_logger, "Uso: kernel <IP>, IP vacio => IP = 127.0.0.4");
 		exit(0);
 	}
-	if(strlen(argv[1])<2){
+	if(argc ==1 || strlen(argv[1])<2 ){
 		puts("IP 127.0.0.4");
 		miIPKernel = IP_KERNEL;
 	}
@@ -883,3 +892,237 @@ void* consola(void* c){
 	}
 
 }
+
+void iniciar_ejecutador_gossiping(){
+	loggear_debug(g_logger, &mutex_log, string_from_format("Iniciando ejecutador gossiping"));
+	pthread_t hilo_ejecutador_gossiping;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_ejecutador_gossiping,&attr, &ejecutar_gossiping, NULL);
+	pthread_detach(hilo_ejecutador_gossiping);
+	loggear_debug(g_logger, &mutex_log, string_from_format("Ejecutador gossiping iniciado"));
+}
+
+void *ejecutar_gossiping()
+{
+	while(1)
+	{
+		loggear_debug(g_logger, &mutex_log, string_from_format("Realizando gossiping programado"));
+		ejecutar_instruccion_gossip();
+		loggear_debug(g_logger, &mutex_log, string_from_format("Fin gossiping programado"));
+		usleep(configuracion.RETARDO_GOSSIPING * 1000);
+	}
+}
+
+void devolver_gossip(instr_t *instruccion, char *remitente){
+	loggear_debug(g_logger,&mutex_log, string_from_format("Devolviendo el gossip"));
+	loggear_debug(g_logger,&mutex_log, string_from_format("Enviando datos a %s", remitente));
+	int conexionRemitente = obtener_fd_out(remitente);
+//	loggear_debug(g_logger,&mutex_log, string_from_format("Datos enviados"));
+	t_list* tablaGossiping = conexiones_para_gossiping();
+
+	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
+
+
+	loggear_debug(g_logger,&mutex_log, string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
+	enviar_request(miInstruccion, conexionRemitente);
+
+	actualizar_tabla_gossiping(instruccion);
+
+}
+
+void actualizar_tabla_gossiping(instr_t* instruccion){
+
+
+	loggear_debug(g_logger,&mutex_log, string_from_format("Actualizando tabla de gossiping"));
+
+	int saltearProximos = 0;
+	int i = 0;
+	char* nombre;
+	char* ip;
+	char* puerto;
+
+	void acutalizar_tabla(char* parametro){
+		saltearProximos--;
+		printf("Saltear Proximos = %d\n", saltearProximos);
+		if(saltearProximos <= 0){
+			if(i % 3 == 0){
+				sem_wait(&mutex_diccionario_conexiones);
+				if(strcmp("Kernel", parametro)!=0 && !dictionary_has_key(conexionesActuales, parametro)){
+					sem_post(&mutex_diccionario_conexiones);
+					nombre = strdup(parametro);
+					loggear_info(g_logger,&mutex_log, string_from_format("No conocia al proceso %s", parametro));
+					i++;
+					saltearProximos = 0;
+				}
+				else{
+					sem_post(&mutex_diccionario_conexiones);
+					loggear_info(g_logger,&mutex_log, string_from_format("Ya tenia el proceso %s en la tabla", parametro));
+					i+=3;
+					saltearProximos = 3;
+				}
+			}
+				else if(i % 3 == 1){
+					ip = strdup(parametro);
+//					loggear_debug(g_logger,&mutex_log, string_from_format("Su ip es %s", ip));
+					i++;
+				}
+					else if(i % 3 == 2){
+						puerto = strdup(parametro);
+//						loggear_debug(g_logger,&mutex_log, string_from_format("Su puerto es %s", puerto));
+						identificador identificadores = {
+								.fd_out = 0,
+								.fd_in = 0
+						};
+
+						strcpy(identificadores.ip_proceso, ip);
+						strcpy(identificadores.puerto, puerto);
+
+						identificador* idsConexionesActuales = malloc(sizeof(identificadores));
+						memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
+
+
+						loggear_debug(g_logger,&mutex_log, string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
+						sem_wait(&mutex_diccionario_conexiones);
+						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
+						sem_post(&mutex_diccionario_conexiones);
+						i++;
+						list_add(configuracion.IP_SEEDS, ip);
+						list_add(configuracion.PUERTO_SEEDS, puerto);
+					}
+		}
+	}
+
+	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
+
+	loggear_debug(g_logger,&mutex_log, string_from_format("CONEXIONES ACTUALES:"));
+	sem_wait(&mutex_diccionario_conexiones);
+	imprimir_conexiones(conexionesActuales);
+	sem_post(&mutex_diccionario_conexiones);
+
+//	imprimir_config_actual();
+}
+
+t_list *conexiones_para_gossiping(){
+
+
+	t_list *tablaGossiping = list_create();
+
+	void juntar_ip_y_puerto(char* nombre, identificador* ids){
+		if(strcmp(nombre, "Kernel")!=0){
+			list_add(tablaGossiping, nombre);
+			list_add(tablaGossiping, ids->ip_proceso);
+			list_add(tablaGossiping, ids->puerto);
+		}
+	}
+
+	sem_wait(&mutex_diccionario_conexiones);
+	dictionary_iterator(conexionesActuales, (void *)juntar_ip_y_puerto);
+	sem_post(&mutex_diccionario_conexiones);
+
+	return tablaGossiping;
+
+}
+void enviar_lista_gossiping(char* nombreProceso){
+	if(strcmp(nombreProceso, "Kernel")!=0){
+		int conexionVieja = obtener_fd_out(nombreProceso);
+		loggear_debug(g_logger,&mutex_log, string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
+		t_list* listaGossiping = conexiones_para_gossiping();
+		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
+		enviar_request(miInstruccion, conexionVieja);
+	}
+}
+
+void ejecutar_instruccion_gossip(){
+
+	loggear_info(g_logger, &mutex_log, string_from_format("Ejecutando instruccion Gossip"));
+
+	gossipear_con_conexiones_actuales();
+
+	gossipear_con_procesos_desconectados();
+
+}
+
+void gossipear_con_conexiones_actuales(){
+
+//	puts("Gossipeando con conexiones actuales");
+	void su_nombre(char* nombre, identificador* ids){
+		sem_post(&mutex_diccionario_conexiones);
+		enviar_lista_gossiping(nombre);
+		sem_wait(&mutex_diccionario_conexiones);
+	}
+	sem_wait(&mutex_diccionario_conexiones);
+	dictionary_iterator(conexionesActuales, (void *)su_nombre);
+	sem_post(&mutex_diccionario_conexiones);
+}
+
+
+void gossipear_con_procesos_desconectados(){
+
+	int i = 0;
+	void enviar_tabla_gossiping(char* unaIP){
+//		printf("IP seed: %s\n", unaIP);
+//		printf("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i));
+
+		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
+		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0){
+//			puts("Ese IP (y puerto) no estaban en las conexiones conocidas o nunca se le habia enviado nada");
+			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPKernel, 0, g_logger, &mutex_log);
+			if(conexion != -1){
+//				puts("Conexion creada");
+				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
+				enviar_request(miInstruccion, conexion);
+//				puts("Le envie mis datos");
+				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
+				enviar_request(peticionDeSuTabla, conexion);
+				loggear_debug(g_logger,&mutex_log, string_from_format("Se envio la Peticion de Gossiping."));
+//				puts("Peticion de gossiping enviada");
+			}
+		}
+		i++;
+	}
+	list_iterate(configuracion.IP_SEEDS, (void*)enviar_tabla_gossiping);
+
+}
+
+
+bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado){
+	return (strcmp(ids->ip_proceso, ipBuscado)==0) && (strcmp(ids->puerto, puertoBuscado)==0);
+}
+
+char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
+
+	char* nombreEncontrado = NULL;
+
+	void su_nombre(char* nombre, identificador* ids){
+		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
+			nombreEncontrado = strdup(nombre);
+		}
+	}
+
+	sem_wait(&mutex_diccionario_conexiones);
+	dictionary_iterator(conexionesActuales, (void *)su_nombre);
+	sem_post(&mutex_diccionario_conexiones);
+
+	return nombreEncontrado;
+}
+
+void imprimir_config_actual(){
+	puts("\nIPs y Puertos:");
+	int i=0;
+	void imprimir(char* valor){
+		printf("IP: %s\n", valor);
+		printf("Puerto: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS, i));
+		i++;
+	}
+	list_iterate(configuracion.IP_SEEDS, (void*)imprimir);
+}
+
+instr_t* mis_datos(cod_op codigoOperacion){
+	t_list *listaParam = list_create();
+	list_add(listaParam, "Kernel");
+	list_add(listaParam, miIPKernel);
+	list_add(listaParam, configuracion.puerto);
+	return crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
+}
+

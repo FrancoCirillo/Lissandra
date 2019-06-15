@@ -16,8 +16,8 @@ typedef struct config
 	char *PUERTO;
 	char *IP_FS;
 	char *PUERTO_FS;
-	char *IP_SEEDS;
-	char *PUERTO_SEEDS;
+	t_list *IP_SEEDS;
+	t_list *PUERTO_SEEDS;
 	int RETARDO_MEMORIA;
 	int RETARDO_FS;
 	int TAMANIO_MEMORIA;
@@ -36,6 +36,7 @@ typedef struct registro
 
 extern sem_t mutex_log;
 extern sem_t mutex_journal;
+extern sem_t mutex_diccionario_conexiones;
 extern t_log *g_logger;
 extern t_log *debug_logger;
 extern t_config *g_config;

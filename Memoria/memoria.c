@@ -13,11 +13,11 @@ int main(int argc, char *argv[])
 
 	inicializar_estructuras_conexiones();
 	empezar_conexiones(argv);
-//	iniciar_ejecutador_journal(); Piden desactivarlo en el checkpoint presencial
+//	iniciar_ejecutador_journal();
 
-	inicializar_estructuras_memoria();
+	iniciar_ejecutador_gossiping();
 
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_MEMORIA, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, &mutex_diccionario_conexiones, CONSOLA_MEMORIA, g_logger, &mutex_log);
 	//config_destroy(g_config);
 
 	return 0;
@@ -28,28 +28,30 @@ void inicializar_configuracion()
 	puts("Configuracion:");
 	char *rutaConfig = "memoria.config";
 	g_config = config_create(rutaConfig);
-	configuracion.PUERTO = obtener_por_clave(rutaConfig, "PUERTO");
-	configuracion.IP_FS = obtener_por_clave(rutaConfig, "IP_FS");
-	configuracion.PUERTO_FS = obtener_por_clave(rutaConfig, "PUERTO_FS");
-	configuracion.IP_SEEDS = obtener_por_clave(rutaConfig, "IP_SEEDS");
-	configuracion.PUERTO_SEEDS = obtener_por_clave(rutaConfig, "PUERTO_SEEDS");
-	configuracion.RETARDO_MEMORIA = atoi(obtener_por_clave(rutaConfig, "RETARDO_MEMORIA"));
-	configuracion.RETARDO_FS = atoi(obtener_por_clave(rutaConfig, "RETARDO_FS"));
-	configuracion.TAMANIO_MEMORIA = atoi(obtener_por_clave(rutaConfig, "TAMANIO_MEMORIA"));
-	configuracion.RETARDO_JOURNAL = atoi(obtener_por_clave(rutaConfig, "RETARDO_JOURNAL"));
-	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave(rutaConfig, "RETARDO_GOSSIPING"));
-	configuracion.MEMORY_NUMBER = atoi(obtener_por_clave(rutaConfig, "MEMORY_NUMBER"));
-	configuracion.RUTA_LOG = obtener_por_clave(rutaConfig, "RUTA_LOG");
+	configuracion.PUERTO = obtener_por_clave("PUERTO");
+	configuracion.IP_FS = obtener_por_clave("IP_FS");
+	configuracion.PUERTO_FS = obtener_por_clave("PUERTO_FS");
+	configuracion.IP_SEEDS = string_array_to_list(config_get_array_value(g_config, "IP_SEEDS"));
+	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
+	imprimir_config_actual();
+	configuracion.RETARDO_MEMORIA = atoi(obtener_por_clave("RETARDO_MEMORIA"));
+	configuracion.RETARDO_FS = atoi(obtener_por_clave("RETARDO_FS"));
+	configuracion.TAMANIO_MEMORIA = atoi(obtener_por_clave("TAMANIO_MEMORIA"));
+	configuracion.RETARDO_JOURNAL = atoi(obtener_por_clave("RETARDO_JOURNAL"));
+	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave("RETARDO_GOSSIPING"));
+	configuracion.MEMORY_NUMBER = atoi(obtener_por_clave("MEMORY_NUMBER"));
+	configuracion.RUTA_LOG = obtener_por_clave("RUTA_LOG");
+
 }
 
 
 void iniciar_log()
 {
 	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
-	debug_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 0, LOG_LEVEL_TRACE);
+	debug_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
 }
 
-char *obtener_por_clave(char *ruta, char *clave)
+char *obtener_por_clave(char *clave)
 {
 	char *valor;
 	valor = config_get_string_value(g_config, clave);
@@ -62,10 +64,14 @@ void inicializar_semaforos()
 {
 	sem_init(&mutex_log, 0,1);
 	sem_init(&mutex_journal, 0, 1);
+	sem_init(&mutex_diccionario_conexiones, 0, 1);
 }
 
 void inicializar_estructuras_conexiones()
 {
+	if(list_size(configuracion.IP_SEEDS) != list_size(configuracion.PUERTO_SEEDS)){
+		loggear_error(g_logger,&mutex_log, string_from_format("La cantidad de IPs no coinciden con la cantidad de Puertos"));
+	}
 	conexionesActuales = dictionary_create();
 	idsNuevasConexiones = malloc(sizeof(identificador));
 	callback = ejecutar_instruccion;
@@ -89,6 +95,7 @@ void inicializar_estructuras_memoria()
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
+	loggear_debug(debug_logger,&mutex_log, string_from_format("Me llego una instruccion con el codOp %d de %s", instruccion->codigo_operacion, remitente));
 	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 	sem_wait(&mutex_journal);
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
@@ -131,6 +138,15 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			actualizar_tamanio_value(instruccion);
 			inicializar_estructuras_memoria();
 			break;
+
+		case PETICION_GOSSIP:
+			devolver_gossip(instruccion, remitente);
+			break;
+
+		case RECEPCION_GOSSIP:
+			actualizar_tabla_gossiping(instruccion);
+			break;
+
 		default:
 			loggear_info(g_logger,&mutex_log, string_from_format("El comando no pertenece a la memoria"));
 			break;
@@ -146,7 +162,17 @@ void iniciar_ejecutador_journal(){
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador_journal,&attr, &ejecutar_journal, NULL);
 	pthread_detach(hilo_ejecutador_journal);
-	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador iniciado journal"));
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador journal iniciado"));
+}
+
+void iniciar_ejecutador_gossiping(){
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Iniciando ejecutador gossiping"));
+	pthread_t hilo_ejecutador_gossiping;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_ejecutador_gossiping,&attr, &ejecutar_gossiping, NULL);
+	pthread_detach(hilo_ejecutador_gossiping);
+	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador gossiping iniciado"));
 }
 
 void check_inicial(int argc, char* argv[])
@@ -155,7 +181,7 @@ void check_inicial(int argc, char* argv[])
 		log_error(g_logger, "Uso: Memoria <IP>, IP vacio => IP = 127.0.0.3");
 		exit(0);
 	}
-	if(strlen(argv[1])<2){
+	if(argc==1 || strlen(argv[1])<2){
 		puts("IP 127.0.0.3");
 		miIPMemoria = IP_MEMORIA;
 	}

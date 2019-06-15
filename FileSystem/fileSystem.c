@@ -225,7 +225,7 @@ void inicializar_FS(int argc, char* argv[]) {
 	iniciar_semaforos();
 	iniciar_logger();
 
-	if(strlen(argv[1])<2){
+	if(argc == 1 || strlen(argv[1])<2){
 		puts("IP 127.0.0.2");
 		miIP = IP_FILESYSTEM;
 	}
@@ -259,6 +259,7 @@ void iniciar_semaforos() {
 	sem_init(&mutex_log, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
 	sem_init(&mutex_tablas_nro_dump,0,1);
+	sem_init(&mutex_diccionario_conexiones,0,1);
 	tablas_nro_dump = dictionary_create();
 }
 
@@ -393,7 +394,7 @@ void inicializar_conexiones(){
 	puts("callback creado");
 	int listenner = iniciar_servidor(miIP, config_FS.puerto_escucha, g_logger, &mutex_log);
 	puts("Servidor iniciado");
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, &mutex_diccionario_conexiones, CONSOLA_FS, g_logger, &mutex_log);
 }
 
 void enviar_tamanio_value(char* remitente){
@@ -415,7 +416,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	list_add(listaParam, config_FS.puerto_escucha);
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIP, g_logger, &mutex_log);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIP, 1, g_logger, &mutex_log);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
