@@ -16,8 +16,8 @@ typedef struct config
 	char *PUERTO;
 	char *IP_FS;
 	char *PUERTO_FS;
-	char *IP_SEEDS;
-	char *PUERTO_SEEDS;
+	t_list *IP_SEEDS;
+	t_list *PUERTO_SEEDS;
 	int RETARDO_MEMORIA;
 	int RETARDO_FS;
 	int TAMANIO_MEMORIA;

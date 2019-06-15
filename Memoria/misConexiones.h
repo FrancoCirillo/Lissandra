@@ -30,9 +30,13 @@ void actualizar_tamanio_value(instr_t* instruccion);
 void ejecutar_instruccion_gossip();
 void *ejecutar_gossiping();
 void devolver_gossip(instr_t* instruccion, char* remitente);
+void gossipear_con_conexiones_actuales();
+void gossipear_con_procesos_desconectados();
 t_list *conexiones_para_gossiping();
 void actualizar_tabla_gossiping(instr_t* instruccion);
 bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado);
 char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado);
+instr_t* mis_datos(cod_op codigoOperacion);
+void imprimir_config_actual();
 
 #endif /* MISCONEXIONES_H_ */

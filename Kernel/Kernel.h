@@ -43,8 +43,8 @@ typedef struct config{
 	char* rutaLog;
 	char* ip;
 	char* puerto;
-	char* MEMORIA_1_IP;
-	char* PUERTO_MEMORIA;
+	t_list* PUERTO_SEEDS;
+	t_list* IP_SEEDS;
 	int RETARDO_GOSSIPING;
 	int tiempoMetricas;
 }config_t;
@@ -113,7 +113,7 @@ void iniciar_consola();
 instr_t* kernel_run(instr_t *nombre_archivo);
 instr_t* kernel_add(instr_t *nombre_archivo);
 instr_t *validar(instr_t * i);
-void metricar();
+void *metricar();
 void metrics();
 instr_t* kernel_metrics(instr_t * i);
 
@@ -169,11 +169,16 @@ void agregar_a_metricas(instr_t* i);
 void iniciar_ejecutador_gossiping();
 void *ejecutar_gossiping();
 void ejecutar_instruccion_gossip();
+void gossipear_con_procesos_desconectados();
+void gossipear_con_conexiones_actuales();
+
 char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado);
 bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado);
-void enviar_lista_gossiping(int conexionVieja);
+void enviar_lista_gossiping(char* nombre);
 t_list *conexiones_para_gossiping();
 void actualizar_tabla_gossiping(instr_t* instruccion);
 void devolver_gossip(instr_t *instruccion, char *remitente);
+void imprimir_config_actual();
+instr_t* mis_datos(cod_op codigoOperacion);
 
 #endif /* kernel.h */

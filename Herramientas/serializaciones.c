@@ -429,3 +429,17 @@ void uint16_to_str(uint16_t key, char** keyChar){
 void* obtener_ultimo_parametro(instr_t* instruccion){
 	return list_get(instruccion->parametros, list_size(instruccion->parametros)-1);
 }
+
+
+t_list* string_array_to_list(char** stringArray){
+	puts("Transformando el char**");
+	t_list* listaStrings = list_create();
+	void agregar_a_lista(char* stringAAgregar){
+		list_add(listaStrings, stringAAgregar);
+	}
+
+	string_iterate_lines(stringArray, (void*)agregar_a_lista);
+
+	return listaStrings;
+
+}

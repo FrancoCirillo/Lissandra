@@ -118,6 +118,7 @@ int vigilar_conexiones_entrantes(
 							sem_wait(mutex_diccionario_conexiones);
 							if (dictionary_get(conexionesConocidas, quienEs) != NULL)
 							{ //Ya lo conocia, no tenia su fd_in
+								loggear_debug(logger, mutex_log, string_from_format("Ya conocia a %s, no tenia su fd_in\n", quienEs));
 								identificador *miIdentificador = (identificador *)dictionary_get(conexionesConocidas, quienEs);
 								miIdentificador->fd_in = newfd;
 								dictionary_put(conexionesConocidas, quienEs, miIdentificador); //TODO: Hace falta? O al cambiar lo apuntado por el puntero ya esta?
@@ -125,6 +126,7 @@ int vigilar_conexiones_entrantes(
 							}
 							else
 							{ //No lo conocia
+								loggear_debug(logger, mutex_log, string_from_format("No conocia a %s\n", quienEs));
 								sem_post(mutex_diccionario_conexiones);
 								char *suIP = (char *)list_get(instruccion_handshake->parametros, 1);	 //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
 								char *suPuerto = (char *)list_get(instruccion_handshake->parametros, 2); //Su Puerto

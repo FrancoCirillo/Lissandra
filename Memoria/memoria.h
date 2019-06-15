@@ -30,7 +30,7 @@ t_config *g_config;
 config configuracion;
 void inicializar_configuracion();
 void iniciar_log();
-char *obtener_por_clave(char *ruta, char *clave);
+char *obtener_por_clave(char *clave);
 
 
 	/* CONEXIONES */
