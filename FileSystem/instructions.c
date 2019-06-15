@@ -6,8 +6,6 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 
 	int codigoNeto = instr->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 
-	//TODO Aca pasar el nombre de la tabla a Mayuscula. y nos desligamos de esto en el resto de los pasos.
-
 	switch (codigoNeto) {
 
 	case CODIGO_CREATE:

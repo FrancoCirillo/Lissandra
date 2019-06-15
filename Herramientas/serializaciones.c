@@ -187,9 +187,12 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	valor = malloc(sizeof(int));
 	t_list *listaParam = list_create();
 
+	requestCopy = string_from_format("%s", requestCopy);
+	string_to_upper(requestCopy);
+
 	if (strcmp(requestCopy, "CERRAR\n") == 0)
 	{
-		printf(COLOR_ANSI_CYAN "Gracias por usar Lissandra FS!\n" COLOR_ANSI_RESET "cerrando...\n");
+		printf(COLOR_ANSI_CYAN "Gracias por usar Lissandra FS!\n" COLOR_ANSI_RESET "cerrando...\n\n");
 		exit(0);
 	}
 
@@ -385,6 +388,7 @@ void loggear_error_proceso(instr_t *miInstruccion, t_log* logger, sem_t *mutex_l
 {
 	loggear_warning(logger,mutex_log,  string_from_format("%s\n", (char *)list_get(miInstruccion->parametros, 0)));
 }
+
 void loggear_exito_proceso(instr_t *miInstruccion, t_log* logger, sem_t* mutex_log)
 {
 

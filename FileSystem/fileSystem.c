@@ -365,8 +365,9 @@ char* to_upper(char* str){
 }
 
 char* obtener_nombre_tabla(instr_t* instr) {
-	char* tabla = obtener_parametro(instr, 0);
-	return to_upper(tabla);
+	//char* tabla = obtener_parametro(instr, 0);
+	//return to_upper(tabla);
+	return obtener_parametro(instr, 0);
 }
 
 char* obtener_parametro(instr_t * instr, int index) {
@@ -458,15 +459,15 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 	default: //Consola file system
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		//Se pidio desde la consola de FS
-		if (codigoOperacion == DEVOLUCION_SELECT) {
+		if (codigoOperacion == DEVOLUCION_SELECT)
 			imprimir_registro(miInstruccion);
-		}
-		if (codigoOperacion == CODIGO_EXITO) {
+
+		if (codigoOperacion == CODIGO_EXITO)
 			loggear_exito_proceso(miInstruccion, g_logger, &mutex_log);
-		}
-		if (codigoOperacion > BASE_COD_ERROR) {
+
+		if (codigoOperacion > BASE_COD_ERROR)
 			loggear_error_proceso(miInstruccion, g_logger, &mutex_log);
-		}
+
 		break;
 	}
 }

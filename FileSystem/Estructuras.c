@@ -14,7 +14,6 @@
  * bloque disponible (bits arrays)
  * semaforos!
  *
- *NO FUNCIONA: string_to_upper(nomb);   //ver como hacer en crear_directorio().
  * ver actualizacion RETARDO del Archivo de config. Se actualiza en cada fin de instruccion?
  * \*/
 
@@ -646,7 +645,7 @@ void crear_particiones(instr_t* instr) {
 		fclose(archivo_binario);
 	}
 
-	char* mensaje= string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
+	char* mensaje = string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
 	loggear_FS(mensaje);
 	free(mensaje);
 }
@@ -688,9 +687,8 @@ FILE* crear_archivo(char* nombre, char* tabla, char* ext) {
 }
 
 void crear_directorio(char* ruta, char* nombre) {
-
-	//string_to_upper(nomb);   //No me funciona (??) TODO ver
 	char* ruta_dir = string_from_format("%s%s", ruta, nombre);
+
 	if (!mkdir(ruta_dir, S_IRWXU)) {
 		char* mensaje = string_from_format("Se creó correctamente la carpeta \"%s\" en el directorio %s", nombre, ruta);
 		loggear_FS(mensaje);
