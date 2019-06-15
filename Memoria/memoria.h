@@ -25,13 +25,11 @@
 	/* CONFIG Y LOG */
 sem_t mutex_log;
 t_log *g_logger;
-t_log *debug_logger;
 t_config *g_config;
 config configuracion;
 void inicializar_configuracion();
 void iniciar_log();
 char *obtener_por_clave(char *clave);
-
 
 	/* CONEXIONES */
 
@@ -39,7 +37,6 @@ identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
 char* miIPMemoria;
 char* nombreDeMemoria;
-int listenner;
 int tamanioValue;
 int tamanioRegistro;
 bool* sectorOcupado;

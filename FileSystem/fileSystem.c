@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
 //	pruebaGeneral();
-//	inicializar_conexiones();
+	inicializar_conexiones();
 
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
@@ -392,9 +392,9 @@ void inicializar_conexiones(){
 	conexionesActuales = dictionary_create();
 	callback = evaluar_instruccion;
 	puts("callback creado");
-	int listenner = iniciar_servidor(miIP, config_FS.puerto_escucha, g_logger, &mutex_log);
+	iniciar_servidor(miIP, config_FS.puerto_escucha);
 	puts("Servidor iniciado");
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, &mutex_diccionario_conexiones, CONSOLA_FS, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(callback, CONSOLA_FS);
 }
 
 void enviar_tamanio_value(char* remitente){
@@ -416,7 +416,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	list_add(listaParam, config_FS.puerto_escucha);
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIP, 1, g_logger, &mutex_log);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIP, 1);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
@@ -460,11 +460,11 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		}
 		if (codigoOperacion == CODIGO_EXITO)
 		{
-			loggear_exito_proceso(miInstruccion, g_logger, &mutex_log);
+			loggear_exito_proceso(miInstruccion);
 		}
 		if (codigoOperacion > BASE_COD_ERROR)
 		{
-			loggear_error_proceso(miInstruccion, g_logger, &mutex_log);
+			loggear_error_proceso(miInstruccion);
 		}
 		break;
 	}

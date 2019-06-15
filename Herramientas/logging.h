@@ -10,10 +10,11 @@
 #include <stdlib.h>
 #include <semaphore.h>
 #include <commons/log.h>
+#include "definicionesConexiones.h"
 
-void loggear_debug(t_log *logger, sem_t* mutex_log, char* valor);
-void loggear_info(t_log *logger, sem_t* mutex_log, char* valor);
-void loggear_error(t_log *logger, sem_t* mutex_log, char* valor);
-void loggear_warning(t_log *logger, sem_t* mutex_log, char* valor);
+void loggear_debug(char* valor);
+void loggear_info(char* valor);
+void loggear_error(char* valor);
+void loggear_warning(char* valor);
 
 #endif /* LOGGING_H_ */

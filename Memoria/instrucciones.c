@@ -32,7 +32,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		}
 		else
 		{
-			log_debug(debug_logger, "La key no se encontro en Memoria. Consultando al FS");
+			log_debug(g_logger, "La key no se encontro en Memoria. Consultando al FS");
 			int conexionFS = obtener_fd_out("FileSystem");
 			usleep(configuracion.RETARDO_FS * 1000);
 			if(enviar_request(instruccion, conexionFS)==-1){
@@ -42,7 +42,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 	}
 	else
 	{
-		log_debug(debug_logger, "La tabla no se encontro en Memoria. Consultando al FS");
+		log_debug(g_logger, "La tabla no se encontro en Memoria. Consultando al FS");
 		int conexionFS = obtener_fd_out("FileSystem");
 		usleep(configuracion.RETARDO_FS * 1000);
 		if(enviar_request(instruccion, conexionFS)==-1){
@@ -53,7 +53,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 {
-	log_debug(debug_logger, "FS devolvio la tabla solicitada.");
+	log_debug(g_logger, "FS devolvio la tabla solicitada.");
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
 	se_uso(paginaInsertada);
 	t_list *listaParam = list_create();
@@ -92,15 +92,15 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 1:
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
 			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-			log_debug(debug_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+			log_debug(g_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 
 			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			log_debug(debug_logger, "\nTabla de paginas actual: (Nueva)");
-			loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
-			log_debug(debug_logger, " ~~~~~~~~~~~~~~~~~~~~\n");
+			log_debug(g_logger, "\nTabla de paginas actual: (Nueva)");
+			loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+			log_debug(g_logger, " ~~~~~~~~~~~~~~~~~~~~\n");
 
 			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 		}
@@ -119,9 +119,9 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
 				filaEncontrada->flagModificado = flagMod;
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
-				log_debug(debug_logger, "\nTabla de paginas actual: (Key preexistente)");
-				loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
-				log_debug(debug_logger, "~~~~~~~~~~~~~~~~~~~~\n");
+				log_debug(g_logger, "\nTabla de paginas actual: (Key preexistente)");
+				loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+				log_debug(g_logger, "~~~~~~~~~~~~~~~~~~~~\n");
 
 				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
 			}
@@ -130,11 +130,11 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 3:
 			else{ //No existia la key en ese segment
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-				log_debug(debug_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+				log_debug(g_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
 				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-				log_debug(debug_logger, "Tabla de paginas actual: (Fila nueva)");
-				loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
-				log_debug(debug_logger, "~~~~~~~~~~~~~~~~~~~~\n");
+				log_debug(g_logger, "Tabla de paginas actual: (Fila nueva)");
+				loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+				log_debug(g_logger, "~~~~~~~~~~~~~~~~~~~~\n");
 
 				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 			}

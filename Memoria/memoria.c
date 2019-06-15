@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 
 	iniciar_ejecutador_gossiping();
 
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, &mutex_diccionario_conexiones, CONSOLA_MEMORIA, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(callback, CONSOLA_MEMORIA);
 	//config_destroy(g_config);
 
 	return 0;
@@ -48,7 +48,7 @@ void inicializar_configuracion()
 void iniciar_log()
 {
 	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
-	debug_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
+	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
 }
 
 char *obtener_por_clave(char *clave)
@@ -70,7 +70,7 @@ void inicializar_semaforos()
 void inicializar_estructuras_conexiones()
 {
 	if(list_size(configuracion.IP_SEEDS) != list_size(configuracion.PUERTO_SEEDS)){
-		loggear_error(g_logger,&mutex_log, string_from_format("La cantidad de IPs no coinciden con la cantidad de Puertos"));
+		loggear_error(string_from_format("La cantidad de IPs no coinciden con la cantidad de Puertos"));
 	}
 	conexionesActuales = dictionary_create();
 	idsNuevasConexiones = malloc(sizeof(identificador));
@@ -80,7 +80,7 @@ void inicializar_estructuras_conexiones()
 void empezar_conexiones()
 {
 	enviar_datos_a_FS();
-	listenner = iniciar_servidor(miIPMemoria, configuracion.PUERTO, g_logger, &mutex_log);
+	iniciar_servidor(miIPMemoria, configuracion.PUERTO);
 	pedir_tamanio_value();
 }
 
@@ -95,11 +95,11 @@ void inicializar_estructuras_memoria()
 
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
-	loggear_debug(debug_logger,&mutex_log, string_from_format("Me llego una instruccion con el codOp %d de %s", instruccion->codigo_operacion, remitente));
+	loggear_debug(string_from_format("Me llego una instruccion con el codOp %d de %s", instruccion->codigo_operacion, remitente));
 	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 	sem_wait(&mutex_journal);
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
-		loggear_debug(debug_logger,&mutex_log, string_from_format("Me llego un codigo de error"));
+		loggear_debug(string_from_format("Me llego un codigo de error"));
 		ejecutar_instruccion_error(instruccion);
 	}
 	else{
@@ -148,7 +148,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			break;
 
 		default:
-			loggear_info(g_logger,&mutex_log, string_from_format("El comando no pertenece a la memoria"));
+			loggear_info(string_from_format("El comando no pertenece a la memoria"));
 			break;
 		}
 	}
@@ -156,23 +156,23 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 }
 
 void iniciar_ejecutador_journal(){
-	loggear_debug(debug_logger, &mutex_log, string_from_format("Iniciando ejecutador journal"));
+	loggear_debug(string_from_format("Iniciando ejecutador journal"));
 	pthread_t hilo_ejecutador_journal;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador_journal,&attr, &ejecutar_journal, NULL);
 	pthread_detach(hilo_ejecutador_journal);
-	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador journal iniciado"));
+	loggear_debug(string_from_format("Ejecutador journal iniciado"));
 }
 
 void iniciar_ejecutador_gossiping(){
-	loggear_debug(debug_logger, &mutex_log, string_from_format("Iniciando ejecutador gossiping"));
+	loggear_debug(string_from_format("Iniciando ejecutador gossiping"));
 	pthread_t hilo_ejecutador_gossiping;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador_gossiping,&attr, &ejecutar_gossiping, NULL);
 	pthread_detach(hilo_ejecutador_gossiping);
-	loggear_debug(debug_logger, &mutex_log, string_from_format("Ejecutador gossiping iniciado"));
+	loggear_debug(string_from_format("Ejecutador gossiping iniciado"));
 }
 
 void check_inicial(int argc, char* argv[])
