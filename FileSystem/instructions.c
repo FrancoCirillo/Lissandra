@@ -167,7 +167,7 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 void execute_describe(instr_t* instruccion, char* remitente) {
 	t_list* listaParam = list_create();
 	int parametros_instr = list_size(instruccion->parametros);
-
+	parametros_instr-=(!quien_pidio(instruccion))?1:0;
 	if(parametros_instr == 0) { //DESCRIBE
 		char* ruta = string_from_format("%s", g_ruta.tablas);
 		printf("Ruta: %s\n", ruta);

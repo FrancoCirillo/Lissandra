@@ -441,13 +441,14 @@ int obtener_fd_out(char *proceso) {
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list* listaParam, char* remitente) {
 	void *ultimoParametro = obtener_ultimo_parametro(instruccion);
-	if (ultimoParametro != NULL){
-		list_add(listaParam, (char*)ultimoParametro);
-	}
+
 	instr_t *miInstruccion;
 
 	switch (quien_pidio(instruccion)) {
 	case CONSOLA_KERNEL:
+		if (ultimoParametro != NULL){
+				list_add(listaParam, (char*)ultimoParametro);
+		}
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionReceptor1 = obtener_fd_out(remitente);
 		enviar_request(miInstruccion, conexionReceptor1);
