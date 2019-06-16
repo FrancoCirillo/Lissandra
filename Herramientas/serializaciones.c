@@ -68,6 +68,7 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 	int tamanio;
 	void *a_enviar = serializar_request(instruccionAEnviar, &tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
+	loggear_trace(string_from_format("Se va a destruir la lista de parametros de la instruccion"));
 	list_destroy(instruccionAEnviar->parametros);
 	free(instruccionAEnviar);
 	free(a_enviar);
