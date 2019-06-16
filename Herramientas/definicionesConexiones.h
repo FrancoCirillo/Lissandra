@@ -3,7 +3,10 @@
 #ifndef MEMORIA_DEFINICIONESCONEXIONES_H_
 #define MEMORIA_DEFINICIONESCONEXIONES_H_
 
+#include <semaphore.h>
 #include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
+#include <commons/log.h>
 #include "tiempo.h"
 #include <errno.h>
 #include <inttypes.h>
@@ -52,7 +55,9 @@ typedef enum cod_op {
 	CODIGO_HANDSHAKE = 11,
 	INPUT_ERROR = 12,
 	CODIGO_VALUE = 13,
-
+	PETICION_GOSSIP = 14,
+	RECEPCION_GOSSIP = 15,
+	SOLICITUD_DATOS = 16,
 	CODIGO_SHOW = 51,
 
 	ERROR_SELECT = BASE_COD_ERROR + CODIGO_SELECT,
@@ -147,5 +152,11 @@ typedef struct identificador
 	char puerto[8];
 	char ip_proceso[17]; //"000.000.000.000\n"
 } identificador;
+
+extern t_dictionary *conexionesActuales;
+extern sem_t mutex_diccionario_conexiones;
+extern t_log *g_logger;
+extern sem_t mutex_log;
+
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */

@@ -52,10 +52,11 @@ void *serializar_paquete(t_paquete *paquete, int bytes)
 void *serializar_request(instr_t *instruccionAEnviar, int *tamanio)
 {
 	t_paquete *paqueteAEnviar = instruccion_a_paquete(instruccionAEnviar);
-	if(paqueteAEnviar->buffer->size<0){ //Pasa si una instruccion no tiene parametros
+	if (paqueteAEnviar->buffer->size < 0)
+	{ //Pasa si una instruccion no tiene parametros
 		paqueteAEnviar->buffer->size = 0;
 	}
-	int bytes =  paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op) + sizeof(mseg_t);
+	int bytes = paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op) + sizeof(mseg_t);
 	void *paqueteSerializado = serializar_paquete(paqueteAEnviar, bytes);
 	*tamanio = bytes;
 	return paqueteSerializado;
@@ -102,7 +103,8 @@ void *recibir_buffer(int *size, int socket_cliente)
 
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
 	buffer = malloc(*size);
-	if(*size !=0) recv(socket_cliente, buffer, *size, MSG_WAITALL); //Pasa cuando recibimos las requests sin parametros
+	if (*size != 0)
+		recv(socket_cliente, buffer, *size, MSG_WAITALL); //Pasa cuando recibimos las requests sin parametros
 	return buffer;
 }
 
@@ -131,17 +133,17 @@ t_list *recibir_paquete(int socket_cliente)
 	return NULL;
 }
 
-int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger, sem_t* mutex_log)
+int recibir_request(int socket_cliente, instr_t **instruccion)
 {
 	mseg_t nuevoTimestamp;
 	cod_op nuevoCodOp;
 	t_list *listaParam;
 
-	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp, logger, mutex_log); //return en error
+	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp); //return en error
 	if (t <= 0)
 		return t;
 
-	t = recibir_operacion(socket_cliente, &nuevoCodOp, logger, mutex_log);
+	t = recibir_operacion(socket_cliente, &nuevoCodOp);
 	if (t <= 0)
 		return t;
 
@@ -155,26 +157,26 @@ int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger, se
 	return 1;
 }
 
-int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp,  t_log *logger, sem_t *mutex_log)
+int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp)
 {
 	int r = recv(socket_cliente, nuevoTimestamp, sizeof(mseg_t), MSG_WAITALL);
 	if (r < 0)
 	{
-		loggear_error(logger, mutex_log, string_from_format("Error en el recv: %s\n", strerror(errno)));
+		loggear_error(string_from_format("Error en el recv: %s\n", strerror(errno)));
 	}
 	return r;
 }
 
-int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion, t_log* logger, sem_t *mutex_log)
+int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion)
 {
 	int r = recv(socket_cliente, nuevaOperacion, sizeof(cod_op), MSG_WAITALL);
 	if (r == 0)
 	{
-		loggear_error(logger, mutex_log, string_from_format("El cliente se desconecto en el medio de una recepción."));
+		loggear_error(string_from_format("El cliente se desconecto en el medio de una recepción."));
 	}
 	if (r < 0)
 	{
-		loggear_error(logger, mutex_log, string_from_format("Error en el recv: %s\n", strerror(errno)));
+		loggear_error(string_from_format("Error en el recv: %s\n", strerror(errno)));
 	}
 	return r;
 }
@@ -209,21 +211,20 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		valor = strdup(actual);
 		list_add(listaParam, valor);
 
-		if(i == 2 && strcmp(comando, "INSERT") == 0)
+		if (i == 2 && strcmp(comando, "INSERT") == 0)
 		{
-			actual = strtok (NULL, "\"\n");
-			if(actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
+			actual = strtok(NULL, "\"\n");
+			if (actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
 			{
 				valor = strdup(actual);
 				list_add(listaParam, valor);
-				actual = strtok (NULL, " \n");
-				if(actual != NULL) //Si es NULL no se introdujo el timestamp opcional
+				actual = strtok(NULL, " \n");
+				if (actual != NULL) //Si es NULL no se introdujo el timestamp opcional
 				{
 					valor = strdup(actual);
 					timestampRequest = string_a_mseg(valor);
 				}
 			}
-
 		}
 		actual = strtok(NULL, " \n");
 	}
@@ -285,7 +286,7 @@ cod_op reconocer_comando(char *comando)
 		return CODIGO_METRICS;
 
 	else if (strcmp(comando, "SHOW") == 0)
-			return CODIGO_SHOW;
+		return CODIGO_SHOW;
 
 	else
 		return INPUT_ERROR;
@@ -351,18 +352,22 @@ instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *l
 	return miInstr;
 }
 
-void imprimir_instruccion(instr_t *instruccion)
+void imprimir_instruccion(instr_t *instruccion, void (*funcion_log)(char *texto))
 {
+	char *texto = string_new();
+	string_append_with_format(&texto, "\n");
 
-	void iterator(char *value){
-		printf("%s\n", value);
+	void iterator(char *value)
+	{
+		string_append_with_format(&texto, "\t%s\n", value);
 	}
 
-	printf("Timestamp: %"PRIu64"\n",instruccion->timestamp);
-	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
-	printf("Parametros:\n");
+	string_append_with_format(&texto,"Timestamp: %" PRIu64 "\n", instruccion->timestamp);
+	string_append_with_format(&texto,"CodigoInstruccion: %d\n", instruccion->codigo_operacion);
+	string_append_with_format(&texto,"Parametros:\n");
 	list_iterate(instruccion->parametros, (void *)iterator);
-	puts("");
+
+	funcion_log(texto);
 }
 
 cod_op quien_pidio(instr_t *instruccion)
@@ -381,55 +386,72 @@ void imprimir_registro(instr_t *instruccion)
 {
 	printf("Key %s\n", (char *)list_get(instruccion->parametros, 1));
 	printf("Value %s\n", (char *)list_get(instruccion->parametros, 2));
-	printf("Timestamp: %"PRIu64"\n", instruccion->timestamp);
+	printf("Timestamp: %" PRIu64 "\n", instruccion->timestamp);
 }
 
-void loggear_error_proceso(instr_t *miInstruccion, t_log* logger, sem_t *mutex_log)
+void loggear_error_proceso(instr_t *miInstruccion)
 {
-	loggear_warning(logger,mutex_log,  string_from_format("%s\n", (char *)list_get(miInstruccion->parametros, 0)));
+	loggear_warning(string_from_format("%s\n", (char *)list_get(miInstruccion->parametros, 0)));
 }
-
-void loggear_exito_proceso(instr_t *miInstruccion, t_log* logger, sem_t* mutex_log)
+void loggear_exito_proceso(instr_t *miInstruccion)
 {
 
-	void mostrar(char* parametro){
-		loggear_info(logger, mutex_log, string_from_format(parametro));
+	void mostrar(char *parametro)
+	{
+		loggear_info(string_from_format(parametro));
 	}
 
-	list_iterate(miInstruccion->parametros, (void*) mostrar);
+	list_iterate(miInstruccion->parametros, (void *)mostrar);
 }
 
-void imprimir_conexiones(t_dictionary *conexAc)
+void imprimir_conexiones(t_dictionary *conexAc, void (*funcion_log)(char *texto))
 {
-	puts("Conexiones conocidas:");
+	char *texto = string_new();
 	void iterator(char *key, identificador *idsProceso)
 	{
-		printf("Proceso: %s\n", key);
-		printf("IP %s\n", idsProceso->ip_proceso);
-		printf("Puerto %s\n", idsProceso->puerto);
-		printf("fd_out %d\n", idsProceso->fd_out);
-		printf("fd_in %d\n", idsProceso->fd_in);
+		string_append_with_format(&texto, "\n");
+		string_append_with_format(&texto, "IP %s	|", idsProceso->ip_proceso);
+		string_append_with_format(&texto, " Puerto %s |", idsProceso->puerto);
+		string_append_with_format(&texto, " fd_out %d	|", idsProceso->fd_out);
+		string_append_with_format(&texto, " fd_in %d	|", idsProceso->fd_in);
+		string_append_with_format(&texto, " %s", key);
 	}
 	dictionary_iterator(conexAc, (void *)iterator);
+	funcion_log(texto);
 }
 
 //TODO: cambiar
 bool str_to_uint16(char *str, uint16_t *res)
 {
-    char *end;
-//    errno = 0;
-    long val = strtol(str, &end, 10);
-//    if (errno || end == str || *end != '\0' || val < 0 || val >= 0x10000) {
-//        return false;
-//    }
-    *res = (uint16_t)val;
-    return true;
+	char *end;
+	//    errno = 0;
+	long val = strtol(str, &end, 10);
+	//    if (errno || end == str || *end != '\0' || val < 0 || val >= 0x10000) {
+	//        return false;
+	//    }
+	*res = (uint16_t)val;
+	return true;
 }
 
-void uint16_to_str(uint16_t key, char** keyChar){
+void uint16_to_str(uint16_t key, char **keyChar)
+{
 	sprintf((*keyChar), "%d", key);
 }
 
-void* obtener_ultimo_parametro(instr_t* instruccion){
-	return list_get(instruccion->parametros, list_size(instruccion->parametros)-1);
+void *obtener_ultimo_parametro(instr_t *instruccion)
+{
+	return list_get(instruccion->parametros, list_size(instruccion->parametros) - 1);
+}
+
+t_list *string_array_to_list(char **stringArray)
+{
+	t_list *listaStrings = list_create();
+	void agregar_a_lista(char *stringAAgregar)
+	{
+		list_add(listaStrings, stringAAgregar);
+	}
+
+	string_iterate_lines(stringArray, (void *)agregar_a_lista);
+
+	return listaStrings;
 }

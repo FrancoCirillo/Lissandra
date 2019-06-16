@@ -5,7 +5,7 @@
 
 void ejecutar_instruccion_select(instr_t *instruccion)
 {
-	log_info(g_logger, "Ejecutando instruccion Select");
+	loggear_info(string_from_format("Ejecutando instruccion Select"));
 	usleep(configuracion.RETARDO_MEMORIA * 1000);
 	char* tabla = (char *)list_get(instruccion->parametros, 0);
 	t_list *suTablaDePaginas = segmento_de_esa_tabla(tabla);
@@ -32,28 +32,28 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		}
 		else
 		{
-			log_debug(debug_logger, "La key no se encontro en Memoria. Consultando al FS");
+			loggear_info(string_from_format("La key no se encontro en Memoria. Consultando al FS"));
 			int conexionFS = obtener_fd_out("FileSystem");
 			usleep(configuracion.RETARDO_FS * 1000);
 			if(enviar_request(instruccion, conexionFS)==-1){
-				log_error(g_logger, "No se logro enviar el Select al FS");
+				loggear_error(string_from_format("No se logro enviar el Select al FS"));
 			}
 		}
 	}
 	else
 	{
-		log_debug(debug_logger, "La tabla no se encontro en Memoria. Consultando al FS");
+		loggear_info(string_from_format("La tabla no se encontro en Memoria. Consultando al FS"));
 		int conexionFS = obtener_fd_out("FileSystem");
 		usleep(configuracion.RETARDO_FS * 1000);
 		if(enviar_request(instruccion, conexionFS)==-1){
-			log_error(g_logger, "No se logro enviar el Select al FS");
+			loggear_error(string_from_format("No se logro enviar el Select al FS"));
 		}
 	}
 }
 
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 {
-	log_debug(debug_logger, "FS devolvio la tabla solicitada.");
+	loggear_debug(string_from_format("FS devolvio la tabla solicitada."));
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
 	se_uso(paginaInsertada);
 	t_list *listaParam = list_create();
@@ -71,7 +71,7 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
 {
-	if(flagMod) log_info(g_logger, "Ejecutando instruccion Insert"); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
+	if(flagMod) loggear_info(string_from_format("Ejecutando instruccion Insert")); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
 	usleep(configuracion.RETARDO_MEMORIA * 1000);
 	int numeroDePaginaInsertada;
 
@@ -92,15 +92,15 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 1:
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
 			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-			log_debug(debug_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+			loggear_debug(string_from_format("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada)));
 
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 
 			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			log_debug(debug_logger, "\nTabla de paginas actual: (Nueva)");
-			loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
-			log_debug(debug_logger, " ~~~~~~~~~~~~~~~~~~~~\n");
+			loggear_trace(string_from_format("\nTabla de paginas actual: (Nueva)"));
+			loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+			loggear_trace(string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
 
 			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 		}
@@ -119,9 +119,9 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				actualizar_pagina(filaEncontrada->ptrPagina, nuevoTimestamp, nuevoValue);
 				filaEncontrada->flagModificado = flagMod;
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
-				log_debug(debug_logger, "\nTabla de paginas actual: (Key preexistente)");
-				loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
-				log_debug(debug_logger, "~~~~~~~~~~~~~~~~~~~~\n");
+				loggear_trace(string_from_format("\nTabla de paginas actual: (Key preexistente)"));
+				loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
 				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
 			}
@@ -130,11 +130,11 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 3:
 			else{ //No existia la key en ese segment
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-				log_debug(debug_logger, "\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada));
+				loggear_trace(string_from_format("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada)));
 				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-				log_debug(debug_logger, "Tabla de paginas actual: (Fila nueva)");
-				loggear_tabla_de_paginas(suTablaDePaginas, debug_logger);
-				log_debug(debug_logger, "~~~~~~~~~~~~~~~~~~~~\n");
+				loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
+				loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
 				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 			}
@@ -159,35 +159,35 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 void ejecutar_instruccion_create(instr_t *instruccion)
 {
-	log_info(g_logger, "Ejecutando instruccion Create");
+	loggear_info(string_from_format("Ejecutando instruccion Create"));
 	int conexionFS = obtener_fd_out("FileSystem");
 	usleep(configuracion.RETARDO_FS * 1000);
 	if(enviar_request(instruccion, conexionFS)==-1){
-		log_error(g_logger, "No se envio el Create al FS");
+		loggear_error(string_from_format("No se envio el Create al FS"));
 	}
 }
 
 void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente)
 {
-	log_info(g_logger, "Ejecutando instruccion Describe");
+	loggear_info(string_from_format("Ejecutando instruccion Describe"));
 	int conexionFS = obtener_fd_out("FileSystem");
 	usleep(configuracion.RETARDO_FS * 1000);
 	if(enviar_request(instruccion, conexionFS)==-1)
 	{
-		log_error(g_logger, "No se envio el Describe al FS");
+		loggear_error(string_from_format("No se envio el Describe al FS"));
 	}
 }
 
 void ejecutar_instruccion_drop(instr_t *instruccion)
 {
 	usleep(configuracion.RETARDO_MEMORIA * 1000);
-	log_info(g_logger, "Ejecutando instruccion Drop");
+	loggear_info(string_from_format("Ejecutando instruccion Drop"));
 
 	eliminar_tabla(instruccion);
 	int conexionFS = obtener_fd_out("FileSystem");
 	usleep(configuracion.RETARDO_FS * 1000);
 	if(enviar_request(instruccion, conexionFS)==-1){
-		log_error(g_logger, "No se envio el Drop al FS");
+		loggear_error(string_from_format("No se envio el Drop al FS"));
 	}
 }
 

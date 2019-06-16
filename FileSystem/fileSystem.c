@@ -19,6 +19,7 @@ registro_t *crear_registro(mseg_t timestampNuevo, uint16_t keyNueva, char *value
 int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
+	
 	inicializar_FS(argc, argv);
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
@@ -228,7 +229,7 @@ void inicializar_FS(int argc, char* argv[]) {
 	iniciar_semaforos();
 	iniciar_logger();
 
-	if(strlen(argv[1])<2){
+	if(argc == 1 || strlen(argv[1])<2){
 		puts("IP 127.0.0.2");
 		miIP = IP_FILESYSTEM;
 	}
@@ -266,6 +267,8 @@ void iniciar_semaforos() {
 	sem_init(&mutex_log, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
 	sem_init(&mutex_tablas_nro_dump,0,1);
+	sem_init(&mutex_diccionario_conexiones,0,1);
+	tablas_nro_dump = dictionary_create();
 }
 
 void iniciar_rutas(){
@@ -400,9 +403,9 @@ void inicializar_conexiones() {
 	conexionesActuales = dictionary_create();
 	callback = evaluar_instruccion;
 	puts("callback creado");
-	int listenner = iniciar_servidor(miIP, config_FS.puerto_escucha, g_logger, &mutex_log);
+	iniciar_servidor(miIP, config_FS.puerto_escucha);
 	puts("Servidor iniciado");
-	vigilar_conexiones_entrantes(listenner, callback, conexionesActuales, CONSOLA_FS, g_logger, &mutex_log);
+	vigilar_conexiones_entrantes(callback, CONSOLA_FS);
 }
 
 void enviar_tamanio_value(char* remitente) {
@@ -423,7 +426,7 @@ void responderHandshake(identificador *idsConexionEntrante) {
 	list_add(listaParam, config_FS.puerto_escucha);
 	instr_t *miInstruccion = miInstruccion = crear_instruccion(obtener_ts(), CODIGO_HANDSHAKE, listaParam);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIP, g_logger, &mutex_log);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIP, 1);
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
@@ -438,13 +441,14 @@ int obtener_fd_out(char *proceso) {
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list* listaParam, char* remitente) {
 	void *ultimoParametro = obtener_ultimo_parametro(instruccion);
-	if (ultimoParametro != NULL){
-		list_add(listaParam, (char*)ultimoParametro);
-	}
+
 	instr_t *miInstruccion;
 
 	switch (quien_pidio(instruccion)) {
 	case CONSOLA_KERNEL:
+		if (ultimoParametro != NULL){
+				list_add(listaParam, (char*)ultimoParametro);
+		}
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionReceptor1 = obtener_fd_out(remitente);
 		enviar_request(miInstruccion, conexionReceptor1);
@@ -463,11 +467,13 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 			imprimir_registro(miInstruccion);
 
 		if (codigoOperacion == CODIGO_EXITO)
-			loggear_exito_proceso(miInstruccion, g_logger, &mutex_log);
-
+		{
+			loggear_exito_proceso(miInstruccion);
+		}
 		if (codigoOperacion > BASE_COD_ERROR)
-			loggear_error_proceso(miInstruccion, g_logger, &mutex_log);
-
+		{
+			loggear_error_proceso(miInstruccion);
+		}
 		break;
 	}
 }

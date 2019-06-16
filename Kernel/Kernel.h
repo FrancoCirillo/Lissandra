@@ -43,11 +43,11 @@ typedef struct config{
 	char* rutaLog;
 	char* ip;
 	char* puerto;
-	char* MEMORIA_1_IP;
-	char* MEMORIA_8_IP;
-	char* MEMORIA_9_IP;
-	char* PUERTO_MEMORIA;
+	t_list* PUERTO_SEEDS;
+	t_list* IP_SEEDS;
+	int RETARDO_GOSSIPING;
 	int tiempoMetricas;
+	t_log_level LOG_LEVEL;
 }config_t;
 
 
@@ -94,12 +94,13 @@ sem_t mutex_log;
 sem_t semaforo_procesos_ready;
 sem_t mutex_diccionario_enviados;
 sem_t mutex_codigo_request;
-sem_t mutex_conexiones_actuales;
+sem_t mutex_diccionario_conexiones;
 sem_t mutex_diccionario_criterios;
 sem_t mutex_contador_ec;
 sem_t mutex_lista_tablas;
 sem_t mutex_configuracion;
 sem_t mutex_lista_instrucciones_ejecutadas;
+sem_t mutex_diccionario_conexiones;
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -113,13 +114,13 @@ void iniciar_consola();
 instr_t* kernel_run(instr_t *nombre_archivo);
 instr_t* kernel_add(instr_t *nombre_archivo);
 instr_t *validar(instr_t * i);
-void metricar();
+void *metricar();
 void metrics();
 instr_t* kernel_metrics(instr_t * i);
 
 //Inits
 void inicializar_kernel();
-void recibi_respuesta(instr_t* respuesta);
+void recibi_respuesta(instr_t* respuesta, char* remitente);
 void inicializar_criterios();
 void inicializarConfiguracion();
 void inicializar_semaforos();
@@ -139,7 +140,7 @@ void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMe
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
 proceso* obtener_sig_proceso();
-char* obtener_por_clave(char* ruta, char* key);
+char* obtener_por_clave(char* key);
 void encolar_proceso(proceso *p);
 char* obtener_parametroN(instr_t* i,int index);
 int obtener_codigo_request();
@@ -164,4 +165,21 @@ bool existe_tabla(char* tablaBuscada);
 void iniciar_consola();
 void* consola(void* c);
 void agregar_a_metricas(instr_t* i);
+
+//Gossiping
+void iniciar_ejecutador_gossiping();
+void *ejecutar_gossiping();
+void ejecutar_instruccion_gossip();
+void gossipear_con_procesos_desconectados();
+void gossipear_con_conexiones_actuales();
+
+char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado);
+bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado);
+void enviar_lista_gossiping(char* nombre);
+t_list *conexiones_para_gossiping();
+void actualizar_tabla_gossiping(instr_t* instruccion);
+void devolver_gossip(instr_t *instruccion, char *remitente);
+void imprimir_config_actual();
+instr_t* mis_datos(cod_op codigoOperacion);
+
 #endif /* kernel.h */

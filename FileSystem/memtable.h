@@ -9,6 +9,7 @@
 t_dictionary* memtable;
 t_dictionary* tablas_nro_dump;
 sem_t mutex_tablas_nro_dump;
+sem_t mutex_diccionario_conexiones;
 
 // --------FUNCIONES DE MEMTABLE--------
 void levantar_tablas_directorio();
