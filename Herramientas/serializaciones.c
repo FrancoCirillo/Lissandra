@@ -59,6 +59,7 @@ void *serializar_request(instr_t *instruccionAEnviar, int *tamanio)
 	int bytes = paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op) + sizeof(mseg_t);
 	void *paqueteSerializado = serializar_paquete(paqueteAEnviar, bytes);
 	*tamanio = bytes;
+	eliminar_paquete(paqueteAEnviar);
 	return paqueteSerializado;
 }
 
@@ -67,6 +68,8 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 	int tamanio;
 	void *a_enviar = serializar_request(instruccionAEnviar, &tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
+	list_destroy(instruccionAEnviar->parametros);
+	free(instruccionAEnviar);
 	free(a_enviar);
 	return s;
 }
@@ -74,14 +77,14 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 //Hay que crear un buffer para los parametros
 void crear_buffer(t_paquete *paquete)
 {
-	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer = malloc(sizeof(t_buffer)); //free en eliminar_paquete
 	paquete->buffer->size = 0;
 	paquete->buffer->stream = NULL;
 }
 
 t_paquete *crear_paquete(cod_op nuevoCodOp, mseg_t nuevoTimestamp)
 {
-	t_paquete *paquete = malloc(sizeof(t_paquete));
+	t_paquete *paquete = malloc(sizeof(t_paquete));//free en eliminar_paquete
 	paquete->timestamp = nuevoTimestamp;
 	paquete->codigo_operacion = nuevoCodOp;
 	crear_buffer(paquete);
@@ -102,7 +105,7 @@ void *recibir_buffer(int *size, int socket_cliente)
 	void *buffer;
 
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-	buffer = malloc(*size);
+	buffer = malloc(*size);//free en recibir_paquete
 	if (*size != 0)
 		recv(socket_cliente, buffer, *size, MSG_WAITALL); //Pasa cuando recibimos las requests sin parametros
 	return buffer;
@@ -191,12 +194,6 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 
 	requestCopy = string_from_format("%s", requestCopy);
 	string_to_upper(requestCopy);
-
-	if (strcmp(requestCopy, "CERRAR\n") == 0)
-	{
-		printf(COLOR_ANSI_CYAN "Gracias por usar Lissandra FS!\n" COLOR_ANSI_RESET "cerrando...\n\n");
-		exit(0);
-	}
 
 	mseg_t timestampRequest = obtener_ts();
 
@@ -288,6 +285,9 @@ cod_op reconocer_comando(char *comando)
 	else if (strcmp(comando, "SHOW") == 0)
 		return CODIGO_SHOW;
 
+	else if (strcmp(comando, "CERRAR") == 0)
+			return CODIGO_CERRAR;
+
 	else
 		return INPUT_ERROR;
 }
@@ -331,6 +331,10 @@ int es_comando_valido(cod_op comando, t_list *listaParam)
 
 	case CODIGO_SHOW: //Para testing
 		return 1;
+
+	case CODIGO_CERRAR: //Para testing
+		return 1;
+
 
 	default:
 		return -1;

@@ -59,5 +59,6 @@ void iniciar_ejecutador_gossiping();
 	/* TESTING */
 
 void check_inicial(int argc, char* argv[]);
+void terminar_memoria(instr_t* instruccion);
 
 #endif /* MEMORIA_MEMORIA_H_ */

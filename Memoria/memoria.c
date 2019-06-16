@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
 	iniciar_ejecutador_gossiping();
 
 	vigilar_conexiones_entrantes(callback, CONSOLA_MEMORIA);
-	//config_destroy(g_config);
 
 	return 0;
 }
@@ -140,6 +139,10 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			inicializar_estructuras_memoria();
 			break;
 
+		case CODIGO_CERRAR:
+			terminar_memoria(instruccion);
+			break;
+
 		case PETICION_GOSSIP:
 			devolver_gossip(instruccion, remitente);
 			break;
@@ -192,4 +195,26 @@ void check_inicial(int argc, char* argv[])
 	}
 	nombreDeMemoria = string_from_format("Memoria_%d", configuracion.MEMORY_NUMBER);
 }
+
+void terminar_memoria(instr_t* instruccion){
+
+	void liberar_parametros(void* value){
+		free(value);
+	}
+	list_iterate(instruccion->parametros, (void*)liberar_parametros);
+	list_destroy(instruccion->parametros);
+	free(instruccion);
+
+	config_destroy(g_config);
+	log_destroy(g_logger);
+	dictionary_destroy(conexionesActuales);
+	free(idsNuevasConexiones);
+	free(memoriaPrincipal);
+	dictionary_destroy(tablaDeSegmentos);
+	list_destroy(paginasSegunUso);
+
+	puts("Gracias por usar Lissandra");
+	exit(0);
+}
+
 

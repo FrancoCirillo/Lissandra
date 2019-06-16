@@ -416,7 +416,6 @@ void enviar_tamanio_value(char* remitente) {
     list_add(listaParam, tamanioValue);
     char* puntoMontaje = string_from_format("%s", config_FS.punto_montaje);
     list_add(listaParam, puntoMontaje);
-    printf("PM:   %s", puntoMontaje);
     instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
     enviar_request(miInstruccion, conexionMemoriaN);
     puts("Tamanio del value y punto de montaje enviados");

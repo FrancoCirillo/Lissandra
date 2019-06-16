@@ -394,7 +394,6 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 				enviar_request(instruccionAEnviar, conexionConFS);
 				list_destroy(instruccionAEnviar->parametros); //No hacemos free a sus elementos xq son punteros a la Memoria Principal
 				loggear_trace(string_from_format("Se vacio la lista y se destruyeron sus elementos"));
-				free(instruccionAEnviar);
 			}
 		}
 

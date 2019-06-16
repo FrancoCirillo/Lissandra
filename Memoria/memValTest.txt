@@ -1,0 +1,348 @@
+==4098== Memcheck, a memory error detector
+==4098== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==4098== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==4098== Command: Default/Memoria
+==4098== Parent PID: 4095
+==4098== 
+--4098-- 
+--4098-- Valgrind options:
+--4098--    --show-leak-kinds=all
+--4098--    --leak-check=full
+--4098--    -v
+--4098--    --log-file=memValTest.txt
+--4098-- Contents of /proc/version:
+--4098--   Linux version 4.4.0-116-generic (buildd@lgw01-amd64-023) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.9) ) #140-Ubuntu SMP Mon Feb 12 21:22:43 UTC 2018
+--4098-- 
+--4098-- Arch and hwcaps: X86, LittleEndian, x86-mmxext-sse1-sse2-sse3-lzcnt
+--4098-- Page sizes: currently 4096, max supported 4096
+--4098-- Valgrind library directory: /usr/lib/valgrind
+--4098-- Reading syms from /lib/i386-linux-gnu/ld-2.23.so
+--4098--   Considering /lib/i386-linux-gnu/ld-2.23.so ..
+--4098--   .. CRC mismatch (computed 596cb2b8 wanted 417b32cc)
+--4098--   Considering /usr/lib/debug/lib/i386-linux-gnu/ld-2.23.so ..
+--4098--   .. CRC is valid
+--4098-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Memoria/Default/Memoria
+--4098-- Reading syms from /usr/lib/valgrind/memcheck-x86-linux
+--4098--   Considering /usr/lib/valgrind/memcheck-x86-linux ..
+--4098--   .. CRC mismatch (computed 6036da3f wanted 652e483f)
+--4098--    object doesn't have a symbol table
+--4098--    object doesn't have a dynamic symbol table
+--4098-- Scheduler: using generic scheduler lock implementation.
+--4098-- Reading suppressions file: /usr/lib/valgrind/default.supp
+==4098== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-4098-by-utnso-on-???
+==4098== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-4098-by-utnso-on-???
+==4098== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-4098-by-utnso-on-???
+==4098== 
+==4098== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==4098== don't want to do, unless you know exactly what you're doing,
+==4098== or are doing some strange experiment):
+==4098==   /usr/lib/valgrind/../../bin/vgdb --pid=4098 ...command...
+==4098== 
+==4098== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==4098==   /path/to/gdb Default/Memoria
+==4098== and then give GDB the following command
+==4098==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=4098
+==4098== --pid is optional if only one valgrind process is running
+==4098== 
+--4098-- REDIR: 0x4018eb0 (ld-linux.so.2:strlen) redirected to 0x380490f2 (???)
+--4098-- REDIR: 0x4018c70 (ld-linux.so.2:index) redirected to 0x380490cd (???)
+--4098-- Reading syms from /usr/lib/valgrind/vgpreload_core-x86-linux.so
+--4098--   Considering /usr/lib/valgrind/vgpreload_core-x86-linux.so ..
+--4098--   .. CRC mismatch (computed 5b95c0c4 wanted 39e79efa)
+--4098--    object doesn't have a symbol table
+--4098-- Reading syms from /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so
+--4098--   Considering /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so ..
+--4098--   .. CRC mismatch (computed 4d5a1526 wanted 33571d5b)
+--4098--    object doesn't have a symbol table
+==4098== WARNING: new redirection conflicts with existing -- ignoring it
+--4098--     old: 0x04018eb0 (strlen              ) R-> (0000.0) 0x380490f2 ???
+--4098--     new: 0x04018eb0 (strlen              ) R-> (2007.0) 0x0402f410 strlen
+--4098-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/libHerramientas.so
+--4098-- Reading syms from /lib/i386-linux-gnu/libpthread-2.23.so
+--4098--   Considering /usr/lib/debug/.build-id/12/78da59ecc0791dce5c44d8b8756a0480be3a5b.debug ..
+--4098--   .. build-id is valid
+--4098-- Reading syms from /usr/lib/libcommons.so
+--4098-- Reading syms from /lib/i386-linux-gnu/libc-2.23.so
+--4098--   Considering /lib/i386-linux-gnu/libc-2.23.so ..
+--4098--   .. CRC mismatch (computed af9c0474 wanted a5de3f2a)
+--4098--   Considering /usr/lib/debug/lib/i386-linux-gnu/libc-2.23.so ..
+--4098--   .. CRC is valid
+--4098-- REDIR: 0x40f74b0 (libc.so.6:strncasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x40fe140 (libc.so.6:memrchr) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x4110b20 (libc.so.6:wcslen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x40f5580 (libc.so.6:strlen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x40f7610 (libc.so.6:memcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x40f4ee0 (libc.so.6:strcmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x40f6fc0 (libc.so.6:memset) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x40f4f90 (libc.so.6:strcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x40f6350 (libc.so.6:strstr) redirected to 0x4033700 (strstr)
+--4098-- REDIR: 0x40f57e0 (libc.so.6:__GI_strrchr) redirected to 0x402ee00 (__GI_strrchr)
+--4098-- REDIR: 0x40f55c0 (libc.so.6:__GI_strlen) redirected to 0x402f390 (__GI_strlen)
+--4098-- REDIR: 0x40f0f00 (libc.so.6:malloc) redirected to 0x402c110 (malloc)
+--4098-- REDIR: 0x40f7680 (libc.so.6:__GI_memcpy) redirected to 0x4030fb0 (__GI_memcpy)
+--4098-- REDIR: 0x40f1810 (libc.so.6:calloc) redirected to 0x402e010 (calloc)
+--4098-- REDIR: 0x40f1520 (libc.so.6:realloc) redirected to 0x402e250 (realloc)
+--4098-- REDIR: 0x40f1470 (libc.so.6:free) redirected to 0x402d2f0 (free)
+--4098-- REDIR: 0x40fe440 (libc.so.6:__strlen_sse2_bsf) redirected to 0x402f370 (strlen)
+--4098-- REDIR: 0x40f5700 (libc.so.6:strncmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x41b55c0 (libc.so.6:__strncmp_ssse3) redirected to 0x402fab0 (strncmp)
+--4098-- REDIR: 0x40f9280 (libc.so.6:strchrnul) redirected to 0x40330b0 (strchrnul)
+--4098-- REDIR: 0x40f70d0 (libc.so.6:__GI_mempcpy) redirected to 0x40332c0 (__GI_mempcpy)
+--4098-- REDIR: 0x40f5750 (libc.so.6:strncpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x40ffdc0 (libc.so.6:__strncpy_ssse3) redirected to 0x402f5f0 (strncpy)
+--4098-- REDIR: 0x40f4ae0 (libc.so.6:strcat) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x4109b30 (libc.so.6:__strcat_ssse3) redirected to 0x402f030 (strcat)
+--4098-- REDIR: 0x40f7460 (libc.so.6:strcasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--4098-- REDIR: 0x41b6fb0 (libc.so.6:__strcasecmp_ssse3) redirected to 0x402fcf0 (strcasecmp)
+--4098-- REDIR: 0x41a54d0 (libc.so.6:__memset_sse2) redirected to 0x40327d0 (memset)
+--4098-- REDIR: 0x40f6c10 (libc.so.6:__GI_memcmp) redirected to 0x4031ef0 (__GI_memcmp)
+--4098-- REDIR: 0x40f91b0 (libc.so.6:__GI___rawmemchr) redirected to 0x4033110 (__GI___rawmemchr)
+==4098== 
+==4098== Process terminating with default action of signal 2 (SIGINT)
+==4098==    at 0x40672F4: connect (connect.c:33)
+==4098==    by 0x403C46E: crear_conexion (utilsCliente.c:44)
+==4098==    by 0x804BD5C: enviar_datos_a_FS (misConexiones.c:90)
+==4098==    by 0x804B4B7: empezar_conexiones (memoria.c:82)
+==4098==    by 0x804963D: main (memoria.c:14)
+==4098== 
+==4098== HEAP SUMMARY:
+==4098==     in use at exit: 1,240 bytes in 64 blocks
+==4098==   total heap usage: 211 allocs, 147 frees, 18,807 bytes allocated
+==4098== 
+==4098== Searching for pointers to 64 not-freed blocks
+==4098== Checked 70,868 bytes
+==4098== 
+==4098== 5 bytes in 1 blocks are still reachable in loss record 1 of 28
+==4098==    at 0x402E2CC: realloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x407845E: string_trim_right (in /usr/lib/libcommons.so)
+==4098==    by 0x4078354: string_trim (in /usr/lib/libcommons.so)
+==4098==    by 0x407873D: string_get_string_as_array (in /usr/lib/libcommons.so)
+==4098==    by 0x407A5D5: config_get_array_value (in /usr/lib/libcommons.so)
+==4098==    by 0x804B301: inicializar_configuracion (memoria.c:34)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 2 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x407A393: config_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B298: inicializar_configuracion (memoria.c:29)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 3 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4078E01: list_create (in /usr/lib/libcommons.so)
+==4098==    by 0x403C1B0: string_array_to_list (serializaciones.c:448)
+==4098==    by 0x804B2EA: inicializar_configuracion (memoria.c:33)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 4 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4079905: list_create_element (in /usr/lib/libcommons.so)
+==4098==    by 0x4078E3D: list_add (in /usr/lib/libcommons.so)
+==4098==    by 0x403C16C: agregar_a_lista.5968 (serializaciones.c:451)
+==4098==    by 0x4078846: string_iterate_lines (in /usr/lib/libcommons.so)
+==4098==    by 0x403C1C5: string_array_to_list (serializaciones.c:454)
+==4098==    by 0x804B2EA: inicializar_configuracion (memoria.c:33)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 5 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4078E01: list_create (in /usr/lib/libcommons.so)
+==4098==    by 0x403C1B0: string_array_to_list (serializaciones.c:448)
+==4098==    by 0x804B309: inicializar_configuracion (memoria.c:34)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 6 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4079905: list_create_element (in /usr/lib/libcommons.so)
+==4098==    by 0x4078E3D: list_add (in /usr/lib/libcommons.so)
+==4098==    by 0x403C16C: agregar_a_lista.5968 (serializaciones.c:451)
+==4098==    by 0x4078846: string_iterate_lines (in /usr/lib/libcommons.so)
+==4098==    by 0x403C1C5: string_array_to_list (serializaciones.c:454)
+==4098==    by 0x804B309: inicializar_configuracion (memoria.c:34)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 7 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4078E01: list_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804BCD9: enviar_datos_a_FS (misConexiones.c:80)
+==4098==    by 0x804B4B7: empezar_conexiones (memoria.c:82)
+==4098==    by 0x804963D: main (memoria.c:14)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 8 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4079905: list_create_element (in /usr/lib/libcommons.so)
+==4098==    by 0x4078E3D: list_add (in /usr/lib/libcommons.so)
+==4098==    by 0x804BD13: enviar_datos_a_FS (misConexiones.c:85)
+==4098==    by 0x804B4B7: empezar_conexiones (memoria.c:82)
+==4098==    by 0x804963D: main (memoria.c:14)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 9 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4079905: list_create_element (in /usr/lib/libcommons.so)
+==4098==    by 0x4078E3D: list_add (in /usr/lib/libcommons.so)
+==4098==    by 0x804BD21: enviar_datos_a_FS (misConexiones.c:86)
+==4098==    by 0x804B4B7: empezar_conexiones (memoria.c:82)
+==4098==    by 0x804963D: main (memoria.c:14)
+==4098== 
+==4098== 8 bytes in 1 blocks are still reachable in loss record 10 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4079905: list_create_element (in /usr/lib/libcommons.so)
+==4098==    by 0x4078E3D: list_add (in /usr/lib/libcommons.so)
+==4098==    by 0x804BD2F: enviar_datos_a_FS (misConexiones.c:87)
+==4098==    by 0x804B4B7: empezar_conexiones (memoria.c:82)
+==4098==    by 0x804963D: main (memoria.c:14)
+==4098== 
+==4098== 8 bytes in 1 blocks are definitely lost in loss record 11 of 28
+==4098==    at 0x402E2CC: realloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4078BC4: _string_split (in /usr/lib/libcommons.so)
+==4098==    by 0x40785F3: string_split (in /usr/lib/libcommons.so)
+==4098==    by 0x4078716: string_get_string_as_array (in /usr/lib/libcommons.so)
+==4098==    by 0x407A5D5: config_get_array_value (in /usr/lib/libcommons.so)
+==4098==    by 0x804B2E2: inicializar_configuracion (memoria.c:33)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 8 bytes in 1 blocks are definitely lost in loss record 12 of 28
+==4098==    at 0x402E2CC: realloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4078BC4: _string_split (in /usr/lib/libcommons.so)
+==4098==    by 0x40785F3: string_split (in /usr/lib/libcommons.so)
+==4098==    by 0x4078716: string_get_string_as_array (in /usr/lib/libcommons.so)
+==4098==    by 0x407A5D5: config_get_array_value (in /usr/lib/libcommons.so)
+==4098==    by 0x804B301: inicializar_configuracion (memoria.c:34)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 10 bytes in 1 blocks are still reachable in loss record 13 of 28
+==4098==    at 0x402E2CC: realloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x407845E: string_trim_right (in /usr/lib/libcommons.so)
+==4098==    by 0x4078354: string_trim (in /usr/lib/libcommons.so)
+==4098==    by 0x407873D: string_get_string_as_array (in /usr/lib/libcommons.so)
+==4098==    by 0x407A5D5: config_get_array_value (in /usr/lib/libcommons.so)
+==4098==    by 0x804B2E2: inicializar_configuracion (memoria.c:33)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 10 bytes in 1 blocks are still reachable in loss record 14 of 28
+==4098==    at 0x402E2CC: realloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x40780E7: string_append (in /usr/lib/libcommons.so)
+==4098==    by 0x4078A5E: _string_append_with_format_list (in /usr/lib/libcommons.so)
+==4098==    by 0x40781D3: string_from_vformat (in /usr/lib/libcommons.so)
+==4098==    by 0x4078171: string_from_format (in /usr/lib/libcommons.so)
+==4098==    by 0x804B640: check_inicial (memoria.c:193)
+==4098==    by 0x804962B: main (memoria.c:10)
+==4098== 
+==4098== 10 bytes in 1 blocks are still reachable in loss record 15 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x40F52C5: strdup (strdup.c:42)
+==4098==    by 0x407809A: string_duplicate (in /usr/lib/libcommons.so)
+==4098==    by 0x4077C49: log_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B20B: iniciar_log (memoria.c:49)
+==4098==    by 0x8049630: main (memoria.c:11)
+==4098== 
+==4098== 15 bytes in 1 blocks are still reachable in loss record 16 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x40F52C5: strdup (strdup.c:42)
+==4098==    by 0x407A3A7: config_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B298: inicializar_configuracion (memoria.c:29)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 16 bytes in 1 blocks are still reachable in loss record 17 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x40799F7: dictionary_create (in /usr/lib/libcommons.so)
+==4098==    by 0x407A3B6: config_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B298: inicializar_configuracion (memoria.c:29)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 16 bytes in 1 blocks are still reachable in loss record 18 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x40799F7: dictionary_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B48A: inicializar_estructuras_conexiones (memoria.c:75)
+==4098==    by 0x8049635: main (memoria.c:13)
+==4098== 
+==4098== 16 bytes in 1 blocks are still reachable in loss record 19 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x403BC74: crear_instruccion (serializaciones.c:349)
+==4098==    by 0x804BD3E: enviar_datos_a_FS (misConexiones.c:88)
+==4098==    by 0x804B4B7: empezar_conexiones (memoria.c:82)
+==4098==    by 0x804963D: main (memoria.c:14)
+==4098== 
+==4098== 20 bytes in 1 blocks are still reachable in loss record 20 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4077BA3: log_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B20B: iniciar_log (memoria.c:49)
+==4098==    by 0x8049630: main (memoria.c:11)
+==4098== 
+==4098== 36 bytes in 1 blocks are still reachable in loss record 21 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x804B499: inicializar_estructuras_conexiones (memoria.c:76)
+==4098==    by 0x8049635: main (memoria.c:13)
+==4098== 
+==4098== 48 bytes in 1 blocks are still reachable in loss record 22 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x414DA1D: gaih_inet (getaddrinfo.c:1223)
+==4098==    by 0x414F3E2: getaddrinfo (getaddrinfo.c:2425)
+==4098==    by 0x403C371: crear_conexion (utilsCliente.c:19)
+==4098==    by 0x804BD5C: enviar_datos_a_FS (misConexiones.c:90)
+==4098==    by 0x804B4B7: empezar_conexiones (memoria.c:82)
+==4098==    by 0x804963D: main (memoria.c:14)
+==4098== 
+==4098== 80 bytes in 1 blocks are still reachable in loss record 23 of 28
+==4098==    at 0x402E0B8: calloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4079A18: dictionary_create (in /usr/lib/libcommons.so)
+==4098==    by 0x407A3B6: config_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B298: inicializar_configuracion (memoria.c:29)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 80 bytes in 1 blocks are still reachable in loss record 24 of 28
+==4098==    at 0x402E0B8: calloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x4079A18: dictionary_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B48A: inicializar_estructuras_conexiones (memoria.c:75)
+==4098==    by 0x8049635: main (memoria.c:13)
+==4098== 
+==4098== 83 bytes in 13 blocks are still reachable in loss record 25 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x40F52C5: strdup (strdup.c:42)
+==4098==    by 0x407809A: string_duplicate (in /usr/lib/libcommons.so)
+==4098==    by 0x4078BA9: _string_split (in /usr/lib/libcommons.so)
+==4098==    by 0x40786AF: string_n_split (in /usr/lib/libcommons.so)
+==4098==    by 0x407A2B0: add_cofiguration.2909 (in /usr/lib/libcommons.so)
+==4098==    by 0x4078846: string_iterate_lines (in /usr/lib/libcommons.so)
+==4098==    by 0x407A444: config_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B298: inicializar_configuracion (memoria.c:29)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 155 bytes in 13 blocks are still reachable in loss record 26 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x40F52C5: strdup (strdup.c:42)
+==4098==    by 0x4079B2D: dictionary_put (in /usr/lib/libcommons.so)
+==4098==    by 0x407A2D3: add_cofiguration.2909 (in /usr/lib/libcommons.so)
+==4098==    by 0x4078846: string_iterate_lines (in /usr/lib/libcommons.so)
+==4098==    by 0x407A444: config_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B298: inicializar_configuracion (memoria.c:29)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 208 bytes in 13 blocks are still reachable in loss record 27 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x407A004: dictionary_create_element (in /usr/lib/libcommons.so)
+==4098==    by 0x4079B3F: dictionary_put (in /usr/lib/libcommons.so)
+==4098==    by 0x407A2D3: add_cofiguration.2909 (in /usr/lib/libcommons.so)
+==4098==    by 0x4078846: string_iterate_lines (in /usr/lib/libcommons.so)
+==4098==    by 0x407A444: config_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B298: inicializar_configuracion (memoria.c:29)
+==4098==    by 0x8049621: main (memoria.c:9)
+==4098== 
+==4098== 344 bytes in 1 blocks are still reachable in loss record 28 of 28
+==4098==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==4098==    by 0x40DE359: __fopen_internal (iofopen.c:69)
+==4098==    by 0x40DE41D: fopen@@GLIBC_2.1 (iofopen.c:97)
+==4098==    by 0x4077ADA: txt_open_for_append (in /usr/lib/libcommons.so)
+==4098==    by 0x4077BE3: log_create (in /usr/lib/libcommons.so)
+==4098==    by 0x804B20B: iniciar_log (memoria.c:49)
+==4098==    by 0x8049630: main (memoria.c:11)
+==4098== 
+==4098== LEAK SUMMARY:
+==4098==    definitely lost: 16 bytes in 2 blocks
+==4098==    indirectly lost: 0 bytes in 0 blocks
+==4098==      possibly lost: 0 bytes in 0 blocks
+==4098==    still reachable: 1,224 bytes in 62 blocks
+==4098==         suppressed: 0 bytes in 0 blocks
+==4098== 
+==4098== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
+==4098== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
