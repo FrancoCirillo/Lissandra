@@ -42,6 +42,7 @@ extern t_log *g_logger;
 extern t_config *g_config;
 extern config configuracion;
 extern int tamanioValue;
+extern char* puntoMontaje;
 extern int tamanioRegistro;
 extern bool* sectorOcupado;
 extern int cantidadDeSectores;

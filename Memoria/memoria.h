@@ -38,6 +38,7 @@ t_dictionary *conexionesActuales;
 char* miIPMemoria;
 char* nombreDeMemoria;
 int tamanioValue;
+char* puntoMontaje;
 int tamanioRegistro;
 bool* sectorOcupado;
 int cantidadDeSectores;

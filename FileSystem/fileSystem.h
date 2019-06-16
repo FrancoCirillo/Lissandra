@@ -53,6 +53,7 @@ typedef unsigned long long mseg_t;
 typedef struct ruta_t {
 	char* tablas;
 	char* bloques;
+	char* carpeta_metadata;
 	char* bitmap;
 	char* metadata;
 } ruta_t;
@@ -93,7 +94,7 @@ t_config* g_config;
 t_config* meta_config;
 
 /*TESTS*/
-void	imprimirRegistro(registro_t*);
+void	imprimirRegistro(void*);
 void	imprimirContenidoArchivo(char*);
 void	imprimirMetadata(char*);
 t_list*	listaRegistros();
@@ -111,7 +112,7 @@ void finalizar_rutas();
 
 /*FUNCIONES DE BLOQUES*/
 t_list* leer_binario(char*, uint16_t);
-t_list* leer_archivos_temporales(char*, uint16_t); //TODO hacer bien
+t_list* leer_archivos_temporales(char*, uint16_t);
 void 	escribir_bloque(registro_t*);
 void 	eliminar_archivos(char*); //TODO hacer
 
@@ -131,6 +132,7 @@ _Bool 	es_registro_mas_reciente(void*, void*);
 void 	liberar_memoria_instr(instr_t *);
 
 /* CONEXIONES */
+int fd_out_inicial;
 char* miIP;
 t_dictionary *conexionesActuales;
 void (*callback)(instr_t *instruccion, char *remitente);

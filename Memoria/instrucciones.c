@@ -2,7 +2,6 @@
 
 #include "instrucciones.h"
 
-
 void ejecutar_instruccion_select(instr_t *instruccion)
 {
 	loggear_info(string_from_format("Ejecutando instruccion Select"));
@@ -19,9 +18,9 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		{	//"La key pertenece a una fila preexistente"
 			registro* registroEncontrado = obtener_registro_de_pagina(filaEncontrada->ptrPagina);
 			t_list *listaParam = list_create();
-			char cadena[400];
-			sprintf(cadena, "Se encontro %s | %d | %s | %"PRIu64" en Memoria",
-					tabla,
+			char cadena[500];
+			sprintf(cadena, "Se encontro %s%s | %d | %s | %"PRIu64" en Memoria",
+					puntoMontaje, tabla,
 					registroEncontrado->key,
 					registroEncontrado->value,
 					registroEncontrado->timestamp);
@@ -59,7 +58,8 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	t_list *listaParam = list_create();
 	char cadena[400];
 	sprintf(cadena,
-			"Se encontro %s | %s | %s | %"PRIu64" en FS",
+			"Se encontro %s%s | %s | %s | %"PRIu64" en FS",
+			puntoMontaje,
 			(char *)list_get(instruccion->parametros, 0), //Tabla
 			(char *)list_get(instruccion->parametros, 1),//Key
 			(char *)list_get(instruccion->parametros, 2), //Value
@@ -145,7 +145,8 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 		if(flagMod){
 			char cadena[500];
 			t_list *listaParam = list_create();
-			sprintf(cadena, "Se inserto %s | %s | %s | %"PRIu64" en la Memoria",
+			sprintf(cadena, "Se inserto %s%s | %s | %s | %"PRIu64" en la Memoria",
+					puntoMontaje,
 					(char *)list_get(instruccion->parametros, 0),
 					(char *)list_get(instruccion->parametros, 1),
 					(char *)list_get(instruccion->parametros, 2),
@@ -189,6 +190,7 @@ void ejecutar_instruccion_drop(instr_t *instruccion)
 	if(enviar_request(instruccion, conexionFS)==-1){
 		loggear_error(string_from_format("No se envio el Drop al FS"));
 	}
+
 }
 
 void ejecutar_instruccion_exito(instr_t *instruccion)

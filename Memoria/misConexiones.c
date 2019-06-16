@@ -111,7 +111,9 @@ void pedir_tamanio_value(){
 
 void actualizar_tamanio_value(instr_t* instruccion){
 	tamanioValue = atoi((char*) list_get(instruccion->parametros, 0));
+	puntoMontaje = (char*) list_get(instruccion->parametros, 1);
 	loggear_debug(string_from_format("Tamanio del value recibido: %d\n", tamanioValue));
+	loggear_debug(string_from_format("Punto de montaje recibido: %s\n", puntoMontaje));
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){
@@ -315,6 +317,7 @@ void gossipear_con_procesos_desconectados(){
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPMemoria, 0);
 			if(conexion != -1){
 				puts("Conexion creada");
+				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
