@@ -196,7 +196,7 @@ cod_op quien_pidio(instr_t *instruccion);
 /*
  *  Imprime un registro presente en instr_t (siempre y cuando Key y Value sean char*)
  */
-void imprimir_registro(instr_t *instruccion);
+void imprimir_registro(instr_t *instruccion, void (*funcion_log)(char *texto));
 
 
 /*

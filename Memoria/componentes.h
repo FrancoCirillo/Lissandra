@@ -46,7 +46,7 @@ registro *obtener_registro_de_pagina(void* pagina);
 
 char* pagina_a_str(void* pagina);
 char* registro_a_str(registro* registro);
-void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log* logger);
+void loggear_tabla_de_paginas(t_list *tablaDePaginas, void (*funcion_log)(char *texto));
 
 
 /* ALGORITMO DE REEMPLAZO */

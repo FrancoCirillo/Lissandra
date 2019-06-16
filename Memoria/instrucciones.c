@@ -99,7 +99,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 			loggear_trace(string_from_format("\nTabla de paginas actual: (Nueva)"));
-			loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+			loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
 			loggear_trace(string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
 
 			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
@@ -120,7 +120,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				filaEncontrada->flagModificado = flagMod;
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
 				loggear_trace(string_from_format("\nTabla de paginas actual: (Key preexistente)"));
-				loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
 				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
 				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
@@ -133,7 +133,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				loggear_trace(string_from_format("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada)));
 				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 				loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
-				loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
 				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
 				numeroDePaginaInsertada = filaAgregada->numeroDePagina;

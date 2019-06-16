@@ -466,7 +466,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		//Se pidio desde la consola de FS
 		if (codigoOperacion == DEVOLUCION_SELECT)
-			imprimir_registro(miInstruccion);
+			imprimir_registro(miInstruccion, loggear_info);
 
 		if (codigoOperacion == CODIGO_EXITO)
 		{

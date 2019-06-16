@@ -199,7 +199,7 @@ char *pagina_a_str(void *pagina)
 	return registro_a_str(obtener_registro_de_pagina(pagina));
 }
 
-void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log *logger)
+void loggear_tabla_de_paginas(t_list *tablaDePaginas, void (*funcion_log)(char *texto))
 {
 
 	char *texto = string_new();
@@ -216,7 +216,7 @@ void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log *logger)
 	}
 
 	list_iterate(tablaDePaginas, (void *)iterator);
-	loggear_info(texto);
+	funcion_log(texto);
 }
 
 void se_uso(int paginaUtilizada)
@@ -506,7 +506,7 @@ void eliminar_tabla(instr_t *instruccion)
 void imprimir_segmento(char *nombreSegmento, t_list *suTablaDePaginas)
 {
 	loggear_info(string_from_format("Tabla: %s%s\n", puntoMontaje, nombreSegmento));
-	loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+	loggear_tabla_de_paginas(suTablaDePaginas, loggear_info);
 }
 
 void imprimir_segmento_basico(char *nombreSegmento, t_list *suTablaDePaginas)

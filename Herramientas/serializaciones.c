@@ -386,11 +386,13 @@ cod_op quien_pidio(instr_t *instruccion)
 	return CONSOLA_FS;
 }
 
-void imprimir_registro(instr_t *instruccion)
+void imprimir_registro(instr_t *instruccion, void (*funcion_log)(char *texto))
 {
-	printf("Key %s\n", (char *)list_get(instruccion->parametros, 1));
-	printf("Value %s\n", (char *)list_get(instruccion->parametros, 2));
-	printf("Timestamp: %" PRIu64 "\n", instruccion->timestamp);
+	char *texto = string_new();
+	string_append_with_format(&texto,"Key %s\n", (char *)list_get(instruccion->parametros, 1));
+	string_append_with_format(&texto,"Value %s\n", (char *)list_get(instruccion->parametros, 2));
+	string_append_with_format(&texto,"Timestamp: %" PRIu64 "\n", instruccion->timestamp);
+	funcion_log(texto);
 }
 
 void loggear_error_proceso(instr_t *miInstruccion)
