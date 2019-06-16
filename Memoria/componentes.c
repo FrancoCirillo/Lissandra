@@ -23,7 +23,7 @@ void inicializar_sectores_memoria()
 	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue;
 	cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro; //Se trunca automaticamente al entero (por ser todos int)
 
-	loggear_debug(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
+	loggear_trace(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
 
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
 	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool));
@@ -90,7 +90,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoConFilaABorrar, (void *)free);
 			}
 			free(segmentoConFilaABorrar); //malloc en fila_correspondiente_a_esa_pagina
-			free(reg); //malloc en obtener_registro_de_instruccion
+			free(reg);					  //malloc en obtener_registro_de_instruccion
 			return memoriaPrincipal + ((*numeroDeSector) * tamanioRegistro);
 		}
 	}
@@ -120,7 +120,7 @@ void actualizar_pagina(void *paginaAActualizar, mseg_t nuevoTimestamp, char *nue
 	desplazamiento += sizeof(mseg_t);
 	//	memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t)); La key no se mofidica
 	desplazamiento += sizeof(uint16_t);
-	memcpy(paginaAActualizar+ desplazamiento, &nuevoValue, tamanioValue);
+	memcpy(paginaAActualizar + desplazamiento, &nuevoValue, tamanioValue);
 }
 registro *obtener_registro_de_instruccion(instr_t *instruccion)
 {
@@ -190,7 +190,7 @@ registro *obtener_registro_de_pagina(void *pagina)
 
 char *registro_a_str(registro *registro)
 {
-	char* regString = string_from_format("	Timestamp:	%"PRIu64"\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
+	char *regString = string_from_format("	Timestamp:	%" PRIu64 "\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
 	return regString;
 }
 
@@ -199,14 +199,14 @@ char *pagina_a_str(void *pagina)
 	return registro_a_str(obtener_registro_de_pagina(pagina));
 }
 
-void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log* logger)
+void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log *logger)
 {
 
-	char* texto = string_new();
+	char *texto = string_new();
 
 	void iterator(filaTabPags * fila)
 	{
-		char* paginaStr = pagina_a_str(fila->ptrPagina);
+		char *paginaStr = pagina_a_str(fila->ptrPagina);
 		string_append_with_format(&texto, " ~~~~~~~~~~~~~~~~~~~~\n"); //No le gusta todo en un solo append
 		string_append_with_format(&texto, " Numero de pagina: %d\n", fila->numeroDePagina);
 		string_append_with_format(&texto, " Puntero a pagina: %p\n", fila->ptrPagina);
@@ -216,10 +216,11 @@ void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log* logger)
 	}
 
 	list_iterate(tablaDePaginas, (void *)iterator);
-	loggear_info( texto);
+	loggear_info(texto);
 }
 
-void se_uso(int paginaUtilizada){
+void se_uso(int paginaUtilizada)
+{
 
 	int *paginaUsada = malloc(sizeof(int));
 	*paginaUsada = paginaUtilizada;
@@ -240,7 +241,6 @@ void se_uso(int paginaUtilizada){
 		//En list[0] queda el que menos se usa
 	}
 	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
-
 }
 
 t_list *segmento_de_esa_tabla(char *tabla)
@@ -281,9 +281,8 @@ bool memoria_esta_full()
 
 int *pagina_lru()
 {
-	return (int*) list_get(paginasSegunUso, 0);
+	return (int *)list_get(paginasSegunUso, 0);
 }
-
 
 filaTabPags *fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, int *indiceEnTabla)
 {
@@ -305,7 +304,8 @@ filaTabPags *fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, in
 	return list_find(suTablaDePaginas, (void *)tiene_el_numero);
 }
 
-filaTabPags *fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada){
+filaTabPags *fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada)
+{
 
 	bool tiene_la_key(filaTabPags * fila)
 	{
@@ -323,7 +323,7 @@ filaTabPags *fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada){
 	return list_find(suTablaDePaginas, (void *)tiene_la_key);
 }
 
-filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla, char** segmentoQueLaTiene)
+filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla, char **segmentoQueLaTiene)
 {
 	//Un dictionary_find casero
 
@@ -333,9 +333,9 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 
 	void tiene_esa_pagina_la_fila(char *segmento, t_list *suTablaDePaginas)
 	{
-		if(seEncontro == 0)
+		if (seEncontro == 0)
 		{
-			*indiceEnTabla= 0;
+			*indiceEnTabla = 0;
 			filaPosible = fila_con_el_numero(suTablaDePaginas, numeroDePagina, indiceEnTabla);
 			if (filaPosible != NULL)
 			{ //Se encontro la fila que tenia ese numero
@@ -344,7 +344,6 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 				*segmentoQueLaTiene = malloc(sizeof(segmento));
 				*segmentoQueLaTiene = strcpy(*segmentoQueLaTiene, segmento);
 			}
-
 		}
 	}
 
@@ -360,60 +359,55 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 		return filaEncontrada;
 }
 
-
-
 void ejecutar_instruccion_journal(instr_t *instruccion)
 {
 	loggear_info(string_from_format("Ejecutando instruccion Journal"));
 	int conexionConFS = obtener_fd_out("FileSystem");
 
-	loggear_debug(string_from_format("Se encontro el fd_out"));
 	void enviar_paginas_modificadas(char *segmento, t_list *suTablaDePaginas)
 	{
-		char* tablaAInsertar = string_from_format("%s", segmento);
+		char *tablaAInsertar = string_from_format("%s", segmento);
 
-		printf("Tabla a journalear: %s\n", tablaAInsertar);
-		loggear_debug(string_from_format("Chequeando una tabla de paginas"));
+		loggear_trace(string_from_format("Chequeando una tabla de paginas"));
 		void enviar_si_esta_modificada(filaTabPags * fila)
 		{
-			loggear_debug(string_from_format("Chequeando tiene una fila modificada"));
-			if(fila->flagModificado)
+			loggear_trace(string_from_format("Chequeando si tiene una fila modificada"));
+			if (fila->flagModificado)
 			{
-				loggear_debug(string_from_format("Se encontro una pagina modificada"));
+				loggear_trace(string_from_format("Se encontro una pagina modificada"));
 				cod_op codOp = CODIGO_INSERT;
 
-				if(quien_pidio(instruccion) == CONSOLA_KERNEL)
+				if (quien_pidio(instruccion) == CONSOLA_KERNEL)
 				{
-					loggear_debug(string_from_format("El journal lo pidio Kernel"));
+					loggear_trace(string_from_format("El journal lo pidio Kernel"));
 					codOp += BASE_CONSOLA_KERNEL;
 				}
 				else
 				{
-					loggear_debug(string_from_format("El journal lo pidio Memoria"));
+					loggear_trace(string_from_format("El journal lo pidio Memoria"));
 					codOp += BASE_CONSOLA_MEMORIA;
 				}
 
-				instr_t* instruccionAEnviar = fila_a_instr(tablaAInsertar, fila, codOp);
-				loggear_debug(string_from_format("Se genero la instruccion a enviar"));
+				loggear_debug(string_from_format("Insertando '%s' en FileSystem", tablaAInsertar));
+				instr_t *instruccionAEnviar = fila_a_instr(tablaAInsertar, fila, codOp);
+				loggear_trace(string_from_format("Se genero la instruccion a enviar"));
 				enviar_request(instruccionAEnviar, conexionConFS);
 				list_destroy(instruccionAEnviar->parametros); //No hacemos free a sus elementos xq son punteros a la Memoria Principal
-				loggear_debug(string_from_format("Se vacio la lista y se destruyeron sus elementos"));
+				loggear_trace(string_from_format("Se vacio la lista y se destruyeron sus elementos"));
 				free(instruccionAEnviar);
-				loggear_debug(string_from_format("free(instruccionAEnviar)"));
 			}
 		}
 
 		list_iterate(suTablaDePaginas, (void *)enviar_si_esta_modificada);
 
 		free(tablaAInsertar); //malloc en string_from_format
-		loggear_debug(string_from_format("free(tablaAInsertar)"));
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)enviar_paginas_modificadas);
 
 	limpiar_memoria();
 
-	loggear_debug(string_from_format("Se recorrieron todas las paginas"));
+	loggear_trace(string_from_format("Se recorrieron todas las paginas"));
 	t_list *listaParam = list_create();
 	char *cadena = "Journal realizado.";
 	list_add(listaParam, cadena);
@@ -421,63 +415,65 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	imprimir_donde_corresponda(codOp, instruccion, listaParam);
 }
 
-instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp){
-	registro* suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
-	loggear_debug(string_from_format("Se tienen los datos de la pagina"));
+instr_t *fila_a_instr(char *tablaAInsertar, filaTabPags *fila, cod_op codOp)
+{
+	registro *suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
+	loggear_trace(string_from_format("Se tienen los datos de la pagina"));
 	return registro_a_instr(tablaAInsertar, suRegistro, codOp);
 }
 
-instr_t *registro_a_instr(char* tablaAInsertar,registro* unRegistro, cod_op codOp){
-	loggear_debug(string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
-	t_list* listaParam  = list_create();
-	loggear_debug(string_from_format("Lista param creada\n"));
+instr_t *registro_a_instr(char *tablaAInsertar, registro *unRegistro, cod_op codOp)
+{
+	loggear_trace(string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
+	t_list *listaParam = list_create();
+	loggear_trace(string_from_format("Lista param creada\n"));
 	list_add(listaParam, tablaAInsertar);
-	loggear_debug(string_from_format("Nombre de la tabla a insertar agregado\n"));
-	char* keyChar = string_from_format("%d", unRegistro->key);
+	loggear_trace(string_from_format("Nombre de la tabla a insertar agregado\n"));
+	char *keyChar = string_from_format("%d", unRegistro->key);
 	list_add(listaParam, keyChar);
 
 	list_add(listaParam, unRegistro->value);
 
-	instr_t* instruccionCreada = crear_instruccion(unRegistro->timestamp, codOp, listaParam);
+	instr_t *instruccionCreada = crear_instruccion(unRegistro->timestamp, codOp, listaParam);
 	return instruccionCreada;
 }
 
-void limpiar_memoria(){
-	loggear_debug(string_from_format("Limpiando mem ppal"));
+void limpiar_memoria()
+{
+	loggear_info(string_from_format("Limpiando Memoria"));
 	limpiar_memoria_principal();
-	loggear_debug(string_from_format("Limpiando segmentos"));
 	limpiar_segmentos();
-	loggear_debug(string_from_format("Segmentos limpios"));
 }
 
-
-void limpiar_memoria_principal(){
+void limpiar_memoria_principal()
+{
+	loggear_debug(string_from_format("Limpiando mem ppal"));
 	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool)); //Ahora indica que todos los sectores de la memoria se pueden sobreescribir
-	//Supongo que no hace falta que hagamos un memset en 0 a la Memoria Principal en si
+																	 //Supongo que no hace falta que hagamos un memset en 0 a la Memoria Principal en si
 }
 
-void limpiar_segmentos(){
-
+void limpiar_segmentos()
+{
+	loggear_debug(string_from_format("Limpiando segmentos"));
 	void limpiar_tabla_de_paginas(char *segmento, t_list *suTablaDePaginas)
-		{
-			list_destroy_and_destroy_elements(suTablaDePaginas, (void*)free);
-		}
+	{
+		list_destroy_and_destroy_elements(suTablaDePaginas, (void *)free);
+	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)limpiar_tabla_de_paginas);
 
 	dictionary_clean(tablaDeSegmentos); //No dictionary_clean_and_destroy_elements porque ya los limpio arriba
 }
 
-
 void *ejecutar_journal()
 {
 
-    t_list *listaParam = list_create();
-    int i = 0;
-    list_add(listaParam, &i);
-    instr_t* miInstruccion = crear_instruccion(obtener_ts(), CONSOLA_MEM_JOURNAL, listaParam);
+	t_list *listaParam = list_create();
+	int i = 0;
+	list_add(listaParam, &i);
+	instr_t *miInstruccion = crear_instruccion(obtener_ts(), CONSOLA_MEM_JOURNAL, listaParam);
 
-	while(1)
+	while (1)
 	{
 		usleep(configuracion.RETARDO_JOURNAL * 1000);
 		sem_wait(&mutex_journal);
@@ -488,41 +484,41 @@ void *ejecutar_journal()
 
 void *ejecutar_gossiping()
 {
-	while(1)
+	while (1)
 	{
-		loggear_debug(string_from_format("Realizando gossiping programado"));
 		ejecutar_instruccion_gossip();
 		loggear_debug(string_from_format("Fin gossip programado"));
 		usleep(configuracion.RETARDO_GOSSIPING * 1000);
 	}
 }
 
-
-
-void eliminar_tabla(instr_t* instruccion)
+void eliminar_tabla(instr_t *instruccion)
 {
-	char* tablaABorrar = (char*)list_get(instruccion->parametros, 0);
-	t_list* segmentoABorrar = segmento_de_esa_tabla(tablaABorrar);
-	if(segmentoABorrar !=NULL){
+	char *tablaABorrar = (char *)list_get(instruccion->parametros, 0);
+	t_list *segmentoABorrar = segmento_de_esa_tabla(tablaABorrar);
+	if (segmentoABorrar != NULL)
+	{
 		dictionary_remove(tablaDeSegmentos, tablaABorrar);
-		list_destroy_and_destroy_elements(segmentoABorrar, (void*)free);
+		list_destroy_and_destroy_elements(segmentoABorrar, (void *)free);
 	}
 }
 
-
-void imprimir_segmento(char* nombreSegmento, t_list* suTablaDePaginas){
+void imprimir_segmento(char *nombreSegmento, t_list *suTablaDePaginas)
+{
 
 	loggear_info(string_from_format("Tabla: %s\n", nombreSegmento));
 	loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
 }
 
-void imprimir_segmento_basico(char* nombreSegmento, t_list* suTablaDePaginas){
-	char* texto = string_new();
+void imprimir_segmento_basico(char *nombreSegmento, t_list *suTablaDePaginas)
+{
+	char *texto = string_new();
 	string_append_with_format(&texto, "------------------------\n");
 	string_append_with_format(&texto, "Tabla: %s\n", nombreSegmento);
 
-	void iterator(filaTabPags* fila){
-		char* paginaStr = pagina_a_str(fila->ptrPagina);
+	void iterator(filaTabPags * fila)
+	{
+		char *paginaStr = pagina_a_str(fila->ptrPagina);
 		string_append(&texto, paginaStr);
 		free(paginaStr);
 	}
@@ -530,11 +526,14 @@ void imprimir_segmento_basico(char* nombreSegmento, t_list* suTablaDePaginas){
 	loggear_info(texto);
 }
 
-void mostrar_paginas(instr_t* instruccion){
-	if(list_get(instruccion->parametros, 0) != NULL){
-		dictionary_iterator(tablaDeSegmentos,(void*) imprimir_segmento);
+void mostrar_paginas(instr_t *instruccion)
+{
+	if (list_get(instruccion->parametros, 0) != NULL)
+	{
+		dictionary_iterator(tablaDeSegmentos, (void *)imprimir_segmento);
 	}
-	else{
-		dictionary_iterator(tablaDeSegmentos,(void*) imprimir_segmento_basico);
+	else
+	{
+		dictionary_iterator(tablaDeSegmentos, (void *)imprimir_segmento_basico);
 	}
 }

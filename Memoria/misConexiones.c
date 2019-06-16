@@ -14,13 +14,13 @@ int obtener_fd_out(char *proceso)
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
 
-		loggear_info(string_from_format("Es la primera vez que se quiere enviar algo al proceso %s", proceso));
+		loggear_debug(string_from_format("Es la primera vez que se quiere enviar algo al proceso %s", proceso));
 		responderHandshake(idsProceso);
 		return idsProceso->fd_out;
 	}
 	//	La conexion en el fd_out %d ya existia
-	loggear_info(string_from_format("Ya existia la conexion con el proceso %s", proceso));
-	loggear_info(string_from_format("Tiene el fd_out %d", idsProceso->fd_out));
+	loggear_trace(string_from_format("Ya existia la conexion con el proceso %s", proceso));
+	loggear_trace(string_from_format("Tiene el fd_out %d", idsProceso->fd_out));
 	return idsProceso->fd_out;
 }
 
@@ -34,7 +34,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		if (ultimoParametro != NULL){
 			list_add(listaParam, (char*)ultimoParametro);
 		}
-		loggear_debug(string_from_format("Enviando instruccion al Kernel"));
+		loggear_info(string_from_format("Enviando instruccion al Kernel"));
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
 		enviar_request(miInstruccion, conexionKernel);
@@ -70,9 +70,9 @@ void responderHandshake(identificador *idsConexionEntrante)
 }
 
 void enviar_datos(char* remitente){
-	loggear_debug(string_from_format("Enviando datos a %s", remitente));
+	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	obtener_fd_out(remitente);
-	loggear_debug(string_from_format("Datos enviados"));
+	loggear_trace(string_from_format("Datos enviados"));
 }
 
 void enviar_datos_a_FS()
@@ -106,19 +106,19 @@ void pedir_tamanio_value(){
 	t_list* listaParam = list_create();
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
 	enviar_request(miInstruccion, conexionFS);
-	loggear_debug(string_from_format("Tamanio del value pedido"));
+	loggear_trace(string_from_format("Tamanio del value pedido"));
 }
 
 void actualizar_tamanio_value(instr_t* instruccion){
 	tamanioValue = atoi((char*) list_get(instruccion->parametros, 0));
-	loggear_info(string_from_format("Tamanio del value recibido: %d\n", tamanioValue));
+	loggear_debug(string_from_format("Tamanio del value recibido: %d\n", tamanioValue));
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){
-	loggear_debug(string_from_format("Devolviendo el gossip"));
-	loggear_debug(string_from_format("Enviando datos a %s", remitente));
+	loggear_info(string_from_format("Devolviendo el gossip"));
+	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
-	loggear_debug(string_from_format("Datos enviados"));
+	loggear_trace(string_from_format("Datos enviados"));
 	t_list* tablaGossiping = conexiones_para_gossiping();
 
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
@@ -126,7 +126,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 
 	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
-	loggear_debug(string_from_format("Envio mi tabla de datos enviada"));
+	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
 
 
 	actualizar_tabla_gossiping(instruccion);
@@ -136,7 +136,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 void actualizar_tabla_gossiping(instr_t* instruccion){
 
 
-	loggear_debug(string_from_format("Actualizando tabla de gossiping"));
+	loggear_debug(string_from_format("Recibi una tabla de Gossiping"));
 
 	int saltearProximos = 0;
 	int i = 0;
@@ -146,7 +146,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 	void acutalizar_tabla(char* parametro){
 		saltearProximos--;
-		printf("Saltear Proximos = %d\n", saltearProximos);
+		loggear_trace(string_from_format("Saltear Proximos = %d\n", saltearProximos));
 		if(saltearProximos <= 0){
 			if(i % 3 == 0){
 				sem_wait(&mutex_diccionario_conexiones);
@@ -159,30 +159,31 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 				}
 				else{
 					sem_post(&mutex_diccionario_conexiones);
-					loggear_info(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
+					loggear_trace(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
 					i+=3;
 					saltearProximos = 3;
 				}
 			}
 				else if(i % 3 == 1){
 					ip = strdup(parametro);
-//					loggear_debug(string_from_format("Su ip es %s", ip));
+					loggear_trace(string_from_format("Su ip es %s", ip));
 					i++;
 				}
 					else if(i % 3 == 2){
 						puerto = strdup(parametro);
-//						loggear_debug(string_from_format("Su puerto es %s", puerto));
+						loggear_trace(string_from_format("Su puerto es %s", puerto));
 						identificador identificadores = {
 								.fd_out = 0,
 								.fd_in = 0
 						};
+						
 						strcpy(identificadores.ip_proceso, ip);
 						strcpy(identificadores.puerto, puerto);
 
 						identificador* idsConexionesActuales = malloc(sizeof(identificadores));
 						memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
 
-//						loggear_debug(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
+						loggear_debug(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
 						sem_wait(&mutex_diccionario_conexiones);
 						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
 						sem_post(&mutex_diccionario_conexiones);
@@ -195,22 +196,27 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
 
-	loggear_debug(string_from_format("CONEXIONES ACTUALES:"));
+	loggear_info(string_from_format("Tabla actualizada:"));
 	sem_wait(&mutex_diccionario_conexiones);
-	imprimir_conexiones(conexionesActuales);
+	imprimir_conexiones(conexionesActuales, loggear_info);
 	sem_post(&mutex_diccionario_conexiones);
 
 //	imprimir_config_actual();
 }
 void imprimir_config_actual(){
-	puts("\nIPs y Puertos:");
+
+	char *texto = string_new();
+	string_append_with_format(&texto, "Config actual:\n");
+	
 	int i=0;
 	void imprimir(char* valor){
-		printf("IP: %s\n", valor);
-		printf("Puerto: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS, i));
+		string_append_with_format(&texto,"IP: %s\n", valor);
+		string_append_with_format(&texto,"Puerto: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS, i));
 		i++;
 	}
 	list_iterate(configuracion.IP_SEEDS, (void*)imprimir);
+	printf("%s",texto); //No log xq lo usamos al levantar el config
+	free(texto);
 }
 
 
@@ -221,11 +227,11 @@ t_list *conexiones_para_gossiping(){
 
 	void juntar_ip_y_puerto(char* nombre, identificador* ids){
 		if(strcmp(nombre, "FileSystem")!=0 && strcmp(nombre, nombreDeMemoria)!=0){
-			loggear_info(string_from_format("Agregando nombre %s", nombre));
+			loggear_trace(string_from_format("Agregando nombre %s", nombre));
 			list_add(tablaGossiping, nombre);
-			loggear_info(string_from_format("Agregando IP %s", ids->ip_proceso));
+			loggear_trace(string_from_format("Agregando IP %s", ids->ip_proceso));
 			list_add(tablaGossiping, ids->ip_proceso);
-			loggear_info(string_from_format("Agregando puerto %s", ids->puerto));
+			loggear_trace(string_from_format("Agregando puerto %s", ids->puerto));
 			list_add(tablaGossiping, ids->puerto);
 
 		}
@@ -252,6 +258,11 @@ void ejecutar_instruccion_gossip(){
 
 	loggear_info(string_from_format("Ejecutando instruccion Gossip"));
 
+	loggear_debug(string_from_format("Tabla enviada:"));
+	sem_wait(&mutex_diccionario_conexiones);
+	imprimir_conexiones(conexionesActuales, loggear_debug);
+	sem_post(&mutex_diccionario_conexiones);
+
 	gossipear_con_conexiones_actuales();
 
 	gossipear_con_procesos_desconectados();
@@ -267,10 +278,10 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 	char* nombreEncontrado = NULL;
 
 	void su_nombre(char* nombre, identificador* ids){
-		printf("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado);
+		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
-			printf("Nombre encontrado! : %s\n", nombreEncontrado);
+			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
 		}
 	}
 	sem_wait(&mutex_diccionario_conexiones);
@@ -279,12 +290,9 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 	return nombreEncontrado;
 }
 
-
-
-
 void gossipear_con_conexiones_actuales(){
 
-//	loggear_debug(string_from_format("Gossipeando conexiones actuales"));
+	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
 	void su_nombre(char* nombre, identificador* ids){
 		sem_post(&mutex_diccionario_conexiones);
 		enviar_lista_gossiping(nombre);
@@ -299,11 +307,11 @@ void gossipear_con_procesos_desconectados(){
 
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
-//		printf("IP seed: %s\n", unaIP);
-//		printf("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i));
+		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
+		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
 		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0){
-			loggear_debug(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPMemoria, 0);
 			if(conexion != -1){
 				puts("Conexion creada");
@@ -316,8 +324,6 @@ void gossipear_con_procesos_desconectados(){
 		i++;
 	}
 	list_iterate(configuracion.IP_SEEDS, (void*)enviar_tabla_gossiping);
-
-
 }
 
 instr_t* mis_datos(cod_op codigoOperacion){

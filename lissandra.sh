@@ -8,6 +8,7 @@ cd ..
 mkdir /home/utnso/lissandra-checkpoint
 echo "Configuracion inicializada"
 cd /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua
+make clean
 make
 echo "Lissandra compilado!"
 echo "Ejecucion lista! 20-04"

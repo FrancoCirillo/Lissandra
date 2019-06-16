@@ -9,8 +9,7 @@ int main(int argc, char *argv[])
 	inicializar_configuracion();
 	check_inicial(argc, argv);
 	iniciar_log();
-
-
+	
 	inicializar_estructuras_conexiones();
 	empezar_conexiones(argv);
 //	iniciar_ejecutador_journal();
@@ -41,14 +40,14 @@ void inicializar_configuracion()
 	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave("RETARDO_GOSSIPING"));
 	configuracion.MEMORY_NUMBER = atoi(obtener_por_clave("MEMORY_NUMBER"));
 	configuracion.RUTA_LOG = obtener_por_clave("RUTA_LOG");
-
+	configuracion.LOG_LEVEL =  log_level_from_string(obtener_por_clave("LOG_LEVEL"));
 }
 
 
 void iniciar_log()
 {
-	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
-	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, LOG_LEVEL_TRACE);
+	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, configuracion.LOG_LEVEL);
+	loggear_debug(string_from_format("Logger en modo %s \n",log_level_as_string(configuracion.LOG_LEVEL)));
 }
 
 char *obtener_por_clave(char *clave)
@@ -56,7 +55,7 @@ char *obtener_por_clave(char *clave)
 	char *valor;
 	valor = config_get_string_value(g_config, clave);
 	printf(" %s: %s \n", clave, valor);
-
+	puts("Valor obtenido");
 	return valor;
 }
 
@@ -99,7 +98,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 	sem_wait(&mutex_journal);
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
-		loggear_debug(string_from_format("Me llego un codigo de error"));
+		loggear_trace(string_from_format("Me llego un codigo de error"));
 		ejecutar_instruccion_error(instruccion);
 	}
 	else{
@@ -148,7 +147,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			break;
 
 		default:
-			loggear_info(string_from_format("El comando no pertenece a la memoria"));
+			loggear_warning(string_from_format("El comando no pertenece a la memoria"));
 			break;
 		}
 	}
@@ -178,7 +177,7 @@ void iniciar_ejecutador_gossiping(){
 void check_inicial(int argc, char* argv[])
 {
 	if(argc>2){
-		log_error(g_logger, "Uso: Memoria <IP>, IP vacio => IP = 127.0.0.3");
+		puts("Uso: Memoria <IP>, IP vacio => IP = 127.0.0.3");
 		exit(0);
 	}
 	if(argc==1 || strlen(argv[1])<2){

@@ -213,7 +213,7 @@ void loggear_error_proceso(instr_t *miInstruccion);
 /*
  * Imprime un diccionario de conexiones
  */
-void imprimir_conexiones(t_dictionary *diccionario);
+void imprimir_conexiones(t_dictionary *diccionario, void (*funcion_log)(char *texto));
 
 /*
  * Conversion de char* a uint16_t

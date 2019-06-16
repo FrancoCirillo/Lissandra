@@ -12,6 +12,7 @@
 #include <commons/log.h>
 #include "definicionesConexiones.h"
 
+void loggear_trace(char* valor);
 void loggear_debug(char* valor);
 void loggear_info(char* valor);
 void loggear_error(char* valor);

@@ -25,6 +25,7 @@ typedef struct config
 	int RETARDO_GOSSIPING;
 	int MEMORY_NUMBER;
 	char *RUTA_LOG;
+	t_log_level LOG_LEVEL;
 } config;
 
 typedef struct registro

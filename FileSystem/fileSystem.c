@@ -20,6 +20,7 @@ registro_t *crear_registro(mseg_t timestampNuevo, uint16_t keyNueva, char *value
 int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
+	
 	inicializar_FS(argc, argv);
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
