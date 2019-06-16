@@ -1,23 +1,29 @@
 //--------compactador.c--------
 
 #include "compactador.h"
-//
-//void compactador(){// ver que conviene que reciba de parametro
-//	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
-//
-//	t_dictionary* reg_x_particion= malloc(sizeof(t_dictionary));
-//
-//	int t = (int)obtener_tiempo_compactacion(tabla); //en segundos
-//
-//	//Esto no se si dejarlo aca o que entre al while, asi no ocupa memoria si es que no hay nada para compactar.. TODO!
-//	int cantidad_particiones = obtener_particiones(tabla); //dev la cantidad de particiones
-//	char* nomb_part;
-//	for(int num = 0; num < cantidad_particiones; num++) {
-//		nomb_part = string_from_format("Part%d", num);
-//		dictionary_put(reg_x_particion, nomb_part, list_create());
-//		free(nomb_part);
-//	} //deja los registros vacios..
-//
+
+void compactador(char* tabla){
+	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
+
+	t_dictionary* particiones = malloc(sizeof(t_dictionary));
+
+	int tiempo_compactacion = 10000;//(int)obtener_tiempo_compactacion(tabla); //en segundos
+
+	int cantidad_particiones = obtener_part_metadata(tabla);
+
+	char* nomb_part;
+
+	for(int num = 0; num < cantidad_particiones; num++) {
+		nomb_part = string_from_format("Part%d.bin", num);
+		dictionary_put(particiones, nomb_part, dictionary_create());
+		free(nomb_part);
+	} //inicia tantos diccionarios vacios como particiones tenga la tabla.
+
+
+
+
+
+	//////////Viejo
 //	void actualizar_registros_de_la_particion(char* particion, t_list* registros_tmpc){
 //			char* bloques= bloques_particion(particion, tabla); // no se si ya existe una funcion similar. TODO
 //			//dev el array.
@@ -28,9 +34,9 @@
 //			list_clean(registros_tmpc); //liberar todos los registros viejos, para pisar con los nuevos. Esto hace el free bien?
 //			registros_tmpc = registros_nuevos;
 //			list_destroy(registros_bin);
-//
 //	}
-//
+
+	//////////Viejo
 //	void finalizar_compactacion(char* particion, t_list* registros_tmpc){
 //		//registros_tmpc tiene a esta altura los registros nuevos a escribir.
 //
@@ -48,64 +54,80 @@
 //		free(bloques);
 //
 //	}
-//
-//	while(existe_tabla(tabla)){
-//		sleep(t);
-//
-//		//Iniciar cronometro: Enunciado dice que hay que registrar tiempo de la duracion de la compactacion.
-//
-//
-//		if(hay_tmpc(tabla)){
+
+
+	while(existe_tabla(tabla)){
+		sleep(tiempo_compactacion);
+//TODO
+//		if(hay_tmp(tabla)){
+//			//Iniciar un cronometro: Enunciado dice que hay que registrar tiempo de la duracion de la compactacion.
 //			//sem_wait(todos los tmp);
-//			renombrar_todos_tmp_a_tmpc(tabla);
-//			formatear_contador_dump(tabla); //esta ya existe
+//			pasar_a_tmpc(tabla);
+//			resetear_numero_dump(tabla);
 //			//sem_post(todos los tmp);
 //		}
 //		else{
 //			continue;
 //		}
+
+		t_list* lista_archivos = listar_archivos(tabla);
+		for(int i = 0; i< list_size(lista_archivos);i++){
+//			agregar_registros_en_particion(particiones, list_get(lista_archivos, i));
+		}
+
+//		bloquear(tabla);//Todo
 //
-//		char *bloques_a_compactar = bloques_totales_tmpc(tabla); //devuelve el array con todos los num de bloques que debe leer de los tmpc
+//		dictionary_iterator(particiones, &finalizar_compactacion); //TODO actualizar
 //
-//		t_list* registros_totales = leer_registros(bloques_a_compactar); //junta todos los registros de todos los tmpc.
+//		desbloquear(tabla);//TODO
 //
-//		separar_registros_x_part(reg_x_particion, registros_totales);//Segun el modulo de la key y la particion, las agrupa.
+//		vaciar_listas_registros(particiones);
 //
-//		dictionary_iterator(reg_x_particion, &filtrar_keys_repetidas);
-//		//filtro para despues tratar cada registro individualmente y preocuparme solo por actualizar o insertar.
-//
-//		dictionary_iterator(reg_x_particion, &actualizar_registros_de_la_particion);
-//		//ya tendria todo en reg_x_particion.
-//
-//		bloquear(tabla);
-//
-//		dictionary_iterator(reg_x_particion, &finalizar_compactacion);
-//
-//		desbloquear(tabla);
-//
-//		vaciar_listas_registros(reg_x_particion);
-//
-//		finalizar_tmpcs(tabla); //Libera bloques, y borra los archivos en el directorio.
-//
-//		//loggear duracion de la compactacion.
-//	}
+//		finalizar_tmpcs(tabla); //Libera bloques, y elimina los archivos tmpcs en el directorio.
+
+		//loggear duracion de la compactacion.
+	}
+
+
+
+//	liberar_recursos(particiones);
+	//free(de todo lo que use);
+}
+
+//void agregar_registros_en_particion(t_dictionary* particiones, char* ruta_archivo){
+//	t_list* registros = levantar_registros(ruta_archivo);//TODO o hacer una iteracion por los bloques que tenga ese archivo.
+//	list_iterate(registros, );
 //
 //
-//
-//	liberar_recursos(tabla);
-//	//free(de todo lo que use);
 //}
 
 
-t_list* comparar_registro_a_registro(t_list* registros_tmpc, t_list* registros_bin){
+t_list* listar_archivos(char* tabla){
 
-	return NULL;
+	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
+	DIR* directorio = opendir(ruta_tabla);
+	puts("Entre a listar_archivos");
+	printf("de la tabla %s\n", tabla);
+	struct dirent* directorio_leido;
+
+	t_list* archivos = list_create();
+	char* archivo;
+	while((directorio_leido = readdir(directorio)) != NULL) {
+		archivo = directorio_leido->d_name;
+		if(string_contains(archivo, ".")) {
+			char* ruta_archivo = string_from_format("%s%s",ruta_tabla, archivo);
+			list_add(archivos,ruta_archivo);
+			printf("la ruta del archivo leido es: %s", archivo);
+			}
+		free(archivo);
+	}
+	free(archivo);
+	free(ruta_tabla);
+	//No hago free(ruta_tabla porque es el que se usa en la lista.).. ver que no rompa.
+	return archivos;
 }
 
-void filtrar_keys_repetidas(char* particion, t_list* registros_tmpc){
 
-
-}
 
 
 
@@ -128,20 +150,6 @@ void compactar5(){
 }
 
 
-//Hablado el sabado: pseudocodigo
-//maniana sigo
-
-void compactador(){
-	//t = obtener_tiempo_compactacion();
-	while(1){
-	//	sleep(t);
-		//listar_y_marcar(tabla);//
-	}
-}
-void compactar(){
-	//pthread_create(hilo, tabla, compactar_tabla);
-
-}
 
 void pasar_a_tmpc(char* tabla) {
 	char* ruta_tabla = string_from_format("%s%s", g_ruta.tablas, tabla);
@@ -173,13 +181,3 @@ void pasar_a_tmpc(char* tabla) {
 }
 
 
-//compactacion por cada tabla.
-/*
-void* compactar(instr_t* i){
-	while(existe_tabla(i->param1)){
-		sleep(atoi(i->param2));
-		compactation(i->param1);
-	}
-	return NULL;
-}
- */
