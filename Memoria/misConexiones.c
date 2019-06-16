@@ -183,7 +183,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						identificador* idsConexionesActuales = malloc(sizeof(identificadores));
 						memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
 
-						loggear_debug(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
+						loggear_trace(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
 						sem_wait(&mutex_diccionario_conexiones);
 						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
 						sem_post(&mutex_diccionario_conexiones);

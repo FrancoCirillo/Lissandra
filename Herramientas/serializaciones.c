@@ -349,19 +349,22 @@ instr_t *crear_instruccion(mseg_t timestampNuevo, cod_op codInstNuevo, t_list *l
 	return miInstr;
 }
 
-void imprimir_instruccion(instr_t *instruccion)
+void imprimir_instruccion(instr_t *instruccion, void (*funcion_log)(char *texto))
 {
+	char *texto = string_new();
+	string_append_with_format(&texto, "\n");
 
 	void iterator(char *value)
 	{
-		printf("%s\n", value);
+		string_append_with_format(&texto, "\t%s\n", value);
 	}
 
-	printf("Timestamp: %" PRIu64 "\n", instruccion->timestamp);
-	printf("CodigoInstruccion: %d\n", instruccion->codigo_operacion);
-	printf("Parametros:\n");
+	string_append_with_format(&texto,"Timestamp: %" PRIu64 "\n", instruccion->timestamp);
+	string_append_with_format(&texto,"CodigoInstruccion: %d\n", instruccion->codigo_operacion);
+	string_append_with_format(&texto,"Parametros:\n");
 	list_iterate(instruccion->parametros, (void *)iterator);
-	puts("");
+
+	funcion_log(texto);
 }
 
 cod_op quien_pidio(instr_t *instruccion)
@@ -401,7 +404,6 @@ void loggear_exito_proceso(instr_t *miInstruccion)
 void imprimir_conexiones(t_dictionary *conexAc, void (*funcion_log)(char *texto))
 {
 	char *texto = string_new();
-	string_append_with_format(&texto, "Conexiones conocidas:");
 	void iterator(char *key, identificador *idsProceso)
 	{
 		string_append_with_format(&texto, "\n");
@@ -412,7 +414,7 @@ void imprimir_conexiones(t_dictionary *conexAc, void (*funcion_log)(char *texto)
 		string_append_with_format(&texto, " %s", key);
 	}
 	dictionary_iterator(conexAc, (void *)iterator);
-	loggear_info(texto);
+	funcion_log(texto);
 }
 
 //TODO: cambiar

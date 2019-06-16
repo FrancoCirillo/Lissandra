@@ -39,7 +39,6 @@ int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar)
 	//ai_addr contiene el puerto e ip del servidor
 	if (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
 	{
-		loggear_trace(string_from_format("Error al crear el socket cliente \n"));
 		if(flagReintentar){
 			loggear_warning(string_from_format("El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n"));
 			while (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1);

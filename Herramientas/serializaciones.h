@@ -181,7 +181,7 @@ int es_comando_valido(cod_op comando, t_list *listaParam);
 /*
  * Imprime instruccion en stdout
  */
-void imprimir_instruccion(instr_t *instruccion);
+void imprimir_instruccion(instr_t *instruccion, void (*funcion_log)(char *texto));
 
 
 /*

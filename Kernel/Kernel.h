@@ -47,6 +47,7 @@ typedef struct config{
 	t_list* IP_SEEDS;
 	int RETARDO_GOSSIPING;
 	int tiempoMetricas;
+	t_log_level LOG_LEVEL;
 }config_t;
 
 
@@ -139,7 +140,7 @@ void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMe
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
 proceso* obtener_sig_proceso();
-char* obtener_por_clave(char* ruta, char* key);
+char* obtener_por_clave(char* key);
 void encolar_proceso(proceso *p);
 char* obtener_parametroN(instr_t* i,int index);
 int obtener_codigo_request();

@@ -26,9 +26,9 @@ int main(int argc, char* argv[]) {
 	inicializar_kernel();
 	//iniciar_consola();
 
-	loggear("### FINALIZANDO KERNEL ###");
+	loggear_debug(string_from_format("### FINALIZANDO KERNEL ###"));
 	sleep(2);
-	loggear("### KERNEL FINALIZADO ###");
+	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
 	return 0;
 }
 void inicializar_kernel(){
@@ -56,7 +56,7 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 		list_add(instruccion->parametros,codigo);
 
 		p->size++;
-		loggear("Instruccion generada, encolando proceso...");
+		loggear_info(string_from_format("Instruccion generada, encolando proceso..."));
 		encolar_proceso(p);
 	}else{//Es una respuesta
 		recibi_respuesta(instruccion, remitente);
@@ -64,7 +64,7 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 
 }
 void procesar_instruccion_consola(char *instruccion){
-	loggear("Generando instruccion unitaria");
+	loggear_info(string_from_format("Generando instruccion unitaria"));
 	t_list* instrucciones = list_create();
 	proceso* p=malloc(sizeof(proceso));
 	p->current=0;
@@ -78,26 +78,26 @@ void procesar_instruccion_consola(char *instruccion){
 
 	list_add(p->instrucciones,nueva_instruccion);
 	p->size++;
-	loggear("Instruccion generada, encolando proceso...");
+	loggear_debug(string_from_format("Instruccion generada, encolando proceso..."));
 	encolar_proceso(p);
 }
 void iniciar_ejecutador(){
-	loggear("Se inicia ejecutador");
+	loggear_info(string_from_format("Se inicia ejecutador"));
 	pthread_t hilo_ejecutador;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador,&attr,ejecutar,NULL);
 	pthread_detach(hilo_ejecutador);
-	loggear("Ejecutador iniciado");
+	loggear_trace(string_from_format("Ejecutador iniciado"));
 }
 void iniciar_metricas(){
-	loggear("Iniciando metricas");
+	loggear_info(string_from_format("Iniciando metricas"));
 	pthread_t hilo_metricas;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_metricas,&attr,&metricar,NULL);
 	pthread_detach(hilo_metricas);
-	loggear("Metricas iniciadas");
+	loggear_trace(string_from_format("Metricas iniciadas"));
 
 }
 void *metricar(){
@@ -112,7 +112,8 @@ void *metricar(){
 	}
 }
 void metrics(){//TODO Porcentaje de uso por memoria
-	loggear("METRICS:");
+
+	loggear_trace(string_from_format("METRICS:"));
 	//printf(" \n\n PRUEBA METRICS %"PRIu64", PRUEBA UN DIGITO MENOS %"PRIu64"",obtener_ts()/100,obtener_ts()/1000);
 	//Obtengo cantidad de instrucciones por tipo/tiempo para insert y select
 	int cantidad_inserts=0;
@@ -128,11 +129,11 @@ void metrics(){//TODO Porcentaje de uso por memoria
 		if(i->codigo_operacion==CODIGO_INSERT){
 			cantidad_inserts++;
 			tiempo_inserts+=(double)i->timestamp/(double)1000;
-			printf("El promedio del insert fue de %lf\n",tiempo_selects);
+			loggear_debug(string_from_format("El promedio del insert fue de %lf\n",tiempo_selects));
 		}else if(i->codigo_operacion==CODIGO_SELECT){
 			cantidad_selects++;
 			tiempo_selects+=(double)i->timestamp/(double)1000;
-			printf("El promedio del select fue de %lf\n",tiempo_selects);
+			loggear_debug(string_from_format("El promedio del select fue de %lf\n",tiempo_selects));
 		}
 	}
 	list_destroy(lista_instrucciones_ejecutadas);
@@ -143,7 +144,7 @@ void metrics(){//TODO Porcentaje de uso por memoria
 		promedio_insert=(double)tiempo_inserts/(double)cantidad_inserts;
 	if(cantidad_selects)
 		promedio_selects=(double)tiempo_selects/(double)cantidad_selects;
-	printf("METRICS RESULTADO: \n \t Writes=%d Write Latency=%lf \n\t Reads=%d Reads Latency=%lf\n",cantidad_inserts,promedio_insert,cantidad_selects, promedio_selects);
+	loggear_info(string_from_format("METRICS RESULTADO: \n \t Writes=%d Write Latency=%lf \n\t Reads=%d Reads Latency=%lf\n",cantidad_inserts,promedio_insert,cantidad_selects, promedio_selects));
 	//TODO memload
 }
 void agregar_a_metricas(instr_t* i){
@@ -152,7 +153,7 @@ void agregar_a_metricas(instr_t* i){
 	sem_post(&mutex_lista_instrucciones_ejecutadas);
 }
 instr_t* kernel_metrics(instr_t * i){
-	loggear("Ejecutando metricas");
+	loggear_debug(string_from_format("Ejecutando metricas"));
 	metrics();
 
 	instr_t * respuesta=malloc(sizeof(instr_t));
@@ -166,7 +167,7 @@ instr_t* kernel_metrics(instr_t * i){
 	return respuesta;
 }
 instr_t* kernel_run(instr_t *i){
-	loggear("EJECUTANDO RUN!");
+	loggear_info(string_from_format("EJECUTANDO RUN!"));
 	char* nombre_archivo=obtener_parametroN(i,0);
 	FILE *f=fopen(nombre_archivo,"r");
 	instr_t * respuesta=malloc(sizeof(instr_t));
@@ -175,7 +176,7 @@ instr_t* kernel_run(instr_t *i){
 	respuesta->parametros=params;
 
 	if(!f){
-		loggear("Archivo no encontrado!");
+		loggear_debug(string_from_format("Archivo no encontrado!"));
 		respuesta->codigo_operacion=ERROR_RUN;
 		char* mensaje=" ARCHIVO NO ENCONTRADO!";
 		list_add(params,mensaje);
@@ -191,12 +192,12 @@ instr_t* kernel_run(instr_t *i){
 	p->instrucciones=instrucciones;
 	p->sig=NULL;
 	instr_t* nueva_instruccion;
-	//loggear("Se ejecuto RUN, leyendo archivo!");
+	//loggear_debug(string_from_format("Se ejecuto RUN, leyendo archivo!");
 
 	while(fgets(line,sizeof(line),f)){
 		nueva_instruccion=leer_a_instruccion(line,CONSOLA_KERNEL);
 		if(!nueva_instruccion){//Input invalido
-			loggear("El archivo posee inputs invalidos");
+			loggear_debug(string_from_format("El archivo posee inputs invalidos"));
 			respuesta->codigo_operacion=ERROR_RUN;
 			char* mensaje="EL ARCHIVO POSEE INPUTS INVALIDOS!";
 			list_add(params,mensaje);
@@ -211,10 +212,10 @@ instr_t* kernel_run(instr_t *i){
 
 		list_add(p->instrucciones,nueva_instruccion);
 		p->size++;
-		loggear("Se agrego una instruccion!");
+		loggear_trace(string_from_format("Se agrego una instruccion!"));
 		//		imprimir_instruccion(nueva_instruccion);
 	}
-	printf("\n\nSize %d\n\n",p->size);
+	loggear_debug(string_from_format("\n\nSize %d\n\n",p->size));
 	fclose(f);
 
 	encolar_proceso(p);
@@ -223,18 +224,17 @@ instr_t* kernel_run(instr_t *i){
 	respuesta->codigo_operacion=0;
 	char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
 	list_add(params,mensaje);
-	loggear("FIN RUN!");
+	loggear_trace(string_from_format("FIN RUN!"));
 	return respuesta;
 
 }
 instr_t* kernel_add(instr_t* i){
 	char* numero_memoria=obtener_parametroN(i,1);
 	int codigo=obtener_codigo_criterio(obtener_parametroN(i,3));
-	loggear("EJECUTANDO ADD PARA MEMORIA:");
-	loggear(numero_memoria);
+	loggear_info(string_from_format("EJECUTANDO ADD PARA MEMORIA %s", numero_memoria));
 	switch(codigo){
 	case SC:
-		loggear("Agregando memoria a criterio SC");
+		loggear_info(string_from_format("Agregando memoria a criterio SC"));
 		sem_wait(&criterio_strong_consistency->mutex_criterio);
 		if(list_size(criterio_strong_consistency->lista_memorias)>0){
 			instr_t * respuesta=malloc(sizeof(instr_t));
@@ -244,7 +244,7 @@ instr_t* kernel_add(instr_t* i){
 			list_add(params,mensaje);
 			respuesta->parametros=params;
 			respuesta->timestamp=i->timestamp;
-			loggear("FIN ADD!");
+			loggear_trace(string_from_format("FIN ADD!"));
 			sem_post(&criterio_strong_consistency->mutex_criterio);
 			return respuesta;
 		}
@@ -253,14 +253,14 @@ instr_t* kernel_add(instr_t* i){
 		break;
 
 	case SHC:
-		loggear("Agregando memoria a criterio SHC");
+		loggear_info(string_from_format("Agregando memoria a criterio SHC"));
 		sem_wait(&criterio_strong_hash_consistency->mutex_criterio);
 		list_add(criterio_strong_hash_consistency->lista_memorias,numero_memoria);
 		sem_post(&criterio_strong_hash_consistency->mutex_criterio);
 		break;
 
 	case EC:
-		loggear("Agregando memoria a criterio EC");
+		loggear_info(string_from_format("Agregando memoria a criterio EC"));
 		sem_wait(&criterio_eventual_consistency->mutex_criterio);
 		list_add(criterio_eventual_consistency->lista_memorias,numero_memoria);
 		sem_post(&criterio_eventual_consistency->mutex_criterio);
@@ -274,7 +274,7 @@ instr_t* kernel_add(instr_t* i){
 	list_add(params,mensaje);
 	respuesta->parametros=params;
 	respuesta->timestamp=i->timestamp;
-	loggear("FIN ADD!");
+	loggear_trace(string_from_format("FIN ADD!"));
 
 	return respuesta;
 
@@ -288,13 +288,13 @@ int obtener_codigo_request(){
 }
 
 void continuar_ejecucion(){
-	loggear("Enviando senial en 1 segundo");
+	loggear_debug(string_from_format("Enviando senial"));
 	//	sleep(1);
 	pthread_mutex_lock(&lock_ejecutar);
 	pthread_cond_signal(&cond_ejecutar);
 	pthread_mutex_unlock(&lock_ejecutar);
 
-	loggear("Senial enviada!");
+	loggear_debug(string_from_format("Senial enviada!"));
 }
 int hay_procesos(){
 	sem_wait(&semaforo_procesos_ready);
@@ -307,18 +307,17 @@ int ejecutar(){
 
 	while(1){
 		//Espero a la senial para seguir
-		loggear("Esperando!");
+		loggear_debug(string_from_format("Esperando!"));
 		pthread_mutex_lock(&lock_ejecutar);
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
 		pthread_mutex_unlock(&lock_ejecutar);
 
 		//sleep(1);
-		loggear("Espera finalizada");
-		loggear("Ejecutando");
+		loggear_info(string_from_format("Espera finalizada, ejecutando"));
 
 		while(hilos_disponibles()&&hay_procesos()){//Se puede procesar
 
-			loggear("Hay hilos y procesos!! Ejecutando...\n");
+			loggear_trace(string_from_format("Hay hilos y procesos!! Ejecutando...\n"));
 			p=obtener_sig_proceso();
 
 			pthread_t un_hilo;
@@ -326,26 +325,26 @@ int ejecutar(){
 
 			pthread_attr_init(&attr);
 			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
-			loggear("Se creo un hilo para atender la solicitud!");
+			loggear_debug(string_from_format("Se creo un hilo para atender la solicitud!"));
 
 			subir_cantidad_hilos();
 
 			//		pthread_join(un_hilo,NULL);
 			pthread_detach(un_hilo);
-			loggear("Hilo detacheado");
+			loggear_trace(string_from_format("Hilo detacheado"));
 		}
-		loggear("No hay mas hilos disponibles o procesos pendientes para ejecutar");
+		loggear_info(string_from_format("No hay mas hilos disponibles o procesos pendientes para ejecutar"));
 
 
 	}
 	return 1;
 }
 void* ejecutar_proceso(void* un_proceso){
-	loggear("Ejecutando proceso....");
+	loggear_info(string_from_format("Ejecutando proceso..."));
 	proceso* p=(proceso*)un_proceso;
 	instr_t* instruccion_obtenida;
 	for(int i=0;i<configuracion.quantum;/*i++*/){
-		loggear("Hay quantum!");
+		loggear_debug(string_from_format("Hay quantum!"));
 		instruccion_obtenida=obtener_instruccion(p);
 		//no se pudo obtener
 		if(instruccion_obtenida!=NULL){
@@ -354,14 +353,14 @@ void* ejecutar_proceso(void* un_proceso){
 
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
-				loggear("Se ejecuto correctamente la instruccion!, Respuesta=");
-				loggear(obtener_parametroN(respuesta,0));
-				loggear("Fin de instruccion");
+				loggear_debug(string_from_format("Se ejecuto correctamente la instruccion!, Respuesta="));
+				loggear_debug(string_from_format(obtener_parametroN(respuesta,0)));
+				loggear_trace(string_from_format("Fin de instruccion"));
 				//METRICS
 				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){
-					loggear("Se agrega a metricas");
+					loggear_trace(string_from_format("Se agrega a metricas"));
 					mseg_t tiempo_exec=respuesta->timestamp;
-					printf("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec);
+					loggear_trace(string_from_format("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec));
 					instruccion_obtenida->timestamp=respuesta->timestamp;
 					agregar_a_metricas(instruccion_obtenida);
 				}else{
@@ -370,15 +369,15 @@ void* ejecutar_proceso(void* un_proceso){
 
 			}else{
 
-				loggear("ERROR al ejecutar la instruccion, finalizando proceso");
+				loggear_debug(string_from_format("ERROR al ejecutar la instruccion, finalizando proceso"));
 				//printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
 				bajar_cantidad_hilos();
-				imprimir_instruccion(respuesta);
+				imprimir_instruccion(respuesta, loggear_warning);
 				return NULL;
 			}
 		}else{
 
-			loggear("Ultima instruccion finalizada, fin de proceso");
+			loggear_info(string_from_format("Ultima instruccion finalizada, fin de proceso"));
 			finalizar_proceso(p);
 
 			bajar_cantidad_hilos();
@@ -386,10 +385,10 @@ void* ejecutar_proceso(void* un_proceso){
 			return NULL;
 		}
 		i++;
-		printf("\n Fin de instruccion. Quantum restante: %d, Nro de instr: %d, Quantum: %d\n",configuracion.quantum-i,i,configuracion.quantum);
+		loggear_info(string_from_format("\n Fin de instruccion. Quantum restante: %d, Nro de instr: %d, Quantum: %d\n",configuracion.quantum-i,i,configuracion.quantum));
 
 	}
-	loggear("Fin de quantum, encolando o finalizando");
+	loggear_trace(string_from_format("Fin de quantum, encolando o finalizando"));
 
 	bajar_cantidad_hilos();
 
@@ -414,8 +413,8 @@ char* obtener_parametroN(instr_t* i,int index){
 
 instr_t* ejecutar_instruccion(instr_t* i){
 	instr_t* respuesta;
-	loggear("#### Se ejecuta una instruccion");
-	imprimir_instruccion(i);
+	loggear_debug(string_from_format("#### Se ejecuta una instruccion"));
+	imprimir_instruccion(i, loggear_trace);
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
 	}
@@ -432,8 +431,7 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	}
 	if(i->codigo_operacion==CODIGO_CREATE){
 		if(!existe_tabla(obtener_parametroN(i,0))){
-			loggear("Agregando tabla a lista de tablas creadas");
-			loggear(obtener_parametroN(i,0));
+			loggear_debug(string_from_format("Agregando tabla %s a lista de tablas creadas", obtener_parametroN(i,0)));
 			agregar_tabla(obtener_parametroN(i,0));
 		}
 	}
@@ -449,17 +447,17 @@ instr_t *validar(instr_t * i){
 	}
 	if(i->codigo_operacion==2 || i->codigo_operacion==1){
 		if(existe_tabla(obtener_parametroN(i,0))){
-			loggear("Existe la tabla para el insert o select ");
+			loggear_debug(string_from_format("Existe la tabla para el insert o select "));
 			return NULL;
 		}else{
 			mensaje_error->codigo_operacion=ERROR_INSERT;
-			printf("\nLa tabla %s no existe!\n",obtener_parametroN(i,0));
+			loggear_warning(string_from_format("La tabla %s no existe!",obtener_parametroN(i,0)));
 			//mensaje="LA TABLA NO EXISTE!";
 		}
 	}
 	if(i->codigo_operacion==3){
 		if(!existe_tabla(obtener_parametroN(i,0))){
-			loggear("No existe tabla para el create");
+			loggear_debug(string_from_format("No existe tabla para el create"));
 			return NULL;
 		}else{
 			//mensaje="LA TABLA YA EXISTE";
@@ -474,7 +472,7 @@ instr_t *validar(instr_t * i){
 
 instr_t* enviar_i(instr_t* i){
 
-	printf(" ENVIANDO INSTRUCCION CODIGO %s\n",(char*)obtener_ultimo_parametro(i));
+	loggear_info(string_from_format(" ENVIANDO INSTRUCCION CODIGO %s\n",(char*)obtener_ultimo_parametro(i)));
 	//imprimir_instruccion(i);
 
 	hilo_enviado* h=malloc(sizeof(hilo_enviado));
@@ -483,7 +481,7 @@ instr_t* enviar_i(instr_t* i){
 	h->cond_t=&cond;
 	h->mutex_t=&lock;
 
-	loggear("Agrego a diccionario");
+	loggear_trace(string_from_format("Agrego a diccionario"));
 
 	sem_wait(&mutex_diccionario_enviados);
 	//printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
@@ -491,10 +489,10 @@ instr_t* enviar_i(instr_t* i){
 	sem_post(&mutex_diccionario_enviados);
 
 
-	loggear("Determinando memoria para request");
+	loggear_debug(string_from_format("Determinando memoria para request"));
 	int conexionMemoria = obtener_fd_memoria(i);
 	if(conexionMemoria<0){
-		loggear("No se pudo encontrar una memoria para el criterio indicado");
+		loggear_debug(string_from_format("No se pudo encontrar una memoria para el criterio indicado"));
 		char* mensaje="No existe una memoria asignada para dicha instruccion";
 		instr_t* respuesta=malloc(sizeof(instr_t));
 		respuesta->timestamp=i->timestamp;
@@ -506,18 +504,17 @@ instr_t* enviar_i(instr_t* i){
 		return respuesta;
 	}
 
-	loggear("ENVIANDO INSTRUCCION:  ");
+	loggear_trace(string_from_format("ENVIANDO INSTRUCCION:  "));
 	enviar_request(i, conexionMemoria);
 
+	loggear_trace(string_from_format("\n##### Instruccion enviada, esperando respuesta###\n"));
 
-	printf("\n##### Instruccion enviada, esperando respuesta###\n");
-
-	loggear("Hilo bloqueado hasta recibir respuesta!");
+	loggear_debug(string_from_format("Hilo bloqueado hasta recibir respuesta!"));
 	pthread_mutex_lock(h->mutex_t);
 	pthread_cond_wait(h->cond_t,h->mutex_t);
 	pthread_mutex_unlock(h->mutex_t);
 
-	loggear("Hilo despierto!");
+	loggear_debug(string_from_format("Hilo despierto!"));
 
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
 	return h->respuesta;
@@ -537,8 +534,8 @@ int obtener_fd_memoria(instr_t *i){
 	}sem_post(&mutex_diccionario_criterios);
 
 	//Obtengo la memoria segun el criterio
-	printf("Codigo de criterio es : %d \n",codigo_criterio);
-	loggear("Determinando criterio de tabla");
+	loggear_trace(string_from_format("Codigo de criterio es : %d \n",codigo_criterio));
+	loggear_info(string_from_format("Determinando criterio de tabla"));
 	switch(codigo_criterio){
 	case SC:
 		sem_wait(&criterio_strong_consistency->mutex_criterio);
@@ -571,11 +568,10 @@ int obtener_fd_memoria(instr_t *i){
 	}//Ya obtuve el alias de la memoria
 
 	if(alias_memoria==NULL){
-		loggear("NO se pudo obtener la memoria para dicha instruccion");
+		loggear_warning(string_from_format("NO se pudo obtener la memoria para dicha instruccion"));
 		return -100;
 	}
-	loggear("Memoria obtenida:");
-	loggear(krn_concat(memoria,alias_memoria));
+	loggear_info(string_from_format("Memoria obtenida: %s%s", memoria, alias_memoria));
 
 	return obtener_fd_out(krn_concat(memoria,alias_memoria));
 }
@@ -583,17 +579,17 @@ char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
 	strcpy(rdo,s1);
 	strcat(rdo,s2);
-//	loggear(rdo);
+//	loggear_debug(string_from_format(rdo);
 	return rdo;
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
-	loggear("Agregando tabla a criterio");
+	loggear_trace(string_from_format("Agregando tabla a criterio"));
 	int* codigo_criterio=malloc(sizeof(int));
 	*codigo_criterio=obtener_codigo_criterio(obtener_parametroN(i,1));
 	sem_wait(&mutex_diccionario_criterios);
 	dictionary_put(diccionario_criterios,obtener_parametroN(i,0),codigo_criterio);
 	sem_post(&mutex_diccionario_criterios);
-	printf("Se agrega la tabla %s, al criterio codigo: %d\n\n",(char*)obtener_parametroN(i,0),*codigo_criterio);
+	loggear_info(string_from_format("Se agrega la tabla %s al criterio codigo: %d\n\n",(char*)obtener_parametroN(i,0),*codigo_criterio));
 }
 int obtener_codigo_criterio(char* criterio){
 	if(!strcmp(criterio,"SC")){
@@ -633,8 +629,8 @@ void responderHandshake(identificador *idsConexionEntrante)
 	idsConexionEntrante->fd_out = fd_saliente;
 }
 void recibi_respuesta(instr_t* respuesta, char* remitente){
-	loggear("Instruccion recibida: ");
-	imprimir_instruccion(respuesta);
+	loggear_debug(string_from_format("Recibi una respuesta con el Codigo %d de %s", respuesta->codigo_operacion, remitente));
+	imprimir_instruccion(respuesta, loggear_trace);
 
 	if(respuesta->codigo_operacion==PETICION_GOSSIP)
 		devolver_gossip(respuesta, remitente);
@@ -643,27 +639,27 @@ void recibi_respuesta(instr_t* respuesta, char* remitente){
 	else{
 		//	list_add(respuesta->parametros,"1");
 		sem_wait(&mutex_diccionario_enviados);
-		printf("El ultimo parametro de la instruccion es %s\n", (char*)obtener_ultimo_parametro(respuesta));
+		loggear_trace(string_from_format("El ultimo parametro de la instruccion es %s\n", (char*)obtener_ultimo_parametro(respuesta)));
 		hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
-		if(h!=NULL) loggear("Hilo obtenido y removido del diccionario!");
-		else loggear("El hilo no existe");
+		if(h!=NULL) loggear_trace(string_from_format("Hilo obtenido y removido del diccionario!"));
+		else loggear_warning(string_from_format("El hilo no existe"));
 		sem_post(&mutex_diccionario_enviados);
 
-		loggear("Asigno respuesta y revivo hilo");
+		loggear_info(string_from_format("Asigno respuesta y revivo hilo"));
 		h->respuesta=respuesta;
 
 		pthread_mutex_lock(h->mutex_t);
 		pthread_cond_signal(h->cond_t);
 		pthread_mutex_unlock(h->mutex_t);
 
-		loggear("Hilo revivido!");
+		loggear_trace(string_from_format("Hilo revivido!"));
 		//printf("La cantidad de waiters es de: %d el lock es de %d\n\n",h->cond_t.__data.__nwaiters, h->cond_t.__data.__lock);
 		//printf("La cantidad de waiters en el principal es de:%d \n\n",cond_ejecutar.__data.__nwaiters);
 	}
 }
 void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
-		loggear("FIN DE PROCESO");
+		loggear_debug(string_from_format("FIN DE PROCESO"));
 		finalizar_proceso(p);
 	}else{
 		encolar_proceso(p);
@@ -673,17 +669,17 @@ void encolar_o_finalizar_proceso(proceso* p){
 
 void finalizar_proceso(proceso* p){
 	//	instruccion_t* aux;
-	//	loggear("finalizando");
+	//	loggear_debug(string_from_format("finalizando");
 	//	while((aux=p->instrucciones)!=NULL){
 	//		p->instrucciones=p->instrucciones->sig;
 	//		free(&aux);
 	//	}
-	loggear("Se finalizo correctamente un proceso !!. Se libera su memoria");
+	loggear_debug(string_from_format("Se finalizo correctamente un proceso !!. Se libera su memoria"));
 	continuar_ejecucion();
 }
 void encolar_proceso(proceso *p){
 	sem_wait(&semaforo_procesos_ready);
-	loggear("Encolando proceso!");
+	loggear_debug(string_from_format("Encolando proceso!"));
 	proceso *aux=cola_ready;
 	if(aux==NULL){
 		cola_ready=p;
@@ -695,7 +691,7 @@ void encolar_proceso(proceso *p){
 	}
 	p->sig=NULL;
 	sem_post(&semaforo_procesos_ready);
-	loggear("Proceso encolado!");
+	loggear_trace(string_from_format("Proceso encolado!"));
 	//Se ejecuta siempre que haya un hilo disponible y proceso para procesar.
 	// Siempre implica un encolar, ya sea por agregar un hilo a la cola o porque un hilo se libero y disminuyo la cantidad corriendo.
 	//ejecutar();
@@ -726,53 +722,45 @@ int hilos_disponibles(){
 	sem_post(&mutex_cantidad_hilos);
 	return hay;
 }
-void inicializarMemorias() {
-	loggear("Memorias inicializadas");
-}
+
 
 void inicializarConfiguracion() {
 	char* rutaConfiguracion = "Kernel.config";
-	configuracion.quantum = atoi(obtener_por_clave(rutaConfiguracion, "quantum"));
-	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave(rutaConfiguracion, "gradoMultiprocesamiento"));
-	configuracion.ip = obtener_por_clave(rutaConfiguracion, "IP");
-	configuracion.puerto = obtener_por_clave(rutaConfiguracion, "PUERTO");
-	configuracion.rutaLog = obtener_por_clave(rutaConfiguracion, "rutaLog");
+	g_config = config_create(rutaConfiguracion);
+	configuracion.quantum = atoi(obtener_por_clave("quantum"));
+	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave("gradoMultiprocesamiento"));
+	configuracion.ip = obtener_por_clave("IP");
+	configuracion.puerto = obtener_por_clave("PUERTO");
+	configuracion.rutaLog = obtener_por_clave("rutaLog");
 
 	configuracion.IP_SEEDS = string_array_to_list(config_get_array_value(g_config, "IP_SEEDS"));
 	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
 	imprimir_config_actual();
 
-	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave(rutaConfiguracion, "RETARDO_GOSSIPING"));
-	configuracion.tiempoMetricas = atoi(obtener_por_clave(rutaConfiguracion, "tiempoMetricas"));
+	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave("RETARDO_GOSSIPING"));
+	configuracion.tiempoMetricas = atoi(obtener_por_clave("tiempoMetricas"));
+	configuracion.LOG_LEVEL =  log_level_from_string(obtener_por_clave("LOG_LEVEL"));
 
 
 }
 void actualizar_configuracion(){
-	char* rutaConfiguracion = "Kernel.config";
 	sem_wait(&mutex_configuracion);
-	configuracion.quantum = atoi(obtener_por_clave(rutaConfiguracion, "quantum"));
-	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave(rutaConfiguracion, "gradoMultiprocesamiento"));
-	configuracion.tiempoMetricas = atoi(obtener_por_clave(rutaConfiguracion, "tiempoMetricas"));
+	configuracion.quantum = atoi(obtener_por_clave("quantum"));
+	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave("gradoMultiprocesamiento"));
+	configuracion.tiempoMetricas = atoi(obtener_por_clave("tiempoMetricas"));
 	sem_post(&mutex_configuracion);
 }
 void iniciar_log(){
-	g_logger = log_create(configuracion.rutaLog,"kernel", 1, LOG_LEVEL_DEBUG);
+	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
 }
-void loggear(char *valor) {
-	sem_wait(&mutex_log);
-	log_info(g_logger, valor);
-	sem_post(&mutex_log);
-}
-char* obtener_por_clave(char* ruta, char* key) {
+
+char* obtener_por_clave(char* key) {
 	char* valor;
-	g_config = config_create(ruta);
 	valor = config_get_string_value(g_config, key);
 	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------\n",key,valor);
 	return valor;
 }
-void inicializarMetricas() {
-	loggear("Metricas inicializadas");
-}
+
 void inicializar_semaforos(){
 	sem_init(&mutex_log,0,1);
 	sem_init(&semaforo_procesos_ready,0,1);
@@ -812,7 +800,7 @@ void inicializar_criterios(){
 	criterio_strong_hash_consistency->codigo_criterio=2;
 	criterio_strong_hash_consistency->lista_memorias=list_create();
 	criterio_strong_hash_consistency->mutex_criterio=sem[2];
-	loggear("Criterios inicializados!");
+	loggear_trace(string_from_format("Criterios inicializados!"));
 }
 void check_inicial(int argc, char* argv[])
 {
@@ -834,7 +822,7 @@ void agregar_tabla(char* tabla){
 	sem_wait(&mutex_lista_tablas);
 	list_add(lista_tablas,tabla);
 	sem_post(&mutex_lista_tablas);
-	loggear("Tabla agregada");
+	loggear_debug(string_from_format("Tabla agregada"));
 }
 bool existe_tabla(char* tablaBuscada){
 	//puts("A");
@@ -850,7 +838,7 @@ bool existe_tabla(char* tablaBuscada){
 }
 void iniciar_consola(){
 	sleep(1);
-	loggear("Se inicia consola");
+	loggear_trace(string_from_format("Se inicia consola"));
 	pthread_t hilo_consola;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
@@ -862,7 +850,7 @@ void* consola(void* c){
 	while(1){
 		instruccion=readline("\n>>");
 		if(strcmp(instruccion,"close")==0){
-			loggear("##### FINALIZANDO KERNEL.... ###### \n");
+			loggear_debug(string_from_format("##### FINALIZANDO KERNEL.... ###### \n"));
 			return NULL;
 		}
 		printf("Procesando instruccion:: %s \n",instruccion);
@@ -878,7 +866,7 @@ void iniciar_ejecutador_gossiping(){
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador_gossiping,&attr, &ejecutar_gossiping, NULL);
 	pthread_detach(hilo_ejecutador_gossiping);
-	loggear_debug(string_from_format("Ejecutador gossiping iniciado"));
+	loggear_trace(string_from_format("Ejecutador gossiping iniciado"));
 }
 
 void *ejecutar_gossiping()
@@ -936,7 +924,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 				}
 				else{
 					sem_post(&mutex_diccionario_conexiones);
-					loggear_info(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
+					loggear_trace(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
 					i+=3;
 					saltearProximos = 3;
 				}
@@ -960,7 +948,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						identificador* idsConexionesActuales = malloc(sizeof(identificadores));
 						memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
 
-						loggear_debug(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
+						loggear_trace(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
 						sem_wait(&mutex_diccionario_conexiones);
 						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
 						sem_post(&mutex_diccionario_conexiones);
