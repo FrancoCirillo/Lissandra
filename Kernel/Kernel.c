@@ -871,6 +871,7 @@ void iniciar_ejecutador_gossiping(){
 
 void *ejecutar_gossiping()
 {
+	fd_out_inicial = 0;
 	while(1)
 	{
 		ejecutar_instruccion_gossip();
@@ -1038,10 +1039,12 @@ void gossipear_con_procesos_desconectados(){
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPKernel, 0);
 			if(conexion != -1){
 				puts("Conexion creada");
+				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
+
 			}
 		}
 		i++;

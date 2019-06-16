@@ -167,12 +167,12 @@ void* consola(void* c);
 void agregar_a_metricas(instr_t* i);
 
 //Gossiping
+int fd_out_inicial;
 void iniciar_ejecutador_gossiping();
 void *ejecutar_gossiping();
 void ejecutar_instruccion_gossip();
 void gossipear_con_procesos_desconectados();
 void gossipear_con_conexiones_actuales();
-
 char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado);
 bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado);
 void enviar_lista_gossiping(char* nombre);

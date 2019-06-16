@@ -157,6 +157,6 @@ extern t_dictionary *conexionesActuales;
 extern sem_t mutex_diccionario_conexiones;
 extern t_log *g_logger;
 extern sem_t mutex_log;
-
+extern int fd_out_inicial;
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */

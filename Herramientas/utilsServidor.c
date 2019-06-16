@@ -131,7 +131,8 @@ int vigilar_conexiones_entrantes(
 								strcpy(idsNuevaConexion->puerto, suPuerto);
 								strcpy(idsNuevaConexion->ip_proceso, suIP);
 								idsNuevaConexion->fd_in = newfd;
-								idsNuevaConexion->fd_out = 0;
+								idsNuevaConexion->fd_out = (fd_out_inicial)?fd_out_inicial:0;
+								fd_out_inicial = 0;
 								sem_wait(&mutex_diccionario_conexiones);
 								dictionary_put(conexionesActuales, quienEs, idsNuevaConexion);
 								sem_post(&mutex_diccionario_conexiones);

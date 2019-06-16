@@ -402,6 +402,7 @@ void inicializar_conexiones() {
 	puts("Inicializando conexiones");
 	conexionesActuales = dictionary_create();
 	callback = evaluar_instruccion;
+	fd_out_inicial = 0;
 	puts("callback creado");
 	iniciar_servidor(miIP, config_FS.puerto_escucha);
 	puts("Servidor iniciado");

@@ -68,6 +68,7 @@ void inicializar_semaforos()
 
 void inicializar_estructuras_conexiones()
 {
+	fd_out_inicial = 0;
 	if(list_size(configuracion.IP_SEEDS) != list_size(configuracion.PUERTO_SEEDS)){
 		loggear_error(string_from_format("La cantidad de IPs no coinciden con la cantidad de Puertos"));
 	}

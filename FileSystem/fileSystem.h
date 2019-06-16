@@ -132,6 +132,7 @@ _Bool 	es_registro_mas_reciente(void*, void*);
 void 	liberar_memoria_instr(instr_t *);
 
 /* CONEXIONES */
+int fd_out_inicial;
 char* miIP;
 t_dictionary *conexionesActuales;
 void (*callback)(instr_t *instruccion, char *remitente);
