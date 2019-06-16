@@ -501,12 +501,12 @@ void eliminar_tabla(instr_t *instruccion)
 		dictionary_remove(tablaDeSegmentos, tablaABorrar);
 		list_destroy_and_destroy_elements(segmentoABorrar, (void *)free);
 	}
+	loggear_info(string_from_format("Tabla %s%s borrada de Memoria", puntoMontaje, tablaABorrar));
 }
 
 void imprimir_segmento(char *nombreSegmento, t_list *suTablaDePaginas)
 {
-
-	loggear_info(string_from_format("Tabla: %s\n", nombreSegmento));
+	loggear_info(string_from_format("Tabla: %s%s\n", puntoMontaje, nombreSegmento));
 	loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
 }
 
@@ -514,7 +514,7 @@ void imprimir_segmento_basico(char *nombreSegmento, t_list *suTablaDePaginas)
 {
 	char *texto = string_new();
 	string_append_with_format(&texto, "------------------------\n");
-	string_append_with_format(&texto, "Tabla: %s\n", nombreSegmento);
+	string_append_with_format(&texto, "Tabla: %s%s\n", puntoMontaje, nombreSegmento);
 
 	void iterator(filaTabPags * fila)
 	{

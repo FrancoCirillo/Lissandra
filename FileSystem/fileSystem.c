@@ -414,10 +414,12 @@ void enviar_tamanio_value(char* remitente) {
     t_list *listaParam = list_create();
     char* tamanioValue = string_from_format("%d", config_FS.tamanio_value);
     list_add(listaParam, tamanioValue);
+    char* puntoMontaje = string_from_format("%s", config_FS.punto_montaje);
+    list_add(listaParam, puntoMontaje);
+    printf("PM:   %s", puntoMontaje);
     instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
-	puts("Enviando tamanio del value");
     enviar_request(miInstruccion, conexionMemoriaN);
-    puts("Tamanio del value enviado");
+    puts("Tamanio del value y punto de montaje enviados");
 }
 
 void responderHandshake(identificador *idsConexionEntrante) {
