@@ -401,6 +401,7 @@ void liberar_memoria_instr(instr_t * instr) {
 void inicializar_conexiones() {
 	puts("Inicializando conexiones");
 	conexionesActuales = dictionary_create();
+	auxiliarConexiones = dictionary_create();
 	callback = evaluar_instruccion;
 	fd_out_inicial = 0;
 	puts("callback creado");

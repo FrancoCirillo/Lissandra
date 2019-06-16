@@ -129,6 +129,7 @@ void iniciar_metricas();
 //Conexiones Franquito
 config_t configuracion;
 t_dictionary *conexionesActuales;
+t_dictionary *auxiliarConexiones;
 void check_inicial(int argc, char* argv[]);
 void (*callback)(instr_t *instruccion, char *remitente);
 void ejecutar_requestRecibido(instr_t * instruccion,char* remitente);

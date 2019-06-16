@@ -138,6 +138,9 @@ int vigilar_conexiones_entrantes(
 								sem_post(&mutex_diccionario_conexiones);
 							}
 							char* auxFd = string_from_format("%d", newfd);
+//							if(dictionary_get(auxiliarConexiones, auxFd)!=NULL){
+//								free(dictionary_get(auxiliarConexiones, auxFd));
+//							}
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
 							free(auxFd);
 							//							imprimirConexiones(conexionesActuales); //Debug

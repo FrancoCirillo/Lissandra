@@ -35,6 +35,7 @@ char *obtener_por_clave(char *clave);
 
 identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
+t_dictionary *auxiliarConexiones;
 char* miIPMemoria;
 char* nombreDeMemoria;
 int tamanioValue;

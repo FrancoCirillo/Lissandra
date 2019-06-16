@@ -140,5 +140,6 @@ void 	inicializar_conexiones();
 void 	imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
 int 	obtener_fd_out(char *proceso);
 void 	enviar_tamanio_value(char* remitente);
+t_dictionary *auxiliarConexiones;
 
 #endif /* FILE_SYSTEM_H */

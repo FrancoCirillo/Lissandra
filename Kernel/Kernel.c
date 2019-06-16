@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 void inicializar_kernel(){
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_requestRecibido;
-
+	auxiliarConexiones = dictionary_create();
 
 	iniciar_servidor(miIPKernel, configuracion.puerto);
 	vigilar_conexiones_entrantes(callback, CONSOLA_KERNEL);

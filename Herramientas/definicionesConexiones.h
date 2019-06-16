@@ -155,6 +155,7 @@ typedef struct identificador
 } identificador;
 
 extern t_dictionary *conexionesActuales;
+extern t_dictionary *auxiliarConexiones;
 extern sem_t mutex_diccionario_conexiones;
 extern t_log *g_logger;
 extern sem_t mutex_log;

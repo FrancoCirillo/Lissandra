@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	empezar_conexiones(argv);
 //	iniciar_ejecutador_journal();
 
-	iniciar_ejecutador_gossiping();
+//	iniciar_ejecutador_gossiping();
 
 	vigilar_conexiones_entrantes(callback, CONSOLA_MEMORIA);
 
@@ -72,6 +72,7 @@ void inicializar_estructuras_conexiones()
 		loggear_error(string_from_format("La cantidad de IPs no coinciden con la cantidad de Puertos"));
 	}
 	conexionesActuales = dictionary_create();
+	auxiliarConexiones = dictionary_create();
 	idsNuevasConexiones = malloc(sizeof(identificador));
 	callback = ejecutar_instruccion;
 }
@@ -208,6 +209,7 @@ void terminar_memoria(instr_t* instruccion){
 	config_destroy(g_config);
 	log_destroy(g_logger);
 	dictionary_destroy(conexionesActuales);
+	dictionary_destroy_and_destroy_elements(auxiliarConexiones, free);
 	free(idsNuevasConexiones);
 	free(memoriaPrincipal);
 	dictionary_destroy(tablaDeSegmentos);
