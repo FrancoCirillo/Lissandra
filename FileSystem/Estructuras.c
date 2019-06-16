@@ -14,7 +14,6 @@
  * bloque disponible (bits arrays)
  * semaforos!
  *
- *NO FUNCIONA: string_to_upper(nomb);   //ver como hacer en crear_directorio().
  * ver actualizacion RETARDO del Archivo de config. Se actualiza en cada fin de instruccion?
  * \*/
 
@@ -27,8 +26,50 @@ int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
-void  eliminar_directorio(char* tabla) {
-	//TODO hacer despues
+
+int eliminar_directorio(char* tabla) {
+	char* ruta_tabla = obtener_ruta_tabla(tabla);
+
+	DIR* directorio = opendir(ruta_tabla);
+	if(directorio == NULL)
+		return -1;
+
+	size_t path_len = strlen(ruta_tabla);
+	int eliminado = -1;
+
+	if(directorio){
+		struct dirent* dir_a_eliminar;
+		eliminado = 0;
+
+		while (!eliminado && (dir_a_eliminar = readdir(directorio))){
+			int removed = -1;
+
+			//Se saltean "." y ".." por la recursividad
+			if (!strcmp(dir_a_eliminar->d_name, ".") || !strcmp(dir_a_eliminar->d_name, ".."))
+				continue;
+
+			size_t length = path_len + strlen(dir_a_eliminar->d_name) + 2;
+			char* arch_a_eliminar = malloc(length);
+
+			if(arch_a_eliminar){
+				snprintf(arch_a_eliminar, length, "%s/%s", ruta_tabla, dir_a_eliminar->d_name);
+
+            	if(!string_ends_with(arch_a_eliminar, "Metadata"))
+            		liberar_bloques(arch_a_eliminar);
+
+            	removed = unlink(arch_a_eliminar);
+
+            	free(arch_a_eliminar);
+			}
+			eliminado = removed;
+		}
+		closedir(directorio);
+	}
+
+	if(!eliminado)
+	     eliminado = rmdir(ruta_tabla);
+
+	return eliminado;
 }
 
 //---------------------------METADATA---------------------------
@@ -99,7 +140,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 		txt_write_in_file(archivo_bloque, string_registro);
 //		puts("Escribo el registro completo");
 	} else {
-		if(cant_bloques_disp() == 0)
+		if(cant_bloques_disponibles() == 0)
 			return; //TODO log: no hay bloques disponibles
 
 		int tam_restante = espacio_restante_bloque(ruta_archivo);
@@ -239,21 +280,17 @@ imprimirContenidoArchivo(ruta_bloque);
 }
 
 //---------------------------BITARRAY---------------------------
-char* ruta_bitmap = "/home/utnso/lissandra-checkpoint/Metadata/Bitmap.bin"; //TODO esto ya esta en g_ruta.bitmap
-int cantidad_bloques = 800; //Metadata_FS.blocks;
 
 int cant_bytes() {
-	return (cantidad_bloques+7)/8;
+	return (Metadata_FS.blocks + 7) / 8;
 }
 
 void inicializar_bitmap() {
 //	puts("inicializar bitmap");
-	char* ruta_metadata = "/home/utnso/lissandra-checkpoint/Metadata/"; //TODO, poner en una variable en algun lado
-//	printf("Ruta metadata: %s\n", ruta_metadata);
-	if(carpeta_esta_vacia(ruta_metadata)) {
+	if(carpeta_esta_vacia(g_ruta.carpeta_metadata)) {
 		FILE* archivo_bitmap = fopen(g_ruta.bitmap, "w+");
 		//char* bitmap = string_repeat(0, cant_bytes());
-		printf("Iniciando bitmap con %d bloques, bytes %d\n", cantidad_bloques,cant_bytes());
+		printf("Iniciando bitmap con %d bloques, bytes %d\n", Metadata_FS.blocks,cant_bytes());
 		//fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
 
 		fclose(archivo_bitmap);
@@ -267,7 +304,7 @@ void inicializar_bitmap() {
 void chequear_bitmap(t_bitarray* bitarray) {
 	int i=0;
 	puts("\n###CHEQUEANDO BITMAP");
-	while(i < cantidad_bloques){
+	while(i < Metadata_FS.blocks){
 		if(bloque_esta_ocupado(bitarray, i))
 			printf("%d,", i);
 		i++;
@@ -276,10 +313,11 @@ void chequear_bitmap(t_bitarray* bitarray) {
 }
 
 t_bitarray* get_bitmap() {
-	puts("Get bitmap");
-	FILE* archivo_bitmap = fopen(ruta_bitmap, "r");
+	//puts("Get bitmap");
+	FILE* archivo_bitmap = fopen(g_ruta.bitmap, "r");
 	char* bitmap = malloc(cant_bytes() + 1);
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cant_bytes()+1, archivo_bitmap);
+	//TODO: resultado_read
 	bitmap[cant_bytes()] = 0;
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cant_bytes(), LSB_FIRST);
 	fclose(archivo_bitmap);
@@ -289,28 +327,27 @@ t_bitarray* get_bitmap() {
 }
 
 void actualizar_bitmap(t_bitarray* bitarray) {
-	FILE* bitmap = fopen(ruta_bitmap, "w+");
+	FILE* bitmap = fopen(g_ruta.bitmap, "w+");
 //	printf("Escribiendo archivo %d bytes\n", strlen(bitarray->bitarray));
 	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
 //	puts("Cerrando archivo");
 	fclose(bitmap);
 }
 
-int cant_bloques_disp() {
+void inicializar_bloques_disp() {
 	int nro_bloque = 0;
-	int cantidad_disponible = 0;
+	int contador_disponibles = 0;
 	t_bitarray* bitmap = get_bitmap();
-	while(nro_bloque < cantidad_bloques) {
+	while(nro_bloque < Metadata_FS.blocks) {
 		if(!bloque_esta_ocupado(bitmap, nro_bloque)) {
-			cantidad_disponible++;
+			contador_disponibles++;
 		} else {
 			//printf(" %d,",nro_bloque);
 		}
 		nro_bloque++;
 	}
 	eliminar_bitarray(bitmap);
-
-	return cantidad_disponible;
+	bloques_disponibles += contador_disponibles;
 }
 
 void eliminar_bitarray(t_bitarray* bitarray) {
@@ -327,9 +364,9 @@ int siguiente_bloque_disponible() {
 	puts("Entre a sig bloque disp");
 	int nro_bloque = 0;
 	t_bitarray* bitmap = get_bitmap();
-	while(nro_bloque < cantidad_bloques && bloque_esta_ocupado(bitmap,nro_bloque))
+	while(nro_bloque < Metadata_FS.blocks && bloque_esta_ocupado(bitmap,nro_bloque))
 		nro_bloque++;
-	if(nro_bloque == cantidad_bloques) {
+	if(nro_bloque == Metadata_FS.blocks) {
 		return -1;
 	}
 	eliminar_bitarray(bitmap);
@@ -358,17 +395,17 @@ void liberar_bloque(int nro_bloque) {
 void ejemplo_bitarray(){
 	inicializar_bitmap();
 	puts("Iniciado!\n");
-	printf("Cantidad de bloques disponibles %d",cant_bloques_disp());
+	printf("Cantidad de bloques disponibles %d",cant_bloques_disponibles());
 	ocupar_bloque(0);
 //	printf("\nPost ocupar 0 , disp: %d\n",cant_bloques_disp());
 	ocupar_bloque(1);
 	ocupar_bloque(3);
 	ocupar_bloque(4);
 	ocupar_bloque(54);
-	printf("\nPost ocupar cantidad de bloques disponibles %d",cant_bloques_disp());
+	printf("\nPost ocupar cantidad de bloques disponibles %d",cant_bloques_disponibles());
 	printf("\nPrimer bloque disponible: %d\n",siguiente_bloque_disponible());
 	liberar_bloque(3);
-	printf("\nPost liberar cantidad de bloques disponibles %d\n",cant_bloques_disp());
+	printf("\nPost liberar cantidad de bloques disponibles %d\n",cant_bloques_disponibles());
 	sleep(2);
 }
 
@@ -438,7 +475,7 @@ FILE* crear_tmp(char* tabla, char* nombre_tmp) {
 }
 
 int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
-	if(cant_bloques_disp() == 0) {
+	if(cant_bloques_disponibles() == 0) {
 		return 0; //TODO log: no hay bloques disponibles
 	}
 	t_config* archivo = config_create(ruta_archivo);
@@ -528,7 +565,7 @@ void liberar_bloques(char* ruta_archivo) {
 //	printf("Nro bloque: %d\t Nro siguiente: %d\n", nro_bloque, bloque);
 	do {
 		liberar_bloque(bloque);
-		incremetar_bloques_disponibles(1);
+		incrementar_bloques_disponibles(1);
 //		printf("Libere el bloque: %d\n", bloque);
 		bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque);
 //		printf("Nro siguiente: %d\n", bloque);
@@ -576,7 +613,7 @@ void restar_bloques_disponibles(int num) {
 
 }
 
-void incremetar_bloques_disponibles(int num) {
+void incrementar_bloques_disponibles(int num) {
 	sem_wait(&mutex_cant_bloques);
 	bloques_disponibles = bloques_disponibles + num;
 	sem_post(&mutex_cant_bloques);
@@ -608,7 +645,7 @@ void crear_particiones(instr_t* instr) {
 		fclose(archivo_binario);
 	}
 
-	char* mensaje= string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
+	char* mensaje = string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
 	loggear_FS(mensaje);
 	free(mensaje);
 }
@@ -650,9 +687,8 @@ FILE* crear_archivo(char* nombre, char* tabla, char* ext) {
 }
 
 void crear_directorio(char* ruta, char* nombre) {
-
-	//string_to_upper(nomb);   //No me funciona (??) TODO ver
 	char* ruta_dir = string_from_format("%s%s", ruta, nombre);
+
 	if (!mkdir(ruta_dir, S_IRWXU)) {
 		char* mensaje = string_from_format("Se creó correctamente la carpeta \"%s\" en el directorio %s", nombre, ruta);
 		loggear_FS(mensaje);
@@ -684,8 +720,7 @@ void crear_bloques() {  //Los bloques van a partir del numero 0.
 }
 
 void crear_bloque(char* nombre) {
-	char* ruta = malloc(sizeof(char) * (strlen(g_ruta.bloques) + strlen(nombre) + strlen(".bin")) + 1);
-	sprintf(ruta, "%s%s%s", g_ruta.bloques, nombre, ".bin");
+	char* ruta = string_from_format("%s%s.bin", g_ruta.bloques, nombre);
 	FILE* f = fopen(ruta, "w+");
 	free(ruta);
 	fclose(f);

@@ -16,7 +16,6 @@ registro_t *crear_registro(mseg_t timestampNuevo, uint16_t keyNueva, char *value
 }
 
 
-
 int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
@@ -24,9 +23,10 @@ int main(int argc, char* argv[]) {
 	inicializar_FS(argc, argv);
 
 	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
-//	pruebaGeneral();
-	inicializar_conexiones();
 
+//	pruebaGeneral();
+
+	inicializar_conexiones();
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin);
@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
 //	pruebaGeneral();
 //	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
 //	imprimirContenidoArchivo(rutaDump1);
+
 	//finalizar_FS();
 
 	return 0;
@@ -47,6 +48,7 @@ int main(int argc, char* argv[]) {
 
 
 //------------------------TESTS------------------------
+
 void imprimirContenidoArchivo(char* ruta) {
 	puts("---LEO ARCHIVO COMPLETO---");
 	FILE* f = fopen(ruta, "r");
@@ -60,7 +62,8 @@ void imprimirContenidoArchivo(char* ruta) {
 	printf("\nLeidos: %d\n", leidos);
 }
 
-void imprimirRegistro(registro_t* registro) {
+void imprimirRegistro(void* reg) {
+	registro_t* registro = reg;
 	puts("REGISTRO:");
 	printf("Timestamp: %"PRIu64"\n",registro->timestamp);
 	printf("Key: %d\n", registro->key);
@@ -242,6 +245,9 @@ void inicializar_FS(int argc, char* argv[]) {
 	inicializar_directorios();
 	crear_bloques(); //inicializa tambien la var globlal de bloques disp.
 	inicializar_bitmap();
+	bloques_disponibles = 0;
+	inicializar_bloques_disp();
+	inicializar_tablas_nro_dump();
 	loggear_FS("-----------Fin inicialización LFS-----------");
 
 }
@@ -250,6 +256,7 @@ void finalizar_FS() {
 	config_destroy(g_config);
 	finalizar_rutas();
 	finalizar_memtable();
+	finalizar_tablas_nro_dump();
 	loggear_FS("-----------FIN PROCESO-----------");
 }
 
@@ -267,6 +274,7 @@ void iniciar_semaforos() {
 void iniciar_rutas(){
 	g_ruta.tablas = string_from_format("%sTablas/", config_FS.punto_montaje);
 	g_ruta.bloques = string_from_format("%sBloques/", config_FS.punto_montaje);
+	g_ruta.carpeta_metadata = string_from_format("%sMetadata/", config_FS.punto_montaje);
 	g_ruta.metadata = string_from_format("%sMetadata/Metadata.bin", config_FS.punto_montaje);
 	g_ruta.bitmap = string_from_format("%sMetadata/Bitmap.bin", config_FS.punto_montaje);
 }
@@ -274,6 +282,7 @@ void iniciar_rutas(){
 void finalizar_rutas(){
 	free(g_ruta.tablas);
 	free(g_ruta.bloques);
+	free(g_ruta.carpeta_metadata);
 	free(g_ruta.metadata);
 	free(g_ruta.bitmap);
 }
@@ -359,8 +368,9 @@ char* to_upper(char* str){
 }
 
 char* obtener_nombre_tabla(instr_t* instr) {
-	char* tabla = obtener_parametro(instr, 0);
-	return to_upper(tabla);
+	//char* tabla = obtener_parametro(instr, 0);
+	//return to_upper(tabla);
+	return obtener_parametro(instr, 0);
 }
 
 char* obtener_parametro(instr_t * instr, int index) {
@@ -388,7 +398,7 @@ void liberar_memoria_instr(instr_t * instr) {
 	free(instr);
 }
 
-void inicializar_conexiones(){
+void inicializar_conexiones() {
 	puts("Inicializando conexiones");
 	conexionesActuales = dictionary_create();
 	callback = evaluar_instruccion;
@@ -398,7 +408,7 @@ void inicializar_conexiones(){
 	vigilar_conexiones_entrantes(callback, CONSOLA_FS);
 }
 
-void enviar_tamanio_value(char* remitente){
+void enviar_tamanio_value(char* remitente) {
 	int conexionMemoriaN = obtener_fd_out(remitente);
     t_list *listaParam = list_create();
     char* tamanioValue = string_from_format("%d", config_FS.tamanio_value);
@@ -409,8 +419,7 @@ void enviar_tamanio_value(char* remitente){
     puts("Tamanio del value enviado");
 }
 
-void responderHandshake(identificador *idsConexionEntrante)
-{
+void responderHandshake(identificador *idsConexionEntrante) {
 	t_list *listaParam = list_create();
 	list_add(listaParam, "FileSystem");
 	list_add(listaParam, miIP);
@@ -422,43 +431,40 @@ void responderHandshake(identificador *idsConexionEntrante)
 	idsConexionEntrante->fd_out = fd_saliente;
 }
 
-int obtener_fd_out(char *proceso)
-{
+int obtener_fd_out(char *proceso) {
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
-	if (idsProceso->fd_out == 0)
-	{ //Es la primera vez que se le quiere enviar algo a proceso
+	if (idsProceso->fd_out == 0) { //Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;
 }
 
-void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list* listaParam, char* remitente)
-{
+void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list* listaParam, char* remitente) {
 	void *ultimoParametro = obtener_ultimo_parametro(instruccion);
 	if (ultimoParametro != NULL){
 		list_add(listaParam, (char*)ultimoParametro);
 	}
 	instr_t *miInstruccion;
-	switch (quien_pidio(instruccion))
-	{
 
+	switch (quien_pidio(instruccion)) {
 	case CONSOLA_KERNEL:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionReceptor1 = obtener_fd_out(remitente);
 		enviar_request(miInstruccion, conexionReceptor1);
 		break;
+
 	case CONSOLA_MEMORIA:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_MEMORIA, listaParam);
 		int conexionReceptor2 = obtener_fd_out(remitente);
 		enviar_request(miInstruccion, conexionReceptor2);
 		break;
-	default:
+
+	default: //Consola file system
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		//Se pidio desde la consola de FS
 		if (codigoOperacion == DEVOLUCION_SELECT)
-		{
 			imprimir_registro(miInstruccion);
-		}
+
 		if (codigoOperacion == CODIGO_EXITO)
 		{
 			loggear_exito_proceso(miInstruccion);

@@ -189,9 +189,12 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	valor = malloc(sizeof(int));
 	t_list *listaParam = list_create();
 
+	requestCopy = string_from_format("%s", requestCopy);
+	string_to_upper(requestCopy);
+
 	if (strcmp(requestCopy, "CERRAR\n") == 0)
 	{
-		printf(COLOR_ANSI_CYAN "Gracias por usar Lissandra FS!\n" COLOR_ANSI_RESET "cerrando...\n");
+		printf(COLOR_ANSI_CYAN "Gracias por usar Lissandra FS!\n" COLOR_ANSI_RESET "cerrando...\n\n");
 		exit(0);
 	}
 
