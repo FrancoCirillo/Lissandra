@@ -130,7 +130,9 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 3:
 			else{ //No existia la key en ese segment
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-				loggear_trace(string_from_format("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada)));
+				char* paginaStr = pagina_a_str(paginaAgregada);
+				loggear_trace(string_from_format("\nPagina agregada: \n%s\n", paginaStr));
+				free(paginaStr);
 				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 				loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
 				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
@@ -138,8 +140,6 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 			}
-
-
 
 		}
 		if(flagMod){

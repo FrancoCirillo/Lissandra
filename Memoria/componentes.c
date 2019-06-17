@@ -118,7 +118,6 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 
 void actualizar_pagina(void *paginaAActualizar, mseg_t nuevoTimestamp, char *nuevoValue)
 {
-
 	int desplazamiento = 0;
 	memcpy(paginaAActualizar + desplazamiento, &nuevoTimestamp, sizeof(mseg_t));
 	desplazamiento += sizeof(mseg_t);
@@ -409,7 +408,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 		}
 
 		list_iterate(suTablaDePaginas, (void *)enviar_si_esta_modificada);
-
+		free(tablaAInsertar);
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)enviar_paginas_modificadas);
@@ -426,15 +425,13 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	free(instruccion);
 }
 
+
 void liberar_value(t_list* listaParam){
 
 	int i = 0;
 
 	void borrar_value(char* parametro){
-		if(i == 0){
-			loggear_trace(string_from_format("Se va a borrar el parametro (Tabla): %s", parametro));
-			free(parametro);
-		}
+
 		if(i==2){
 			loggear_trace(string_from_format("Se va a borrar el parametro (Value): %s", parametro));
 			free(parametro);
