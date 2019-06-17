@@ -7,9 +7,10 @@ t_paquete *instruccion_a_paquete(instr_t *instruccionAEnviar)
 
 	t_paquete *paqueteAEnviar = crear_paquete(instruccionAEnviar->codigo_operacion, instruccionAEnviar->timestamp);
 	int tamanioTotal = 0;
-	void iterator(void *valor)
+	int tamanio = 0;
+	void iterator(char *valor)
 	{
-		int tamanio = strlen((char *)valor) + 1;
+		tamanio = strlen(valor) + 1;
 		agregar_a_paquete(paqueteAEnviar, valor, tamanio);
 		tamanioTotal += tamanio;
 	}
@@ -31,7 +32,7 @@ void agregar_a_paquete(t_paquete *paquete, void *valor, int tamanio)
 
 void *serializar_paquete(t_paquete *paquete, int bytes)
 {
-	void *magic = malloc(bytes);
+	void *magic = calloc(1, bytes);
 
 	int desplazamiento = 0;
 	memcpy(magic + desplazamiento, &(paquete->timestamp), sizeof(mseg_t));
@@ -65,8 +66,9 @@ void *serializar_request(instr_t *instruccionAEnviar, int *tamanio)
 
 int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 {
-	int tamanio;
-	void *a_enviar = serializar_request(instruccionAEnviar, &tamanio);
+	int tamanio=0;
+	void *a_enviar = NULL;
+	a_enviar = serializar_request(instruccionAEnviar, &tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
 	loggear_trace(string_from_format("Se va a destruir la lista de parametros de la instruccion"));
 	list_destroy(instruccionAEnviar->parametros);

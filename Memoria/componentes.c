@@ -167,15 +167,14 @@ mseg_t get_ts_pagina(void *pagina)
 
 uint16_t get_key_pagina(void *pagina)
 {
-	uint16_t keyPagina;
+	uint16_t keyPagina = 0;
 	memcpy(&keyPagina, pagina + sizeof(mseg_t), sizeof(uint16_t));
 	return keyPagina;
 }
 
 char *get_value_pagina(void *pagina)
 {
-	char *value = NULL;
-	value = realloc(value, tamanioValue);
+	char* value = calloc(1, tamanioValue);
 	memcpy(value, pagina + sizeof(mseg_t) + sizeof(uint16_t), sizeof(tamanioValue)+1);
 	return value;
 }
@@ -184,7 +183,7 @@ registro *obtener_registro_de_pagina(void *pagina)
 {
 	mseg_t timestamp = get_ts_pagina(pagina);
 	uint16_t key = get_key_pagina(pagina);
-	registro * miRegistro = malloc(tamanioRegistro + 1);
+	registro * miRegistro = calloc(1, tamanioRegistro + 1);
 	miRegistro->timestamp = timestamp;
 	miRegistro->key = key;
 	miRegistro->value = NULL;
@@ -402,13 +401,14 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 				loggear_debug(string_from_format("Insertando '%s' en FileSystem", tablaAInsertar));
 				instr_t *instruccionAEnviar = fila_a_instr(tablaAInsertar, fila, codOp);
 				loggear_trace(string_from_format("Se genero la instruccion a enviar"));
+				t_list* listaABorrar = list_duplicate(instruccionAEnviar->parametros);
 				enviar_request(instruccionAEnviar, conexionConFS);
+				liberar_value(listaABorrar);
 			}
 		}
 
 		list_iterate(suTablaDePaginas, (void *)enviar_si_esta_modificada);
 
-		free(tablaAInsertar); //malloc en string_from_format
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)enviar_paginas_modificadas);
@@ -425,6 +425,27 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	free(instruccion);
 }
 
+void liberar_value(t_list* listaParam){
+
+	int i = 0;
+
+	void borrar_value(char* parametro){
+		if(i == 0){
+			loggear_trace(string_from_format("Se va a borrar el parametro (Tabla): %s", parametro));
+			free(parametro);
+		}
+		if(i==2){
+			loggear_trace(string_from_format("Se va a borrar el parametro (Value): %s", parametro));
+			free(parametro);
+			i = -1;
+		}
+		i++;
+	}
+	list_iterate(listaParam, (void*)borrar_value);
+
+	list_destroy(listaParam);
+}
+
 instr_t *fila_a_instr(char *tablaAInsertar, filaTabPags *fila, cod_op codOp)
 {
 	registro *suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
@@ -434,17 +455,23 @@ instr_t *fila_a_instr(char *tablaAInsertar, filaTabPags *fila, cod_op codOp)
 
 instr_t *registro_a_instr(char *tablaAInsertar, registro *unRegistro, cod_op codOp)
 {
-	loggear_trace(string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
+//	loggear_trace(string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
 	t_list *listaParam = list_create();
+
 	loggear_trace(string_from_format("Lista param creada\n"));
 	list_add(listaParam, tablaAInsertar);
+
 	loggear_trace(string_from_format("Nombre de la tabla a insertar agregado\n"));
-	char *keyChar = string_from_format("%d", unRegistro->key);
+	char keyChar[6];
+	sprintf(keyChar,"%d", unRegistro->key);
 	list_add(listaParam, keyChar);
 
-	list_add(listaParam, unRegistro->value);
+	char* valueAAgregar = strdup(unRegistro->value);
+	list_add(listaParam, valueAAgregar);
 
 	instr_t *instruccionCreada = crear_instruccion(unRegistro->timestamp, codOp, listaParam);
+	free(unRegistro->value);
+	free(unRegistro);
 	return instruccionCreada;
 }
 

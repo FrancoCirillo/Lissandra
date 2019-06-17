@@ -70,7 +70,7 @@ instr_t *registro_a_instr(char* tablaAInsertar, registro* unRegistro, cod_op cod
 void limpiar_memoria();
 void limpiar_memoria_principal();
 void limpiar_segmentos();
-
+void liberar_value(t_list* instruccion);
 
 /* SHOW */
 void mostrar_paginas(instr_t* instruccion);
