@@ -176,7 +176,7 @@ char *get_value_pagina(void *pagina)
 {
 	char *value = NULL;
 	value = realloc(value, tamanioValue);
-	memcpy(value, pagina + sizeof(mseg_t) + sizeof(uint16_t), sizeof(tamanioValue));
+	memcpy(value, pagina + sizeof(mseg_t) + sizeof(uint16_t), sizeof(tamanioValue)+1);
 	return value;
 }
 
@@ -184,17 +184,13 @@ registro *obtener_registro_de_pagina(void *pagina)
 {
 	mseg_t timestamp = get_ts_pagina(pagina);
 	uint16_t key = get_key_pagina(pagina);
-	char *value = NULL;
-	value = get_value_pagina(pagina);
-
-	registro *miRegistro = NULL;
-	miRegistro = realloc(miRegistro, tamanioRegistro);
+	registro * miRegistro = malloc(tamanioRegistro + 1);
 	miRegistro->timestamp = timestamp;
 	miRegistro->key = key;
 	miRegistro->value = NULL;
-	miRegistro->value = strdup(value);
+	miRegistro->value = realloc(miRegistro->value, tamanioValue + 1);
+	memcpy(miRegistro->value, pagina + sizeof(mseg_t) + sizeof(uint16_t), sizeof(tamanioValue)+1);
 
-	free(value);
 	return miRegistro;
 }
 
