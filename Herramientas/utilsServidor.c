@@ -109,7 +109,7 @@ int vigilar_conexiones_entrantes(
 							instr_t *instruccion_handshake;
 							recibir_request(newfd, &instruccion_handshake);
 							loggear_trace(string_from_format("recibida instruccion handshake"));
-							char *quienEs = (char *)list_get(instruccion_handshake->parametros, 0); //El nombre
+							char *quienEs = strdup((char *)list_get(instruccion_handshake->parametros, 0)); //El nombre
 							loggear_debug(string_from_format("Se conecto %s\n", quienEs));
 
 							sem_wait(&mutex_diccionario_conexiones);
@@ -142,7 +142,9 @@ int vigilar_conexiones_entrantes(
 //								free(dictionary_get(auxiliarConexiones, auxFd));
 //							}
 							loggear_trace(string_from_format("Se va a hacer free de los parametros de la instruccion handshake"));
+							free(list_get(instruccion_handshake->parametros, 0));
 							list_destroy(instruccion_handshake->parametros);
+							free(instruccion_handshake);
 							loggear_trace(string_from_format("Instruccion handshake freed"));
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
 							free(auxFd);
