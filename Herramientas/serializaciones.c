@@ -134,7 +134,6 @@ t_list *recibir_paquete(int socket_cliente)
 	}
 	free(buffer);
 	return valores;
-	return NULL;
 }
 
 int recibir_request(int socket_cliente, instr_t **instruccion)
@@ -190,7 +189,6 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	char *requestCopy = strdup(request);
 	char *actual, *comando, *valor;
 	comando = NULL;
-	valor = malloc(sizeof(int));
 	t_list *listaParam = list_create();
 
 	requestCopy = string_from_format("%s", requestCopy);
@@ -199,8 +197,9 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	mseg_t timestampRequest = obtener_ts();
 
 	actual = strtok(requestCopy, " \n");
-	if (actual == NULL)
+	if (actual == NULL){
 		return NULL;
+	}
 
 	comando = strdup(actual);
 	actual = strtok(NULL, " \n");
