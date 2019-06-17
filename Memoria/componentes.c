@@ -188,7 +188,7 @@ registro *obtener_registro_de_pagina(void *pagina)
 	miRegistro->timestamp = timestamp;
 	miRegistro->key = key;
 	miRegistro->value = NULL;
-	miRegistro->value = realloc(miRegistro->value, tamanioValue + 1);
+	miRegistro->value = calloc(1, tamanioValue + 1);
 	memcpy(miRegistro->value, pagina + sizeof(mseg_t) + sizeof(uint16_t), sizeof(tamanioValue)+1);
 
 	return miRegistro;
