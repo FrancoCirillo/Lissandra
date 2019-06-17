@@ -29,8 +29,12 @@ void inicializar_configuracion()
 	configuracion.PUERTO = obtener_por_clave("PUERTO");
 	configuracion.IP_FS = obtener_por_clave("IP_FS");
 	configuracion.PUERTO_FS = obtener_por_clave("PUERTO_FS");
-	configuracion.IP_SEEDS = string_array_to_list(config_get_array_value(g_config, "IP_SEEDS"));
-	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
+	char** ip_seeds = config_get_array_value(g_config, "IP_SEEDS");
+	configuracion.IP_SEEDS = string_array_to_list(ip_seeds);
+	free(ip_seeds);
+	char** puerto_seeds = config_get_array_value(g_config, "PUERTO_SEEDS");
+	configuracion.PUERTO_SEEDS = string_array_to_list(puerto_seeds);
+	free(puerto_seeds);
 	imprimir_config_actual();
 	configuracion.RETARDO_MEMORIA = atoi(obtener_por_clave("RETARDO_MEMORIA"));
 	configuracion.RETARDO_FS = atoi(obtener_por_clave("RETARDO_FS"));
@@ -201,13 +205,11 @@ void check_inicial(int argc, char* argv[])
 
 void terminar_memoria(instr_t* instruccion){
 
-	void liberar_parametros(void* value){
-		free(value);
-	}
-	list_iterate(instruccion->parametros, (void*)liberar_parametros);
-	list_destroy(instruccion->parametros);
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 
+	list_destroy_and_destroy_elements(configuracion.IP_SEEDS, free);
+	list_destroy_and_destroy_elements(configuracion.PUERTO_SEEDS, free);
 	config_destroy(g_config);
 	log_destroy(g_logger);
 	dictionary_destroy(conexionesActuales);

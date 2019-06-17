@@ -141,6 +141,7 @@ int vigilar_conexiones_entrantes(
 //							if(dictionary_get(auxiliarConexiones, auxFd)!=NULL){
 //								free(dictionary_get(auxiliarConexiones, auxFd));
 //							}
+							list_destroy_and_destroy_elements(instruccion_handshake->parametros, free);
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
 							free(auxFd);
 							//							imprimirConexiones(conexionesActuales); //Debug

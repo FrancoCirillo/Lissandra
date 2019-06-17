@@ -152,7 +152,6 @@ int recibir_request(int socket_cliente, instr_t **instruccion)
 
 	listaParam = recibir_paquete(socket_cliente); //del TP0
 
-	(*instruccion) = malloc(sizeof(mseg_t) * sizeof(cod_op) + sizeof(listaParam));
 	(*instruccion)->timestamp = nuevoTimestamp;
 	(*instruccion)->codigo_operacion = nuevoCodOp;
 	(*instruccion)->parametros = listaParam;
@@ -186,18 +185,18 @@ int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion)
 
 instr_t *leer_a_instruccion(char *request, int queConsola)
 {
-	char *requestCopy = strdup(request);
 	char *actual, *comando, *valor;
 	comando = NULL;
 	t_list *listaParam = list_create();
 
-	requestCopy = string_from_format("%s", requestCopy);
+	char* requestCopy = string_from_format("%s", request);
 	string_to_upper(requestCopy);
 
 	mseg_t timestampRequest = obtener_ts();
 
 	actual = strtok(requestCopy, " \n");
 	if (actual == NULL){
+		free(requestCopy);
 		return NULL;
 	}
 
@@ -228,6 +227,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	free(requestCopy);
 
 	cod_op comandoReconocido = reconocer_comando(comando);
+	free(comando);
 	if (es_comando_valido(comandoReconocido, listaParam) > 0)
 	{
 		switch (queConsola)

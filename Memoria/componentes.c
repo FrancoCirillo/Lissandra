@@ -83,11 +83,11 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 			*nroPag = (*numeroDeSector);
 
 			//Borrando la fila "indiceEnTabla" de la Tabla de paginas "segmentoConFilaABorrar"
-			list_remove_and_destroy_element(suTablaDePaginas, indiceEnTabla, (void *)free);
+			list_remove_and_destroy_element(suTablaDePaginas, indiceEnTabla,free);
 			if (list_is_empty(suTablaDePaginas))
 			{
 				//La tabla de páginas quedó vacía, no tiene sentido guardar el puntero
-				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoConFilaABorrar, (void *)free);
+				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoConFilaABorrar,free);
 			}
 			free(segmentoConFilaABorrar); //malloc en fila_correspondiente_a_esa_pagina
 			free(reg);					  //malloc en obtener_registro_de_instruccion
@@ -237,7 +237,7 @@ void se_uso(int paginaUtilizada)
 
 	if ((list_find(paginasSegunUso, (void *)esPaginaRequerida)) != NULL)
 	{
-		list_remove_and_destroy_by_condition(paginasSegunUso, (void *)esPaginaRequerida, (void *)free);
+		list_remove_and_destroy_by_condition(paginasSegunUso, (void *)esPaginaRequerida, free);
 		//En list[0] queda el que menos se usa
 	}
 	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
@@ -454,7 +454,7 @@ void limpiar_segmentos()
 	loggear_debug(string_from_format("Limpiando segmentos"));
 	void limpiar_tabla_de_paginas(char *segmento, t_list *suTablaDePaginas)
 	{
-		list_destroy_and_destroy_elements(suTablaDePaginas, (void *)free);
+		list_destroy_and_destroy_elements(suTablaDePaginas,free);
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)limpiar_tabla_de_paginas);
@@ -496,7 +496,7 @@ void eliminar_tabla(instr_t *instruccion)
 	if (segmentoABorrar != NULL)
 	{
 		dictionary_remove(tablaDeSegmentos, tablaABorrar);
-		list_destroy_and_destroy_elements(segmentoABorrar, (void *)free);
+		list_destroy_and_destroy_elements(segmentoABorrar, free);
 	}
 	loggear_info(string_from_format("Tabla %s%s borrada de Memoria", puntoMontaje, tablaABorrar));
 }
