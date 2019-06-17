@@ -18,8 +18,8 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		{	//"La key pertenece a una fila preexistente"
 			registro* registroEncontrado = obtener_registro_de_pagina(filaEncontrada->ptrPagina);
 			t_list *listaParam = list_create();
-			char cadena[500];
-			sprintf(cadena, "Se encontro %s%s | %d | %s | %"PRIu64" en Memoria",
+			char* cadena = string_from_format(
+					"Se encontro %s%s | %d | %s | %"PRIu64" en Memoria",
 					puntoMontaje, tabla,
 					registroEncontrado->key,
 					registroEncontrado->value,
@@ -56,11 +56,9 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
 	se_uso(paginaInsertada);
 	t_list *listaParam = list_create();
-	char cadena[400];
-	sprintf(cadena,
+	char* cadena = string_from_format(
 			"Se encontro %s%s | %s | %s | %"PRIu64" en FS",
-			puntoMontaje,
-			(char *)list_get(instruccion->parametros, 0), //Tabla
+			puntoMontaje, (char *)list_get(instruccion->parametros, 0), //Tabla
 			(char *)list_get(instruccion->parametros, 1),//Key
 			(char *)list_get(instruccion->parametros, 2), //Value
 			(mseg_t)instruccion->timestamp); //Timestamp
@@ -77,9 +75,8 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
 	{
-		char cadena[500];
 		t_list *listaParam = list_create();
-		sprintf(cadena, "El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
+		char* cadena = string_from_format("El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam);
 		return -1;
@@ -143,11 +140,10 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 		}
 		if(flagMod){
-			char cadena[500];
 			t_list *listaParam = list_create();
-			sprintf(cadena, "Se inserto %s%s | %s | %s | %"PRIu64" en la Memoria",
-					puntoMontaje,
-					(char *)list_get(instruccion->parametros, 0),
+			char *cadena = string_from_format(
+					"Se inserto %s%s | %s | %s | %"PRIu64" en la Memoria",
+					puntoMontaje, (char *)list_get(instruccion->parametros, 0),
 					(char *)list_get(instruccion->parametros, 1),
 					(char *)list_get(instruccion->parametros, 2),
 					(mseg_t)instruccion->timestamp);

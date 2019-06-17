@@ -162,8 +162,8 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 	}
 	sem_post(&mutex_journal);
 
-	list_destroy_and_destroy_elements(instruccion->parametros, (void*)free);
-	free(instruccion);
+//	list_destroy_and_destroy_elements(instruccion->parametros, (void*)free);
+//	free(instruccion);
 }
 
 void iniciar_ejecutador_journal(){
@@ -211,6 +211,7 @@ void terminar_memoria(instr_t* instruccion){
 	list_destroy_and_destroy_elements(configuracion.IP_SEEDS, free);
 	list_destroy_and_destroy_elements(configuracion.PUERTO_SEEDS, free);
 	free(nombreDeMemoria);
+	free(puntoMontaje);
 
 	config_destroy(g_config);
 	log_destroy(g_logger);

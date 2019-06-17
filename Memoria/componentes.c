@@ -406,7 +406,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 	loggear_trace(string_from_format("Se recorrieron todas las paginas"));
 	t_list *listaParam = list_create();
-	char *cadena = "Journal realizado.";
+	char *cadena = string_from_format("Journal realizado.");
 	list_add(listaParam, cadena);
 	cod_op codOp = CODIGO_EXITO;
 	imprimir_donde_corresponda(codOp, instruccion, listaParam);
