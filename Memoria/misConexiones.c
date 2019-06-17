@@ -90,7 +90,9 @@ void enviar_datos_a_FS()
 		int conexion_con_fs = crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria, 1);
 		enviar_request(miInstruccion, conexion_con_fs);
 
+		identificador *idsNuevasConexiones = malloc(sizeof(identificador));
 		idsNuevasConexiones->fd_in = 0; //Ojo
+
 		strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_FS);
 		strcpy(idsNuevasConexiones->ip_proceso, configuracion.IP_FS);
 		idsNuevasConexiones->fd_out = conexion_con_fs;

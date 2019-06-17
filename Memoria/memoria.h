@@ -33,7 +33,6 @@ char *obtener_por_clave(char *clave);
 
 	/* CONEXIONES */
 
-identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
 t_dictionary *auxiliarConexiones;
 char* miIPMemoria;

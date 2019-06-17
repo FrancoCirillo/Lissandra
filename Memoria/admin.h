@@ -49,7 +49,6 @@ extern int cantidadDeSectores;
 extern t_dictionary *conexionesActuales;
 extern char* miIPMemoria;
 extern char* nombreDeMemoria;
-extern identificador *idsNuevasConexiones;
 
 extern t_dictionary *tablaDeSegmentos;
 

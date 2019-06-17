@@ -125,11 +125,9 @@ int vigilar_conexiones_entrantes(
 							{ //No lo conocia
 								loggear_debug(string_from_format("No conocia a %s\n", quienEs));
 								sem_post(&mutex_diccionario_conexiones);
-								char *suIP = strdup((char *)list_get(instruccion_handshake->parametros, 1));	 //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
-								char *suPuerto = strdup((char *)list_get(instruccion_handshake->parametros, 2)); //Su Puerto
 								identificador *idsNuevaConexion = malloc(sizeof(identificador));
-								strcpy(idsNuevaConexion->puerto, suPuerto);
-								strcpy(idsNuevaConexion->ip_proceso, suIP);
+								strcpy(idsNuevaConexion->puerto, (char *)list_get(instruccion_handshake->parametros, 2));
+								strcpy(idsNuevaConexion->ip_proceso, (char *)list_get(instruccion_handshake->parametros, 1));
 								idsNuevaConexion->fd_in = newfd;
 								idsNuevaConexion->fd_out = (fd_out_inicial)?fd_out_inicial:0;
 								fd_out_inicial = 0;
