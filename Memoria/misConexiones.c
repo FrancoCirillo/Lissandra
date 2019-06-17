@@ -204,6 +204,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						i++;
 					}
 		}
+		free(parametro);
 	}
 
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
@@ -213,6 +214,8 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 	imprimir_conexiones(conexionesActuales, loggear_info);
 	sem_post(&mutex_diccionario_conexiones);
 
+	list_destroy(instruccion->parametros);
+	free(instruccion);
 //	imprimir_config_actual();
 }
 void imprimir_config_actual(){
