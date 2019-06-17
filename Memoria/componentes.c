@@ -20,7 +20,7 @@ void inicializar_tabla_segmentos()
 
 void inicializar_sectores_memoria()
 {
-	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue;
+	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue + 1; //Porque guardamos el \0
 	cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro; //Se trunca automaticamente al entero (por ser todos int)
 
 	loggear_trace(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
@@ -124,7 +124,8 @@ void actualizar_pagina(void *paginaAActualizar, mseg_t nuevoTimestamp, char *nue
 	desplazamiento += sizeof(mseg_t);
 	//	memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t)); La key no se mofidica
 	desplazamiento += sizeof(uint16_t);
-	memcpy(paginaAActualizar + desplazamiento, &nuevoValue, tamanioValue);
+	loggear_debug(string_from_format("Se esta actualizando la pagina con el value %s", nuevoValue));
+	memcpy(paginaAActualizar + desplazamiento, nuevoValue, strlen(nuevoValue)+1);
 }
 registro *obtener_registro_de_instruccion(instr_t *instruccion)
 {
@@ -174,8 +175,8 @@ uint16_t get_key_pagina(void *pagina)
 
 char *get_value_pagina(void *pagina)
 {
-	char* value = calloc(1, tamanioValue);
-	memcpy(value, pagina + sizeof(mseg_t) + sizeof(uint16_t), sizeof(tamanioValue)+1);
+	char* value = calloc(1, tamanioValue+1);
+	memcpy(value, pagina + sizeof(mseg_t) + sizeof(uint16_t), tamanioValue + 1);
 	return value;
 }
 
@@ -188,7 +189,7 @@ registro *obtener_registro_de_pagina(void *pagina)
 	miRegistro->key = key;
 	miRegistro->value = NULL;
 	miRegistro->value = calloc(1, tamanioValue + 1);
-	memcpy(miRegistro->value, pagina + sizeof(mseg_t) + sizeof(uint16_t), sizeof(tamanioValue)+1);
+	memcpy(miRegistro->value, pagina + sizeof(mseg_t) + sizeof(uint16_t), tamanioValue + 1);
 
 	return miRegistro;
 }
