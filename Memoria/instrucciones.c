@@ -18,8 +18,8 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		{	//"La key pertenece a una fila preexistente"
 			registro* registroEncontrado = obtener_registro_de_pagina(filaEncontrada->ptrPagina);
 			t_list *listaParam = list_create();
-			char cadena[500];
-			sprintf(cadena, "Se encontro %s%s | %d | %s | %"PRIu64" en Memoria",
+			char* cadena = string_from_format(
+					"Se encontro %s%s | %d | %s | %"PRIu64" en Memoria",
 					puntoMontaje, tabla,
 					registroEncontrado->key,
 					registroEncontrado->value,
@@ -56,11 +56,9 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
 	se_uso(paginaInsertada);
 	t_list *listaParam = list_create();
-	char cadena[400];
-	sprintf(cadena,
+	char* cadena = string_from_format(
 			"Se encontro %s%s | %s | %s | %"PRIu64" en FS",
-			puntoMontaje,
-			(char *)list_get(instruccion->parametros, 0), //Tabla
+			puntoMontaje, (char *)list_get(instruccion->parametros, 0), //Tabla
 			(char *)list_get(instruccion->parametros, 1),//Key
 			(char *)list_get(instruccion->parametros, 2), //Value
 			(mseg_t)instruccion->timestamp); //Timestamp
@@ -77,11 +75,11 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
 	{
-		char cadena[500];
 		t_list *listaParam = list_create();
-		sprintf(cadena, "El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
+		char* cadena = string_from_format("El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam);
+		free(instruccion); //TODO: list_destroy(instruccion->parametros);
 		return -1;
 	}
 	else
@@ -91,15 +89,17 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 //CASO 1:
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
-			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-			loggear_debug(string_from_format("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada)));
-
+			void *paginaAgregada = NULL;
+			paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
+			char* paginaShow = pagina_a_str(paginaAgregada);
+			loggear_debug(string_from_format("\nPagina agregada: \n%s\n", paginaShow));
+			free(paginaShow);
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 
 			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 			loggear_trace(string_from_format("\nTabla de paginas actual: (Nueva)"));
-			loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+			loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
 			loggear_trace(string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
 
 			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
@@ -120,7 +120,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				filaEncontrada->flagModificado = flagMod;
 				//La fila de la tabla de paginas no se modifica, porque guarda un puntero a la pagina
 				loggear_trace(string_from_format("\nTabla de paginas actual: (Key preexistente)"));
-				loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
 				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
 				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
@@ -130,31 +130,33 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 3:
 			else{ //No existia la key en ese segment
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-				loggear_trace(string_from_format("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada)));
+				char* paginaStr = pagina_a_str(paginaAgregada);
+				loggear_trace(string_from_format("\nPagina agregada: \n%s\n", paginaStr));
+				free(paginaStr);
 				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 				loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
-				loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
 				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
 				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
 			}
 
-
-
 		}
 		if(flagMod){
-			char cadena[500];
 			t_list *listaParam = list_create();
-			sprintf(cadena, "Se inserto %s%s | %s | %s | %"PRIu64" en la Memoria",
-					puntoMontaje,
-					(char *)list_get(instruccion->parametros, 0),
+			char *cadena = string_from_format(
+					"Se inserto %s%s | %s | %s | %"PRIu64" en la Memoria",
+					puntoMontaje, (char *)list_get(instruccion->parametros, 0),
 					(char *)list_get(instruccion->parametros, 1),
 					(char *)list_get(instruccion->parametros, 2),
 					(mseg_t)instruccion->timestamp);
 			list_add(listaParam, cadena);
 			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 		}
-			return numeroDePaginaInsertada;
+
+		list_destroy_and_destroy_elements(instruccion->parametros, free);
+		free(instruccion);
+		return numeroDePaginaInsertada;
 	}
 }
 

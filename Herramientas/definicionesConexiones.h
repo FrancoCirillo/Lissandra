@@ -59,6 +59,7 @@ typedef enum cod_op {
 	RECEPCION_GOSSIP = 15,
 	SOLICITUD_DATOS = 16,
 	CODIGO_SHOW = 51,
+	CODIGO_CERRAR = 22,
 
 	ERROR_SELECT = BASE_COD_ERROR + CODIGO_SELECT,
 	ERROR_INSERT = BASE_COD_ERROR + CODIGO_INSERT,
@@ -154,6 +155,7 @@ typedef struct identificador
 } identificador;
 
 extern t_dictionary *conexionesActuales;
+extern t_dictionary *auxiliarConexiones;
 extern sem_t mutex_diccionario_conexiones;
 extern t_log *g_logger;
 extern sem_t mutex_log;

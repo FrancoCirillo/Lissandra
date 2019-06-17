@@ -4,6 +4,8 @@
 
 void evaluar_instruccion(instr_t* instr, char* remitente) {
 
+	loggear_trace(string_from_format("Evaluando instruccion recibida"));
+
 	int codigoNeto = instr->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
 
 	switch (codigoNeto) {
@@ -34,6 +36,7 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 		break;
 
 	case CODIGO_VALUE:
+		loggear_trace(string_from_format("Me llego un CODIGO_VALUE"));
 		enviar_tamanio_value(remitente);
 		break;
 
@@ -81,6 +84,7 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
 		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
 		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
+		string_append_with_format(&cadena, " porque no existe esa tabla");
 		*codOp = ERROR_INSERT;
 
 		list_add(listaParam, cadena);

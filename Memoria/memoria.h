@@ -33,8 +33,8 @@ char *obtener_por_clave(char *clave);
 
 	/* CONEXIONES */
 
-identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
+t_dictionary *auxiliarConexiones;
 char* miIPMemoria;
 char* nombreDeMemoria;
 int tamanioValue;
@@ -59,5 +59,6 @@ void iniciar_ejecutador_gossiping();
 	/* TESTING */
 
 void check_inicial(int argc, char* argv[]);
+void terminar_memoria(instr_t* instruccion);
 
 #endif /* MEMORIA_MEMORIA_H_ */

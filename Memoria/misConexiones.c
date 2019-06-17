@@ -47,6 +47,12 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		if (codigoOperacion > BASE_COD_ERROR){
 			loggear_error_proceso(miInstruccion);
 		}
+		loggear_trace(string_from_format("Se va a destruir miInstruccion->parametros y free"));
+		imprimir_instruccion(miInstruccion, loggear_trace);
+		list_destroy_and_destroy_elements(miInstruccion->parametros, free);
+		loggear_trace(string_from_format("Parametros freed"));
+		free(miInstruccion);
+		loggear_trace(string_from_format("miInstruccion freed"));
 		break;
 	}
 }
@@ -90,7 +96,9 @@ void enviar_datos_a_FS()
 		int conexion_con_fs = crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria, 1);
 		enviar_request(miInstruccion, conexion_con_fs);
 
+		identificador *idsNuevasConexiones = malloc(sizeof(identificador));
 		idsNuevasConexiones->fd_in = 0; //Ojo
+
 		strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_FS);
 		strcpy(idsNuevasConexiones->ip_proceso, configuracion.IP_FS);
 		idsNuevasConexiones->fd_out = conexion_con_fs;
@@ -111,7 +119,9 @@ void pedir_tamanio_value(){
 
 void actualizar_tamanio_value(instr_t* instruccion){
 	tamanioValue = atoi((char*) list_get(instruccion->parametros, 0));
-	puntoMontaje = (char*) list_get(instruccion->parametros, 1);
+	puntoMontaje = strdup((char*) list_get(instruccion->parametros, 1));
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	free(instruccion);
 	loggear_debug(string_from_format("Tamanio del value recibido: %d\n", tamanioValue));
 	loggear_debug(string_from_format("Punto de montaje recibido: %s\n", puntoMontaje));
 }

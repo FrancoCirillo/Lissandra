@@ -7,9 +7,10 @@ t_paquete *instruccion_a_paquete(instr_t *instruccionAEnviar)
 
 	t_paquete *paqueteAEnviar = crear_paquete(instruccionAEnviar->codigo_operacion, instruccionAEnviar->timestamp);
 	int tamanioTotal = 0;
-	void iterator(void *valor)
+	int tamanio = 0;
+	void iterator(char *valor)
 	{
-		int tamanio = strlen((char *)valor) + 1;
+		tamanio = strlen(valor) + 1;
 		agregar_a_paquete(paqueteAEnviar, valor, tamanio);
 		tamanioTotal += tamanio;
 	}
@@ -31,7 +32,7 @@ void agregar_a_paquete(t_paquete *paquete, void *valor, int tamanio)
 
 void *serializar_paquete(t_paquete *paquete, int bytes)
 {
-	void *magic = malloc(bytes);
+	void *magic = calloc(1, bytes);
 
 	int desplazamiento = 0;
 	memcpy(magic + desplazamiento, &(paquete->timestamp), sizeof(mseg_t));
@@ -59,29 +60,37 @@ void *serializar_request(instr_t *instruccionAEnviar, int *tamanio)
 	int bytes = paqueteAEnviar->buffer->size + sizeof(int) + sizeof(cod_op) + sizeof(mseg_t);
 	void *paqueteSerializado = serializar_paquete(paqueteAEnviar, bytes);
 	*tamanio = bytes;
+	eliminar_paquete(paqueteAEnviar);
 	return paqueteSerializado;
 }
 
 int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 {
-	int tamanio;
-	void *a_enviar = serializar_request(instruccionAEnviar, &tamanio);
+	int tamanio=0;
+	void *a_enviar = NULL;
+	a_enviar = serializar_request(instruccionAEnviar, &tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
+	loggear_trace(string_from_format("Se va a destruir la lista de parametros de la instruccion"));
+	list_destroy(instruccionAEnviar->parametros);
+	loggear_trace(string_from_format("Se va a hacer free(instruccionAEnviar"));
+	free(instruccionAEnviar);
+	loggear_trace(string_from_format("Se va a hacer free(a_enviar)"));
 	free(a_enviar);
+	loggear_trace(string_from_format("Request enviado y borrado"));
 	return s;
 }
 
 //Hay que crear un buffer para los parametros
 void crear_buffer(t_paquete *paquete)
 {
-	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer = malloc(sizeof(t_buffer)); //free en eliminar_paquete
 	paquete->buffer->size = 0;
 	paquete->buffer->stream = NULL;
 }
 
 t_paquete *crear_paquete(cod_op nuevoCodOp, mseg_t nuevoTimestamp)
 {
-	t_paquete *paquete = malloc(sizeof(t_paquete));
+	t_paquete *paquete = malloc(sizeof(t_paquete));//free en eliminar_paquete
 	paquete->timestamp = nuevoTimestamp;
 	paquete->codigo_operacion = nuevoCodOp;
 	crear_buffer(paquete);
@@ -102,58 +111,60 @@ void *recibir_buffer(int *size, int socket_cliente)
 	void *buffer;
 
 	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-	buffer = malloc(*size);
+	buffer = malloc(*size);//free en recibir_paquete
 	if (*size != 0)
 		recv(socket_cliente, buffer, *size, MSG_WAITALL); //Pasa cuando recibimos las requests sin parametros
 	return buffer;
 }
 
-t_list *recibir_paquete(int socket_cliente)
+void recibir_paquete(int socket_cliente, t_list * valores)
 {
 	int size;
 	int desplazamiento = 0;
 	void *buffer;
-	t_list *valores = list_create();
 	int tamanio;
-	int i = 0; //debug
 
+	loggear_trace(string_from_format("Se va a recibir_buffer"));
 	buffer = recibir_buffer(&size, socket_cliente);
+	loggear_trace(string_from_format("buffer recibido, copiandolo"));
 	while (desplazamiento < size)
 	{
-		i++;
 		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 		desplazamiento += sizeof(int);
 		char *valor = malloc(tamanio);
 		memcpy(valor, buffer + desplazamiento, tamanio);
 		desplazamiento += tamanio;
+		printf("El valor es %s\n", valor);
 		list_add(valores, valor);
 	}
 	free(buffer);
-	return valores;
-	return NULL;
+	loggear_trace(string_from_format("free(buffer) hecho"));
+
+	void mostrar(char* va){
+		printf("Un valor es %s\n", va);
+	}
+	list_iterate(valores, (void*)mostrar);
 }
 
 int recibir_request(int socket_cliente, instr_t **instruccion)
 {
 	mseg_t nuevoTimestamp;
 	cod_op nuevoCodOp;
-	t_list *listaParam;
-
 	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp); //return en error
 	if (t <= 0)
 		return t;
-
 	t = recibir_operacion(socket_cliente, &nuevoCodOp);
 	if (t <= 0)
 		return t;
+	t_list *listaParam = list_create();
 
-	listaParam = recibir_paquete(socket_cliente); //del TP0
-
-	(*instruccion) = malloc(sizeof(mseg_t) * sizeof(cod_op) + sizeof(listaParam));
+	loggear_trace(string_from_format("Se va a recibir el buffer!"));
+	recibir_paquete(socket_cliente, listaParam); //del TP0
+	*instruccion = malloc(sizeof(instr_t));
 	(*instruccion)->timestamp = nuevoTimestamp;
 	(*instruccion)->codigo_operacion = nuevoCodOp;
 	(*instruccion)->parametros = listaParam;
-
+	loggear_trace(string_from_format("Request recibido"));
 	return 1;
 }
 
@@ -183,29 +194,26 @@ int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion)
 
 instr_t *leer_a_instruccion(char *request, int queConsola)
 {
-	char *requestCopy = strdup(request);
 	char *actual, *comando, *valor;
 	comando = NULL;
-	valor = malloc(sizeof(int));
 	t_list *listaParam = list_create();
 
-	requestCopy = string_from_format("%s", requestCopy);
+	char* requestCopy = string_from_format("%s", request);
 	string_to_upper(requestCopy);
-
-	if (strcmp(requestCopy, "CERRAR\n") == 0)
-	{
-		printf(COLOR_ANSI_CYAN "Gracias por usar Lissandra FS!\n" COLOR_ANSI_RESET "cerrando...\n\n");
-		exit(0);
-	}
 
 	mseg_t timestampRequest = obtener_ts();
 
 	actual = strtok(requestCopy, " \n");
-	if (actual == NULL)
+	if (actual == NULL){
+		list_destroy(listaParam);
+		free(requestCopy);
 		return NULL;
+	}
 
 	comando = strdup(actual);
-	actual = strtok(NULL, " \n");
+	actual = strtok(NULL, " \n"); //El primer parametro
+
+	//Evaluacion de parametros:
 	for (int i = 1; actual != NULL; i++)
 	{
 		valor = strdup(actual);
@@ -213,44 +221,58 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 
 		if (i == 2 && strcmp(comando, "INSERT") == 0)
 		{
-			actual = strtok(NULL, "\"\n");
+			actual = strtok(NULL, "\"\n"); //El Value en el INSERT
 			if (actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
 			{
 				valor = strdup(actual);
 				list_add(listaParam, valor);
 				actual = strtok(NULL, " \n");
-				if (actual != NULL) //Si es NULL no se introdujo el timestamp opcional
+				if (actual != NULL) //Si no es NULL se introdujo el timestamp opcional
 				{
-					valor = strdup(actual);
+					valor = strdup(actual); //Timestamp
 					timestampRequest = string_a_mseg(valor);
 				}
+				else{
+					free(actual);
+				}
+			}
+			else{ //No se introdujo el value
+				free(actual);
+				break;
 			}
 		}
-		actual = strtok(NULL, " \n");
+		actual = strtok(NULL, " \n"); //(Si es el insert, el 2do parametro)
 	}
 	free(requestCopy);
 
 	cod_op comandoReconocido = reconocer_comando(comando);
+	free(comando);
 	if (es_comando_valido(comandoReconocido, listaParam) > 0)
 	{
+		instr_t* instruccionLista;
 		switch (queConsola)
 		{
 		case CONSOLA_KERNEL:
-			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			instruccionLista = crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			return instruccionLista;
 			break;
 		case CONSOLA_MEMORIA:
-			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_MEMORIA, listaParam);
+			instruccionLista = crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_MEMORIA, listaParam);
+			return instruccionLista;
 			break;
 		case CONSOLA_FS:
-			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_FS, listaParam);
+			instruccionLista = crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_FS, listaParam);
+			return instruccionLista;
 			break;
 		default:
-			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			instruccionLista = crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			return instruccionLista;
 			break;
 		}
 	}
 	else
 	{
+		list_destroy_and_destroy_elements(listaParam, free); //Hay que liberar todos los parametros del INSERT (Tabla y key)
 		puts("Input invalido");
 		return NULL;
 	}
@@ -287,6 +309,9 @@ cod_op reconocer_comando(char *comando)
 
 	else if (strcmp(comando, "SHOW") == 0)
 		return CODIGO_SHOW;
+
+	else if (strcmp(comando, "CERRAR") == 0)
+			return CODIGO_CERRAR;
 
 	else
 		return INPUT_ERROR;
@@ -331,6 +356,10 @@ int es_comando_valido(cod_op comando, t_list *listaParam)
 
 	case CODIGO_SHOW: //Para testing
 		return 1;
+
+	case CODIGO_CERRAR: //Para testing
+		return 1;
+
 
 	default:
 		return -1;
@@ -382,11 +411,13 @@ cod_op quien_pidio(instr_t *instruccion)
 	return CONSOLA_FS;
 }
 
-void imprimir_registro(instr_t *instruccion)
+void imprimir_registro(instr_t *instruccion, void (*funcion_log)(char *texto))
 {
-	printf("Key %s\n", (char *)list_get(instruccion->parametros, 1));
-	printf("Value %s\n", (char *)list_get(instruccion->parametros, 2));
-	printf("Timestamp: %" PRIu64 "\n", instruccion->timestamp);
+	char *texto = string_new();
+	string_append_with_format(&texto,"Key %s\n", (char *)list_get(instruccion->parametros, 1));
+	string_append_with_format(&texto,"Value %s\n", (char *)list_get(instruccion->parametros, 2));
+	string_append_with_format(&texto,"Timestamp: %" PRIu64 "\n", instruccion->timestamp);
+	funcion_log(texto);
 }
 
 void loggear_error_proceso(instr_t *miInstruccion)

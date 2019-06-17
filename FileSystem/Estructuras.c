@@ -767,7 +767,7 @@ void inicializar_configuracion(void) {
 }
 
 void iniciar_logger(){
-	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_INFO);
+	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_TRACE);
 }
 
 void actualizar_tiempo_dump_config(mseg_t value) {
