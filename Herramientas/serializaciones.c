@@ -209,7 +209,9 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	}
 
 	comando = strdup(actual);
-	actual = strtok(NULL, " \n");
+	actual = strtok(NULL, " \n"); //El primer parametro
+
+	//Evaluacion de parametros:
 	for (int i = 1; actual != NULL; i++)
 	{
 		valor = strdup(actual);
@@ -217,7 +219,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 
 		if (i == 2 && strcmp(comando, "INSERT") == 0)
 		{
-			actual = strtok(NULL, "\"\n");
+			actual = strtok(NULL, "\"\n"); //El Value en el INSERT
 			if (actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
 			{
 				valor = strdup(actual);
@@ -225,15 +227,19 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 				actual = strtok(NULL, " \n");
 				if (actual != NULL) //Si no es NULL se introdujo el timestamp opcional
 				{
-					valor = strdup(actual);
+					valor = strdup(actual); //Timestamp
 					timestampRequest = string_a_mseg(valor);
 				}
 				else{
 					free(actual);
 				}
 			}
+			else{ //No se introdujo el value
+				free(actual);
+				break;
+			}
 		}
-		actual = strtok(NULL, " \n");
+		actual = strtok(NULL, " \n"); //(Si es el insert, el 2do parametro)
 	}
 	free(requestCopy);
 
@@ -264,8 +270,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	}
 	else
 	{
-		free(valor);
-		list_destroy(listaParam);
+		list_destroy_and_destroy_elements(listaParam, free); //Hay que liberar todos los parametros del INSERT (Tabla y key)
 		puts("Input invalido");
 		return NULL;
 	}
