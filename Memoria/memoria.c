@@ -210,11 +210,15 @@ void terminar_memoria(instr_t* instruccion){
 
 	list_destroy_and_destroy_elements(configuracion.IP_SEEDS, free);
 	list_destroy_and_destroy_elements(configuracion.PUERTO_SEEDS, free);
+	free(nombreDeMemoria);
+
 	config_destroy(g_config);
 	log_destroy(g_logger);
+
 	dictionary_destroy(conexionesActuales);
 	dictionary_destroy_and_destroy_elements(auxiliarConexiones, (void*)free);
 	free(idsNuevasConexiones);
+
 	free(memoriaPrincipal);
 	dictionary_destroy(tablaDeSegmentos);
 	list_destroy(paginasSegunUso);

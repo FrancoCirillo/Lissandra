@@ -72,7 +72,6 @@ int vigilar_conexiones_entrantes(
 
 	// mantener cual es el fd mas grande (lo pide el select())
 	fdmax = listener; // por ahora es este
-	t_dictionary *auxiliarConexiones = dictionary_create();
 
 	while (1)
 	{
