@@ -101,13 +101,14 @@ int vigilar_conexiones_entrantes(
 						}
 						else
 						{
+							loggear_trace(string_from_format("select() iniciado"));
 							//							char* ipCliente = ip_cliente(remoteaddr);
 							FD_SET(newfd, &master);					 // se agrega al set master
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande
 
 							instr_t *instruccion_handshake;
 							recibir_request(newfd, &instruccion_handshake);
-
+							loggear_trace(string_from_format("recibida instruccion handshake"));
 							char *quienEs = (char *)list_get(instruccion_handshake->parametros, 0); //El nombre
 							loggear_debug(string_from_format("Se conecto %s\n", quienEs));
 
@@ -140,9 +141,12 @@ int vigilar_conexiones_entrantes(
 //							if(dictionary_get(auxiliarConexiones, auxFd)!=NULL){
 //								free(dictionary_get(auxiliarConexiones, auxFd));
 //							}
-							list_destroy_and_destroy_elements(instruccion_handshake->parametros, free);
+							loggear_trace(string_from_format("Se va a hacer free de los parametros de la instruccion handshake"));
+							list_destroy(instruccion_handshake->parametros);
+							loggear_trace(string_from_format("Instruccion handshake freed"));
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
 							free(auxFd);
+							loggear_trace(string_from_format("auxFd Freed"));
 							//							imprimirConexiones(conexionesActuales); //Debug
 						}
 					}
@@ -174,6 +178,7 @@ int vigilar_conexiones_entrantes(
 
 						else
 						{ //Se recibio una instruccion desde otro proceso
+							loggear_trace(string_from_format("Se recibio una instruccion de otro proceso"));
 							ejecutar_requestRecibido(instrcuccion_recibida, quienLoEnvia);
 						}
 

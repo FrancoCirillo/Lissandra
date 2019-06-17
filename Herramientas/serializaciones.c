@@ -121,7 +121,9 @@ t_list *recibir_paquete(int socket_cliente)
 	int tamanio;
 	int i = 0; //debug
 
+	loggear_trace(string_from_format("Se va a recibir_buffer"));
 	buffer = recibir_buffer(&size, socket_cliente);
+	loggear_trace(string_from_format("buffer recibido, copiandolo"));
 	while (desplazamiento < size)
 	{
 		i++;
@@ -133,6 +135,7 @@ t_list *recibir_paquete(int socket_cliente)
 		list_add(valores, valor);
 	}
 	free(buffer);
+	loggear_trace(string_from_format("free(buffer) hecho"));
 	return valores;
 }
 
@@ -141,21 +144,20 @@ int recibir_request(int socket_cliente, instr_t **instruccion)
 	mseg_t nuevoTimestamp;
 	cod_op nuevoCodOp;
 	t_list *listaParam;
-
 	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp); //return en error
 	if (t <= 0)
 		return t;
-
 	t = recibir_operacion(socket_cliente, &nuevoCodOp);
 	if (t <= 0)
 		return t;
 
+	loggear_trace(string_from_format("Se va a recibir el buffer!"));
 	listaParam = recibir_paquete(socket_cliente); //del TP0
-
+	*instruccion = malloc(sizeof(instr_t));
 	(*instruccion)->timestamp = nuevoTimestamp;
 	(*instruccion)->codigo_operacion = nuevoCodOp;
 	(*instruccion)->parametros = listaParam;
-
+	loggear_trace(string_from_format("Request recibido"));
 	return 1;
 }
 

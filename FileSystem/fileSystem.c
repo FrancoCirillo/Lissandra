@@ -412,11 +412,12 @@ void inicializar_conexiones() {
 
 void enviar_tamanio_value(char* remitente) {
 	int conexionMemoriaN = obtener_fd_out(remitente);
-    t_list *listaParam = list_create();
+	t_list *listaParam = list_create();
     char* tamanioValue = string_from_format("%d", config_FS.tamanio_value);
     list_add(listaParam, tamanioValue);
     char* puntoMontaje = string_from_format("%s", config_FS.punto_montaje);
     list_add(listaParam, puntoMontaje);
+
     instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
     enviar_request(miInstruccion, conexionMemoriaN);
     puts("Tamanio del value y punto de montaje enviados");
@@ -435,8 +436,15 @@ void responderHandshake(identificador *idsConexionEntrante) {
 }
 
 int obtener_fd_out(char *proceso) {
+	sem_wait(&mutex_diccionario_conexiones);
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
-	if (idsProceso->fd_out == 0) { //Es la primera vez que se le quiere enviar algo a proceso
+	sem_post(&mutex_diccionario_conexiones); //quizas en todo obtener_fd_out iria
+	if(idsProceso == NULL){
+		loggear_error(string_from_format("Se desconoce completamente el proceso %s", proceso));
+		return 0;
+	}
+	if (idsProceso->fd_out == 0) {
+		loggear_trace(string_from_format("Es la primera vez que se quiere enviar algo al proceso"));//Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;
