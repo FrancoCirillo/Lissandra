@@ -79,6 +79,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 		char* cadena = string_from_format("El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)",strlen((char *)list_get(instruccion->parametros, 2)), tamanioValue);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam);
+		free(instruccion); //TODO: list_destroy(instruccion->parametros);
 		return -1;
 	}
 	else
@@ -88,9 +89,11 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 //CASO 1:
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
-			void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-			loggear_debug(string_from_format("\nPagina agregada: \n%s\n", pagina_a_str(paginaAgregada)));
-
+			void *paginaAgregada = NULL;
+			paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
+			char* paginaShow = pagina_a_str(paginaAgregada);
+			loggear_debug(string_from_format("\nPagina agregada: \n%s\n", paginaShow));
+			free(paginaShow);
 			suTablaDePaginas = nueva_tabla_de_paginas();
 			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 
@@ -150,7 +153,10 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 			list_add(listaParam, cadena);
 			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 		}
-			return numeroDePaginaInsertada;
+
+		list_destroy_and_destroy_elements(instruccion->parametros, free);
+		free(instruccion);
+		return numeroDePaginaInsertada;
 	}
 }
 

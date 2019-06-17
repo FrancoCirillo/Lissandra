@@ -203,6 +203,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 
 	actual = strtok(requestCopy, " \n");
 	if (actual == NULL){
+		list_destroy(listaParam);
 		free(requestCopy);
 		return NULL;
 	}
@@ -222,10 +223,13 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 				valor = strdup(actual);
 				list_add(listaParam, valor);
 				actual = strtok(NULL, " \n");
-				if (actual != NULL) //Si es NULL no se introdujo el timestamp opcional
+				if (actual != NULL) //Si no es NULL se introdujo el timestamp opcional
 				{
 					valor = strdup(actual);
 					timestampRequest = string_a_mseg(valor);
+				}
+				else{
+					free(actual);
 				}
 			}
 		}
@@ -237,24 +241,31 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	free(comando);
 	if (es_comando_valido(comandoReconocido, listaParam) > 0)
 	{
+		instr_t* instruccionLista;
 		switch (queConsola)
 		{
 		case CONSOLA_KERNEL:
-			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			instruccionLista = crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			return instruccionLista;
 			break;
 		case CONSOLA_MEMORIA:
-			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_MEMORIA, listaParam);
+			instruccionLista = crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_MEMORIA, listaParam);
+			return instruccionLista;
 			break;
 		case CONSOLA_FS:
-			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_FS, listaParam);
+			instruccionLista = crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_FS, listaParam);
+			return instruccionLista;
 			break;
 		default:
-			return crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			instruccionLista = crear_instruccion(timestampRequest, comandoReconocido + BASE_CONSOLA_KERNEL, listaParam);
+			return instruccionLista;
 			break;
 		}
 	}
 	else
 	{
+		free(valor);
+		list_destroy(listaParam);
 		puts("Input invalido");
 		return NULL;
 	}

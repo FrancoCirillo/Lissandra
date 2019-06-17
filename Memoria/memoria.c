@@ -225,6 +225,11 @@ void terminar_memoria(instr_t* instruccion){
 	dictionary_destroy_and_destroy_elements(auxiliarConexiones, (void*)free);
 
 	free(memoriaPrincipal);
+
+	void borrar_todo(char* nombreTabla, t_list* tabla){
+		list_destroy_and_destroy_elements(tabla, free);
+	}
+	dictionary_iterator(tablaDeSegmentos, (void*)borrar_todo);
 	dictionary_destroy(tablaDeSegmentos);
 	list_destroy(paginasSegunUso);
 	free(sectorOcupado);
