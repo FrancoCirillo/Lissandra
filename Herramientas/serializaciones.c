@@ -112,47 +112,49 @@ void *recibir_buffer(int *size, int socket_cliente)
 	return buffer;
 }
 
-t_list *recibir_paquete(int socket_cliente)
+void recibir_paquete(int socket_cliente, t_list * valores)
 {
 	int size;
 	int desplazamiento = 0;
 	void *buffer;
-	t_list *valores = list_create();
 	int tamanio;
-	int i = 0; //debug
 
 	loggear_trace(string_from_format("Se va a recibir_buffer"));
 	buffer = recibir_buffer(&size, socket_cliente);
 	loggear_trace(string_from_format("buffer recibido, copiandolo"));
 	while (desplazamiento < size)
 	{
-		i++;
 		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
 		desplazamiento += sizeof(int);
 		char *valor = malloc(tamanio);
 		memcpy(valor, buffer + desplazamiento, tamanio);
 		desplazamiento += tamanio;
+		printf("El valor es %s\n", valor);
 		list_add(valores, valor);
 	}
 	free(buffer);
 	loggear_trace(string_from_format("free(buffer) hecho"));
-	return valores;
+
+	void mostrar(char* va){
+		printf("Un valor es %s\n", va);
+	}
+	list_iterate(valores, (void*)mostrar);
 }
 
 int recibir_request(int socket_cliente, instr_t **instruccion)
 {
 	mseg_t nuevoTimestamp;
 	cod_op nuevoCodOp;
-	t_list *listaParam;
 	int t = recibir_timestamp(socket_cliente, &nuevoTimestamp); //return en error
 	if (t <= 0)
 		return t;
 	t = recibir_operacion(socket_cliente, &nuevoCodOp);
 	if (t <= 0)
 		return t;
+	t_list *listaParam = list_create();
 
 	loggear_trace(string_from_format("Se va a recibir el buffer!"));
-	listaParam = recibir_paquete(socket_cliente); //del TP0
+	recibir_paquete(socket_cliente, listaParam); //del TP0
 	*instruccion = malloc(sizeof(instr_t));
 	(*instruccion)->timestamp = nuevoTimestamp;
 	(*instruccion)->codigo_operacion = nuevoCodOp;

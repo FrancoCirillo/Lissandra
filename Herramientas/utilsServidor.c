@@ -26,7 +26,7 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir)
 		//TODO: Cerrar socket servidor?
 		return -1;
 	}
-	int aceptar;
+	int aceptar = 1;
 	setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEADDR, &aceptar, sizeof(int));
 	if (bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen) < 0)
 	{
@@ -125,8 +125,8 @@ int vigilar_conexiones_entrantes(
 							{ //No lo conocia
 								loggear_debug(string_from_format("No conocia a %s\n", quienEs));
 								sem_post(&mutex_diccionario_conexiones);
-								char *suIP = (char *)list_get(instruccion_handshake->parametros, 1);	 //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
-								char *suPuerto = (char *)list_get(instruccion_handshake->parametros, 2); //Su Puerto
+								char *suIP = strdup((char *)list_get(instruccion_handshake->parametros, 1));	 //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
+								char *suPuerto = strdup((char *)list_get(instruccion_handshake->parametros, 2)); //Su Puerto
 								identificador *idsNuevaConexion = malloc(sizeof(identificador));
 								strcpy(idsNuevaConexion->puerto, suPuerto);
 								strcpy(idsNuevaConexion->ip_proceso, suIP);
@@ -142,8 +142,7 @@ int vigilar_conexiones_entrantes(
 //								free(dictionary_get(auxiliarConexiones, auxFd));
 //							}
 							loggear_trace(string_from_format("Se va a hacer free de los parametros de la instruccion handshake"));
-							free(list_get(instruccion_handshake->parametros, 0));
-							list_destroy(instruccion_handshake->parametros);
+							list_destroy_and_destroy_elements(instruccion_handshake->parametros, free);
 							free(instruccion_handshake);
 							loggear_trace(string_from_format("Instruccion handshake freed"));
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
