@@ -37,7 +37,7 @@ void inicializar_kernel(){
 	auxiliarConexiones = dictionary_create();
 
 	iniciar_servidor(miIPKernel, configuracion.puerto);
-	vigilar_conexiones_entrantes(callback, CONSOLA_KERNEL);
+	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Kernel", CONSOLA_KERNEL);
 
 }
 
@@ -725,7 +725,7 @@ int hilos_disponibles(){
 
 
 void inicializarConfiguracion() {
-	char* rutaConfiguracion = "Kernel.config";
+	rutaConfiguracion = "Kernel.config";
 	g_config = config_create(rutaConfiguracion);
 	configuracion.quantum = atoi(obtener_por_clave("quantum"));
 	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave("gradoMultiprocesamiento"));
@@ -762,6 +762,7 @@ char* obtener_por_clave(char* key) {
 }
 
 void inicializar_semaforos(){
+	sem_init(&mutex_actualizacion_log,0,1);
 	sem_init(&mutex_log,0,1);
 	sem_init(&semaforo_procesos_ready,0,1);
 	sem_init(&mutex_cantidad_hilos,0,1);
@@ -1099,3 +1100,26 @@ instr_t* mis_datos(cod_op codigoOperacion){
 	return crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 }
 
+void actualizar_config(){
+	g_config = config_create(rutaConfiguracion);
+	configuracion.quantum = atoi(obtener_por_clave("quantum"));
+
+	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave("RETARDO_GOSSIPING"));
+	configuracion.tiempoMetricas = atoi(obtener_por_clave("tiempoMetricas"));
+	configuracion.LOG_LEVEL =  log_level_from_string(obtener_por_clave("LOG_LEVEL"));
+	sem_wait(&mutex_actualizacion_log);
+	actualizar_log_level();
+	sem_post(&mutex_actualizacion_log);
+	loggear_info(string_from_format(
+			"Config actualizado!\n"
+			"Quantum: %d\n"
+			"Tiempo de Gossiping: %d\n"
+			"Tiempo de Metricas: %d\n"
+			"Log level: %s\n",
+			configuracion.quantum, configuracion.RETARDO_GOSSIPING, configuracion.tiempoMetricas , log_level_as_string(configuracion.LOG_LEVEL)));
+}
+
+void actualizar_log_level(){
+	log_destroy(g_logger);
+	iniciar_log();
+}

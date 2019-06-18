@@ -56,28 +56,20 @@ int read_events (int fd)
 }
 
 
-void event_handler(int length){
+void event_handler(int length, void (*actualizar_config)(void)){
 
 	int offset = 0;
 
-	// Luego del read buffer es un array de n posiciones donde cada posición contiene
-	// un eventos ( inotify_event ) junto con el nombre de este.
 	while (offset < length) {
-
-		// El buffer es de tipo array de char, o array de bytes. Esto es porque como los
-		// nombres pueden tener nombres mas cortos que 24 caracteres el tamaño va a ser menor
-		// a sizeof( struct inotify_event ) + 24.
 		struct inotify_event *event = (struct inotify_event *) &buffer[offset];
 
-		// El campo "len" nos indica la longitud del tamaño del nombre
 		if (event->len) {
-			// Dentro de "mask" tenemos el evento que ocurrio y sobre donde ocurrio
-			// sea un archivo o un directorio
 			if (event->mask & IN_MODIFY) {
 				if (event->mask & IN_ISDIR) {
 					loggear_warning(string_from_format("El directorio '%s' fue modificado", event->name));
 				} else if(string_ends_with(event->name, ".config")){
 					loggear_info(string_from_format("Archivo de congif '%s' modificado", event->name));
+					actualizar_config();
 				}
 			}
 		}

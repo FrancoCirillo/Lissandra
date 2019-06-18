@@ -91,6 +91,7 @@ pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
 
 sem_t mutex_cantidad_hilos;
 sem_t mutex_log;
+sem_t mutex_actualizacion_log;
 sem_t semaforo_procesos_ready;
 sem_t mutex_diccionario_enviados;
 sem_t mutex_codigo_request;
@@ -125,6 +126,7 @@ void inicializar_criterios();
 void inicializarConfiguracion();
 void inicializar_semaforos();
 void iniciar_metricas();
+char* rutaConfiguracion;
 
 //Conexiones Franquito
 config_t configuracion;
@@ -166,6 +168,8 @@ bool existe_tabla(char* tablaBuscada);
 void iniciar_consola();
 void* consola(void* c);
 void agregar_a_metricas(instr_t* i);
+void actualizar_config();
+void actualizar_log_level();
 
 //Gossiping
 int fd_out_inicial;

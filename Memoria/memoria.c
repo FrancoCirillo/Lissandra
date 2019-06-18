@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 
 //	iniciar_ejecutador_gossiping();
 
-	vigilar_conexiones_entrantes(callback, CONSOLA_MEMORIA);
+	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Memoria", CONSOLA_MEMORIA);
 
 	return 0;
 }
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 void inicializar_configuracion()
 {
 	puts("Configuracion:");
-	char *rutaConfig = "memoria.config";
+	rutaConfig = "memoria.config";
 	g_config = config_create(rutaConfig);
 	configuracion.PUERTO = obtener_por_clave("PUERTO");
 	configuracion.IP_FS = obtener_por_clave("IP_FS");
@@ -64,6 +64,7 @@ char *obtener_por_clave(char *clave)
 
 void inicializar_semaforos()
 {
+	sem_init(&mutex_actualizacion_log, 0,1);
 	sem_init(&mutex_log, 0,1);
 	sem_init(&mutex_journal, 0, 1);
 	sem_init(&mutex_diccionario_conexiones, 0, 1);
@@ -201,6 +202,29 @@ void check_inicial(int argc, char* argv[])
 		miIPMemoria = argv[1];
 	}
 	nombreDeMemoria = string_from_format("Memoria_%d", configuracion.MEMORY_NUMBER);
+}
+void actualizar_config(){
+	g_config = config_create(rutaConfig);
+	configuracion.RETARDO_MEMORIA = atoi(obtener_por_clave("RETARDO_MEMORIA"));
+	configuracion.RETARDO_FS = atoi(obtener_por_clave("RETARDO_FS"));
+	configuracion.RETARDO_JOURNAL = atoi(obtener_por_clave("RETARDO_JOURNAL"));
+	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave("RETARDO_GOSSIPING"));
+	configuracion.LOG_LEVEL = log_level_from_string(obtener_por_clave("LOG_LEVEL"));
+	sem_wait(&mutex_actualizacion_log);
+	actualizar_log_level();
+	sem_post(&mutex_actualizacion_log);
+	loggear_info(string_from_format("Config actualizado!\n"
+			"Retardo de accseso a Memoria Principal: %d\n"
+			"Retardo de accseso a File System: %d\n"
+			"Tiempo de Journal: %d\n"
+			"Tiempo de Gossiping: %d\n"
+			"Log level: %s\n",
+			configuracion.RETARDO_MEMORIA, configuracion.RETARDO_FS, configuracion.RETARDO_JOURNAL, configuracion.RETARDO_GOSSIPING, log_level_as_string(configuracion.LOG_LEVEL)));
+}
+
+void actualizar_log_level(){
+	log_destroy(g_logger);
+	iniciar_log();
 }
 
 void terminar_memoria(instr_t* instruccion){

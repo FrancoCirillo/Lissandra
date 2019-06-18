@@ -29,6 +29,6 @@ int inicializar_estructuras_inotify();
 int abrir_fd_inotify();
 int watch_dir(int fd, const char *dirname, unsigned long watchFlags);
 int read_events (int fd);
-void event_handler(int length);
+void event_handler(int length, void (*actualizar_config)(void));
 
 #endif /* AUXINOTIFY_H_ */

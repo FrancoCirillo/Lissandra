@@ -23,13 +23,17 @@
 #include "instrucciones.h"
 
 	/* CONFIG Y LOG */
+char *rutaConfig;
 sem_t mutex_log;
+sem_t mutex_actualizacion_log;
 t_log *g_logger;
 t_config *g_config;
 config configuracion;
 void inicializar_configuracion();
 void iniciar_log();
 char *obtener_por_clave(char *clave);
+void actualizar_config();
+void actualizar_log_level();
 
 	/* CONEXIONES */
 
