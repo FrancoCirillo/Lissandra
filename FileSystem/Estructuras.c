@@ -434,6 +434,7 @@ char* aplanar(char** lista) {
            	buf[count-1] = ',';
         }
         buf[count-1]=']';
+        buf[count]='\0';
     }
     return buf;
 }
@@ -450,6 +451,8 @@ void ejemplo_aplanar() {
 	*(array + 3) = d;
 	*(array + 4) = NULL;
 	printf("La lista aplanada es %s\n", aplanar(array));
+	char* ejemplo =  agregar_bloque_bloques(array, 5);
+	printf("La lista aplanada con el bloque 5 es  %s\n", ejemplo);
 }
 
 //---------------------------TMP Y BIN---------------------------

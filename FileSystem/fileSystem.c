@@ -20,13 +20,12 @@ int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	
-	inicializar_FS(argc, argv);
-
-	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
+	//inicializar_FS(argc, argv);
+	ejemplo_aplanar();
 
 //	pruebaGeneral();
 
-	inicializar_conexiones();
+	//inicializar_conexiones();
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin);

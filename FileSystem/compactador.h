@@ -11,21 +11,22 @@
 #include <semaphore.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "registros.h"
 
-void compactar();
-void compactador(char* tabla);
+void 	compactar();
+void 	compactador(char* tabla);
 t_list* listar_archivos(char* tabla);
-
-void actualizar_registros_de_la_particion(char* , t_list* );
-void finalizar_compactacion(char* , t_list* );
-t_list* comparar_registro_a_registro(t_list* , t_list* );
-void filtrar_keys_repetidas(char* , t_list* );
+int 	hay_tmp(char* tabla);
+void 	agregar_por_ts( t_dictionary* dic, registro_t* reg_nuevo);
+void 	agregar_registros_en_particion(t_list* particiones, char* ruta_archivo);
+t_list* levantar_registros(char* ruta_archivo);
+void 	liberar_todos_los_bloques(char* tabla);
 
 
 //ELiminar
-void compactar2();
-void compactar5();
+void 	compactar2();
+void 	compactar5();
 
 
 void pasar_a_tmpc(char* tabla);
