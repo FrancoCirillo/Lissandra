@@ -70,12 +70,16 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 	void *a_enviar = NULL;
 	a_enviar = serializar_request(instruccionAEnviar, &tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
+
 	loggear_trace(string_from_format("Se va a destruir la lista de parametros de la instruccion"));
 	list_destroy(instruccionAEnviar->parametros);
+
 	loggear_trace(string_from_format("Se va a hacer free(instruccionAEnviar"));
 	free(instruccionAEnviar);
+
 	loggear_trace(string_from_format("Se va a hacer free(a_enviar)"));
 	free(a_enviar);
+
 	loggear_trace(string_from_format("Request enviado y borrado"));
 	return s;
 }

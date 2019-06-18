@@ -571,4 +571,6 @@ void mostrar_paginas(instr_t *instruccion)
 	{
 		dictionary_iterator(tablaDeSegmentos, (void *)imprimir_segmento_basico);
 	}
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	free(instruccion);
 }
