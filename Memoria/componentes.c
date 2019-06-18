@@ -421,7 +421,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	list_add(listaParam, cadena);
 	cod_op codOp = CODIGO_EXITO;
 	imprimir_donde_corresponda(codOp, instruccion, listaParam);
-	list_destroy(instruccion->parametros);
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 }
 
