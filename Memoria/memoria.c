@@ -231,7 +231,7 @@ void terminar_memoria(instr_t* instruccion){
 	}
 	dictionary_iterator(tablaDeSegmentos, (void*)borrar_todo);
 	dictionary_destroy(tablaDeSegmentos);
-	list_destroy(paginasSegunUso);
+	list_destroy_and_destroy_elements(paginasSegunUso, free);
 	free(sectorOcupado);
 	puts("Gracias por usar Lissandra");
 	exit(0);

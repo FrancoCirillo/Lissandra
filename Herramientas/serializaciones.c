@@ -70,12 +70,16 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 	void *a_enviar = NULL;
 	a_enviar = serializar_request(instruccionAEnviar, &tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
+
 	loggear_trace(string_from_format("Se va a destruir la lista de parametros de la instruccion"));
 	list_destroy(instruccionAEnviar->parametros);
+
 	loggear_trace(string_from_format("Se va a hacer free(instruccionAEnviar"));
 	free(instruccionAEnviar);
+
 	loggear_trace(string_from_format("Se va a hacer free(a_enviar)"));
 	free(a_enviar);
+
 	loggear_trace(string_from_format("Request enviado y borrado"));
 	return s;
 }
@@ -198,12 +202,16 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	comando = NULL;
 	t_list *listaParam = list_create();
 
+	char* requestAux = string_from_format("%s", request);
+
 	char* requestCopy = string_from_format("%s", request);
 	string_to_upper(requestCopy);
 
+	actual = strtok(requestCopy, " \n");
+
 	mseg_t timestampRequest = obtener_ts();
 
-	actual = strtok(requestCopy, " \n");
+
 	if (actual == NULL){
 		list_destroy(listaParam);
 		free(requestCopy);
@@ -211,6 +219,15 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	}
 
 	comando = strdup(actual);
+	cod_op comandoReconocido = reconocer_comando(comando);
+
+	if(comandoReconocido == CODIGO_RUN){
+		actual = strtok(requestAux, " \n");
+	}
+	else{
+		free(requestAux);
+	}
+
 	actual = strtok(NULL, " \n"); //El primer parametro
 
 	//Evaluacion de parametros:
@@ -245,7 +262,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	}
 	free(requestCopy);
 
-	cod_op comandoReconocido = reconocer_comando(comando);
+
 	free(comando);
 	if (es_comando_valido(comandoReconocido, listaParam) > 0)
 	{

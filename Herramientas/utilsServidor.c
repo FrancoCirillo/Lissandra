@@ -171,7 +171,7 @@ int vigilar_conexiones_entrantes(
 							loggear_warning(string_from_format("El cliente '%s'se desconecto\n", quienLoEnvia));
 							FD_CLR(i, &master);
 							sem_wait(&mutex_diccionario_conexiones);
-							dictionary_remove(conexionesActuales, quienLoEnvia); //No and_destroy porque se libera solo afuera del else
+							dictionary_remove_and_destroy(conexionesActuales, quienLoEnvia, free); //No and_destroy porque se libera solo afuera del else
 							sem_post(&mutex_diccionario_conexiones);
 						}
 

@@ -37,7 +37,12 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		loggear_info(string_from_format("Enviando instruccion al Kernel"));
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
+		t_list* listaABorrar = list_duplicate(miInstruccion->parametros);
 		enviar_request(miInstruccion, conexionKernel);
+		list_remove(listaABorrar, list_size(listaABorrar)-1);
+		list_destroy_and_destroy_elements(listaABorrar, free);
+		loggear_trace(string_from_format("Parametros freed"));
+
 		break;
 	default:
 		loggear_debug(string_from_format("Loggeando resultado instruccion"));
@@ -47,10 +52,10 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		if (codigoOperacion > BASE_COD_ERROR){
 			loggear_error_proceso(miInstruccion);
 		}
-		loggear_trace(string_from_format("Se va a destruir miInstruccion->parametros y free"));
-		imprimir_instruccion(miInstruccion, loggear_trace);
+
 		list_destroy_and_destroy_elements(miInstruccion->parametros, free);
 		loggear_trace(string_from_format("Parametros freed"));
+
 		free(miInstruccion);
 		loggear_trace(string_from_format("miInstruccion freed"));
 		break;
@@ -204,6 +209,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						i++;
 					}
 		}
+		free(parametro);
 	}
 
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
@@ -213,6 +219,8 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 	imprimir_conexiones(conexionesActuales, loggear_info);
 	sem_post(&mutex_diccionario_conexiones);
 
+	list_destroy(instruccion->parametros);
+	free(instruccion);
 //	imprimir_config_actual();
 }
 void imprimir_config_actual(){
