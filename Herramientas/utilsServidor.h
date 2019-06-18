@@ -17,6 +17,7 @@
 #include "serializaciones.h"
 #include "utilsCliente.h"
 #include "logging.h"
+#include "auxInotify.h"
 
 #define TAMANIO_MAX_INPUT_CONSOLA 200
 

@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../auxInotify.c \
 ../logging.c \
 ../serializaciones.c \
 ../tiempo.c \
@@ -11,6 +12,7 @@ C_SRCS += \
 ../utilsServidor.c 
 
 OBJS += \
+./auxInotify.o \
 ./logging.o \
 ./serializaciones.o \
 ./tiempo.o \
@@ -18,6 +20,7 @@ OBJS += \
 ./utilsServidor.o 
 
 C_DEPS += \
+./auxInotify.d \
 ./logging.d \
 ./serializaciones.d \
 ./tiempo.d \
