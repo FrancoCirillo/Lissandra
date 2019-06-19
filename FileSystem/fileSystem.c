@@ -490,19 +490,56 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 }
 
 void actualizar_config(){
-	printf("Creando nuevo config en %s\n", rutaConfiguracion);
+
+	//Por si nos equivocamos y tocamos el que no era
+	char* puntoMontajeViejo = strdup(config_FS.punto_montaje);
+	char* puertoEscuchaViejo = strdup(config_FS.puerto_escucha);
+	char* tamanioValueViejo = string_from_format("%d", config_FS.tamanio_value);
+	char* blockSizeViejo = string_from_format("%d", Metadata_FS.block_size);
+	char* blocksViejo = string_from_format("%d", Metadata_FS.blocks);
+	char* magicNumberViejo = strdup(Metadata_FS.magic_number);
+	/*
+	 * Segun el editor (vi, nano, leafpad etc) puede ser que se borre el archivo y se cree uno con el mismo nombre.
+	 * Al config no ls gusta para nada (seg fault). Por eso se destruye el anterior y se crea uno nuevo.
+	 * Al destruir el anterior, se recargan los valores.
+	 */
+	printf("Destruyendo config en %s\n", rutaConfiguracion);
+	config_destroy(g_config);
+	printf("Creando config nuevo\n");
 	g_config = config_create(rutaConfiguracion);
-	printf("Config nuevo creado\n");
+	if(g_config == NULL) loggear_error(string_from_format("No se pudo crear el g_config"));
+	printf("Config nuevo creado");
+
+	config_set_value(g_config, "PUNTO_MONTAJE", puntoMontajeViejo);
+	config_set_value(g_config, "PUERTO_ESCUCHA", puertoEscuchaViejo);
+	config_set_value(g_config, "TAMAÑO_VALUE", tamanioValueViejo);
+
+	//No se pasa directamente los valores viejos para que no haya comportamientos inesperados al hacer config_destroy (al terminar el programa)
+	config_FS.punto_montaje = config_get_string_value(g_config, "PUNTO_MONTAJE");
+	config_FS.puerto_escucha = config_get_string_value(g_config, "PUERTO_ESCUCHA");
+	config_FS.tamanio_value = config_get_int_value(g_config, "TAMAÑO_VALUE");
+
+	config_FS.retardo = (mseg_t)config_get_int_value(g_config, "RETARDO");
+	config_FS.tiempo_dump = (mseg_t)config_get_int_value(g_config, "TIEMPO_DUMP");
+
+	Metadata_FS.block_size = config_get_int_value(g_config, "BLOCK_SIZE");
+	Metadata_FS.blocks = config_get_int_value(g_config, "BLOCKS");
+	Metadata_FS.magic_number = config_get_string_value(g_config, "MAGIC_NUMBER");
+
+	free(puntoMontajeViejo);
+	free(puertoEscuchaViejo);
+	free(tamanioValueViejo);
+	free(blocksViejo);
+	free(blockSizeViejo);
+	free(magicNumberViejo);
 
 //	sem_wait(&mutex_tiempo_retardo_config);
-	config_FS.retardo = (mseg_t)config_get_int_value(g_config, "RETARDO");
 //	sem_post(&mutex_tiempo_retardo_config);
-
+//
 //	sem_wait(&mutex_tiempo_dump_config);
-	config_FS.tiempo_dump = (mseg_t)config_get_int_value(g_config, "TIEMPO_DUMP");
 //	sem_post(&mutex_tiempo_dump_config);
 
-	printf("Config actualizado!\nRetardo: %" PRIu64 "\nTiempo de Dump: %" PRIu64 "",config_FS.retardo, config_FS.tiempo_dump);
+	printf("Config actualizado!\npuerto eSCUCHA:%s\nTAMANIO VALUE:%d\nPUNTO MONTAJE (BORRAR): %s\nRetardo: %" PRIu64 "\nTiempo de Dump: %" PRIu64 "\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET,config_FS.puerto_escucha, config_FS.tamanio_value, config_FS.punto_montaje, config_FS.retardo, config_FS.tiempo_dump);
 	fflush(stdout);
 }
 
