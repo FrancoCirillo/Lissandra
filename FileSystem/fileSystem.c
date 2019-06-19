@@ -407,7 +407,7 @@ void inicializar_conexiones() {
 	puts("callback creado");
 	iniciar_servidor(miIP, config_FS.puerto_escucha);
 	puts("Servidor iniciado");
-	vigilar_conexiones_entrantes(callback, CONSOLA_FS);
+	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem", CONSOLA_FS);
 }
 
 void enviar_tamanio_value(char* remitente) {
@@ -489,5 +489,31 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 	}
 }
 
+void actualizar_config(){
+
+	t_config * aux_config;
+	while( (aux_config = config_create(rutaConfiguracion)) == NULL) loggear_error(string_from_format("NO SE CREO EL T_CONFIG"));
+
+	sem_wait(&mutex_tiempo_retardo_config);
+	config_FS.retardo = (mseg_t)config_get_int_value(aux_config, "RETARDO");
+	sem_post(&mutex_tiempo_retardo_config);
+
+	sem_wait(&mutex_tiempo_dump_config);
+	config_FS.tiempo_dump = (mseg_t)config_get_int_value(aux_config, "TIEMPO_DUMP");
+	sem_post(&mutex_tiempo_dump_config);
+
+	config_destroy(aux_config);
+
+	loggear_info(string_from_format("Config actualizado!\n"
+			"Retardo: %" PRIu64 "\n"
+					"Tiempo de Dump: %" PRIu64,
+					config_FS.retardo, config_FS.tiempo_dump));
+
+	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
+	fflush(stdout);
+
+
+
+}
 
 

@@ -19,6 +19,7 @@ sem_t mutex_diccionario_conexiones;
 void gran_malloc_inicial();
 void inicializar_sectores_memoria();
 void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag);
+void avisar_estado_full(instr_t* instruccion);
 void actualizar_pagina(void* paginaAActualizar, mseg_t nuevoTimestamp, char* nuevoValue);
 registro *obtener_registro_de_instruccion(instr_t *instruccion);
 int get_proximo_sector_disponible();

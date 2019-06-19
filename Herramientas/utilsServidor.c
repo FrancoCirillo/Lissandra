@@ -51,6 +51,8 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir)
 
 int vigilar_conexiones_entrantes(
 		void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente),
+		void (*actualizar_config)(void),
+		char* rutaConfig,
 		int queConsola)
 {
 	//Gracias a la guia de Beej:
@@ -70,14 +72,21 @@ int vigilar_conexiones_entrantes(
 	FD_SET(listener, &master); // agregamos a los fds que vigila select()
 	FD_SET(0, &master);		   // 0 es el fd de la consola
 
+	int fdInotify = inicializar_estructuras_inotify(rutaConfig);
+	FD_SET(fdInotify, &master);
 	// mantener cual es el fd mas grande (lo pide el select())
-	fdmax = listener; // por ahora es este
+	fdmax = (listener < fdInotify) ? fdInotify : listener;
+
+	int actualizarPrintf = 1;
 
 	while (1)
 	{
 		read_fds = master;
-		printf("\n" COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
-		fflush(stdout);
+		if(actualizarPrintf){
+			printf("\n" COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
+			fflush(stdout);
+		}
+		actualizarPrintf = 1;
 		int resultado = select(fdmax + 1, &read_fds, NULL, NULL, NULL);
 		if (resultado == -1)
 		{
@@ -155,6 +164,14 @@ int vigilar_conexiones_entrantes(
 						instr_t *request_recibida = leer_a_instruccion(bufferLeido, queConsola);
 						if (request_recibida != NULL)
 							ejecutar_requestRecibido(request_recibida, 0);
+					}
+
+					else if (i == fdInotify)
+					{
+//						loggear_trace(string_from_format("inotify"));
+						int largo = read_events(i);
+						event_handler(largo, actualizar_config);
+						actualizarPrintf = 0;
 					}
 
 					else

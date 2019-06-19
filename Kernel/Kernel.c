@@ -37,7 +37,7 @@ void inicializar_kernel(){
 	auxiliarConexiones = dictionary_create();
 
 	iniciar_servidor(miIPKernel, configuracion.puerto);
-	vigilar_conexiones_entrantes(callback, CONSOLA_KERNEL);
+	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Kernel", CONSOLA_KERNEL);
 
 }
 
@@ -725,7 +725,7 @@ int hilos_disponibles(){
 
 
 void inicializarConfiguracion() {
-	char* rutaConfiguracion = "Kernel.config";
+	rutaConfiguracion = "Kernel.config";
 	g_config = config_create(rutaConfiguracion);
 	configuracion.quantum = atoi(obtener_por_clave("quantum"));
 	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave("gradoMultiprocesamiento"));
@@ -1099,3 +1099,29 @@ instr_t* mis_datos(cod_op codigoOperacion){
 	return crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 }
 
+void actualizar_config(){
+	t_config * auxConfig = config_create(rutaConfiguracion);
+
+	configuracion.quantum = config_get_int_value(auxConfig, "quantum");
+	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
+	configuracion.tiempoMetricas = config_get_int_value(auxConfig, "tiempoMetricas");
+	configuracion.LOG_LEVEL =  log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
+	sem_wait(&mutex_log);
+	actualizar_log_level();
+	sem_post(&mutex_log);
+	loggear_info(string_from_format(
+			"Config actualizado!\n"
+			"Quantum: %d\n"
+			"Tiempo de Gossiping: %d\n"
+			"Tiempo de Metricas: %d\n"
+			"Log level: %s",
+			configuracion.quantum, configuracion.RETARDO_GOSSIPING, configuracion.tiempoMetricas , log_level_as_string(configuracion.LOG_LEVEL)));
+	config_destroy(auxConfig);
+	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
+	fflush(stdout);
+}
+
+void actualizar_log_level(){
+	log_destroy(g_logger);
+	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
+}

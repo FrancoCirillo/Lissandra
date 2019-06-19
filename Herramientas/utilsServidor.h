@@ -17,6 +17,7 @@
 #include "serializaciones.h"
 #include "utilsCliente.h"
 #include "logging.h"
+#include "auxInotify.h"
 
 #define TAMANIO_MAX_INPUT_CONSOLA 200
 
@@ -25,7 +26,7 @@ int listener;
 
 void imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr);
 int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir);
-int vigilar_conexiones_entrantes(void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), int queConsola);
+int vigilar_conexiones_entrantes(void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), void (*actualizar_config)(void), char* rutaConfig, int queConsola);
 char *ip_cliente(struct sockaddr_storage remoteaddr);
 
 #endif /* UTILS_SERVIDOR */

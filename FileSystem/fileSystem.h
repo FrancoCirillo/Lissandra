@@ -90,7 +90,7 @@ metadata_FS_t Metadata_FS;
 ruta_t g_ruta;
 
 t_log* g_logger;
-t_config* g_config;
+
 t_config* meta_config;
 
 /*TESTS*/
@@ -109,6 +109,7 @@ void finalizar_FS();
 void iniciar_semaforos();
 void iniciar_rutas();
 void finalizar_rutas();
+void actualizar_config();
 
 /*FUNCIONES DE BLOQUES*/
 t_list* leer_binario(char*, uint16_t);

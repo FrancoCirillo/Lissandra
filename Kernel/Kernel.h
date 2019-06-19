@@ -125,6 +125,7 @@ void inicializar_criterios();
 void inicializarConfiguracion();
 void inicializar_semaforos();
 void iniciar_metricas();
+char* rutaConfiguracion;
 
 //Conexiones Franquito
 config_t configuracion;
@@ -166,6 +167,8 @@ bool existe_tabla(char* tablaBuscada);
 void iniciar_consola();
 void* consola(void* c);
 void agregar_a_metricas(instr_t* i);
+void actualizar_config();
+void actualizar_log_level();
 
 //Gossiping
 int fd_out_inicial;

@@ -747,16 +747,17 @@ void loggear_FS_error(char* valor, instr_t* i) {
 	//Esto no genera memory leak, pisa el parametro bien. testeado!
 }
 
-char* obtener_por_clave(char* ruta, char* clave) {
-	t_config* c = config_create(ruta);
-	char* valor;
-	valor = config_get_string_value(c, clave);
-	config_destroy(c);
-	return valor;
-}
+//char* obtener_por_clave(char* ruta, char* clave) {
+//	t_config* c = config_create(ruta);
+//	char* valor;
+//	valor = config_get_string_value(c, clave);
+//	config_destroy(c);
+//	return valor;
+//}
 
 void inicializar_configuracion(void) {
-	g_config = config_create("Lissandra.config");
+	rutaConfiguracion = "Lissandra.config";
+	g_config = config_create(rutaConfiguracion);
 	config_FS.punto_montaje = config_get_string_value(g_config, "PUNTO_MONTAJE");
 	config_FS.puerto_escucha = config_get_string_value(g_config, "PUERTO_ESCUCHA");
 	config_FS.tamanio_value = config_get_int_value(g_config, "TAMAÑO_VALUE");
@@ -770,38 +771,38 @@ void iniciar_logger(){
 	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_TRACE);
 }
 
-void actualizar_tiempo_dump_config(mseg_t value) {
-
-	char* val = string_itoa((int) value);
-
-	sem_wait(&mutex_tiempo_dump_config);
-	config_set_value(g_config, "TIEMPO_DUMP", val);
-	sem_post(&mutex_tiempo_dump_config);
-
-	config_save(g_config);
-
-	char* mensaje = string_from_format("Se actualizo el tiempo de dumpeo en el archivo de configuracion. Nuevo valor: %s", val);
-	loggear_FS(mensaje);
-	free(mensaje);
-	free(val);
-}
-
-void actualizar_tiempo_retardo_config(mseg_t value) {
-
-	char* val = string_itoa( value);
-
-	sem_wait(&mutex_tiempo_retardo_config);
-	config_set_value(g_config, "TIEMPO_RETARDO", val);
-	sem_post(&mutex_tiempo_retardo_config);
-
-	config_save(g_config);
-
-	char* mensaje = string_from_format("Se actualizo el tiempo de retardo en el archivo de configuracion. Nuevo valor: %s", val);
-	loggear_FS(mensaje);
-	free(mensaje);
-	free(val);
-
-}
+//void actualizar_tiempo_dump_config(mseg_t value) {
+//
+//	char* val = string_itoa((int) value);
+//
+//	sem_wait(&mutex_tiempo_dump_config);
+//	config_set_value(g_config, "TIEMPO_DUMP", val);
+//	sem_post(&mutex_tiempo_dump_config);
+//
+//	config_save(g_config);
+//
+//	char* mensaje = string_from_format("Se actualizo el tiempo de dumpeo en el archivo de configuracion. Nuevo valor: %s", val);
+//	loggear_FS(mensaje);
+//	free(mensaje);
+//	free(val);
+//}
+//
+//void actualizar_tiempo_retardo_config(mseg_t value) {
+//
+//	char* val = string_itoa( value);
+//
+//	sem_wait(&mutex_tiempo_retardo_config);
+//	config_set_value(g_config, "TIEMPO_RETARDO", val);
+//	sem_post(&mutex_tiempo_retardo_config);
+//
+//	config_save(g_config);
+//
+//	char* mensaje = string_from_format("Se actualizo el tiempo de retardo en el archivo de configuracion. Nuevo valor: %s", val);
+//	loggear_FS(mensaje);
+//	free(mensaje);
+//	free(val);
+//
+//}
 
 void inicializar_directorios() {
 

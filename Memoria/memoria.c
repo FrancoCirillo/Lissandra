@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 
 //	iniciar_ejecutador_gossiping();
 
-	vigilar_conexiones_entrantes(callback, CONSOLA_MEMORIA);
+	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Memoria", CONSOLA_MEMORIA);
 
 	return 0;
 }
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 void inicializar_configuracion()
 {
 	puts("Configuracion:");
-	char *rutaConfig = "memoria.config";
+	rutaConfig = "memoria.config";
 	g_config = config_create(rutaConfig);
 	configuracion.PUERTO = obtener_por_clave("PUERTO");
 	configuracion.IP_FS = obtener_por_clave("IP_FS");
@@ -201,6 +201,33 @@ void check_inicial(int argc, char* argv[])
 		miIPMemoria = argv[1];
 	}
 	nombreDeMemoria = string_from_format("Memoria_%d", configuracion.MEMORY_NUMBER);
+}
+void actualizar_config(){
+	t_config * auxConfig = config_create(rutaConfig);
+	configuracion.RETARDO_MEMORIA = config_get_int_value(auxConfig, "RETARDO_MEMORIA");
+	configuracion.RETARDO_FS = config_get_int_value(auxConfig, "RETARDO_FS");
+	configuracion.RETARDO_JOURNAL = config_get_int_value(auxConfig, "RETARDO_JOURNAL");
+	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
+	configuracion.LOG_LEVEL = log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
+	sem_wait(&mutex_log);
+	actualizar_log_level();
+	sem_post(&mutex_log);
+	loggear_info(string_from_format("Config actualizado!\n"
+			"Retardo de accseso a Memoria Principal: %d\n"
+			"Retardo de accseso a File System: %d\n"
+			"Tiempo de Journal: %d\n"
+			"Tiempo de Gossiping: %d\n"
+			"Log level: %s"
+			"\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET,
+			configuracion.RETARDO_MEMORIA, configuracion.RETARDO_FS, configuracion.RETARDO_JOURNAL, configuracion.RETARDO_GOSSIPING, log_level_as_string(configuracion.LOG_LEVEL)));
+	config_destroy(auxConfig);
+	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
+	fflush(stdout);
+}
+
+void actualizar_log_level(){
+	log_destroy(g_logger);
+	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, configuracion.LOG_LEVEL);
 }
 
 void terminar_memoria(instr_t* instruccion){
