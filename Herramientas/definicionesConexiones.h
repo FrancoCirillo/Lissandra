@@ -58,6 +58,7 @@ typedef enum cod_op {
 	PETICION_GOSSIP = 14,
 	RECEPCION_GOSSIP = 15,
 	SOLICITUD_DATOS = 16,
+	MEMORIA_FULL = 17,
 	CODIGO_SHOW = 51,
 	CODIGO_CERRAR = 22,
 
@@ -71,7 +72,7 @@ typedef enum cod_op {
 	ERROR_RUN = BASE_COD_ERROR + CODIGO_RUN,
 	ERROR_METRICS = BASE_COD_ERROR + CODIGO_METRICS,
 
-	// Solo para saber si devolver los resultados al Kernel o Memoria para que imprima
+	// TODO: Borrar - no se usa
 	CONSOLA_FS_EXITO = BASE_CONSOLA_FS + CODIGO_EXITO,
 	CONSOLA_MEM_EXITO = BASE_CONSOLA_MEMORIA + CODIGO_EXITO,
 	CONSOLA_KRN_EXITO = BASE_CONSOLA_KERNEL + CODIGO_EXITO,

@@ -66,18 +66,20 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	loggear_debug(string_from_format("FS devolvio la tabla solicitada."));
 	t_list* listaABorrar = list_duplicate(instruccion->parametros);
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
-	se_uso(paginaInsertada);
-	t_list *listaParam = list_create();
-	char* cadena = string_from_format(
-			"Se encontro %s%s | %s | %s | %"PRIu64" en FS",
-			puntoMontaje, (char *)list_get(instruccion->parametros, 0), //Tabla
-			(char *)list_get(instruccion->parametros, 1),//Key
-			(char *)list_get(instruccion->parametros, 2), //Value
-			(mseg_t)instruccion->timestamp); //Timestamp
+	if(paginaInsertada != -1){
+		se_uso(paginaInsertada);
+		t_list *listaParam = list_create();
+		char* cadena = string_from_format(
+				"Se encontro %s%s | %s | %s | %"PRIu64" en FS",
+				puntoMontaje, (char *)list_get(instruccion->parametros, 0), //Tabla
+				(char *)list_get(instruccion->parametros, 1),//Key
+				(char *)list_get(instruccion->parametros, 2), //Value
+				(mseg_t)instruccion->timestamp); //Timestamp
 
-	list_add(listaParam, cadena);
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
-	list_destroy_and_destroy_elements(listaABorrar, free);
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+		list_destroy_and_destroy_elements(listaABorrar, free);
+	}
 }
 
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
@@ -104,18 +106,25 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
 			void *paginaAgregada = NULL;
 			paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-			char* paginaShow = pagina_a_str(paginaAgregada);
-			loggear_debug(string_from_format("\nPagina agregada: \n%s\n", paginaShow));
-			free(paginaShow);
-			suTablaDePaginas = nueva_tabla_de_paginas();
-			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
+			if(paginaAgregada != NULL){
+				char* paginaShow = pagina_a_str(paginaAgregada);
+				loggear_debug(string_from_format("\nPagina agregada: \n%s\n", paginaShow));
+				free(paginaShow);
+				suTablaDePaginas = nueva_tabla_de_paginas();
+				dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 
-			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			loggear_trace(string_from_format("\nTabla de paginas actual: (Nueva)"));
-			loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
-			loggear_trace(string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
+				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+				loggear_trace(string_from_format("\nTabla de paginas actual: (Nueva)"));
+				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
+				loggear_trace(string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
 
-			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+				if(flagMod){
+					insert_exitoso(instruccion);
+				}
+			}
+			else return -1;
+
 		}
 
 
@@ -137,40 +146,50 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
 				numeroDePaginaInsertada = filaEncontrada->numeroDePagina;
+				if(flagMod){
+					insert_exitoso(instruccion);
+				}
 			}
+
 
 
 //CASO 3:
 			else{ //No existia la key en ese segment
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-				char* paginaStr = pagina_a_str(paginaAgregada);
-				loggear_trace(string_from_format("\nPagina agregada: \n%s\n", paginaStr));
-				free(paginaStr);
-				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-				loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
-				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
-				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
+				if(paginaAgregada != NULL){
+					char* paginaStr = pagina_a_str(paginaAgregada);
+					loggear_trace(string_from_format("\nPagina agregada: \n%s\n", paginaStr));
+					free(paginaStr);
+					filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+					loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
+					loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
+					loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
-				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+					numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+					if(flagMod){
+						insert_exitoso(instruccion);
+					}
+				}
+				else return -1;
 			}
 
 		}
-		if(flagMod){
-			t_list *listaParam = list_create();
-			char *cadena = string_from_format(
-					"Se inserto %s%s | %s | %s | %"PRIu64" en la Memoria",
-					puntoMontaje, (char *)list_get(instruccion->parametros, 0),
-					(char *)list_get(instruccion->parametros, 1),
-					(char *)list_get(instruccion->parametros, 2),
-					(mseg_t)instruccion->timestamp);
-			list_add(listaParam, cadena);
-			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
-		}
-
-		list_destroy_and_destroy_elements(instruccion->parametros, free);
-		free(instruccion);
 		return numeroDePaginaInsertada;
 	}
+}
+
+void insert_exitoso(instr_t* instruccion){
+	t_list *listaParam = list_create();
+	char *cadena = string_from_format(
+			"Se inserto %s%s | %s | %s | %"PRIu64" en la Memoria",
+			puntoMontaje, (char *)list_get(instruccion->parametros, 0),
+			(char *)list_get(instruccion->parametros, 1),
+			(char *)list_get(instruccion->parametros, 2),
+			(mseg_t)instruccion->timestamp);
+	list_add(listaParam, cadena);
+	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	free(instruccion);
 }
 
 void ejecutar_instruccion_create(instr_t *instruccion)
