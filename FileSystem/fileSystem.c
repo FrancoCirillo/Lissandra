@@ -493,19 +493,27 @@ void actualizar_config(){
 
 	t_config * aux_config;
 	while( (aux_config = config_create(rutaConfiguracion)) == NULL) loggear_error(string_from_format("NO SE CREO EL T_CONFIG"));
+
+	sem_wait(&mutex_tiempo_retardo_config);
 	config_FS.retardo = (mseg_t)config_get_int_value(aux_config, "RETARDO");
+	sem_post(&mutex_tiempo_retardo_config);
+
+	sem_wait(&mutex_tiempo_dump_config);
 	config_FS.tiempo_dump = (mseg_t)config_get_int_value(aux_config, "TIEMPO_DUMP");
+	sem_post(&mutex_tiempo_dump_config);
 
 	config_destroy(aux_config);
 
-//	sem_wait(&mutex_tiempo_retardo_config);
-//	sem_post(&mutex_tiempo_retardo_config);
-//
-//	sem_wait(&mutex_tiempo_dump_config);
-//	sem_post(&mutex_tiempo_dump_config);
+	loggear_info(string_from_format("Config actualizado!\n"
+			"Retardo: %" PRIu64 "\n"
+					"Tiempo de Dump: %" PRIu64,
+					config_FS.retardo, config_FS.tiempo_dump));
 
-	printf("Config actualizado!\nRetardo: %" PRIu64 "\nTiempo de Dump: %" PRIu64 "\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET, config_FS.retardo, config_FS.tiempo_dump);
+	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 	fflush(stdout);
+
+
+
 }
 
 
