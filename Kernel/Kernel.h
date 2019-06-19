@@ -91,7 +91,6 @@ pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
 
 sem_t mutex_cantidad_hilos;
 sem_t mutex_log;
-sem_t mutex_actualizacion_log;
 sem_t semaforo_procesos_ready;
 sem_t mutex_diccionario_enviados;
 sem_t mutex_codigo_request;

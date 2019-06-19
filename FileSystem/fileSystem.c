@@ -491,7 +491,8 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 void actualizar_config(){
 
-	t_config * aux_config = config_create(rutaConfiguracion);
+	t_config * aux_config;
+	while( (aux_config = config_create(rutaConfiguracion)) == NULL) loggear_error(string_from_format("NO SE CREO EL T_CONFIG"));
 	config_FS.retardo = (mseg_t)config_get_int_value(aux_config, "RETARDO");
 	config_FS.tiempo_dump = (mseg_t)config_get_int_value(aux_config, "TIEMPO_DUMP");
 

@@ -25,7 +25,6 @@
 	/* CONFIG Y LOG */
 char *rutaConfig;
 sem_t mutex_log;
-sem_t mutex_actualizacion_log;
 t_log *g_logger;
 t_config *g_config;
 config configuracion;
