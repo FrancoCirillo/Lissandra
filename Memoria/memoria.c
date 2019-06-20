@@ -210,7 +210,9 @@ void actualizar_config(){
 			!config_has_property(auxConfig, "RETARDO_FS") 		||
 			!config_has_property(auxConfig, "RETARDO_JOURNAL") 	||
 			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
-			!config_has_property(auxConfig, "LOG_LEVEL"));
+			!config_has_property(auxConfig, "LOG_LEVEL")){
+		config_destroy(auxConfig);
+	}
 
 	configuracion.RETARDO_MEMORIA = config_get_int_value(auxConfig, "RETARDO_MEMORIA");
 	configuracion.RETARDO_FS = config_get_int_value(auxConfig, "RETARDO_FS");

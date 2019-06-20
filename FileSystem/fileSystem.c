@@ -494,7 +494,9 @@ void actualizar_config(){
 	t_config * auxConfig;
 	while((auxConfig = config_create(rutaConfiguracion)) == NULL||
 			!config_has_property(auxConfig, "RETARDO")			||
-			!config_has_property(auxConfig, "TIEMPO_DUMP"));
+			!config_has_property(auxConfig, "TIEMPO_DUMP")){
+		config_destroy(auxConfig);
+	}
 
 	sem_wait(&mutex_tiempo_retardo_config);
 	config_FS.retardo = (mseg_t)config_get_int_value(auxConfig, "RETARDO");

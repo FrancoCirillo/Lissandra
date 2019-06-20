@@ -1105,7 +1105,9 @@ void actualizar_config(){
 			!config_has_property(auxConfig, "quantum") 			||
 			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
 			!config_has_property(auxConfig, "tiempoMetricas")	||
-			!config_has_property(auxConfig, "LOG_LEVEL"));
+			!config_has_property(auxConfig, "LOG_LEVEL")){
+		config_destroy(auxConfig);
+	}
 
 	configuracion.quantum = config_get_int_value(auxConfig, "quantum");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
