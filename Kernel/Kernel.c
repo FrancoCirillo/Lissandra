@@ -1100,7 +1100,14 @@ instr_t* mis_datos(cod_op codigoOperacion){
 }
 
 void actualizar_config(){
-	t_config * auxConfig = config_create(rutaConfiguracion);
+	t_config *auxConfig;
+	while((auxConfig = config_create(rutaConfiguracion)) == NULL||
+			!config_has_property(auxConfig, "quantum") 			||
+			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
+			!config_has_property(auxConfig, "tiempoMetricas")	||
+			!config_has_property(auxConfig, "LOG_LEVEL")){
+		config_destroy(auxConfig);
+	}
 
 	configuracion.quantum = config_get_int_value(auxConfig, "quantum");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");

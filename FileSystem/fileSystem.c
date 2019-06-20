@@ -491,18 +491,22 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 void actualizar_config(){
 
-	t_config * aux_config;
-	while( (aux_config = config_create(rutaConfiguracion)) == NULL) loggear_error(string_from_format("NO SE CREO EL T_CONFIG"));
+	t_config * auxConfig;
+	while((auxConfig = config_create(rutaConfiguracion)) == NULL||
+			!config_has_property(auxConfig, "RETARDO")			||
+			!config_has_property(auxConfig, "TIEMPO_DUMP")){
+		config_destroy(auxConfig);
+	}
 
 	sem_wait(&mutex_tiempo_retardo_config);
-	config_FS.retardo = (mseg_t)config_get_int_value(aux_config, "RETARDO");
+	config_FS.retardo = (mseg_t)config_get_int_value(auxConfig, "RETARDO");
 	sem_post(&mutex_tiempo_retardo_config);
 
 	sem_wait(&mutex_tiempo_dump_config);
-	config_FS.tiempo_dump = (mseg_t)config_get_int_value(aux_config, "TIEMPO_DUMP");
+	config_FS.tiempo_dump = (mseg_t)config_get_int_value(auxConfig, "TIEMPO_DUMP");
 	sem_post(&mutex_tiempo_dump_config);
 
-	config_destroy(aux_config);
+	config_destroy(auxConfig);
 
 	loggear_info(string_from_format("Config actualizado!\n"
 			"Retardo: %" PRIu64 "\n"
@@ -511,8 +515,6 @@ void actualizar_config(){
 
 	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 	fflush(stdout);
-
-
 
 }
 

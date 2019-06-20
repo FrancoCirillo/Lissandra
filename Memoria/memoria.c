@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 void inicializar_configuracion()
 {
 	puts("Configuracion:");
-	rutaConfig = "memoria.config";
+	rutaConfig = "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Memoria/memoria.config";
 	g_config = config_create(rutaConfig);
 	configuracion.PUERTO = obtener_por_clave("PUERTO");
 	configuracion.IP_FS = obtener_por_clave("IP_FS");
@@ -203,7 +203,17 @@ void check_inicial(int argc, char* argv[])
 	nombreDeMemoria = string_from_format("Memoria_%d", configuracion.MEMORY_NUMBER);
 }
 void actualizar_config(){
-	t_config * auxConfig = config_create(rutaConfig);
+	t_config * auxConfig;
+
+	while(	(auxConfig = config_create(rutaConfig)) == NULL 	||
+			!config_has_property(auxConfig, "RETARDO_MEMORIA") 	||
+			!config_has_property(auxConfig, "RETARDO_FS") 		||
+			!config_has_property(auxConfig, "RETARDO_JOURNAL") 	||
+			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
+			!config_has_property(auxConfig, "LOG_LEVEL")){
+		config_destroy(auxConfig);
+	}
+
 	configuracion.RETARDO_MEMORIA = config_get_int_value(auxConfig, "RETARDO_MEMORIA");
 	configuracion.RETARDO_FS = config_get_int_value(auxConfig, "RETARDO_FS");
 	configuracion.RETARDO_JOURNAL = config_get_int_value(auxConfig, "RETARDO_JOURNAL");
@@ -212,6 +222,7 @@ void actualizar_config(){
 	sem_wait(&mutex_log);
 	actualizar_log_level();
 	sem_post(&mutex_log);
+	config_destroy(auxConfig);
 	loggear_info(string_from_format("Config actualizado!\n"
 			"Retardo de accseso a Memoria Principal: %d\n"
 			"Retardo de accseso a File System: %d\n"
@@ -220,7 +231,6 @@ void actualizar_config(){
 			"Log level: %s"
 			"\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET,
 			configuracion.RETARDO_MEMORIA, configuracion.RETARDO_FS, configuracion.RETARDO_JOURNAL, configuracion.RETARDO_GOSSIPING, log_level_as_string(configuracion.LOG_LEVEL)));
-	config_destroy(auxConfig);
 	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 	fflush(stdout);
 }
