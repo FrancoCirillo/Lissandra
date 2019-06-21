@@ -48,6 +48,7 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 void execute_create(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list* listaParam = list_create();
+
 	if (!existe_tabla(tabla)) {
 		if(!puede_crear_particiones(instruccion)) {
 			char* cadena = string_from_format("No hay bloques disponibles para crear las particiones de la tabla'%s'.", tabla);
@@ -56,6 +57,12 @@ void execute_create(instr_t* instruccion, char* remitente) {
 			free(cadena);
 		}
 		agregar_tabla(tabla); //la agrega a la mem
+
+//		//TODO: Semaforos
+//		sem_t mutex_tabla;
+//		sem_init(&mutex_tabla, 0, 1);
+//		agregar_mutex_a_dic(tabla, mutex_tabla);
+
 		agregar_a_contador_dumpeo(tabla);
 		crear_directorio(g_ruta.tablas, tabla);
 		crear_particiones(instruccion);
@@ -91,11 +98,17 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 		return listaParam;
 	}
 	else {
+		//TODO: Semaforos
+//		sem_t mutex = obtener_mutex_tabla(tabla);
+//		sem_wait(&mutex);
+//		agregar_registro(tabla, registro);
+//		sem_post(&mutex);
+
 		agregar_registro(tabla, registro);
 
 		char* cadena = string_from_format("Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
-		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 1)); //Key
-		string_append_with_format(&cadena, "%s |", (char *)list_get(instruccion->parametros, 2)); //Value
+		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
+		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
 		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
 		*codOp = CODIGO_EXITO;
 
@@ -107,12 +120,14 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 void execute_select(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list *listaParam = list_create();
+
 	if (!existe_tabla(tabla)) {
 		puts("No existe la tabla");
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 		free(cadena);
+		return;
 	}
 	puts("Existe tabla");
 	int key = (uint16_t)atoi(obtener_parametro(instruccion, 1));
@@ -126,17 +141,23 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		free(cadena);
 	}
 	else {
-		puts("Registro encontrados");
-		char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);//respuesta del select, TODO: no anda
-//		printf("Value %s\n", value_registro_reciente);
+		puts("Registro encontrado");
+
+//		//TODO: Semaforos
+//		sem_t* mutex = obtener_mutex_tabla(tabla);
+//		sem_wait(&mutex);
+//		char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);
+//		sem_post(&mutex);
+
+		char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);
+		//printf("Value %s\n", value_registro_reciente);
 
 		list_add(listaParam, tabla);
 		list_add(listaParam, string_itoa(key));
 		list_add(listaParam, value_registro_reciente);
 		imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
-		free(value_registro_reciente);
 	}
-	borrar_lista_registros(registros_key);
+	//borrar_lista_registros(registros_key); 	//No usar, elimina el registro
 }
 
 void execute_drop(instr_t* instruccion, char* remitente) {
@@ -151,8 +172,16 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 		return;
 	}
 
-	eliminar_tabla_de_mem(tabla);
+//	//TODO: Semaforos
+//	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
+//	sem_wait(&mutex_tabla);
+//	int resultadoDrop = eliminar_directorio(tabla);
+//	eliminar_tabla_de_mem(tabla);
+//	eliminar_mutex_de_tabla(tabla);
+//	sem_wait(&mutex_tabla);
+
 	int resultadoDrop = eliminar_directorio(tabla);
+	eliminar_tabla_de_mem(tabla);
 
 	if(resultadoDrop == 0){
 		char* cadena = string_from_format("Se elimino correctamente la tabla '%s'", tabla);
@@ -178,6 +207,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		DIR* directorio = opendir(ruta);
 		if (directorio == NULL) {
 			printf("Error: No se puede abrir el directorio\n");
+			//free(ruta);
 			exit(2);
 		}
 

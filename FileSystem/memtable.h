@@ -28,6 +28,7 @@ t_list* 	obtener_registros_mem(char*, uint16_t);
 // --------FUNCIONES DE TABLAS--------
 int   existe_tabla(char*);
 void  agregar_tabla(char*);
+void  agregar_mutex_a_mem(char*, sem_t);
 void  eliminar_tabla_de_mem(char*);
 char* obtener_ruta_tabla(char*);
 

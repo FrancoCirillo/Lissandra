@@ -1,9 +1,4 @@
-/*
- * auxInotify.c
- *
- *  Created on: 18 jun. 2019
- *      Author: utnso
- */
+//-------auxNotify.c-------
 
 #include "auxInotify.h"
 

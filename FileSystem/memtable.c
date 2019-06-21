@@ -23,8 +23,8 @@ void levantar_tablas_directorio(DIR* directorio) {
 		char* tabla = directorio_leido->d_name;
 		if(!string_contains(tabla, ".")) {
 			t_list* registros = crear_lista_registros();
+			agregar_a_contador_dumpeo(tabla);
 			dictionary_put(memtable, tabla, registros);
-			//agregar_a_contador_dumpeo(tabla);	//TODO: da seg fault
 		}
 	}
 }

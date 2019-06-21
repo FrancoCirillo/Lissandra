@@ -26,6 +26,24 @@ int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
+////---------------------------SEMAFOROS---------------------------
+//
+////TODO: Semaforos
+//void crear_dic_semaforos_FS(){
+//	dic_semaforos_tablas = dictionary_create();
+//}
+//
+//void agregar_mutex_a_dic(char* tabla, sem_t* mutex_tabla){
+//	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
+//	puts("Se agrego el semaforo en el diccionario.");
+//}
+//
+//sem_t* obtener_mutex_tabla(char* tabla){
+//	puts("---Buscando mutex---");
+//	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+//}
+
+//---------------------------+DIRECTORIO---------------------------
 
 int eliminar_directorio(char* tabla) {
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
@@ -34,41 +52,39 @@ int eliminar_directorio(char* tabla) {
 	if(directorio == NULL)
 		return -1;
 
+	struct dirent* dir_a_eliminar;
 	size_t path_len = strlen(ruta_tabla);
-	int eliminado = -1;
+	int eliminado = 0;
 
-	if(directorio){
-		struct dirent* dir_a_eliminar;
-		eliminado = 0;
+	while (!eliminado && (dir_a_eliminar = readdir(directorio))){
+		int removed = -1;
 
-		while (!eliminado && (dir_a_eliminar = readdir(directorio))){
-			int removed = -1;
+		//Se saltean "." y ".."
+		if (!strcmp(dir_a_eliminar->d_name, ".") || !strcmp(dir_a_eliminar->d_name, ".."))
+			continue;
 
-			//Se saltean "." y ".." por la recursividad
-			if (!strcmp(dir_a_eliminar->d_name, ".") || !strcmp(dir_a_eliminar->d_name, ".."))
-				continue;
+		size_t length = path_len + strlen(dir_a_eliminar->d_name) + 2;
+		char* arch_a_eliminar = malloc(length);
 
-			size_t length = path_len + strlen(dir_a_eliminar->d_name) + 2;
-			char* arch_a_eliminar = malloc(length);
+		if(arch_a_eliminar){
+			snprintf(arch_a_eliminar, length, "%s/%s", ruta_tabla, dir_a_eliminar->d_name);
 
-			if(arch_a_eliminar){
-				snprintf(arch_a_eliminar, length, "%s/%s", ruta_tabla, dir_a_eliminar->d_name);
+           	if(!string_ends_with(arch_a_eliminar, "Metadata"))
+           		liberar_bloques(arch_a_eliminar);
 
-            	if(!string_ends_with(arch_a_eliminar, "Metadata"))
-            		liberar_bloques(arch_a_eliminar);
+        	removed = unlink(arch_a_eliminar);
 
-            	removed = unlink(arch_a_eliminar);
-
-            	free(arch_a_eliminar);
-			}
-			eliminado = removed;
+           	free(arch_a_eliminar);
 		}
-		closedir(directorio);
+		eliminado = removed;
 	}
 
-	if(!eliminado)
-	     eliminado = rmdir(ruta_tabla);
+	closedir(directorio);
 
+	if(!eliminado)
+		eliminado = rmdir(ruta_tabla);
+
+	//frees
 	return eliminado;
 }
 
@@ -206,23 +222,23 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
     return -1;
 }
 
-registro_t* obtener_reg(char* buffer) {
+registro_t* obtener_registro(char* buffer) {
 //	puts("---OBTENER REGISTRO---");
 	char* bufferCopy = strdup(buffer);
 	registro_t* registro = malloc(sizeof(registro_t));
-	char* token = malloc(sizeof(int));
+	char* valor;
 
 	char* actual = strtok(bufferCopy, ";");
-	token = strdup(actual);
-	registro->timestamp = string_a_mseg(token);
+	valor = strdup(actual);
+	registro->timestamp = string_a_mseg(valor);
 
 	actual = strtok(NULL, ";");
-	token = strdup(actual);
-	registro->key = (uint16_t)atoi(token);
+	valor = strdup(actual);
+	registro->key = (uint16_t)atoi(valor);
 
 	actual = strtok(NULL, "\n");
-	token = strdup(actual);
-	registro->value = token;
+	valor = strdup(actual);
+	registro->value = valor;
 
 	free(bufferCopy);
 //	puts("Pase el registro formateado a registro");
@@ -247,7 +263,7 @@ imprimirContenidoArchivo(ruta_bloque);
 		switch(caracter_leido) {
 		case '\n': //tengo un registro completo
 			strcat(buffer, "\n");
-			registro_t* registro = obtener_reg(buffer);
+			registro_t* registro = obtener_registro(buffer);
 
 			if(registro->key == key) {
 				list_add(registros, registro); //lo agrego solo si tiene la key que busco

@@ -94,13 +94,14 @@ t_log* g_logger;
 t_config* meta_config;
 
 /*TESTS*/
-void	imprimirRegistro(void*);
-void	imprimirContenidoArchivo(char*);
-void	imprimirMetadata(char*);
-t_list*	listaRegistros();
-void	pruebaDump();
-void	pruebaTmp();
-void	pruebaGeneral();
+registro_t* crearRegistro(mseg_t, uint16_t, char*);
+void		imprimirRegistro(void*);
+void		imprimirContenidoArchivo(char*);
+void		imprimirMetadata(char*);
+t_list*		listaRegistros();
+void		pruebaDump();
+void		pruebaTmp();
+void		pruebaGeneral();
 
 
 /*INICIALIZACION Y FINALIZACION*/
@@ -121,7 +122,6 @@ char* 	obtener_registro_mas_reciente(t_list*);
 t_list* obtener_registros_key(char*, uint16_t);
 
 /*FUNCIONES AUXILIARES*/
-char* 	to_upper(char*);
 char*	obtener_parametro(instr_t*, int);
 int  	obtener_particion_key(char*, int);
 char*	obtener_nombre_tabla(instr_t*);

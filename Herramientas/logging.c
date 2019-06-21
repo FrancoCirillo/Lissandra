@@ -1,3 +1,5 @@
+//-------logging.c-------
+
 #include "logging.h"
 
 void loggear_trace(char* valor){

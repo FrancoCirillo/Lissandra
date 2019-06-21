@@ -103,28 +103,32 @@ void compactador(char* tabla){
 
 
 t_list* listar_archivos(char* tabla){
+	printf("---Entre a listar_archivos de la tabla %s---\n", tabla);
+	char* ruta_tabla =  obtener_ruta_tabla(tabla);
 
-	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
 	DIR* directorio = opendir(ruta_tabla);
-	puts("Entre a listar_archivos");
-	printf("de la tabla %s\n", tabla);
-	struct dirent* directorio_leido;
-
-	t_list* archivos = list_create();
-	char* archivo;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-		archivo = directorio_leido->d_name;
-		if(string_contains(archivo, ".")) {
-			char* ruta_archivo = string_from_format("%s%s",ruta_tabla, archivo);
-			list_add(archivos,ruta_archivo);
-			printf("la ruta del archivo leido es: %s", archivo);
-			}
-		free(archivo);
+	if (directorio == NULL) {
+		puts("Error: No se pudo abrir el directorio");
+		//free(ruta_tabla);
+		exit(2);
 	}
-	free(archivo);
-	free(ruta_tabla);
-	//No hago free(ruta_tabla porque es el que se usa en la lista.).. ver que no rompa.
-	return archivos;
+	else{
+		struct dirent* directorio_leido;
+		t_list* archivos = list_create();
+
+		while((directorio_leido = readdir(directorio)) != NULL) {
+			char* archivo = directorio_leido->d_name;
+			if(string_contains(archivo, ".")) {
+				char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
+				list_add(archivos, ruta_archivo);
+				printf("la ruta del archivo leido es: %s", archivo);
+			}
+			free(archivo);
+		}
+		free(ruta_tabla);
+		//free(ruta_archivo) No lo hago porque es el que se usa en la lista... ver que no rompa.
+		return archivos;
+	}
 }
 
 
@@ -152,11 +156,12 @@ void compactar5(){
 
 
 void pasar_a_tmpc(char* tabla) {
-	char* ruta_tabla = string_from_format("%s%s", g_ruta.tablas, tabla);
+	char* ruta_tabla = obtener_ruta_tabla(tabla);
 	printf("RUTA TABLA: %s\n", ruta_tabla);
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
-		printf("Error: No se puede abrir el directorio\n");
+		puts("Error: No se pudo abrir el directorio");
+		//free(ruta_tabla);
 		exit(2);
 	}
 	struct dirent* directorio_leido;

@@ -1,9 +1,4 @@
-/*
- * auxInotify.h
- *
- *  Created on: 18 jun. 2019
- *      Author: utnso
- */
+//-------auxNotify.h-------
 
 #ifndef AUXINOTIFY_H_
 #define AUXINOTIFY_H_

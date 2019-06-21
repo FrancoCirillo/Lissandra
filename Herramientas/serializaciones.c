@@ -185,60 +185,60 @@ int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp)
 int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion)
 {
 	int r = recv(socket_cliente, nuevaOperacion, sizeof(cod_op), MSG_WAITALL);
+
 	if (r == 0)
-	{
 		loggear_error(string_from_format("El cliente se desconecto en el medio de una recepción."));
-	}
+
 	if (r < 0)
-	{
 		loggear_error(string_from_format("Error en el recv: %s\n", strerror(errno)));
-	}
+
 	return r;
 }
 
 instr_t *leer_a_instruccion(char *request, int queConsola)
 {
-	char *actual, *comando, *valor;
-	comando = NULL;
-	t_list *listaParam = list_create();
-
-	char* requestAux = string_from_format("%s", request);
-
 	char* requestCopy = string_from_format("%s", request);
-	string_to_upper(requestCopy);
-
-	actual = strtok(requestCopy, " \n");
-
-	mseg_t timestampRequest = obtener_ts();
-
+	char* actual = strtok(requestCopy, " \n");
 
 	if (actual == NULL){
-		list_destroy(listaParam);
 		free(requestCopy);
 		return NULL;
 	}
 
-	comando = strdup(actual);
+//	char* requestAux = string_from_format("%s", request);
+
+	char* comando = strdup(actual);
+	string_to_upper(comando);
 	cod_op comandoReconocido = reconocer_comando(comando);
 
-	if(comandoReconocido == CODIGO_RUN){
-		actual = strtok(requestAux, " \n");
-	}
-	else{
-		free(requestAux);
-	}
+//	if(comandoReconocido == CODIGO_RUN)
+//		actual = strtok(requestAux, " \n");
+//	else
+//		free(requestAux);
+
+	char* valor; //Va a almacenar parametros
+	t_list *listaParam = list_create();
+	mseg_t timestampRequest = obtener_ts();
 
 	actual = strtok(NULL, " \n"); //El primer parametro
 
 	//Evaluacion de parametros:
 	for (int i = 1; actual != NULL; i++)
 	{
+		if(comandoReconocido == CODIGO_RUN){
+			valor = strdup(actual);
+			list_add(listaParam, valor);
+			break;
+		}
+
 		valor = strdup(actual);
+		string_to_upper(valor);
 		list_add(listaParam, valor);
 
-		if (i == 2 && strcmp(comando, "INSERT") == 0)
+		if (i == 2 && comandoReconocido == CODIGO_INSERT)
 		{
 			actual = strtok(NULL, "\"\n"); //El Value en el INSERT
+
 			if (actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
 			{
 				valor = strdup(actual);
@@ -260,10 +260,10 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		}
 		actual = strtok(NULL, " \n"); //(Si es el insert, el 2do parametro)
 	}
+
 	free(requestCopy);
-
-
 	free(comando);
+
 	if (es_comando_valido(comandoReconocido, listaParam) > 0)
 	{
 		instr_t* instruccionLista;
@@ -377,7 +377,6 @@ int es_comando_valido(cod_op comando, t_list *listaParam)
 	case CODIGO_CERRAR: //Para testing
 		return 1;
 
-
 	default:
 		return -1;
 		break;
@@ -419,12 +418,16 @@ void imprimir_instruccion(instr_t *instruccion, void (*funcion_log)(char *texto)
 cod_op quien_pidio(instr_t *instruccion)
 {
 	int codigoAnalizado = instruccion->codigo_operacion;
+
 	if (codigoAnalizado > BASE_COD_ERROR)
 		codigoAnalizado -= BASE_COD_ERROR;
+
 	if (codigoAnalizado < BASE_CONSOLA_MEMORIA)
 		return CONSOLA_KERNEL;
+
 	if (codigoAnalizado < BASE_CONSOLA_FS)
 		return CONSOLA_MEMORIA;
+
 	return CONSOLA_FS;
 }
 
@@ -441,6 +444,7 @@ void loggear_error_proceso(instr_t *miInstruccion)
 {
 	loggear_warning(string_from_format("%s\n", (char *)list_get(miInstruccion->parametros, 0)));
 }
+
 void loggear_exito_proceso(instr_t *miInstruccion)
 {
 
