@@ -26,22 +26,45 @@ int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
-////---------------------------SEMAFOROS---------------------------
-//
-////TODO: Semaforos
-//void crear_dic_semaforos_FS(){
-//	dic_semaforos_tablas = dictionary_create();
-//}
-//
-//void agregar_mutex_a_dic(char* tabla, sem_t* mutex_tabla){
-//	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
-//	puts("Se agrego el semaforo en el diccionario.");
-//}
-//
-//sem_t* obtener_mutex_tabla(char* tabla){
-//	puts("---Buscando mutex---");
-//	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
-//}
+void borrar_lista_parametros_impresion(t_list* listaParam){
+	list_destroy_and_destroy_elements(listaParam, free);
+}
+
+
+
+//---------------------------SEMAFOROS---------------------------
+
+//TODO: Semaforos
+void crear_dic_semaforos_FS(){
+	dic_semaforos_tablas = dictionary_create();
+}
+
+void agregar_mutex_a_dic(char* tabla, sem_t* mutex_tabla){
+	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
+	puts("Se agrego el semaforo en el diccionario.");
+}
+
+int obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
+	puts("Entre a obtener_mutex_tabla");
+	*(&mutex_tabla) = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+	int sem_val;
+	sem_getvalue(&(*mutex_tabla), &sem_val);
+	return sem_val;
+}
+
+sem_t* aux_obtener_mutex_tabla(char* tabla){
+	puts("Entre a aux_obtener_mutex_tabla");
+	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+}
+
+int existe_mutex(char* tabla){
+	puts("Entre a existe_mutex");
+	return dictionary_has_key(dic_semaforos_tablas, tabla);
+}
+
+void eliminar_mutex_de_tabla(char* tabla){
+	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
+}
 
 //---------------------------+DIRECTORIO---------------------------
 
@@ -220,29 +243,6 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
     }
     config_destroy(archivo);
     return -1;
-}
-
-registro_t* obtener_registro(char* buffer) {
-//	puts("---OBTENER REGISTRO---");
-	char* bufferCopy = strdup(buffer);
-	registro_t* registro = malloc(sizeof(registro_t));
-	char* valor;
-
-	char* actual = strtok(bufferCopy, ";");
-	valor = strdup(actual);
-	registro->timestamp = string_a_mseg(valor);
-
-	actual = strtok(NULL, ";");
-	valor = strdup(actual);
-	registro->key = (uint16_t)atoi(valor);
-
-	actual = strtok(NULL, "\n");
-	valor = strdup(actual);
-	registro->value = valor;
-
-	free(bufferCopy);
-//	puts("Pase el registro formateado a registro");
-	return registro;
 }
 
 t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=0, .tmp=1

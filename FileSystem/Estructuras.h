@@ -96,14 +96,18 @@ void	liberar_bloques(char*);
 int 	obtener_siguiente_bloque_archivo(char*, int);
 
 
-////SEMAFOROS
-//void   crear_dic_semaforos_FS();
-//void   agregar_mutex_a_dic(char*, sem_t*);
-//sem_t* obtener_mutex_tabla(char*);
+//SEMAFOROS
+void   crear_dic_semaforos_FS();
+void   agregar_mutex_a_dic(char*, sem_t*);
+int obtener_mutex_tabla(char*, sem_t*);
+sem_t* aux_obtener_mutex_tabla(char*);
+int existe_mutex(char*);
+void eliminar_mutex_de_tabla(char*);
 
 
-registro_t* obtener_registro(char*);
+void borrar_lista_parametros_impresion(t_list*);
 int archivo_inicializar(FILE*);
+
 
 
 #endif /* ESTRUCTURAS_H_ */
