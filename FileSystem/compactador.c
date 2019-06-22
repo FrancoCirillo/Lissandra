@@ -5,43 +5,25 @@
 void compactador(char* tabla){
 	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
 
-	t_list* particiones = malloc(sizeof(t_list));
+	t_list* particiones = list_create();
 
 	int tiempo_compactacion = obtener_tiempo_compactacion_metadata(tabla)/1000; //en segundos
-
 	int cantidad_particiones = obtener_part_metadata(tabla);
-
-	char* nomb_part;
+	int cant_tmpc;
 
 	for(int num = 0; num < cantidad_particiones; num++) {
-		nomb_part = string_from_format("Part%d.bin", num);
+		//inicia tantos diccionarios vacios como particiones tenga la tabla.
 		list_add(particiones, dictionary_create());
-		free(nomb_part);
-	} //inicia tantos diccionarios vacios como particiones tenga la tabla.
-
-
-
-	void finalizar_compactacion(t_dictionary* particion){
-	//	char* bloques_nuevos = escribir_en_nuevos_bloques(particion); //Que retorne el array para escribirlo en el archivo.
-	//	actualizar_bloques_archivo(particion, bloques_nuevos); //escribe el nuevo array. Para esta altura los bloques ya estan liberados.
-	//	int nuevo_size = calcular_size(particion);
-	//	actualizar_size_archivo(particion, nuevo_size); //mechar con lo existente.
-
-		//TODO
 	}
-
 
 	while(existe_tabla(tabla)){
 		sleep(tiempo_compactacion);
 
-		if(hay_tmp(tabla)){
-			//Iniciar un cronometro: Enunciado dice que hay que registrar tiempo de la duracion de la compactacion.
-			//sem_wait(todos los tmp);
-			pasar_a_tmpc(tabla);
-			resetear_numero_dump(tabla);
-			//sem_post(todos los tmp); //TODO
-		}
-		else{
+		//sem_wait(todos los tmp);
+		cant_tmpc = pasar_a_tmpc(tabla);
+		//sem_post(todos los tmp); //TODO
+
+		if(!cant_tmpc){
 			continue;
 		}
 
@@ -51,8 +33,10 @@ void compactador(char* tabla){
 		}
 
 //		bloquear(tabla);//Todo
-		liberar_todos_los_bloques(tabla);
-		list_iterate(particiones, &finalizar_compactacion);
+		list_iterate((t_list*)lista_archivos,&liberar_bloques);
+		for(int j = 0; j< cantidad_particiones;j++){
+			finalizar_compactacion(list_get(particiones,j), tabla, j);
+		}
 
 //		desbloquear(tabla);//TODO
 
@@ -70,19 +54,41 @@ void compactador(char* tabla){
 }
 
 
-void liberar_todos_los_bloques(char* tabla){
-	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
-	int cantidad_particiones = obtener_part_metadata(tabla);
 
-	char*ruta;
+void finalizar_compactacion(t_dictionary* particion, char* tabla, int num){
+	char* nom = string_from_format("Part%d", num);
+	FILE* f = crear_archivo(nom, tabla,".bin"); //lo crea como nuevo.
 
-	for(int i = 0; i<cantidad_particiones;i++){
-		ruta = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, i);
-		liberar_bloques(ruta);
-		free(ruta);
+	int ult_bloque;
+	int nro_bloque = archivo_inicializar(f);
+	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num);
+	t_config* archivo = config_create(ruta_archivo);
+
+	void bajar_registro(char* key, registro_t* reg){
+		if(nro_bloque != (ult_bloque = ultimo_bloque(archivo))){
+			nro_bloque = ult_bloque;
+			free(ruta_bloque);
+			ruta_bloque = obtener_ruta_bloque(nro_bloque);
+		}
+
+		escribir_registro_bloque(reg, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
 	}
-	free(ruta_tabla);
 
+	dictionary_iterator((t_dictionary*)particion, &bajar_registro);
+	config_destroy(archivo);
+	fclose(f);
+	free(nom);
+}
+
+
+int ultimo_bloque(t_config* archivo){
+	char* lista_bloques = config_get_string_value(archivo, "BLOCKS");
+	char* s_ult_bloque = string_substring(lista_bloques,strlen(lista_bloques)-2,1);
+	int ult_bloque = atoi(s_ult_bloque);
+	free(s_ult_bloque);
+	free(lista_bloques);
+	return ult_bloque;
 }
 
 
@@ -141,45 +147,21 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 			}
 }
 
-void agregar_por_ts( t_dictionary* dic, registro_t* reg_nuevo){
-
-	registro_t* reg_viejo= (registro_t*)dictionary_get( dic,reg_nuevo->key);
+void agregar_por_ts( t_dictionary* dic, registro_t* reg_nuevo){  //Esto me tiro mil warnings..
+	char* key_nueva = string_itoa(reg_nuevo->key);
+	registro_t* reg_viejo= (registro_t*)dictionary_get( (t_dictionary*)dic,key_nueva);
 	if( (!reg_viejo) || ((reg_viejo != NULL) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
-	dictionary_put(dic, reg_nuevo->key, reg_nuevo);
-
-}
-
-
-int hay_tmp(char* tabla){
-	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
-	DIR* directorio = opendir(ruta_tabla);
-	puts("Entre a hay_tmp");
-	printf("de la tabla %s\n", tabla);
-	struct dirent* directorio_leido;
-	char* archivo;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-			archivo = directorio_leido->d_name;
-			if(string_contains(archivo, ".tmp")) {
-				free(archivo);
-				printf("Hay un tmp en la tabla: %s", tabla);
-				return 1;
-				//closedir(); ?? TODO ver
-				}
-			free(archivo);
-		}
-	free(archivo);
-	free(ruta_tabla);
-	return 0;
-
+	dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
+	//TODO Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.
 }
 
 
 t_list* listar_archivos(char* tabla){
 
 	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
+	printf("la ruta es: %s \n",ruta_tabla);
 	DIR* directorio = opendir(ruta_tabla);
-	puts("Entre a listar_archivos");
-	printf("de la tabla %s\n", tabla);
+	printf("Entre a listar_archivos de la tabla %s\n", tabla);
 	struct dirent* directorio_leido;
 
 	t_list* archivos = list_create();
@@ -189,7 +171,7 @@ t_list* listar_archivos(char* tabla){
 		if(string_contains(archivo, ".")) {
 			char* ruta_archivo = string_from_format("%s%s",ruta_tabla, archivo);
 			list_add(archivos,ruta_archivo);
-			printf("la ruta del archivo leido es: %s", archivo);
+			printf("la ruta del archivo leido es: %s", ruta_archivo);
 			}
 		free(archivo);
 	}
@@ -223,7 +205,7 @@ void compactar5(){
 
 
 
-void pasar_a_tmpc(char* tabla) {
+int pasar_a_tmpc(char* tabla) {
 	char* ruta_tabla = string_from_format("%s%s", g_ruta.tablas, tabla);
 	printf("RUTA TABLA: %s\n", ruta_tabla);
 	DIR* directorio = opendir(ruta_tabla);
@@ -232,6 +214,7 @@ void pasar_a_tmpc(char* tabla) {
 		exit(2);
 	}
 	struct dirent* directorio_leido;
+	int contador =0;
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		char* nombre_archivo = directorio_leido->d_name;
 		printf("Nombre archivo: %s\n", nombre_archivo);
@@ -247,8 +230,10 @@ void pasar_a_tmpc(char* tabla) {
 			printf("Nuevo nombre: %s\n", nuevo_nombre);
 			int status = rename(nombre_viejo, nuevo_nombre);
 			printf("Status: %d\n", status);
+			contador++;
 		}
 	}
+	return contador;
 	//resetear_numero_dump(tabla);
 }
 

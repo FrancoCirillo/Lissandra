@@ -5,6 +5,7 @@
 
 #include "fileSystem.h"
 #include "memtable.h"
+#include "Estructuras.h"
 #include <commons/txt.h>
 #include <commons/bitarray.h>
 #include <pthread.h>
@@ -22,13 +23,14 @@ void 	agregar_por_ts( t_dictionary* dic, registro_t* reg_nuevo);
 void 	agregar_registros_en_particion(t_list* particiones, char* ruta_archivo);
 t_list* levantar_registros(char* ruta_archivo);
 void 	liberar_todos_los_bloques(char* tabla);
-
+void 	finalizar_compactacion(t_dictionary*, char* tabla, int num);
+int  	ultimo_bloque(t_config* archivo);
 
 //ELiminar
 void 	compactar2();
 void 	compactar5();
 
 
-void pasar_a_tmpc(char* tabla);
+int pasar_a_tmpc(char* tabla);
 
 #endif /* COMPACTADOR_H_ */

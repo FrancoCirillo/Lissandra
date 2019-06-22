@@ -16,6 +16,7 @@ void levantar_tablas_directorio();
 void inicializar_memtable();
 void finalizar_memtable();
 void limpiar_memtable();
+void resetear_numero_dump(char* tabla);
 
 // --------FUNCIONES DE REGISTROS--------
 t_list* 	crear_lista_registros();
