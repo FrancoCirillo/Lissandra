@@ -99,11 +99,7 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 
 	if (!existe_mutex(tabla)) {
 		//Si la tabla existe pero no se creo en esta sesion, su mutex no esta en el diccionario y tira seg fault
-		char* cadena = string_from_format("No se pudo insertar %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
-		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
-		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
-		string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
-		string_append_with_format(&cadena, " porque esa tabla fue creada en otra sesion.\n");
+		char* cadena = string_from_format("No se pudo realizar el INSERT porque esa tabla fue creada en otra sesion.\n");
 		string_append_with_format(&cadena, "Si desea realizar un INSERT en una tabla con el nombre %s,", tabla);
 		string_append_with_format(&cadena, " por favor eliminela (DROP %s) y creela nuevamente.", tabla);
 

@@ -30,7 +30,7 @@ void levantar_tablas_directorio(DIR* directorio) {
 }
 
 void borrar_lista_registros(void* registros) {
-	list_destroy((t_list*)registros);
+	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
 }
 
 void borrar_registro(void* registro){

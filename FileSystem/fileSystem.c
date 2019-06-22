@@ -275,8 +275,8 @@ void finalizar_FS() {
 }
 
 void iniciar_semaforos() {
-	//TODO: Semaforos
-	crear_dic_semaforos_FS();
+//TODO: Semaforos
+//	crear_dic_semaforos_FS();
 	sem_init(&mutex_tiempo_dump_config, 0, 1);
 	sem_init(&mutex_tiempo_retardo_config, 0, 1);
 	sem_init(&mutex_memtable, 0, 1);

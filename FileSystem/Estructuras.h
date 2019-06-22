@@ -105,6 +105,7 @@ int existe_mutex(char*);
 void eliminar_mutex_de_tabla(char*);
 
 
+
 void borrar_lista_parametros_impresion(t_list*);
 int archivo_inicializar(FILE*);
 

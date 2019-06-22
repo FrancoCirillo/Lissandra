@@ -35,6 +35,7 @@ void borrar_lista_parametros_impresion(t_list* listaParam){
 //---------------------------SEMAFOROS---------------------------
 
 //TODO: Semaforos
+
 void crear_dic_semaforos_FS(){
 	dic_semaforos_tablas = dictionary_create();
 }
