@@ -131,7 +131,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 
 			case '\n': //registro completo.
 				strcat(buffer, "\n");
-				registro_t* registro = obtener_reg(buffer);
+				registro_t* registro = obtener_registro(buffer);
 				strcpy(buffer, "");
 
 				index = registro->key % cant_particiones;

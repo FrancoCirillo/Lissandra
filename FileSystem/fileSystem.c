@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 
 //	listaRegistros();
 
-//	pruebaGeneral();
+	pruebaGeneral();
 
 //	pruebaCompactacion();
 
@@ -195,10 +195,10 @@ void pruebaDump() {
 	puts("Se agrego la tabla2 en la memtable.");
 
 	//--creo registros--
-	registro_t* registro2 = crear_registro(4324234, 25, "HolaSoyOtraPr");
+	registro_t* registro2 = crearRegistro(4324234, 25, "HolaSoyOtraPr");
 //	imprimirRegistro(registro2);
 
-	registro_t* registro = crear_registro(4324234, 34, "HolaSoyUnaPr");
+	registro_t* registro = crearRegistro(4324234, 34, "HolaSoyUnaPr");
 //	imprimirRegistro(registro);
 
 	//--agrego registros--
