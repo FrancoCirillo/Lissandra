@@ -4,8 +4,7 @@
 
 void inicializar_memtable() {
 	memtable = dictionary_create();
-	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas);
-	DIR* directorio = opendir(ruta_tabla);
+	DIR* directorio = opendir(g_ruta.tablas);
 	if (directorio != NULL)
 		levantar_tablas_directorio(directorio);
 	loggear_FS("Se inicializó la memtable.");
@@ -39,13 +38,15 @@ void borrar_registro(void* registro){
 }
 
 void borrar_registros(char* tabla, void* registros) {
+	//Semaforos hay que poner aca?? (Dai)
+
 	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
 	agregar_tabla(tabla);
 	//dictionary_put inserta un nuevo par (key->data) al diccionario
 	//en caso de ya existir la key actualiza la data.
 }
 
-void limpiar_memtable() {
+void limpiar_memtable() {   //Semaforos??
 	dictionary_iterator(memtable, &borrar_registros);
 }
 
@@ -186,11 +187,15 @@ void dumpear_tabla(char* tabla, void* registros) {
 		int nro_bloque = archivo_inicializar(temporal);
 		puts("Inicializando temporal");
 
-		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+		char* ruta_bloque;
+		int ult_bloque;
+		//IMPORTANTE (Dai): agrego que lea el ult bloque, ya que antes escribia todo en uno solo, y eso esta mal.
 
 		void escribir_reg_en_tmp(void* registro) {
+			ult_bloque= obtener_ultimo_bloque(ruta_tmp);
+			ruta_bloque = obtener_ruta_bloque(nro_bloque);
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
-			puts("Escribi en bloque");
+			free(ruta_bloque);
 		}
 
 		list_iterate((t_list*)registros, &escribir_reg_en_tmp);
@@ -229,22 +234,3 @@ void dumpeo() {    //Version sin uso del diccionario.
 		sem_post(&mutex_tiempo_dump_config);
 	}
 }
-
-
-//void pasar_a_archivo(char* tabla, t_list* registros, char* ext) {
-//	if (!strcmp(ext, "tmp")) {
-//		char* n = string_itoa(siguiente_nro_dump(tabla));
-//		n = concat("Dump_", n);
-//		FILE * f = crear_archivo(n, tabla, ext);
-//		//escribir(f,registros);
-//		//Escribir tiene que hacer el fclose(f);
-//		//hacer eso cuando lo implementemos.
-//		fclose(f);
-//		free(n);
-//	} else if (!strcmp(ext, "tmpc")) { //ver si sirve de algo hacerlo polimorfico asi.
-//		//
-//	} else {
-//		//ver en compactacion como podemos reutilizar esto..
-//	}
-//}
-

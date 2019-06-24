@@ -3,6 +3,9 @@
 #include "compactador.h"
 
 void compactador(char* tabla){
+
+	// en la branch de compactacion esto esta modificado.
+
 	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
 
 	t_dictionary* particiones = malloc(sizeof(t_dictionary));

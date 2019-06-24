@@ -113,4 +113,7 @@ int archivo_inicializar(FILE*);
 
 
 
+//test
+void ejemplo_aplanar();
+
 #endif /* ESTRUCTURAS_H_ */

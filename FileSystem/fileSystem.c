@@ -16,19 +16,17 @@ char* to_upper(char* str){
 }
 
 
+
 int main(int argc, char* argv[]) {
 
-	//printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	printf(COLOR_ANSI_CYAN "\n\n************ PROCESO FILESYSTEM ************\n\n" COLOR_ANSI_RESET);
 	
 	inicializar_FS(argc, argv);
 
-	// DESCOMENTAR LO COMENTADO DE LAS CONEXIONES DE FRAN!
+	ejemplo_aplanar();
+	//pruebaGeneral();
 
-//	pruebaGeneral();
-
-	inicializar_conexiones();
-
+	//inicializar_conexiones();
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin);
@@ -394,12 +392,6 @@ _Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
 
 //------------CONEXIONES----------------
 
-void liberar_memoria_instr(instr_t * instr) {
-	//Para testeo. Fran libera todo con sus conexiones.
-	list_clean(instr->parametros);
-	free(instr->parametros);
-	free(instr);
-}
 
 void inicializar_conexiones() {
 	puts("Inicializando conexiones");
