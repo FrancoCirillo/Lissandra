@@ -3,25 +3,6 @@
 #include "Estructuras.h"
 
 
-//Todo
-/*
- * eliminar carpeta
- * eliminar directorio
- * copiar archivo (para los tmpc)
- * archivo_modificar_size();	//escribir nuevo numero en el archivo.
- * archivo_agregar_bloque();    //en el array de un archivo
- * archivo_liberar_bloque();	//en el array de un archivo
- * bloque disponible (bits arrays)
- * semaforos!
- *
- * ver actualizacion RETARDO del Archivo de config. Se actualiza en cada fin de instruccion?
- * \*/
-
-//Pendientes Dai:
-//1) Ver si el g_logger global no hace problemas..
-//	 Si se crea una vez sola o ahi en el loggear_FS esta bien.
-
-
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
@@ -127,7 +108,7 @@ int eliminar_directorio(char* tabla) {
 
 //---------------------------METADATA---------------------------
 char* obtener_path_metadata(char* tabla) {
-	return string_from_format("%s%s/Metadata", g_ruta.tablas, tabla);
+	return string_from_format("%s%sMetadata", g_ruta.tablas, tabla);
 }
 
 t_config* obtener_metadata(char* tabla) {
@@ -194,7 +175,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 //		puts("Escribo el registro completo");
 	} else {
 		if(cant_bloques_disponibles() == 0)
-			return; //TODO log: no hay bloques disponibles
+			return; //TODO log: no hay bloques disponibles      //Y ESTO??
 
 		int tam_restante = espacio_restante_bloque(ruta_archivo);
 		char* primera_mitad_registro = string_substring_until(string_registro, tam_restante);
@@ -230,9 +211,7 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 
 	if(nro_bloque == -1) {
 		char* bloque = lista_bloques[0];
-//		printf("Primer bloque como string: %s\n", bloque);
 		int mi_bloque = atoi(bloque);
-//		printf("Primer bloque como int: %d\n", mi_bloque);
 		config_destroy(archivo);
 		return mi_bloque;
 	} else {
@@ -249,6 +228,7 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 //				printf("Entre al if\t%s\t%s\n", bloque, mi_bloque);
 				char* sig_bloque = *(lista_bloques + tam +1);
 				int bloque_siguiente = atoi(sig_bloque);
+				free(sig_bloque);
 //				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
 				config_destroy(archivo);
 				return bloque_siguiente;
@@ -267,7 +247,12 @@ imprimirContenidoArchivo(ruta_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
 	t_list* registros = crear_lista_registros();
 	int status = 1;
-	char* buffer = string_new();
+
+	int cant_letras_ts= strlen(mseg_a_string(obtener_ts()));
+	printf("\n\ncant_letras_ts\n\n\n\n %d", cant_letras_ts);
+	char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + strlen(string_itoa((int)key)))); //   +4 por: \n ; ; \0
+	strcpy(buffer,"");
+
 	char* s_caracter;
 	char caracter_leido;
 
@@ -316,19 +301,15 @@ int cant_bytes() {
 }
 
 void inicializar_bitmap() {
-//	puts("inicializar bitmap");
+
 	if(carpeta_esta_vacia(g_ruta.carpeta_metadata)) {
 		FILE* archivo_bitmap = fopen(g_ruta.bitmap, "w+");
-		//char* bitmap = string_repeat(0, cant_bytes());
 		printf("Iniciando bitmap con %d bloques, bytes %d\n", Metadata_FS.blocks,cant_bytes());
-		//fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
-
 		fclose(archivo_bitmap);
 		truncate(g_ruta.bitmap, cant_bytes());
-		//free(bitmap);
 	}
 	else
-		puts("Bitmap ya creado");
+		puts("Bitmap ya creado");//TODO free de que??
 }
 
 void chequear_bitmap(t_bitarray* bitarray) {
@@ -358,9 +339,7 @@ t_bitarray* get_bitmap() {
 
 void actualizar_bitmap(t_bitarray* bitarray) {
 	FILE* bitmap = fopen(g_ruta.bitmap, "w+");
-//	printf("Escribiendo archivo %d bytes\n", strlen(bitarray->bitarray));
 	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
-//	puts("Cerrando archivo");
 	fclose(bitmap);
 }
 
@@ -453,6 +432,7 @@ char* aplanar(char** lista) {
     }
     sum++;  // Make room for terminating null character
     sum += 1; //Sumo el espacio para corchete inicial, al final reemplazo ultima coma por ]
+    sum += tam; //Sumo tamanio por las comas, daba invalid write. la ultima se reemplaza por ]
 
     char* buf;
     if ((buf = calloc(sum, sizeof(char))) != NULL) {
@@ -464,6 +444,7 @@ char* aplanar(char** lista) {
            	buf[count-1] = ',';
         }
         buf[count-1]=']';
+        buf[count]='\0';
     }
     return buf;
 }
@@ -480,23 +461,31 @@ void ejemplo_aplanar() {
 	*(array + 3) = d;
 	*(array + 4) = NULL;
 	printf("La lista aplanada es %s\n", aplanar(array));
+
+	char* rtado=aplanar(array);
+	printf("La lista aplanada es %s\n", rtado);
+	char* ejemplo =  agregar_bloque_bloques(array, 5);
+	printf("La lista aplanada con el bloque 5 es  %s\n", ejemplo);
 }
 
 //---------------------------TMP Y BIN---------------------------
 char* agregar_bloque_bloques(char** lista_s_bloques, int bloque) {
-	puts("-------------------Entre a agregar_bloque_bloques-------------------");
-	printf("Bloques antes de hacer nada: %s\n", aplanar(lista_s_bloques));
 	char* s_bloque = string_from_format(",%d]", bloque);
-	printf("Bloque como String: %s\n", s_bloque);
+
 	char* bloques_viejos = aplanar(lista_s_bloques);
-	printf("Bloque viejos: %s\n", bloques_viejos);
 	int longitud = strlen(bloques_viejos);
-	printf("Longitud: %d\n", longitud);
-	char* mis_bloques = string_substring_until(bloques_viejos, longitud-1);
-	printf("Bloques sin ]: %s\n", mis_bloques);
+	char* mis_bloques_viejos = string_substring_until(bloques_viejos, longitud-1);
+	int longitud_final =strlen(mis_bloques_viejos)+strlen(s_bloque)+1;
+	char* mis_bloques = malloc(sizeof(char)* longitud_final);
+	strcpy(mis_bloques,mis_bloques_viejos);
 	strcat(mis_bloques, s_bloque);
-	printf("Mis bloques finales: %s\n", mis_bloques);
+
+	free(bloques_viejos);
+	free(mis_bloques_viejos);
+	free(s_bloque);
+
 	return mis_bloques;
+
 }
 
 FILE* crear_tmp(char* tabla, char* nombre_tmp) {
@@ -534,31 +523,22 @@ int obtener_ultimo_bloque(char* ruta_archivo){
 }
 
 int obtener_tam_archivo(char* ruta_archivo) {
-//	puts("-------------------Entre a obtener_tam_archivo-------------------");
-//	printf("Ruta archivo: %s\n", ruta_archivo);
+
 	t_config* archivo = config_create(ruta_archivo);
-//	puts("Config create");
 	int tam_archivo = config_get_int_value(archivo, "SIZE");
-//	puts("config_get_int_value");
 	config_destroy(archivo);
-//	puts("Config destroy");
 	return tam_archivo;
 }
 
 void aumentar_tam_archivo(char* ruta_archivo, registro_t* registro) {
 //	puts("-------------------Entre a aumentar_tam_archivo-------------------");
 	t_config* archivo = config_create(ruta_archivo);
-//	puts("config create");
 	int tam_viejo = config_get_int_value(archivo, "SIZE");
-//	puts("config get int value");
 	int tam_nuevo = tam_viejo + tam_registro(registro);
 	printf("Tam viejo: %d\tTam Registro: %d\tTam nuevo: %d\n", tam_viejo, tam_registro(registro), tam_nuevo);
 	char* tam = string_itoa(tam_nuevo);
-//	printf("%s\n", tam);
 	config_set_value(archivo, "SIZE", tam);
-//	puts("config set value");
 	config_save(archivo);
-//	puts("config save");
 	config_destroy(archivo);
 	free(tam);
 }
@@ -732,14 +712,14 @@ void crear_directorio(char* ruta, char* nombre) {
 	}
 }
 
-void crear_bloques() {  //Los bloques van a partir del numero 0.
-	char* ruta_bloques = string_from_format("%s", g_ruta.bloques);
-	if(carpeta_esta_vacia(ruta_bloques)) {
-		puts("La carpeta no esta creada");
+void crear_bloques() {  //Los bloques van a partir del numero 0 al n-1
+
+	if(carpeta_esta_vacia(g_ruta.bloques)) {
+		puts("Los bloques no existen");
 		int cantidad = Metadata_FS.blocks;
 		bloques_disponibles = cantidad;
 		char* num;
-		for (int i = 0; i <= cantidad; i++) {
+		for (int i = 0; i < cantidad; i++) {
 			num = string_itoa(i);
 			crear_bloque(num);
 			free(num);

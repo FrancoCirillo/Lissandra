@@ -41,8 +41,5 @@ void dumpear(t_dictionary*);
 void dumpeo();
 
 
-void pasar_a_archivo(char*, t_list*, char*);
-void escribir(FILE*, t_list*);
-//void bajar_tabla(mem_tabla_t*);
 
 #endif /* MEMTABLE_H_ */

@@ -302,6 +302,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		while((directorio_leido = readdir(directorio)) != NULL) {
 			char* tabla = directorio_leido->d_name;
 			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
+				printf("\n\n\nLa ruta de la tabla es %s\n\n\n\n\n HOLAAAA\n\n",tabla);
 				imprimirMetadata(tabla);
 				char* consistencia = obtener_consistencia_metadata(tabla);
 				char* particiones = string_itoa(obtener_part_metadata(tabla));
