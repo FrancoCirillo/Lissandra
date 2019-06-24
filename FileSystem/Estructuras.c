@@ -26,30 +26,43 @@ int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
-void borrar_lista_parametros_impresion(t_list* listaParam){
-	list_destroy_and_destroy_elements(listaParam, free);
-}
+//void borrar_lista_parametros_impresion(t_list* listaParam){
+//	list_destroy_and_destroy_elements(listaParam, free);
+//}
 
 
 
 //---------------------------SEMAFOROS---------------------------
 
-//TODO: Semaforos
-
 void crear_dic_semaforos_FS(){
 	dic_semaforos_tablas = dictionary_create();
+	sem_init(&mutex_dic_semaforos, 0, 1);
 }
 
-void agregar_mutex_a_dic(char* tabla, sem_t* mutex_tabla){
-	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
-	puts("Se agrego el semaforo en el diccionario.");
+void inicializar_semaforo_tabla(char* tabla){
+	sem_t* mutex_tabla = malloc(sizeof(sem_t));
+	sem_init(mutex_tabla, 0, 1);
+
+	sem_wait(&mutex_dic_semaforos);
+	agregar_a_dic_semaforos(tabla, mutex_tabla);
+	sem_post(&mutex_dic_semaforos);
+
+	loggear_FS("Semáforo inicializado y agregado al diccionario de semáforos.");
 }
+
+void agregar_a_dic_semaforos(char* tabla, sem_t* mutex_tabla){
+	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
+}
+
+//void obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
+//	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+//}
 
 int obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
 	puts("Entre a obtener_mutex_tabla");
-	*(&mutex_tabla) = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 	int sem_val;
-	sem_getvalue(&(*mutex_tabla), &sem_val);
+	sem_getvalue(mutex_tabla, &sem_val);
 	return sem_val;
 }
 

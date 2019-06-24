@@ -205,16 +205,9 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 		return NULL;
 	}
 
-//	char* requestAux = string_from_format("%s", request);
-
 	char* comando = strdup(actual);
 	string_to_upper(comando);
 	cod_op comandoReconocido = reconocer_comando(comando);
-
-//	if(comandoReconocido == CODIGO_RUN)
-//		actual = strtok(requestAux, " \n");
-//	else
-//		free(requestAux);
 
 	char* valor; //Va a almacenar parametros
 	t_list *listaParam = list_create();
@@ -226,6 +219,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	for (int i = 1; actual != NULL; i++)
 	{
 		if(comandoReconocido == CODIGO_RUN){
+			//string_to_upper no debe afectar al nombre de archivo del RUN
 			valor = strdup(actual);
 			list_add(listaParam, valor);
 			break;
@@ -264,7 +258,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	free(requestCopy);
 	free(comando);
 
-	if (es_comando_valido(comandoReconocido, listaParam) > 0)
+	if (es_comando_valido(comandoReconocido, listaParam))
 	{
 		instr_t* instruccionLista;
 		switch (queConsola)
@@ -367,14 +361,14 @@ int es_comando_valido(cod_op comando, t_list *listaParam)
 		return cantParam == CANT_PARAM_RUN;
 		break;
 
+	case CODIGO_CERRAR:
+		return cantParam == CANT_PARAM_CERRAR;
+
 	case INPUT_ERROR:
 		return -1;
 		break;
 
 	case CODIGO_SHOW: //Para testing
-		return 1;
-
-	case CODIGO_CERRAR: //Para testing
 		return 1;
 
 	default:

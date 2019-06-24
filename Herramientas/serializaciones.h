@@ -28,7 +28,8 @@ enum cantidadParametros{
     CANT_PARAM_JOURNAL = 0, 
     CANT_PARAM_ADD = 4,
     CANT_PARAM_METRICS = 0, 
-    CANT_PARAM_RUN = 1 
+    CANT_PARAM_RUN = 1,
+	CANT_PARAM_CERRAR = 0
 };
 
 /*
