@@ -4,7 +4,7 @@
 
 void inicializar_memtable() {
 	memtable = dictionary_create();
-	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas);
+	char* ruta_tabla = string_from_format("%s/", g_ruta.tablas);
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio != NULL)
 		levantar_tablas_directorio(directorio);

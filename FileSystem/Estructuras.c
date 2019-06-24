@@ -208,24 +208,34 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 
 registro_t* obtener_reg(char* buffer) {
 //	puts("---OBTENER REGISTRO---");
-	char* bufferCopy = strdup(buffer);
+	char* bufferCopy =malloc(sizeof(char*)* (strlen(buffer)+1));//
+	strcpy(bufferCopy , buffer);//
+	//puts("Pruebo el bufferCopy");
+	//printf("%s", bufferCopy);
+
 	registro_t* registro = malloc(sizeof(registro_t));
-	char* token = malloc(sizeof(int));
 
-	char* actual = strtok(bufferCopy, ";");
-	token = strdup(actual);
-	registro->timestamp = string_a_mseg(token);
+	char* actual = string_from_format("%s",strtok(bufferCopy, ";"));
+	//printf("actual es %s", actual);
 
-	actual = strtok(NULL, ";");
-	token = strdup(actual);
-	registro->key = (uint16_t)atoi(token);
+	//printf("actual es %s", actual);
+	//printf("token es %s", token);
 
-	actual = strtok(NULL, "\n");
-	token = strdup(actual);
-	registro->value = token;
+	registro->timestamp = string_a_mseg(actual);
 
+	actual = string_from_format("%s",strtok(NULL, ";"));
+	//printf("actual es %s", actual);
+
+	registro->key = (uint16_t) atoi(string_from_format("%s",actual));
+
+	actual = string_from_format("%s",strtok(NULL, "\n"));
+	//printf("actual es %s", actual);
+	registro->value = actual;
+	//printf("actual es %s", actual);
 	free(bufferCopy);
-//	puts("Pase el registro formateado a registro");
+	//puts("Pase el registro formateado a registro");
+	//puts("imprimo registro desde obtener_reg()\n");
+	//imprimirRegistro(registro);
 	return registro;
 }
 
@@ -237,7 +247,13 @@ imprimirContenidoArchivo(ruta_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
 	t_list* registros = crear_lista_registros();
 	int status = 1;
-	char* buffer = string_new();
+
+	//char* buffer = string_new();  //no funcionaba
+
+	int cant_letras_ts= strlen(mseg_a_string(obtener_ts()));
+	char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + strlen(string_itoa((int)key)))); //   +4 por: \n ; ; \0
+	strcpy(buffer,"");
+
 	char* s_caracter;
 	char caracter_leido;
 
@@ -273,9 +289,11 @@ imprimirContenidoArchivo(ruta_bloque);
 		default:
 			s_caracter = string_from_format("%c", caracter_leido);
 			strcat(buffer, s_caracter);
+
 			break;
 		}
 	}
+	free(buffer);
 	return registros; //En la funcion que lo llamo, tengo que validar que no este vacio y destruir la lista
 }
 
@@ -289,13 +307,10 @@ void inicializar_bitmap() {
 //	puts("inicializar bitmap");
 	if(carpeta_esta_vacia(g_ruta.carpeta_metadata)) {
 		FILE* archivo_bitmap = fopen(g_ruta.bitmap, "w+");
-		//char* bitmap = string_repeat(0, cant_bytes());
 		printf("Iniciando bitmap con %d bloques, bytes %d\n", Metadata_FS.blocks,cant_bytes());
-		//fwrite(bitmap, sizeof(char), sizeof(char)*strlen(bitmap), archivo_bitmap);
 
 		fclose(archivo_bitmap);
-		truncate(g_ruta.bitmap, cant_bytes());
-		//free(bitmap);
+		truncate(g_ruta.bitmap, cant_bytes());//te deja todo el archivo en cero.
 	}
 	else
 		puts("Bitmap ya creado");
@@ -315,7 +330,7 @@ void chequear_bitmap(t_bitarray* bitarray) {
 t_bitarray* get_bitmap() {
 	//puts("Get bitmap");
 	FILE* archivo_bitmap = fopen(g_ruta.bitmap, "r");
-	char* bitmap = malloc(cant_bytes() + 1);
+	char* bitmap = malloc(cant_bytes() + 1);//Crear struct.
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cant_bytes()+1, archivo_bitmap);
 	//TODO: resultado_read
 	bitmap[cant_bytes()] = 0;
@@ -347,7 +362,7 @@ void inicializar_bloques_disp() {
 		nro_bloque++;
 	}
 	eliminar_bitarray(bitmap);
-	bloques_disponibles += contador_disponibles;
+	bloques_disponibles += contador_disponibles;  //Todo
 }
 
 void eliminar_bitarray(t_bitarray* bitarray) {
@@ -410,19 +425,25 @@ void ejemplo_bitarray(){
 }
 
 //--------------------------APLANAR LISTAS-----------------------
-char* aplanar(char** lista) {
+
+char* aplanar(char** lista) {  //Listo.
+	//puts("estoy en aplanar.\n\n");
 	int tam = 0;
 	while(*(lista + tam))
 		tam++;
 
     int sum = 0;
     int count = 0;
+//    printf("%d\n\n", sum);
 //    printf("Length %d\n",tam);
     for (int i = 0; i < tam; i++) {
     	sum += strlen(lista[i]);
+//    	printf("%d\n\n", sum);
     }
-    sum++;  // Make room for terminating null character
+    sum++;  //Suma 1 para el \0
     sum += 1; //Sumo el espacio para corchete inicial, al final reemplazo ultima coma por ]
+    sum += tam; //Sumo tamanio por las comas, daba invalid write. la ultima se reemplaza por ]
+   // printf("%d\n\n", sum);
 
     char* buf;
     if ((buf = calloc(sum, sizeof(char))) != NULL) {
@@ -436,6 +457,7 @@ char* aplanar(char** lista) {
         buf[count-1]=']';
         buf[count]='\0';
     }
+    printf("%s",buf);
     return buf;
 }
 
@@ -450,7 +472,9 @@ void ejemplo_aplanar() {
 	*(array + 2) = c;
 	*(array + 3) = d;
 	*(array + 4) = NULL;
-	printf("La lista aplanada es %s\n", aplanar(array));
+
+	char* rtado=aplanar(array);
+	printf("La lista aplanada es %s\n", rtado);
 	char* ejemplo =  agregar_bloque_bloques(array, 5);
 	printf("La lista aplanada con el bloque 5 es  %s\n", ejemplo);
 }
@@ -458,17 +482,22 @@ void ejemplo_aplanar() {
 //---------------------------TMP Y BIN---------------------------
 char* agregar_bloque_bloques(char** lista_s_bloques, int bloque) {
 	puts("-------------------Entre a agregar_bloque_bloques-------------------");
-	printf("Bloques antes de hacer nada: %s\n", aplanar(lista_s_bloques));
+//	printf("Bloques antes de hacer nada: %s\n", aplanar(lista_s_bloques));
 	char* s_bloque = string_from_format(",%d]", bloque);
-	printf("Bloque como String: %s\n", s_bloque);
+//	printf("Bloque como String: %s\n", s_bloque);
 	char* bloques_viejos = aplanar(lista_s_bloques);
-	printf("Bloque viejos: %s\n", bloques_viejos);
+//	printf("Bloque viejos: %s\n", bloques_viejos);
 	int longitud = strlen(bloques_viejos);
-	printf("Longitud: %d\n", longitud);
-	char* mis_bloques = string_substring_until(bloques_viejos, longitud-1);
-	printf("Bloques sin ]: %s\n", mis_bloques);
+//	printf("Longitud: %d\n", longitud);
+	char* mis_bloques_viejos = string_substring_until(bloques_viejos, longitud-1);
+	int longitud_final =strlen(mis_bloques_viejos)+strlen(s_bloque)+1;
+	char* mis_bloques = malloc(sizeof(char)* longitud_final);
+	strcpy(mis_bloques,mis_bloques_viejos);
+//	printf("Bloques sin ]: %s\n", mis_bloques);
 	strcat(mis_bloques, s_bloque);
-	printf("Mis bloques finales: %s\n", mis_bloques);
+//	printf("Mis bloques finales: %s\n", mis_bloques);
+	free(mis_bloques_viejos);
+	free(s_bloque);
 	return mis_bloques;
 }
 

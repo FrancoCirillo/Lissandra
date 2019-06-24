@@ -4,6 +4,7 @@
 #define ESTRUCTURAS_H_
 
 #include "memtable.h"
+#include "../Herramientas/tiempo.h"
 #include "fileSystem.h"
 #include <commons/txt.h>
 #include <commons/bitarray.h>

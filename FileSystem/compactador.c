@@ -18,33 +18,36 @@ void compactador(char* tabla){
 
 	while(existe_tabla(tabla)){
 		sleep(tiempo_compactacion);
+		//sem_wait(mutex_tabla);
 
-		//sem_wait(todos los tmp);
 		cant_tmpc = pasar_a_tmpc(tabla);
-		//sem_post(todos los tmp); //TODO
 
-		if(!cant_tmpc){
+		//sem_post(mutex_tabla); //TODO
+
+		if(!cant_tmpc)
 			continue;
-		}
+
 
 		t_list* lista_archivos = listar_archivos(tabla);
 		for(int i = 0; i< list_size(lista_archivos);i++){
 			agregar_registros_en_particion(particiones, list_get(lista_archivos, i));
 		}
 
-//		bloquear(tabla);//Todo
+		//sem_wait(mutex_tabla);
 		list_iterate((t_list*)lista_archivos,&liberar_bloques);
 		for(int j = 0; j< cantidad_particiones;j++){
 			finalizar_compactacion(list_get(particiones,j), tabla, j);
 		}
+//		borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
 
-//		desbloquear(tabla);//TODO
+		//sem_post(mutex_tabla);
+
 
 //		vaciar_listas_registros(particiones);//TODO deja los diccionarios como nuevos.
 
-//		finalizar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
 
 		//loggear duracion de la compactacion.
+
 	}
 
 

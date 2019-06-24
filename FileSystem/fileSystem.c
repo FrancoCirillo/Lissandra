@@ -20,10 +20,27 @@ int main(int argc, char* argv[]) {
 
 	printf("\n\n************PROCESO FILESYSTEM************\n\n");
 	
-	//inicializar_FS(argc, argv);
-	ejemplo_aplanar();
+	inicializar_FS(argc, argv);
+
+//	ejemplo_aplanar();   //Corregido
+
+//	listaRegistros();
 
 //	pruebaGeneral();
+
+//	pruebaCompactacion();
+
+///////////////
+/// Esto lo use para correr la funcion y probar que funcione bien. Queria usar pruebaGeneral() y me daba segmentation fault.
+//	t_list* prueba_buscar_key_en_bloques = buscar_key_en_bloques("/home/utnso/lissandra-checkpoint/Tablas/PRUEBA_COMPACTACION/Dump1.tmp",32,1);
+//
+//	registro_t* reg = list_get(prueba_buscar_key_en_bloques, 0);
+//	registro_t* reg1 = list_get(prueba_buscar_key_en_bloques, 1);
+//	imprimirRegistro(reg);
+//	imprimirRegistro(reg1);
+//	puts("Fin lectura reg de key 32\n");
+///
+///////////////
 
 	//inicializar_conexiones();
 
@@ -40,7 +57,7 @@ int main(int argc, char* argv[]) {
 //	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
 //	imprimirContenidoArchivo(rutaDump1);
 
-	//finalizar_FS();
+//	finalizar_FS();
 
 	return 0;
 }
@@ -84,6 +101,7 @@ void imprimirMetadata(char* tabla){
 t_list* listaRegistros() {
 	t_list* registros = crear_lista_registros();
 
+	registro_t* registro0 = obtener_reg("33331111;1;va de nuevo\n");
 	registro_t* registro1 = obtener_reg("43242345;253;registro1\n");
 	registro_t* registro2 = obtener_reg("43242345;43;registro2\n");
 	registro_t* registro3 = obtener_reg("43242345;54;registro3\n");
@@ -95,6 +113,7 @@ t_list* listaRegistros() {
 	registro_t* registro9 = obtener_reg("43224345;34;registro9\n");
 	registro_t* registro10 = obtener_reg("23224345;5;registro10\n");
 
+	list_add(registros, registro0);
 	list_add(registros, registro1);
 	list_add(registros, registro2);
 	list_add(registros, registro3);
@@ -105,6 +124,16 @@ t_list* listaRegistros() {
 	list_add(registros, registro8);
 	list_add(registros, registro9);
 	list_add(registros, registro10);
+
+//Para testeo.
+
+//	void escribir(registro_t* reg){
+//		int bloque= obtener_ultimo_bloque("/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp");
+//		char* ruta_bloque= obtener_ruta_bloque(bloque);
+//		escribir_registro_bloque(reg,  ruta_bloque, "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp");
+//	}
+//
+//	list_iterate(registros, &escribir);
 
 	return registros;
 }
@@ -126,10 +155,11 @@ void pruebaDump() {
 			imprimirRegistro((registro_t*)registro);
 			int bloque = obtener_ultimo_bloque(ruta_tmp);
 			char* ruta_bloque = obtener_ruta_bloque(bloque);
-//			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
+			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
 
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 			puts("Escribi el registro en bloque");
+			printf("el nro de bloque es: %d\n",bloque);
 		}
 
 		list_iterate((t_list*)registros, &escribir_reg_en_tmp);
@@ -145,27 +175,25 @@ void pruebaDump() {
 	//--agrego una tabla con registros---
 	t_list* reg = listaRegistros();
 	dictionary_put(mockMem, "TABLA1", reg);
-	puts("Se agrego la tabla en la memtable.");
+	puts("Se agrego la tabla1 en la memtable.");
 
 	//--agrego otra tabla--
 	t_list* registros = crear_lista_registros();
 	dictionary_put(mockMem, "TABLA2", registros);
-	puts("Se agrego la tabla en la memtable.");
+	puts("Se agrego la tabla2 en la memtable.");
 
 	//--creo registros--
-	registro_t* registro2 = crear_registro(4324234, 25, "HolaSoyOtraPrueba");
-	puts("Cree un registro:");
-	imprimirRegistro(registro2);
+	registro_t* registro2 = crear_registro(4324234, 25, "HolaSoyOtraPr");
+//	imprimirRegistro(registro2);
 
-	registro_t* registro = crear_registro(4324234, 32, "HolaSoyUnaPrueba");
-	puts("Cree un registro:");
-	imprimirRegistro(registro);
+	registro_t* registro = crear_registro(4324234, 34, "HolaSoyUnaPr");
+//	imprimirRegistro(registro);
 
 	//--agrego registros--
 	t_list* registros_tabla = dictionary_get(mockMem, "TABLA2");
 	list_add(registros_tabla, registro);
 	list_add(registros_tabla, registro2);
-	puts("Se inserto el registro en la memtable.");
+	puts("Se insertaron los registros en la memtable. Los de la Tabla2");
 
 	//--hago dump--
 	dictionary_iterator(mockMem, &dump);
@@ -202,19 +230,22 @@ void pruebaTmp() {
 void pruebaGeneral() {
 	pruebaDump();
 
-	char* bloque0 = obtener_ruta_bloque(0);
-	printf("\n\nRuta bloque 0: %s\n", bloque0);
-	imprimirContenidoArchivo(bloque0);
+	puts("Ya termino el dumpeo");
 
-	char* bloque1 = obtener_ruta_bloque(1);
-	printf("\n\nRuta bloque 1: %s\n", bloque1);
-	imprimirContenidoArchivo(bloque1);
-
-	char* bloque2 = obtener_ruta_bloque(2);
-	printf("\n\nRuta bloque 2: %s\n", bloque2);
-	imprimirContenidoArchivo(bloque2);
+//	char* bloque0 = obtener_ruta_bloque(0);
+//	printf("\n\nRuta bloque 0: %s\n", bloque0);
+//	imprimirContenidoArchivo(bloque0);
+//
+//	char* bloque1 = obtener_ruta_bloque(1);
+//	printf("\n\nRuta bloque 1: %s\n", bloque1);
+//	imprimirContenidoArchivo(bloque1);
+//
+//	char* bloque2 = obtener_ruta_bloque(2);
+//	printf("\n\nRuta bloque 2: %s\n", bloque2);
+//	imprimirContenidoArchivo(bloque2);
 
 	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
+
 	t_list* registros = buscar_key_en_bloques(ruta, 34, 1);
 	puts("Estos son los registros que encontre:");
 	list_iterate(registros, &imprimirRegistro);
@@ -244,7 +275,7 @@ void inicializar_FS(int argc, char* argv[]) {
 	inicializar_directorios();
 	crear_bloques(); //inicializa tambien la var globlal de bloques disp.
 	inicializar_bitmap();
-	bloques_disponibles = 0;
+	bloques_disponibles = 0;   //Esto que es??
 	inicializar_bloques_disp();
 	inicializar_tablas_nro_dump();
 	loggear_FS("-----------Fin inicialización LFS-----------");
