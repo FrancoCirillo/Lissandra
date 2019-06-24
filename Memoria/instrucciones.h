@@ -19,7 +19,6 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion);
  * Devuelve el numero de pagina insertado o -1 en error
  */
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod);
-void insert_exitoso(instr_t* instruccion);
 void ejecutar_instruccion_create(instr_t *instruccion);
 void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente);
 void ejecutar_instruccion_drop(instr_t *instruccion);

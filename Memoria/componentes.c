@@ -48,24 +48,6 @@ filaTabPags *agregar_fila_tabla(t_list *tablaDePaginas, int numPag, void *pagina
 	return tabla;
 }
 
-void avisar_estado_full(instr_t* instruccion){
-
-	if(quien_pidio(instruccion) == CONSOLA_KERNEL){
-		loggear_info(string_from_format("Memoria full! Avisando al Kernel"));
-		int conexionKernel = obtener_fd_out("Kernel");
-		t_list* listaABorrar = list_duplicate(instruccion->parametros);
-		instruccion->codigo_operacion = MEMORIA_FULL;
-		if(enviar_request(instruccion, conexionKernel)==-1){
-			loggear_error(string_from_format("No se envio el aviso de Memoria Full al Kernel"));
-		}
-		list_destroy_and_destroy_elements(listaABorrar, free);
-		loggear_trace(string_from_format("Se borraron los parametros del insert fallido"));
-	}
-	else{
-		loggear_warning(string_from_format("Memoria full. No se aviso al Kernel porque no fue quien pidio el insert"));
-	}
-}
-
 void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 {
 	int desplazamiento = 0;
@@ -77,8 +59,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 	{
 		if (memoria_esta_full())
 		{
-			avisar_estado_full(instruccion);
-			return NULL;
+			ejecutar_instruccion_journal(instruccion);
 		}
 		else
 		{ //Algoritmo de reemplazo:
