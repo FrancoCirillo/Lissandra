@@ -22,7 +22,7 @@ int  bloques_disponibles;
 char* rutaConfiguracion;
 t_config* g_config;
 t_dictionary* dic_semaforos_tablas;
-
+sem_t mutex_dic_semaforos;
 
 //LOGS Y CONFIG
 void  loggear_FS(char*);
@@ -97,14 +97,21 @@ void	liberar_bloques(char*);
 int 	obtener_siguiente_bloque_archivo(char*, int);
 
 
-////SEMAFOROS
-//void   crear_dic_semaforos_FS();
-//void   agregar_mutex_a_dic(char*, sem_t*);
-//sem_t* obtener_mutex_tabla(char*);
+//SEMAFOROS
+void   crear_dic_semaforos_FS();
+void   inicializar_semaforo_tabla(char*);
+void   agregar_a_dic_semaforos(char*, sem_t*);
+//void   obtener_mutex_tabla(char*, sem_t*);
+int    obtener_mutex_tabla(char*, sem_t*);
+sem_t* aux_obtener_mutex_tabla(char*);
+int    existe_mutex(char*);
+void   eliminar_mutex_de_tabla(char*);
 
 
-registro_t* obtener_registro(char*);
+
+void borrar_lista_parametros_impresion(t_list*);
 int archivo_inicializar(FILE*);
+
 
 
 #endif /* ESTRUCTURAS_H_ */

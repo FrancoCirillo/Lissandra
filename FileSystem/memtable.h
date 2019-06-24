@@ -23,13 +23,13 @@ t_list* 	crear_lista_registros();
 void 		borrar_lista_registros(void*);
 void 		agregar_registro(char*, registro_t*);
 void 		borrar_registro(void*);
+registro_t* obtener_registro(char*);
 registro_t* pasar_a_registro(instr_t*);
 t_list* 	obtener_registros_mem(char*, uint16_t);
 
 // --------FUNCIONES DE TABLAS--------
 int   existe_tabla(char*);
 void  agregar_tabla(char*);
-void  agregar_mutex_a_mem(char*, sem_t);
 void  eliminar_tabla_de_mem(char*);
 char* obtener_ruta_tabla(char*);
 
@@ -44,6 +44,6 @@ void dumpeo();
 
 void pasar_a_archivo(char*, t_list*, char*);
 void escribir(FILE*, t_list*);
-//void bajar_tabla(mem_tabla_t* t)
+//void bajar_tabla(mem_tabla_t*);
 
 #endif /* MEMTABLE_H_ */

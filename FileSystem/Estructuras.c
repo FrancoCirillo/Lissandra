@@ -3,33 +3,64 @@
 #include "Estructuras.h"
 
 
-//Todo
-/*
- * ver actualizacion RETARDO del Archivo de config. Se actualiza en cada fin de instruccion?
- * \*/
-
-
 
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
-////---------------------------SEMAFOROS---------------------------
-//
-////TODO: Semaforos
-//void crear_dic_semaforos_FS(){
-//	dic_semaforos_tablas = dictionary_create();
+//void borrar_lista_parametros_impresion(t_list* listaParam){
+//	list_destroy_and_destroy_elements(listaParam, free);
 //}
-//
-//void agregar_mutex_a_dic(char* tabla, sem_t* mutex_tabla){
-//	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
-//	puts("Se agrego el semaforo en el diccionario.");
+
+
+
+//---------------------------SEMAFOROS---------------------------
+
+void crear_dic_semaforos_FS(){
+	dic_semaforos_tablas = dictionary_create();
+	sem_init(&mutex_dic_semaforos, 0, 1);
+}
+
+void inicializar_semaforo_tabla(char* tabla){
+	sem_t* mutex_tabla = malloc(sizeof(sem_t));
+	sem_init(mutex_tabla, 0, 1);
+
+	sem_wait(&mutex_dic_semaforos);
+	agregar_a_dic_semaforos(tabla, mutex_tabla);
+	sem_post(&mutex_dic_semaforos);
+
+	loggear_FS("Semáforo inicializado y agregado al diccionario de semáforos.");
+}
+
+void agregar_a_dic_semaforos(char* tabla, sem_t* mutex_tabla){
+	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
+}
+
+//void obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
+//	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 //}
-//
-//sem_t* obtener_mutex_tabla(char* tabla){
-//	puts("---Buscando mutex---");
-//	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
-//}
+
+int obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
+	puts("Entre a obtener_mutex_tabla");
+	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+	int sem_val;
+	sem_getvalue(mutex_tabla, &sem_val);
+	return sem_val;
+}
+
+sem_t* aux_obtener_mutex_tabla(char* tabla){
+	puts("Entre a aux_obtener_mutex_tabla");
+	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+}
+
+int existe_mutex(char* tabla){
+	puts("Entre a existe_mutex");
+	return dictionary_has_key(dic_semaforos_tablas, tabla);
+}
+
+void eliminar_mutex_de_tabla(char* tabla){
+	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
+}
 
 //---------------------------+DIRECTORIO---------------------------
 
@@ -210,38 +241,7 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
     return -1;
 }
 
-registro_t* obtener_registro(char* buffer) {
-//	puts("---OBTENER REGISTRO---");
-	char* bufferCopy =malloc(sizeof(char*)* (strlen(buffer)+1));//
-	strcpy(bufferCopy , buffer);//
-	//puts("Pruebo el bufferCopy");
-	//printf("%s", bufferCopy);
 
-	registro_t* registro = malloc(sizeof(registro_t));
-
-	char* actual = string_from_format("%s",strtok(bufferCopy, ";"));
-	//printf("actual es %s", actual);
-
-	//printf("actual es %s", actual);
-	//printf("token es %s", token);
-
-	registro->timestamp = string_a_mseg(actual);
-
-	actual = string_from_format("%s",strtok(NULL, ";"));
-	//printf("actual es %s", actual);
-
-	registro->key = (uint16_t) atoi(string_from_format("%s",actual));
-
-	actual = string_from_format("%s",strtok(NULL, "\n"));
-	//printf("actual es %s", actual);
-	registro->value = actual;
-	//printf("actual es %s", actual);
-	free(bufferCopy);
-	//puts("Pase el registro formateado a registro");
-	//puts("imprimo registro desde obtener_reg()\n");
-	//imprimirRegistro(registro);
-	return registro;
-}
 
 t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=0, .tmp=1
 	puts("Entre a buscar_key_en_bloques");

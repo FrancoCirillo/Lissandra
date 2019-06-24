@@ -18,7 +18,8 @@ char* to_upper(char* str){
 
 int main(int argc, char* argv[]) {
 
-	printf("\n\n************PROCESO FILESYSTEM************\n\n");
+	//printf("\n\n************PROCESO FILESYSTEM************\n\n");
+	printf(COLOR_ANSI_CYAN "\n\n************ PROCESO FILESYSTEM ************\n\n" COLOR_ANSI_RESET);
 	
 	inicializar_FS(argc, argv);
 
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]) {
 //	imprimirContenidoArchivo(rutaDump1);
 
 //	finalizar_FS();
+
 
 	return 0;
 }
@@ -303,11 +305,12 @@ void finalizar_FS() {
 	finalizar_memtable();
 	finalizar_tablas_nro_dump();
 	loggear_FS("-----------FIN PROCESO-----------");
+	exit(0);
 }
 
 void iniciar_semaforos() {
-//	//TODO: Semaforos
-//	crear_dic_semaforos_FS();
+//TODO: Semaforos
+	crear_dic_semaforos_FS();
 	sem_init(&mutex_tiempo_dump_config, 0, 1);
 	sem_init(&mutex_tiempo_retardo_config, 0, 1);
 	sem_init(&mutex_memtable, 0, 1);

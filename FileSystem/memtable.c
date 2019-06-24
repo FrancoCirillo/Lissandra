@@ -30,7 +30,7 @@ void levantar_tablas_directorio(DIR* directorio) {
 }
 
 void borrar_lista_registros(void* registros) {
-	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
+	list_destroy((t_list*)registros);
 }
 
 void borrar_registro(void* registro){
@@ -88,6 +88,29 @@ t_list* obtener_registros_mem(char* tabla, uint16_t key) {
 	t_list* registros = list_filter(registros_tabla, &es_key_registro);
 	printf("Tam de lista mem: %d\n", list_size(registros));
 	return registros;
+}
+
+registro_t* obtener_registro(char* buffer) {
+//	puts("---OBTENER REGISTRO---");
+	char* bufferCopy = strdup(buffer);
+	registro_t* registro = malloc(sizeof(registro_t));
+	char* valor;
+
+	char* actual = strtok(bufferCopy, ";");
+	valor = strdup(actual);
+	registro->timestamp = string_a_mseg(valor);
+
+	actual = strtok(NULL, ";");
+	valor = strdup(actual);
+	registro->key = (uint16_t)atoi(valor);
+
+	actual = strtok(NULL, "\n");
+	valor = strdup(actual);
+	registro->value = valor;
+
+	free(bufferCopy);
+//	puts("Pase el registro formateado a registro");
+	return registro;
 }
 
 registro_t* pasar_a_registro(instr_t* instr) {
