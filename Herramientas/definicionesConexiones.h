@@ -58,7 +58,9 @@ typedef enum cod_op {
 	PETICION_GOSSIP = 14,
 	RECEPCION_GOSSIP = 15,
 	SOLICITUD_DATOS = 16,
+	MEMORIA_FULL = 17,
 	CODIGO_SHOW = 51,
+	CODIGO_CERRAR = 22,
 
 	ERROR_SELECT = BASE_COD_ERROR + CODIGO_SELECT,
 	ERROR_INSERT = BASE_COD_ERROR + CODIGO_INSERT,
@@ -70,7 +72,7 @@ typedef enum cod_op {
 	ERROR_RUN = BASE_COD_ERROR + CODIGO_RUN,
 	ERROR_METRICS = BASE_COD_ERROR + CODIGO_METRICS,
 
-	// Solo para saber si devolver los resultados al Kernel o Memoria para que imprima
+	// TODO: Borrar - no se usa
 	CONSOLA_FS_EXITO = BASE_CONSOLA_FS + CODIGO_EXITO,
 	CONSOLA_MEM_EXITO = BASE_CONSOLA_MEMORIA + CODIGO_EXITO,
 	CONSOLA_KRN_EXITO = BASE_CONSOLA_KERNEL + CODIGO_EXITO,
@@ -154,9 +156,10 @@ typedef struct identificador
 } identificador;
 
 extern t_dictionary *conexionesActuales;
+extern t_dictionary *auxiliarConexiones;
 extern sem_t mutex_diccionario_conexiones;
 extern t_log *g_logger;
 extern sem_t mutex_log;
-
+extern int fd_out_inicial;
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */

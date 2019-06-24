@@ -37,7 +37,12 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		loggear_info(string_from_format("Enviando instruccion al Kernel"));
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
+		t_list* listaABorrar = list_duplicate(miInstruccion->parametros);
 		enviar_request(miInstruccion, conexionKernel);
+		list_remove(listaABorrar, list_size(listaABorrar)-1);
+		list_destroy_and_destroy_elements(listaABorrar, free);
+		loggear_trace(string_from_format("Parametros freed"));
+
 		break;
 	default:
 		loggear_debug(string_from_format("Loggeando resultado instruccion"));
@@ -47,6 +52,12 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		if (codigoOperacion > BASE_COD_ERROR){
 			loggear_error_proceso(miInstruccion);
 		}
+
+		list_destroy_and_destroy_elements(miInstruccion->parametros, free);
+		loggear_trace(string_from_format("Parametros freed"));
+
+		free(miInstruccion);
+		loggear_trace(string_from_format("miInstruccion freed"));
 		break;
 	}
 }
@@ -90,7 +101,9 @@ void enviar_datos_a_FS()
 		int conexion_con_fs = crear_conexion(configuracion.IP_FS, configuracion.PUERTO_FS, miIPMemoria, 1);
 		enviar_request(miInstruccion, conexion_con_fs);
 
+		identificador *idsNuevasConexiones = malloc(sizeof(identificador));
 		idsNuevasConexiones->fd_in = 0; //Ojo
+
 		strcpy(idsNuevasConexiones->puerto, configuracion.PUERTO_FS);
 		strcpy(idsNuevasConexiones->ip_proceso, configuracion.IP_FS);
 		idsNuevasConexiones->fd_out = conexion_con_fs;
@@ -111,7 +124,11 @@ void pedir_tamanio_value(){
 
 void actualizar_tamanio_value(instr_t* instruccion){
 	tamanioValue = atoi((char*) list_get(instruccion->parametros, 0));
+	puntoMontaje = strdup((char*) list_get(instruccion->parametros, 1));
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	free(instruccion);
 	loggear_debug(string_from_format("Tamanio del value recibido: %d\n", tamanioValue));
+	loggear_debug(string_from_format("Punto de montaje recibido: %s\n", puntoMontaje));
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){
@@ -192,6 +209,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						i++;
 					}
 		}
+		free(parametro);
 	}
 
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
@@ -201,6 +219,8 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 	imprimir_conexiones(conexionesActuales, loggear_info);
 	sem_post(&mutex_diccionario_conexiones);
 
+	list_destroy(instruccion->parametros);
+	free(instruccion);
 //	imprimir_config_actual();
 }
 void imprimir_config_actual(){
@@ -315,6 +335,7 @@ void gossipear_con_procesos_desconectados(){
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPMemoria, 0);
 			if(conexion != -1){
 				puts("Conexion creada");
+				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);

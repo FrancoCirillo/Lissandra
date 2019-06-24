@@ -19,6 +19,7 @@ sem_t mutex_diccionario_conexiones;
 void gran_malloc_inicial();
 void inicializar_sectores_memoria();
 void *insertar_instruccion_en_memoria(instr_t* instruccion, int* nroPag);
+void avisar_estado_full(instr_t* instruccion);
 void actualizar_pagina(void* paginaAActualizar, mseg_t nuevoTimestamp, char* nuevoValue);
 registro *obtener_registro_de_instruccion(instr_t *instruccion);
 int get_proximo_sector_disponible();
@@ -46,7 +47,7 @@ registro *obtener_registro_de_pagina(void* pagina);
 
 char* pagina_a_str(void* pagina);
 char* registro_a_str(registro* registro);
-void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log* logger);
+void loggear_tabla_de_paginas(t_list *tablaDePaginas, void (*funcion_log)(char *texto));
 
 
 /* ALGORITMO DE REEMPLAZO */
@@ -70,7 +71,7 @@ instr_t *registro_a_instr(char* tablaAInsertar, registro* unRegistro, cod_op cod
 void limpiar_memoria();
 void limpiar_memoria_principal();
 void limpiar_segmentos();
-
+void liberar_value(t_list* instruccion);
 
 /* SHOW */
 void mostrar_paginas(instr_t* instruccion);

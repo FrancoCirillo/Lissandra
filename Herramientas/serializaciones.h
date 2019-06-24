@@ -139,9 +139,9 @@ void *recibir_buffer(int *size, int socket_cliente);
 
 /*
  * Por mas que se llame recibir paquete, lo que hace es
- * recibir_buffer y lo deserializa en una nueva t_list
+ * recibir_buffer y lo deserializa en t_list
  */
-t_list *recibir_paquete(int socketCliente);
+void recibir_paquete(int socketCliente, t_list* valores);
 
 
 /*
@@ -196,7 +196,7 @@ cod_op quien_pidio(instr_t *instruccion);
 /*
  *  Imprime un registro presente en instr_t (siempre y cuando Key y Value sean char*)
  */
-void imprimir_registro(instr_t *instruccion);
+void imprimir_registro(instr_t *instruccion, void (*funcion_log)(char *texto));
 
 
 /*

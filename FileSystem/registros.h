@@ -1,9 +1,4 @@
-/*
- * registros.h
- *
- *  Created on: 6 jun. 2019
- *      Author: utnso
- */
+//--------registros.h--------
 
 #ifndef REGISTROS_H_
 #define REGISTROS_H_
