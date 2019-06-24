@@ -100,9 +100,8 @@ int 	obtener_siguiente_bloque_archivo(char*, int);
 void   crear_dic_semaforos_FS();
 void   inicializar_semaforo_tabla(char*);
 void   agregar_a_dic_semaforos(char*, sem_t*);
-//void   obtener_mutex_tabla(char*, sem_t*);
-int    obtener_mutex_tabla(char*, sem_t*);
-sem_t* aux_obtener_mutex_tabla(char*);
+sem_t* obtener_mutex_tabla(char*);
+int    aux_obtener_mutex_tabla(char*, sem_t*);
 int    existe_mutex(char*);
 void   eliminar_mutex_de_tabla(char*);
 
