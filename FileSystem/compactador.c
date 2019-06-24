@@ -3,6 +3,7 @@
 #include "compactador.h"
 
 void compactador(char* tabla){
+
 	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
 
 	t_list* particiones = list_create();
@@ -130,7 +131,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 
 			case '\n': //registro completo.
 				strcat(buffer, "\n");
-				registro_t* registro = obtener_reg(buffer);
+				registro_t* registro = obtener_registro(buffer);
 				strcpy(buffer, "");
 
 				index = registro->key % cant_particiones;
@@ -172,6 +173,7 @@ t_list* listar_archivos(char* tabla){
 	else{
 		struct dirent* directorio_leido;
 		t_list* archivos = list_create();
+
 		char* archivo;
 		while((directorio_leido = readdir(directorio)) != NULL) {
 			archivo = directorio_leido->d_name;

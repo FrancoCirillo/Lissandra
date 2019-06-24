@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 
 //	listaRegistros();
 
-//	pruebaGeneral();
+	pruebaGeneral();
 
 //	pruebaCompactacion();
 
@@ -126,6 +126,7 @@ t_list* listaRegistros() {
 	registro_t* registro9 = obtener_registro("43224345;34;registro9\n");
 	registro_t* registro10 = obtener_registro("23224345;5;registro10\n");
 
+
 	list_add(registros, registro1);
 	list_add(registros, registro2);
 	list_add(registros, registro3);
@@ -196,13 +197,11 @@ void pruebaDump() {
 
 	//--creo registros--
 
-	registro_t* registro2 = crearRegistro(4324234, 25, "HolaSoyOtraPrueba");
-	puts("Cree un registro:");
-	imprimirRegistro(registro2);
+	registro_t* registro2 = crearRegistro(4324234, 25, "HolaSoyOtraPr");
+//	imprimirRegistro(registro2);
 
-	registro_t* registro = crearRegistro(4324234, 32, "HolaSoyUnaPrueba");
-	puts("Cree un registro:");
-	imprimirRegistro(registro);
+	registro_t* registro = crearRegistro(4324234, 34, "HolaSoyUnaPr");
+//	imprimirRegistro(registro);
 
 
 	//--agrego registros--
