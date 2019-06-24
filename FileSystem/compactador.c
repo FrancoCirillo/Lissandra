@@ -3,6 +3,7 @@
 #include "compactador.h"
 
 void compactador(char* tabla){
+
 	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
 
 	t_list* particiones = list_create();
