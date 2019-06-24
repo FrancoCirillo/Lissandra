@@ -421,8 +421,11 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	list_add(listaParam, cadena);
 	cod_op codOp = CODIGO_EXITO;
 	imprimir_donde_corresponda(codOp, instruccion, listaParam);
+	loggear_trace(string_from_format("Se van a borrar los parametros de la instruccion"));
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	loggear_trace(string_from_format("Se va a liberar instruccion"));
 	free(instruccion);
+	loggear_trace(string_from_format("Journal finalizado por completo"));
 }
 
 
@@ -503,14 +506,11 @@ void limpiar_segmentos()
 void *ejecutar_journal()
 {
 
-	t_list *listaParam = list_create();
-	int i = 0;
-	list_add(listaParam, &i);
-	instr_t *miInstruccion = crear_instruccion(obtener_ts(), CONSOLA_MEM_JOURNAL, listaParam);
 
 	while (1)
 	{
 		usleep(configuracion.RETARDO_JOURNAL * 1000);
+		instr_t *miInstruccion = leer_a_instruccion("JOURNAL", CONSOLA_MEMORIA);
 		sem_wait(&mutex_journal);
 		ejecutar_instruccion_journal(miInstruccion);
 		sem_post(&mutex_journal);

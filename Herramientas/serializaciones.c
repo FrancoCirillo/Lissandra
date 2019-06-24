@@ -138,16 +138,11 @@ void recibir_paquete(int socket_cliente, t_list * valores)
 		char *valor = malloc(tamanio);
 		memcpy(valor, buffer + desplazamiento, tamanio);
 		desplazamiento += tamanio;
-		printf("El valor es %s\n", valor);
 		list_add(valores, valor);
 	}
 	free(buffer);
 	loggear_trace(string_from_format("free(buffer) hecho"));
 
-	void mostrar(char* va){
-		printf("Un valor es %s\n", va);
-	}
-	list_iterate(valores, (void*)mostrar);
 }
 
 int recibir_request(int socket_cliente, instr_t **instruccion)
@@ -209,6 +204,13 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	string_to_upper(comando);
 	cod_op comandoReconocido = reconocer_comando(comando);
 
+	if(comandoReconocido == INPUT_ERROR){
+		free(requestCopy);
+		free(comando);
+		puts("Input invalido");
+		return NULL;
+	}
+
 	char* valor; //Va a almacenar parametros
 	t_list *listaParam = list_create();
 	mseg_t timestampRequest = obtener_ts();
@@ -222,37 +224,37 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 			//string_to_upper no debe afectar al nombre de archivo del RUN
 			valor = strdup(actual);
 			list_add(listaParam, valor);
-			break;
 		}
+		else{
+			valor = strdup(actual);
+			string_to_upper(valor);
+			list_add(listaParam, valor);
 
-		valor = strdup(actual);
-		string_to_upper(valor);
-		list_add(listaParam, valor);
-
-		if (i == 2 && comandoReconocido == CODIGO_INSERT)
-		{
-			actual = strtok(NULL, "\"\n"); //El Value en el INSERT
-
-			if (actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
+			if (i == 2 && comandoReconocido == CODIGO_INSERT)
 			{
-				valor = strdup(actual);
-				list_add(listaParam, valor);
-				actual = strtok(NULL, " \n");
-				if (actual != NULL) //Si no es NULL se introdujo el timestamp opcional
+				actual = strtok(NULL, "\"\n"); //El Value en el INSERT
+
+				if (actual != NULL) //Si es NULL la cantidad de parametros es incorrecta
 				{
-					valor = strdup(actual); //Timestamp
-					timestampRequest = string_a_mseg(valor);
+					valor = strdup(actual);
+					list_add(listaParam, valor);
+					actual = strtok(NULL, " \n");
+					if (actual != NULL) //Si no es NULL se introdujo el timestamp opcional
+					{
+						valor = strdup(actual); //Timestamp
+						timestampRequest = string_a_mseg(valor);
+					}
+					else{
+						free(actual);
+					}
 				}
-				else{
+				else{ //No se introdujo el value
 					free(actual);
+					break;
 				}
 			}
-			else{ //No se introdujo el value
-				free(actual);
-				break;
-			}
+			actual = strtok(NULL, " \n"); //(Si es el insert, el 2do parametro)
 		}
-		actual = strtok(NULL, " \n"); //(Si es el insert, el 2do parametro)
 	}
 
 	free(requestCopy);
@@ -284,7 +286,7 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 	else
 	{
 		list_destroy_and_destroy_elements(listaParam, free); //Hay que liberar todos los parametros del INSERT (Tabla y key)
-		puts("Input invalido");
+		puts("Input invalido: cantidad de parametros invalida");
 		return NULL;
 	}
 }

@@ -410,7 +410,8 @@ void inicializar_conexiones() {
 	puts("callback creado");
 	iniciar_servidor(miIP, config_FS.puerto_escucha);
 	puts("Servidor iniciado");
-	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem", CONSOLA_FS);
+	// . es el directorio Actual - Tener en cuenta que lo corremos desde la carpeta padre a la que tiene el binario
+	vigilar_conexiones_entrantes(callback, actualizar_config, ".", CONSOLA_FS);
 }
 
 void enviar_tamanio_value(char* remitente) {

@@ -83,7 +83,7 @@ int vigilar_conexiones_entrantes(
 	{
 		read_fds = master;
 		if(actualizarPrintf){
-			printf("\n" COLOR_ANSI_MAGENTA "> " COLOR_ANSI_RESET);
+			printf("\n" COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 			fflush(stdout);
 		}
 		actualizarPrintf = 1;
