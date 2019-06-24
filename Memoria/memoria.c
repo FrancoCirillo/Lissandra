@@ -14,10 +14,9 @@ int main(int argc, char *argv[])
 	empezar_conexiones(argv);
 //	iniciar_ejecutador_journal();
 
-	iniciar_ejecutador_gossiping();
+//	iniciar_ejecutador_gossiping();
 
-	vigilar_conexiones_entrantes(callback, CONSOLA_MEMORIA);
-	//config_destroy(g_config);
+	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Memoria", CONSOLA_MEMORIA);
 
 	return 0;
 }
@@ -25,13 +24,17 @@ int main(int argc, char *argv[])
 void inicializar_configuracion()
 {
 	puts("Configuracion:");
-	char *rutaConfig = "memoria.config";
+	rutaConfig = "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Memoria/memoria.config";
 	g_config = config_create(rutaConfig);
 	configuracion.PUERTO = obtener_por_clave("PUERTO");
 	configuracion.IP_FS = obtener_por_clave("IP_FS");
 	configuracion.PUERTO_FS = obtener_por_clave("PUERTO_FS");
-	configuracion.IP_SEEDS = string_array_to_list(config_get_array_value(g_config, "IP_SEEDS"));
-	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
+	char** ip_seeds = config_get_array_value(g_config, "IP_SEEDS");
+	configuracion.IP_SEEDS = string_array_to_list(ip_seeds);
+	free(ip_seeds);
+	char** puerto_seeds = config_get_array_value(g_config, "PUERTO_SEEDS");
+	configuracion.PUERTO_SEEDS = string_array_to_list(puerto_seeds);
+	free(puerto_seeds);
 	imprimir_config_actual();
 	configuracion.RETARDO_MEMORIA = atoi(obtener_por_clave("RETARDO_MEMORIA"));
 	configuracion.RETARDO_FS = atoi(obtener_por_clave("RETARDO_FS"));
@@ -68,11 +71,12 @@ void inicializar_semaforos()
 
 void inicializar_estructuras_conexiones()
 {
+	fd_out_inicial = 0;
 	if(list_size(configuracion.IP_SEEDS) != list_size(configuracion.PUERTO_SEEDS)){
 		loggear_error(string_from_format("La cantidad de IPs no coinciden con la cantidad de Puertos"));
 	}
 	conexionesActuales = dictionary_create();
-	idsNuevasConexiones = malloc(sizeof(identificador));
+	auxiliarConexiones = dictionary_create();
 	callback = ejecutar_instruccion;
 }
 
@@ -139,6 +143,10 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			inicializar_estructuras_memoria();
 			break;
 
+		case CODIGO_CERRAR:
+			terminar_memoria(instruccion);
+			break;
+
 		case PETICION_GOSSIP:
 			devolver_gossip(instruccion, remitente);
 			break;
@@ -153,6 +161,9 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 		}
 	}
 	sem_post(&mutex_journal);
+
+//	list_destroy_and_destroy_elements(instruccion->parametros, (void*)free);
+//	free(instruccion);
 }
 
 void iniciar_ejecutador_journal(){
@@ -191,4 +202,76 @@ void check_inicial(int argc, char* argv[])
 	}
 	nombreDeMemoria = string_from_format("Memoria_%d", configuracion.MEMORY_NUMBER);
 }
+void actualizar_config(){
+	t_config * auxConfig;
+
+	while(	(auxConfig = config_create(rutaConfig)) == NULL 	||
+			!config_has_property(auxConfig, "RETARDO_MEMORIA") 	||
+			!config_has_property(auxConfig, "RETARDO_FS") 		||
+			!config_has_property(auxConfig, "RETARDO_JOURNAL") 	||
+			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
+			!config_has_property(auxConfig, "LOG_LEVEL")){
+		config_destroy(auxConfig);
+	}
+
+	configuracion.RETARDO_MEMORIA = config_get_int_value(auxConfig, "RETARDO_MEMORIA");
+	configuracion.RETARDO_FS = config_get_int_value(auxConfig, "RETARDO_FS");
+	configuracion.RETARDO_JOURNAL = config_get_int_value(auxConfig, "RETARDO_JOURNAL");
+	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
+	configuracion.LOG_LEVEL = log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
+	sem_wait(&mutex_log);
+	actualizar_log_level();
+	sem_post(&mutex_log);
+	config_destroy(auxConfig);
+	loggear_info(string_from_format("Config actualizado!\n"
+			"Retardo de accseso a Memoria Principal: %d\n"
+			"Retardo de accseso a File System: %d\n"
+			"Tiempo de Journal: %d\n"
+			"Tiempo de Gossiping: %d\n"
+			"Log level: %s"
+			"\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET,
+			configuracion.RETARDO_MEMORIA, configuracion.RETARDO_FS, configuracion.RETARDO_JOURNAL, configuracion.RETARDO_GOSSIPING, log_level_as_string(configuracion.LOG_LEVEL)));
+	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
+	fflush(stdout);
+}
+
+void actualizar_log_level(){
+	log_destroy(g_logger);
+	g_logger = log_create(configuracion.RUTA_LOG, nombreDeMemoria, 1, configuracion.LOG_LEVEL);
+}
+
+void terminar_memoria(instr_t* instruccion){
+
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	free(instruccion);
+
+	list_destroy_and_destroy_elements(configuracion.IP_SEEDS, free);
+	list_destroy_and_destroy_elements(configuracion.PUERTO_SEEDS, free);
+	free(nombreDeMemoria);
+	free(puntoMontaje);
+
+	config_destroy(g_config);
+	log_destroy(g_logger);
+
+//	void chau_ip(char* nombre, identificador* ids){
+//		free(ids->ip_proceso);
+//		free(ids->puerto);
+//	}
+//	dictionary_iterator(conexionesActuales, (void*)chau_ip);
+	dictionary_destroy_and_destroy_elements(conexionesActuales, free);
+	dictionary_destroy_and_destroy_elements(auxiliarConexiones, (void*)free);
+
+	free(memoriaPrincipal);
+
+	void borrar_todo(char* nombreTabla, t_list* tabla){
+		list_destroy_and_destroy_elements(tabla, free);
+	}
+	dictionary_iterator(tablaDeSegmentos, (void*)borrar_todo);
+	dictionary_destroy(tablaDeSegmentos);
+	list_destroy_and_destroy_elements(paginasSegunUso, free);
+	free(sectorOcupado);
+	puts("Gracias por usar Lissandra");
+	exit(0);
+}
+
 

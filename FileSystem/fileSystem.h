@@ -90,17 +90,18 @@ metadata_FS_t Metadata_FS;
 ruta_t g_ruta;
 
 t_log* g_logger;
-t_config* g_config;
+
 t_config* meta_config;
 
 /*TESTS*/
-void	imprimirRegistro(void*);
-void	imprimirContenidoArchivo(char*);
-void	imprimirMetadata(char*);
-t_list*	listaRegistros();
-void	pruebaDump();
-void	pruebaTmp();
-void	pruebaGeneral();
+registro_t* crearRegistro(mseg_t, uint16_t, char*);
+void		imprimirRegistro(void*);
+void		imprimirContenidoArchivo(char*);
+void		imprimirMetadata(char*);
+t_list*		listaRegistros();
+void		pruebaDump();
+void		pruebaTmp();
+void		pruebaGeneral();
 
 
 /*INICIALIZACION Y FINALIZACION*/
@@ -109,6 +110,7 @@ void finalizar_FS();
 void iniciar_semaforos();
 void iniciar_rutas();
 void finalizar_rutas();
+void actualizar_config();
 
 /*FUNCIONES DE BLOQUES*/
 t_list* leer_binario(char*, uint16_t);
@@ -120,7 +122,6 @@ char* 	obtener_registro_mas_reciente(t_list*);
 t_list* obtener_registros_key(char*, uint16_t);
 
 /*FUNCIONES AUXILIARES*/
-char* 	to_upper(char*);
 char*	obtener_parametro(instr_t*, int);
 int  	obtener_particion_key(char*, int);
 char*	obtener_nombre_tabla(instr_t*);
@@ -132,6 +133,7 @@ _Bool 	es_registro_mas_reciente(void*, void*);
 void 	liberar_memoria_instr(instr_t *);
 
 /* CONEXIONES */
+int fd_out_inicial;
 char* miIP;
 t_dictionary *conexionesActuales;
 void (*callback)(instr_t *instruccion, char *remitente);
@@ -139,5 +141,6 @@ void 	inicializar_conexiones();
 void 	imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
 int 	obtener_fd_out(char *proceso);
 void 	enviar_tamanio_value(char* remitente);
+t_dictionary *auxiliarConexiones;
 
 #endif /* FILE_SYSTEM_H */

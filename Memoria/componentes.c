@@ -20,7 +20,7 @@ void inicializar_tabla_segmentos()
 
 void inicializar_sectores_memoria()
 {
-	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue;
+	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue + 1; //Porque guardamos el \0
 	cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro; //Se trunca automaticamente al entero (por ser todos int)
 
 	loggear_trace(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
@@ -48,16 +48,37 @@ filaTabPags *agregar_fila_tabla(t_list *tablaDePaginas, int numPag, void *pagina
 	return tabla;
 }
 
+void avisar_estado_full(instr_t* instruccion){
+
+	if(quien_pidio(instruccion) == CONSOLA_KERNEL){
+		loggear_info(string_from_format("Memoria full! Avisando al Kernel"));
+		int conexionKernel = obtener_fd_out("Kernel");
+		t_list* listaABorrar = list_duplicate(instruccion->parametros);
+		instruccion->codigo_operacion = MEMORIA_FULL;
+		if(enviar_request(instruccion, conexionKernel)==-1){
+			loggear_error(string_from_format("No se envio el aviso de Memoria Full al Kernel"));
+		}
+		list_destroy_and_destroy_elements(listaABorrar, free);
+		loggear_trace(string_from_format("Se borraron los parametros del insert fallido"));
+	}
+	else{
+		loggear_warning(string_from_format("Memoria full. No se aviso al Kernel porque no fue quien pidio el insert"));
+	}
+}
+
 void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 {
 	int desplazamiento = 0;
 	registro *reg = obtener_registro_de_instruccion(instruccion);
+
+	printf("REGISTRO:	Timestamp:	%" PRIu64 "\n	Key:		%u\n	Value:		%s\n", reg->timestamp, reg->key, reg->value);
 	int sectorDisponible = get_proximo_sector_disponible();
 	if (sectorDisponible == -1)
 	{
 		if (memoria_esta_full())
 		{
-			ejecutar_instruccion_journal(instruccion);
+			avisar_estado_full(instruccion);
+			return NULL;
 		}
 		else
 		{ //Algoritmo de reemplazo:
@@ -79,15 +100,15 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 			desplazamiento += sizeof(mseg_t);
 			memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t));
 			desplazamiento += sizeof(uint16_t);
-			memcpy(memoriaPrincipal + desplazamiento, &reg->value, tamanioValue);
+			memcpy(memoriaPrincipal + desplazamiento, reg->value, strlen(reg->value)+1);
 			*nroPag = (*numeroDeSector);
 
 			//Borrando la fila "indiceEnTabla" de la Tabla de paginas "segmentoConFilaABorrar"
-			list_remove_and_destroy_element(suTablaDePaginas, indiceEnTabla, (void *)free);
+			list_remove_and_destroy_element(suTablaDePaginas, indiceEnTabla,free);
 			if (list_is_empty(suTablaDePaginas))
 			{
 				//La tabla de páginas quedó vacía, no tiene sentido guardar el puntero
-				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoConFilaABorrar, (void *)free);
+				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoConFilaABorrar,free);
 			}
 			free(segmentoConFilaABorrar); //malloc en fila_correspondiente_a_esa_pagina
 			free(reg);					  //malloc en obtener_registro_de_instruccion
@@ -102,8 +123,10 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		desplazamiento += sizeof(mseg_t);
 		memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t));
 		desplazamiento += sizeof(uint16_t);
-		memcpy(memoriaPrincipal + desplazamiento, &reg->value, tamanioValue);
+		memcpy(memoriaPrincipal + desplazamiento, reg->value, strlen(reg->value)+1);
 		*nroPag = sectorDisponible;
+		loggear_trace(string_from_format("Memcpy realizado en la pagina"));
+		free(reg->value);
 		free(reg);
 		return memoriaPrincipal + (sectorDisponible * tamanioRegistro);
 	}
@@ -114,30 +137,31 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 
 void actualizar_pagina(void *paginaAActualizar, mseg_t nuevoTimestamp, char *nuevoValue)
 {
-
 	int desplazamiento = 0;
 	memcpy(paginaAActualizar + desplazamiento, &nuevoTimestamp, sizeof(mseg_t));
 	desplazamiento += sizeof(mseg_t);
 	//	memcpy(memoriaPrincipal + desplazamiento, &reg->key, sizeof(uint16_t)); La key no se mofidica
 	desplazamiento += sizeof(uint16_t);
-	memcpy(paginaAActualizar + desplazamiento, &nuevoValue, tamanioValue);
+	loggear_debug(string_from_format("Se esta actualizando la pagina con el value %s", nuevoValue));
+	memcpy(paginaAActualizar + desplazamiento, nuevoValue, strlen(nuevoValue)+1);
 }
 registro *obtener_registro_de_instruccion(instr_t *instruccion)
 {
-	char *keyChar = (char *)list_get(instruccion->parametros, 1);
+	char *keyChar = strdup((char *)list_get(instruccion->parametros, 1));
 	char *valueNuevo = (char *)list_get(instruccion->parametros, 2);
+	printf("EL value nuevo es: %s\n", valueNuevo);
+	printf("Y su tamanio sin contar el 0 es: %d\n", strlen(valueNuevo));
 	mseg_t timestampNuevo = instruccion->timestamp;
 	uint16_t keyNueva;
 	str_to_uint16(keyChar, &keyNueva);
+	free(keyChar);
 
-	registro registroCreado = {
-		.timestamp = timestampNuevo,
-		.key = keyNueva,
-		.value = valueNuevo};
-
-	registro *miReg = malloc(sizeof(registroCreado));
-	memcpy(miReg, &registroCreado, sizeof(registroCreado));
-
+	registro *miReg = malloc(sizeof(registro));
+	miReg->timestamp= timestampNuevo;
+	miReg->key = keyNueva;
+	miReg->value = malloc(tamanioValue+1);
+	memset(miReg->value, 0, tamanioValue+1);
+	memcpy(miReg->value, valueNuevo, strlen(valueNuevo));
 	return miReg;
 }
 
@@ -162,44 +186,49 @@ mseg_t get_ts_pagina(void *pagina)
 
 uint16_t get_key_pagina(void *pagina)
 {
-	uint16_t keyPagina;
+	uint16_t keyPagina = 0;
 	memcpy(&keyPagina, pagina + sizeof(mseg_t), sizeof(uint16_t));
 	return keyPagina;
 }
 
 char *get_value_pagina(void *pagina)
 {
-	char *keyPagina = malloc(tamanioValue);
-	memcpy(&keyPagina, pagina + sizeof(mseg_t) + sizeof(uint16_t), sizeof(tamanioValue));
-	return keyPagina;
+	char* value = calloc(1, tamanioValue+1);
+	memcpy(value, pagina + sizeof(mseg_t) + sizeof(uint16_t), tamanioValue + 1);
+	return value;
 }
 
 registro *obtener_registro_de_pagina(void *pagina)
 {
 	mseg_t timestamp = get_ts_pagina(pagina);
 	uint16_t key = get_key_pagina(pagina);
-	char *value = get_value_pagina(pagina);
-
-	registro *miRegistro = malloc(tamanioRegistro + 1);
+	registro * miRegistro = calloc(1, tamanioRegistro + 1);
 	miRegistro->timestamp = timestamp;
 	miRegistro->key = key;
-	miRegistro->value = value;
+	miRegistro->value = NULL;
+	miRegistro->value = calloc(1, tamanioValue + 1);
+	memcpy(miRegistro->value, pagina + sizeof(mseg_t) + sizeof(uint16_t), tamanioValue + 1);
 
 	return miRegistro;
 }
 
 char *registro_a_str(registro *registro)
 {
-	char *regString = string_from_format("	Timestamp:	%" PRIu64 "\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
+	char *regString = NULL;
+	regString = string_from_format("	Timestamp:	%" PRIu64 "\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
 	return regString;
 }
 
 char *pagina_a_str(void *pagina)
 {
-	return registro_a_str(obtener_registro_de_pagina(pagina));
+	registro* registroDePagina = obtener_registro_de_pagina(pagina);
+	char* registroStr =  registro_a_str(registroDePagina);
+	free(registroDePagina->value);
+	free(registroDePagina);
+	return registroStr;
 }
 
-void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log *logger)
+void loggear_tabla_de_paginas(t_list *tablaDePaginas, void (*funcion_log)(char *texto))
 {
 
 	char *texto = string_new();
@@ -216,7 +245,7 @@ void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log *logger)
 	}
 
 	list_iterate(tablaDePaginas, (void *)iterator);
-	loggear_info(texto);
+	funcion_log(texto);
 }
 
 void se_uso(int paginaUtilizada)
@@ -237,7 +266,7 @@ void se_uso(int paginaUtilizada)
 
 	if ((list_find(paginasSegunUso, (void *)esPaginaRequerida)) != NULL)
 	{
-		list_remove_and_destroy_by_condition(paginasSegunUso, (void *)esPaginaRequerida, (void *)free);
+		list_remove_and_destroy_by_condition(paginasSegunUso, (void *)esPaginaRequerida, free);
 		//En list[0] queda el que menos se usa
 	}
 	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
@@ -391,16 +420,14 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 				loggear_debug(string_from_format("Insertando '%s' en FileSystem", tablaAInsertar));
 				instr_t *instruccionAEnviar = fila_a_instr(tablaAInsertar, fila, codOp);
 				loggear_trace(string_from_format("Se genero la instruccion a enviar"));
+				t_list* listaABorrar = list_duplicate(instruccionAEnviar->parametros);
 				enviar_request(instruccionAEnviar, conexionConFS);
-				list_destroy(instruccionAEnviar->parametros); //No hacemos free a sus elementos xq son punteros a la Memoria Principal
-				loggear_trace(string_from_format("Se vacio la lista y se destruyeron sus elementos"));
-				free(instruccionAEnviar);
+				liberar_value(listaABorrar);
 			}
 		}
 
 		list_iterate(suTablaDePaginas, (void *)enviar_si_esta_modificada);
-
-		free(tablaAInsertar); //malloc en string_from_format
+		free(tablaAInsertar);
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)enviar_paginas_modificadas);
@@ -409,10 +436,31 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 
 	loggear_trace(string_from_format("Se recorrieron todas las paginas"));
 	t_list *listaParam = list_create();
-	char *cadena = "Journal realizado.";
+	char *cadena = string_from_format("Journal realizado.");
 	list_add(listaParam, cadena);
 	cod_op codOp = CODIGO_EXITO;
 	imprimir_donde_corresponda(codOp, instruccion, listaParam);
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	free(instruccion);
+}
+
+
+void liberar_value(t_list* listaParam){
+
+	int i = 0;
+
+	void borrar_value(char* parametro){
+
+		if(i==2){
+			loggear_trace(string_from_format("Se va a borrar el parametro (Value): %s", parametro));
+			free(parametro);
+			i = -1;
+		}
+		i++;
+	}
+	list_iterate(listaParam, (void*)borrar_value);
+
+	list_destroy(listaParam);
 }
 
 instr_t *fila_a_instr(char *tablaAInsertar, filaTabPags *fila, cod_op codOp)
@@ -424,17 +472,23 @@ instr_t *fila_a_instr(char *tablaAInsertar, filaTabPags *fila, cod_op codOp)
 
 instr_t *registro_a_instr(char *tablaAInsertar, registro *unRegistro, cod_op codOp)
 {
-	loggear_trace(string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
+//	loggear_trace(string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
 	t_list *listaParam = list_create();
+
 	loggear_trace(string_from_format("Lista param creada\n"));
 	list_add(listaParam, tablaAInsertar);
+
 	loggear_trace(string_from_format("Nombre de la tabla a insertar agregado\n"));
-	char *keyChar = string_from_format("%d", unRegistro->key);
+	char keyChar[6];
+	sprintf(keyChar,"%d", unRegistro->key);
 	list_add(listaParam, keyChar);
 
-	list_add(listaParam, unRegistro->value);
+	char* valueAAgregar = strdup(unRegistro->value);
+	list_add(listaParam, valueAAgregar);
 
 	instr_t *instruccionCreada = crear_instruccion(unRegistro->timestamp, codOp, listaParam);
+	free(unRegistro->value);
+	free(unRegistro);
 	return instruccionCreada;
 }
 
@@ -457,7 +511,7 @@ void limpiar_segmentos()
 	loggear_debug(string_from_format("Limpiando segmentos"));
 	void limpiar_tabla_de_paginas(char *segmento, t_list *suTablaDePaginas)
 	{
-		list_destroy_and_destroy_elements(suTablaDePaginas, (void *)free);
+		list_destroy_and_destroy_elements(suTablaDePaginas,free);
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)limpiar_tabla_de_paginas);
@@ -499,22 +553,22 @@ void eliminar_tabla(instr_t *instruccion)
 	if (segmentoABorrar != NULL)
 	{
 		dictionary_remove(tablaDeSegmentos, tablaABorrar);
-		list_destroy_and_destroy_elements(segmentoABorrar, (void *)free);
+		list_destroy_and_destroy_elements(segmentoABorrar, free);
 	}
+	loggear_info(string_from_format("Tabla %s%s borrada de Memoria", puntoMontaje, tablaABorrar));
 }
 
 void imprimir_segmento(char *nombreSegmento, t_list *suTablaDePaginas)
 {
-
-	loggear_info(string_from_format("Tabla: %s\n", nombreSegmento));
-	loggear_tabla_de_paginas(suTablaDePaginas, g_logger);
+	loggear_info(string_from_format("Tabla: %s%s\n", puntoMontaje, nombreSegmento));
+	loggear_tabla_de_paginas(suTablaDePaginas, loggear_info);
 }
 
 void imprimir_segmento_basico(char *nombreSegmento, t_list *suTablaDePaginas)
 {
 	char *texto = string_new();
 	string_append_with_format(&texto, "------------------------\n");
-	string_append_with_format(&texto, "Tabla: %s\n", nombreSegmento);
+	string_append_with_format(&texto, "Tabla: %s%s\n", puntoMontaje, nombreSegmento);
 
 	void iterator(filaTabPags * fila)
 	{
@@ -536,4 +590,6 @@ void mostrar_paginas(instr_t *instruccion)
 	{
 		dictionary_iterator(tablaDeSegmentos, (void *)imprimir_segmento_basico);
 	}
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	free(instruccion);
 }

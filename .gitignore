@@ -64,3 +64,6 @@ Herramientas/Debug/libHerramientas.so
 
 #VStudio
 .vscode/
+
+#Txts Valgrind
+Memoria/memValTest.txt

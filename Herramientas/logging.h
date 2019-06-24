@@ -1,9 +1,4 @@
-/*
- * logging.h
- *
- *  Created on: 3 jun. 2019
- *      Author: utnso
- */
+//-------logging.c-------
 
 #ifndef LOGGING_H_
 #define LOGGING_H_

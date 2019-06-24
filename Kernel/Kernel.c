@@ -34,10 +34,10 @@ int main(int argc, char* argv[]) {
 void inicializar_kernel(){
 	conexionesActuales = dictionary_create();
 	callback = ejecutar_requestRecibido;
-
+	auxiliarConexiones = dictionary_create();
 
 	iniciar_servidor(miIPKernel, configuracion.puerto);
-	vigilar_conexiones_entrantes(callback, CONSOLA_KERNEL);
+	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Kernel", CONSOLA_KERNEL);
 
 }
 
@@ -725,7 +725,7 @@ int hilos_disponibles(){
 
 
 void inicializarConfiguracion() {
-	char* rutaConfiguracion = "Kernel.config";
+	rutaConfiguracion = "Kernel.config";
 	g_config = config_create(rutaConfiguracion);
 	configuracion.quantum = atoi(obtener_por_clave("quantum"));
 	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave("gradoMultiprocesamiento"));
@@ -871,6 +871,7 @@ void iniciar_ejecutador_gossiping(){
 
 void *ejecutar_gossiping()
 {
+	fd_out_inicial = 0;
 	while(1)
 	{
 		ejecutar_instruccion_gossip();
@@ -1038,10 +1039,12 @@ void gossipear_con_procesos_desconectados(){
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPKernel, 0);
 			if(conexion != -1){
 				puts("Conexion creada");
+				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
+
 			}
 		}
 		i++;
@@ -1096,3 +1099,36 @@ instr_t* mis_datos(cod_op codigoOperacion){
 	return crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 }
 
+void actualizar_config(){
+	t_config *auxConfig;
+	while((auxConfig = config_create(rutaConfiguracion)) == NULL||
+			!config_has_property(auxConfig, "quantum") 			||
+			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
+			!config_has_property(auxConfig, "tiempoMetricas")	||
+			!config_has_property(auxConfig, "LOG_LEVEL")){
+		config_destroy(auxConfig);
+	}
+
+	configuracion.quantum = config_get_int_value(auxConfig, "quantum");
+	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
+	configuracion.tiempoMetricas = config_get_int_value(auxConfig, "tiempoMetricas");
+	configuracion.LOG_LEVEL =  log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
+	sem_wait(&mutex_log);
+	actualizar_log_level();
+	sem_post(&mutex_log);
+	loggear_info(string_from_format(
+			"Config actualizado!\n"
+			"Quantum: %d\n"
+			"Tiempo de Gossiping: %d\n"
+			"Tiempo de Metricas: %d\n"
+			"Log level: %s",
+			configuracion.quantum, configuracion.RETARDO_GOSSIPING, configuracion.tiempoMetricas , log_level_as_string(configuracion.LOG_LEVEL)));
+	config_destroy(auxConfig);
+	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
+	fflush(stdout);
+}
+
+void actualizar_log_level(){
+	log_destroy(g_logger);
+	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
+}

@@ -5,27 +5,32 @@
 
 //Todo
 /*
- * eliminar carpeta
- * eliminar directorio
- * copiar archivo (para los tmpc)
- * archivo_modificar_size();	//escribir nuevo numero en el archivo.
- * archivo_agregar_bloque();    //en el array de un archivo
- * archivo_liberar_bloque();	//en el array de un archivo
- * bloque disponible (bits arrays)
- * semaforos!
- *
  * ver actualizacion RETARDO del Archivo de config. Se actualiza en cada fin de instruccion?
  * \*/
-
-//Pendientes Dai:
-//1) Ver si el g_logger global no hace problemas..
-//	 Si se crea una vez sola o ahi en el loggear_FS esta bien.
 
 
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump * 1000;
 }
 
+////---------------------------SEMAFOROS---------------------------
+//
+////TODO: Semaforos
+//void crear_dic_semaforos_FS(){
+//	dic_semaforos_tablas = dictionary_create();
+//}
+//
+//void agregar_mutex_a_dic(char* tabla, sem_t* mutex_tabla){
+//	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
+//	puts("Se agrego el semaforo en el diccionario.");
+//}
+//
+//sem_t* obtener_mutex_tabla(char* tabla){
+//	puts("---Buscando mutex---");
+//	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+//}
+
+//---------------------------+DIRECTORIO---------------------------
 
 int eliminar_directorio(char* tabla) {
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
@@ -34,41 +39,39 @@ int eliminar_directorio(char* tabla) {
 	if(directorio == NULL)
 		return -1;
 
+	struct dirent* dir_a_eliminar;
 	size_t path_len = strlen(ruta_tabla);
-	int eliminado = -1;
+	int eliminado = 0;
 
-	if(directorio){
-		struct dirent* dir_a_eliminar;
-		eliminado = 0;
+	while (!eliminado && (dir_a_eliminar = readdir(directorio))){
+		int removed = -1;
 
-		while (!eliminado && (dir_a_eliminar = readdir(directorio))){
-			int removed = -1;
+		//Se saltean "." y ".."
+		if (!strcmp(dir_a_eliminar->d_name, ".") || !strcmp(dir_a_eliminar->d_name, ".."))
+			continue;
 
-			//Se saltean "." y ".." por la recursividad
-			if (!strcmp(dir_a_eliminar->d_name, ".") || !strcmp(dir_a_eliminar->d_name, ".."))
-				continue;
+		size_t length = path_len + strlen(dir_a_eliminar->d_name) + 2;
+		char* arch_a_eliminar = malloc(length);
 
-			size_t length = path_len + strlen(dir_a_eliminar->d_name) + 2;
-			char* arch_a_eliminar = malloc(length);
+		if(arch_a_eliminar){
+			snprintf(arch_a_eliminar, length, "%s/%s", ruta_tabla, dir_a_eliminar->d_name);
 
-			if(arch_a_eliminar){
-				snprintf(arch_a_eliminar, length, "%s/%s", ruta_tabla, dir_a_eliminar->d_name);
+           	if(!string_ends_with(arch_a_eliminar, "Metadata"))
+           		liberar_bloques(arch_a_eliminar);
 
-            	if(!string_ends_with(arch_a_eliminar, "Metadata"))
-            		liberar_bloques(arch_a_eliminar);
+        	removed = unlink(arch_a_eliminar);
 
-            	removed = unlink(arch_a_eliminar);
-
-            	free(arch_a_eliminar);
-			}
-			eliminado = removed;
+           	free(arch_a_eliminar);
 		}
-		closedir(directorio);
+		eliminado = removed;
 	}
 
-	if(!eliminado)
-	     eliminado = rmdir(ruta_tabla);
+	closedir(directorio);
 
+	if(!eliminado)
+		eliminado = rmdir(ruta_tabla);
+
+	//frees
 	return eliminado;
 }
 
@@ -206,7 +209,7 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
     return -1;
 }
 
-registro_t* obtener_reg(char* buffer) {
+registro_t* obtener_registro(char* buffer) {
 //	puts("---OBTENER REGISTRO---");
 	char* bufferCopy =malloc(sizeof(char*)* (strlen(buffer)+1));//
 	strcpy(bufferCopy , buffer);//
@@ -251,6 +254,7 @@ imprimirContenidoArchivo(ruta_bloque);
 	//char* buffer = string_new();  //no funcionaba
 
 	int cant_letras_ts= strlen(mseg_a_string(obtener_ts()));
+	printf("\n\ncant_letras_ts\n\n\n\n %d", cant_letras_ts);
 	char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + strlen(string_itoa((int)key)))); //   +4 por: \n ; ; \0
 	strcpy(buffer,"");
 
@@ -263,7 +267,7 @@ imprimirContenidoArchivo(ruta_bloque);
 		switch(caracter_leido) {
 		case '\n': //tengo un registro completo
 			strcat(buffer, "\n");
-			registro_t* registro = obtener_reg(buffer);
+			registro_t* registro = obtener_registro(buffer);
 
 			if(registro->key == key) {
 				list_add(registros, registro); //lo agrego solo si tiene la key que busco
@@ -779,16 +783,17 @@ void loggear_FS_error(char* valor, instr_t* i) {
 	//Esto no genera memory leak, pisa el parametro bien. testeado!
 }
 
-char* obtener_por_clave(char* ruta, char* clave) {
-	t_config* c = config_create(ruta);
-	char* valor;
-	valor = config_get_string_value(c, clave);
-	config_destroy(c);
-	return valor;
-}
+//char* obtener_por_clave(char* ruta, char* clave) {
+//	t_config* c = config_create(ruta);
+//	char* valor;
+//	valor = config_get_string_value(c, clave);
+//	config_destroy(c);
+//	return valor;
+//}
 
 void inicializar_configuracion(void) {
-	g_config = config_create("Lissandra.config");
+	rutaConfiguracion = "Lissandra.config";
+	g_config = config_create(rutaConfiguracion);
 	config_FS.punto_montaje = config_get_string_value(g_config, "PUNTO_MONTAJE");
 	config_FS.puerto_escucha = config_get_string_value(g_config, "PUERTO_ESCUCHA");
 	config_FS.tamanio_value = config_get_int_value(g_config, "TAMAÑO_VALUE");
@@ -799,41 +804,41 @@ void inicializar_configuracion(void) {
 }
 
 void iniciar_logger(){
-	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_INFO);
+	g_logger = log_create("Lissandra.log", "File System", 1, LOG_LEVEL_TRACE);
 }
 
-void actualizar_tiempo_dump_config(mseg_t value) {
-
-	char* val = string_itoa((int) value);
-
-	sem_wait(&mutex_tiempo_dump_config);
-	config_set_value(g_config, "TIEMPO_DUMP", val);
-	sem_post(&mutex_tiempo_dump_config);
-
-	config_save(g_config);
-
-	char* mensaje = string_from_format("Se actualizo el tiempo de dumpeo en el archivo de configuracion. Nuevo valor: %s", val);
-	loggear_FS(mensaje);
-	free(mensaje);
-	free(val);
-}
-
-void actualizar_tiempo_retardo_config(mseg_t value) {
-
-	char* val = string_itoa( value);
-
-	sem_wait(&mutex_tiempo_retardo_config);
-	config_set_value(g_config, "TIEMPO_RETARDO", val);
-	sem_post(&mutex_tiempo_retardo_config);
-
-	config_save(g_config);
-
-	char* mensaje = string_from_format("Se actualizo el tiempo de retardo en el archivo de configuracion. Nuevo valor: %s", val);
-	loggear_FS(mensaje);
-	free(mensaje);
-	free(val);
-
-}
+//void actualizar_tiempo_dump_config(mseg_t value) {
+//
+//	char* val = string_itoa((int) value);
+//
+//	sem_wait(&mutex_tiempo_dump_config);
+//	config_set_value(g_config, "TIEMPO_DUMP", val);
+//	sem_post(&mutex_tiempo_dump_config);
+//
+//	config_save(g_config);
+//
+//	char* mensaje = string_from_format("Se actualizo el tiempo de dumpeo en el archivo de configuracion. Nuevo valor: %s", val);
+//	loggear_FS(mensaje);
+//	free(mensaje);
+//	free(val);
+//}
+//
+//void actualizar_tiempo_retardo_config(mseg_t value) {
+//
+//	char* val = string_itoa( value);
+//
+//	sem_wait(&mutex_tiempo_retardo_config);
+//	config_set_value(g_config, "TIEMPO_RETARDO", val);
+//	sem_post(&mutex_tiempo_retardo_config);
+//
+//	config_save(g_config);
+//
+//	char* mensaje = string_from_format("Se actualizo el tiempo de retardo en el archivo de configuracion. Nuevo valor: %s", val);
+//	loggear_FS(mensaje);
+//	free(mensaje);
+//	free(val);
+//
+//}
 
 void inicializar_directorios() {
 

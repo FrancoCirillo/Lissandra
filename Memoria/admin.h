@@ -42,13 +42,13 @@ extern t_log *g_logger;
 extern t_config *g_config;
 extern config configuracion;
 extern int tamanioValue;
+extern char* puntoMontaje;
 extern int tamanioRegistro;
 extern bool* sectorOcupado;
 extern int cantidadDeSectores;
 extern t_dictionary *conexionesActuales;
 extern char* miIPMemoria;
 extern char* nombreDeMemoria;
-extern identificador *idsNuevasConexiones;
 
 extern t_dictionary *tablaDeSegmentos;
 

@@ -26,7 +26,7 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir)
 		//TODO: Cerrar socket servidor?
 		return -1;
 	}
-	int aceptar;
+	int aceptar = 1;
 	setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEADDR, &aceptar, sizeof(int));
 	if (bind(socket_servidor, servinfo->ai_addr, servinfo->ai_addrlen) < 0)
 	{
@@ -51,6 +51,8 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir)
 
 int vigilar_conexiones_entrantes(
 		void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente),
+		void (*actualizar_config)(void),
+		char* rutaConfig,
 		int queConsola)
 {
 	//Gracias a la guia de Beej:
@@ -70,15 +72,21 @@ int vigilar_conexiones_entrantes(
 	FD_SET(listener, &master); // agregamos a los fds que vigila select()
 	FD_SET(0, &master);		   // 0 es el fd de la consola
 
+	int fdInotify = inicializar_estructuras_inotify(rutaConfig);
+	FD_SET(fdInotify, &master);
 	// mantener cual es el fd mas grande (lo pide el select())
-	fdmax = listener; // por ahora es este
-	t_dictionary *auxiliarConexiones = dictionary_create();
+	fdmax = (listener < fdInotify) ? fdInotify : listener;
+
+	int actualizarPrintf = 1;
 
 	while (1)
 	{
 		read_fds = master;
-		printf("\n" COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
-		fflush(stdout);
+		if(actualizarPrintf){
+			printf("\n" COLOR_ANSI_MAGENTA "> " COLOR_ANSI_RESET);
+			fflush(stdout);
+		}
+		actualizarPrintf = 1;
 		int resultado = select(fdmax + 1, &read_fds, NULL, NULL, NULL);
 		if (resultado == -1)
 		{
@@ -102,14 +110,15 @@ int vigilar_conexiones_entrantes(
 						}
 						else
 						{
+							loggear_trace(string_from_format("select() iniciado"));
 							//							char* ipCliente = ip_cliente(remoteaddr);
 							FD_SET(newfd, &master);					 // se agrega al set master
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande
 
 							instr_t *instruccion_handshake;
 							recibir_request(newfd, &instruccion_handshake);
-
-							char *quienEs = (char *)list_get(instruccion_handshake->parametros, 0); //El nombre
+							loggear_trace(string_from_format("recibida instruccion handshake"));
+							char *quienEs = strdup((char *)list_get(instruccion_handshake->parametros, 0)); //El nombre
 							loggear_debug(string_from_format("Se conecto %s\n", quienEs));
 
 							sem_wait(&mutex_diccionario_conexiones);
@@ -125,20 +134,27 @@ int vigilar_conexiones_entrantes(
 							{ //No lo conocia
 								loggear_debug(string_from_format("No conocia a %s\n", quienEs));
 								sem_post(&mutex_diccionario_conexiones);
-								char *suIP = (char *)list_get(instruccion_handshake->parametros, 1);	 //Su IP, quizás se más fácil usar ip_cliente(remoteaddr)
-								char *suPuerto = (char *)list_get(instruccion_handshake->parametros, 2); //Su Puerto
 								identificador *idsNuevaConexion = malloc(sizeof(identificador));
-								strcpy(idsNuevaConexion->puerto, suPuerto);
-								strcpy(idsNuevaConexion->ip_proceso, suIP);
+								strcpy(idsNuevaConexion->puerto, (char *)list_get(instruccion_handshake->parametros, 2));
+								strcpy(idsNuevaConexion->ip_proceso, (char *)list_get(instruccion_handshake->parametros, 1));
 								idsNuevaConexion->fd_in = newfd;
-								idsNuevaConexion->fd_out = 0;
+								idsNuevaConexion->fd_out = (fd_out_inicial)?fd_out_inicial:0;
+								fd_out_inicial = 0;
 								sem_wait(&mutex_diccionario_conexiones);
 								dictionary_put(conexionesActuales, quienEs, idsNuevaConexion);
 								sem_post(&mutex_diccionario_conexiones);
 							}
 							char* auxFd = string_from_format("%d", newfd);
+//							if(dictionary_get(auxiliarConexiones, auxFd)!=NULL){
+//								free(dictionary_get(auxiliarConexiones, auxFd));
+//							}
+							loggear_trace(string_from_format("Se va a hacer free de los parametros de la instruccion handshake"));
+							list_destroy_and_destroy_elements(instruccion_handshake->parametros, free);
+							free(instruccion_handshake);
+							loggear_trace(string_from_format("Instruccion handshake freed"));
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
 							free(auxFd);
+							loggear_trace(string_from_format("auxFd Freed"));
 							//							imprimirConexiones(conexionesActuales); //Debug
 						}
 					}
@@ -148,6 +164,14 @@ int vigilar_conexiones_entrantes(
 						instr_t *request_recibida = leer_a_instruccion(bufferLeido, queConsola);
 						if (request_recibida != NULL)
 							ejecutar_requestRecibido(request_recibida, 0);
+					}
+
+					else if (i == fdInotify)
+					{
+//						loggear_trace(string_from_format("inotify"));
+						int largo = read_events(i);
+						event_handler(largo, actualizar_config);
+						actualizarPrintf = 0;
 					}
 
 					else
@@ -164,12 +188,13 @@ int vigilar_conexiones_entrantes(
 							loggear_warning(string_from_format("El cliente '%s'se desconecto\n", quienLoEnvia));
 							FD_CLR(i, &master);
 							sem_wait(&mutex_diccionario_conexiones);
-							dictionary_remove(conexionesActuales, quienLoEnvia); //No and_destroy porque se libera solo afuera del else
+							dictionary_remove_and_destroy(conexionesActuales, quienLoEnvia, free); //No and_destroy porque se libera solo afuera del else
 							sem_post(&mutex_diccionario_conexiones);
 						}
 
 						else
 						{ //Se recibio una instruccion desde otro proceso
+							loggear_trace(string_from_format("Se recibio una instruccion de otro proceso"));
 							ejecutar_requestRecibido(instrcuccion_recibida, quienLoEnvia);
 						}
 

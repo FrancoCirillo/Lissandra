@@ -15,18 +15,22 @@
 
 #include "registros.h"
 
-							/*Globales*/
+
+//GLOBALES
 void iniciar_logger();
 int  bloques_disponibles;
-							/*ARCHIVOS*/
+char* rutaConfiguracion;
+t_config* g_config;
+t_dictionary* dic_semaforos_tablas;
 
+
+//LOGS Y CONFIG
 void  loggear_FS(char*);
 void  loggear_FS_error(char*, instr_t*);
 void  inicializar_configuracion(void);
-void  inicializar_directorios(void);
 void  actualizar_tiempo_retardo_config(mseg_t);   //ver si le llega mseg_t o un char*
 void  actualizar_tiempo_dump_config(mseg_t);		//ver si le llega mseg_t o un char*
-char* obtener_por_clave(char* , char*);
+//char* obtener_por_clave(char* , char*);
 int   obtener_tiempo_dump_config();
 
 
@@ -37,6 +41,8 @@ t_config* obtener_metadata(char*);
 int 	  obtener_part_metadata(char*);
 char* 	  obtener_consistencia_metadata(char*);
 int 	  obtener_tiempo_compactacion_metadata(char*);
+
+void 	  leer_metadata_FS();
 
 //BITARRAY
 int 		bloques_en_bytes();
@@ -51,13 +57,13 @@ void 		ocupar_bloque(int);
 void 		liberar_bloque(int);
 
 
-void leer_metadata_FS();		//es un único archivo
-
-
+//DIRECTORIOS Y ARCHIVOS
+void  inicializar_directorios(void);
 void  crear_directorio(char*, char*);
 int   eliminar_directorio(char*);
 int   carpeta_esta_vacia(char*);
 FILE* crear_archivo(char*, char*, char*);
+
 
 //BLOQUES
 void  crear_bloque(char*);
@@ -72,8 +78,7 @@ int  cant_bloques_disponibles();
 void restar_bloques_disponibles(int);
 void incrementar_bloques_disponibles(int);
 
-registro_t* obtener_reg(char*);
-t_list*		buscar_key_en_bloques(char*, uint16_t, int);
+t_list*	buscar_key_en_bloques(char*, uint16_t, int);
 
 
 //TEMPORALES Y BINARIOS
@@ -92,7 +97,13 @@ void	liberar_bloques(char*);
 int 	obtener_siguiente_bloque_archivo(char*, int);
 
 
+////SEMAFOROS
+//void   crear_dic_semaforos_FS();
+//void   agregar_mutex_a_dic(char*, sem_t*);
+//sem_t* obtener_mutex_tabla(char*);
 
+
+registro_t* obtener_registro(char*);
 int archivo_inicializar(FILE*);
 
 

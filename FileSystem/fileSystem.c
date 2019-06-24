@@ -2,17 +2,17 @@
 
 #include "fileSystem.h"
 
-registro_t *crear_registro(mseg_t timestampNuevo, uint16_t keyNueva, char *valueNuevo) {
-
-	registro_t registroCreado = {
-		.timestamp = timestampNuevo,
-		.key = keyNueva,
-		.value = valueNuevo};
-
-	registro_t *miReg = malloc(sizeof(registroCreado));
-	memcpy(miReg, &registroCreado, sizeof(registroCreado));
-
-	return miReg;
+char* to_upper(char* str){
+	char* upr = "";
+	char ch;
+	int tam = strlen(str);
+	for(int i = 0; i < tam; i++) {
+//		printf("%c\n", *(str+i));
+		ch = toupper((char)*(str+i));
+		upr = string_from_format("%s%c", upr, ch);
+//		printf("%s\n", upr);
+	}
+	return upr;
 }
 
 
@@ -44,6 +44,7 @@ int main(int argc, char* argv[]) {
 
 	//inicializar_conexiones();
 
+
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin);
 //	char* ruta1bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part1.bin";
@@ -64,6 +65,19 @@ int main(int argc, char* argv[]) {
 
 
 //------------------------TESTS------------------------
+
+registro_t* crearRegistro(mseg_t timestampNuevo, uint16_t keyNueva, char *valueNuevo) {
+
+	registro_t registroCreado = {
+		.timestamp = timestampNuevo,
+		.key = keyNueva,
+		.value = valueNuevo};
+
+	registro_t *miReg = malloc(sizeof(registroCreado));
+	memcpy(miReg, &registroCreado, sizeof(registroCreado));
+
+	return miReg;
+}
 
 void imprimirContenidoArchivo(char* ruta) {
 	puts("---LEO ARCHIVO COMPLETO---");
@@ -101,19 +115,17 @@ void imprimirMetadata(char* tabla){
 t_list* listaRegistros() {
 	t_list* registros = crear_lista_registros();
 
-	registro_t* registro0 = obtener_reg("33331111;1;va de nuevo\n");
-	registro_t* registro1 = obtener_reg("43242345;253;registro1\n");
-	registro_t* registro2 = obtener_reg("43242345;43;registro2\n");
-	registro_t* registro3 = obtener_reg("43242345;54;registro3\n");
-	registro_t* registro4 = obtener_reg("43242345;5;registro4\n");
-	registro_t* registro5 = obtener_reg("99992999;5;registro5\n");
-	registro_t* registro6 = obtener_reg("33242345;34;registro6\n");
-	registro_t* registro7 = obtener_reg("43224345;64;registro7\n");
-	registro_t* registro8 = obtener_reg("43224345;11;registro8\n");
-	registro_t* registro9 = obtener_reg("43224345;34;registro9\n");
-	registro_t* registro10 = obtener_reg("23224345;5;registro10\n");
+	registro_t* registro1 = obtener_registro("43242345;253;registro1\n");
+	registro_t* registro2 = obtener_registro("43242345;43;registro2\n");
+	registro_t* registro3 = obtener_registro("43242345;54;registro3\n");
+	registro_t* registro4 = obtener_registro("43242345;5;registro4\n");
+	registro_t* registro5 = obtener_registro("99992999;5;registro5\n");
+	registro_t* registro6 = obtener_registro("33242345;34;registro6\n");
+	registro_t* registro7 = obtener_registro("43224345;64;registro7\n");
+	registro_t* registro8 = obtener_registro("43224345;11;registro8\n");
+	registro_t* registro9 = obtener_registro("43224345;34;registro9\n");
+	registro_t* registro10 = obtener_registro("23224345;5;registro10\n");
 
-	list_add(registros, registro0);
 	list_add(registros, registro1);
 	list_add(registros, registro2);
 	list_add(registros, registro3);
@@ -183,11 +195,15 @@ void pruebaDump() {
 	puts("Se agrego la tabla2 en la memtable.");
 
 	//--creo registros--
-	registro_t* registro2 = crear_registro(4324234, 25, "HolaSoyOtraPr");
-//	imprimirRegistro(registro2);
 
-	registro_t* registro = crear_registro(4324234, 34, "HolaSoyUnaPr");
-//	imprimirRegistro(registro);
+	registro_t* registro2 = crearRegistro(4324234, 25, "HolaSoyOtraPrueba");
+	puts("Cree un registro:");
+	imprimirRegistro(registro2);
+
+	registro_t* registro = crearRegistro(4324234, 32, "HolaSoyUnaPrueba");
+	puts("Cree un registro:");
+	imprimirRegistro(registro);
+
 
 	//--agrego registros--
 	t_list* registros_tabla = dictionary_get(mockMem, "TABLA2");
@@ -291,13 +307,15 @@ void finalizar_FS() {
 }
 
 void iniciar_semaforos() {
+//	//TODO: Semaforos
+//	crear_dic_semaforos_FS();
 	sem_init(&mutex_tiempo_dump_config, 0, 1);
 	sem_init(&mutex_tiempo_retardo_config, 0, 1);
 	sem_init(&mutex_memtable, 0, 1);
 	sem_init(&mutex_log, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
-	sem_init(&mutex_tablas_nro_dump,0,1);
-	sem_init(&mutex_diccionario_conexiones,0,1);
+	sem_init(&mutex_tablas_nro_dump, 0, 1);
+	sem_init(&mutex_diccionario_conexiones, 0, 1);
 	tablas_nro_dump = dictionary_create();
 }
 
@@ -384,19 +402,6 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 
 //------------FUNCIONES AUXILIARES------------
 
-char* to_upper(char* str){
-	char* upr = "";
-	char ch;
-	int tam = strlen(str);
-	for(int i = 0; i < tam; i++) {
-//		printf("%c\n", *(str+i));
-		ch = toupper((char)*(str+i));
-		upr = string_from_format("%s%c", upr, ch);
-//		printf("%s\n", upr);
-	}
-	return upr;
-}
-
 char* obtener_nombre_tabla(instr_t* instr) {
 	//char* tabla = obtener_parametro(instr, 0);
 	//return to_upper(tabla);
@@ -431,22 +436,26 @@ void liberar_memoria_instr(instr_t * instr) {
 void inicializar_conexiones() {
 	puts("Inicializando conexiones");
 	conexionesActuales = dictionary_create();
+	auxiliarConexiones = dictionary_create();
 	callback = evaluar_instruccion;
+	fd_out_inicial = 0;
 	puts("callback creado");
 	iniciar_servidor(miIP, config_FS.puerto_escucha);
 	puts("Servidor iniciado");
-	vigilar_conexiones_entrantes(callback, CONSOLA_FS);
+	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem", CONSOLA_FS);
 }
 
 void enviar_tamanio_value(char* remitente) {
 	int conexionMemoriaN = obtener_fd_out(remitente);
-    t_list *listaParam = list_create();
+	t_list *listaParam = list_create();
     char* tamanioValue = string_from_format("%d", config_FS.tamanio_value);
     list_add(listaParam, tamanioValue);
+    char* puntoMontaje = string_from_format("%s", config_FS.punto_montaje);
+    list_add(listaParam, puntoMontaje);
+
     instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
-	puts("Enviando tamanio del value");
     enviar_request(miInstruccion, conexionMemoriaN);
-    puts("Tamanio del value enviado");
+    puts("Tamanio del value y punto de montaje enviados");
 }
 
 void responderHandshake(identificador *idsConexionEntrante) {
@@ -462,8 +471,15 @@ void responderHandshake(identificador *idsConexionEntrante) {
 }
 
 int obtener_fd_out(char *proceso) {
+	sem_wait(&mutex_diccionario_conexiones);
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
-	if (idsProceso->fd_out == 0) { //Es la primera vez que se le quiere enviar algo a proceso
+	sem_post(&mutex_diccionario_conexiones); //quizas en todo obtener_fd_out iria
+	if(idsProceso == NULL){
+		loggear_error(string_from_format("Se desconoce completamente el proceso %s", proceso));
+		return 0;
+	}
+	if (idsProceso->fd_out == 0) {
+		loggear_trace(string_from_format("Es la primera vez que se quiere enviar algo al proceso"));//Es la primera vez que se le quiere enviar algo a proceso
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;
@@ -492,21 +508,47 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 	default: //Consola file system
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
-		//Se pidio desde la consola de FS
-		if (codigoOperacion == DEVOLUCION_SELECT)
-			imprimir_registro(miInstruccion);
+
+		if (codigoOperacion == DEVOLUCION_SELECT) //Se pidio desde la consola de FS
+			imprimir_registro(miInstruccion, loggear_info);
 
 		if (codigoOperacion == CODIGO_EXITO)
-		{
 			loggear_exito_proceso(miInstruccion);
-		}
+
 		if (codigoOperacion > BASE_COD_ERROR)
-		{
 			loggear_error_proceso(miInstruccion);
-		}
+
 		break;
 	}
 }
 
+void actualizar_config(){
+
+	t_config * auxConfig;
+	while((auxConfig = config_create(rutaConfiguracion)) == NULL||
+			!config_has_property(auxConfig, "RETARDO")			||
+			!config_has_property(auxConfig, "TIEMPO_DUMP")){
+		config_destroy(auxConfig);
+	}
+
+	sem_wait(&mutex_tiempo_retardo_config);
+	config_FS.retardo = (mseg_t)config_get_int_value(auxConfig, "RETARDO");
+	sem_post(&mutex_tiempo_retardo_config);
+
+	sem_wait(&mutex_tiempo_dump_config);
+	config_FS.tiempo_dump = (mseg_t)config_get_int_value(auxConfig, "TIEMPO_DUMP");
+	sem_post(&mutex_tiempo_dump_config);
+
+	config_destroy(auxConfig);
+
+	loggear_info(string_from_format("Config actualizado!\n"
+									"Retardo: %" PRIu64 "\n"
+									"Tiempo de Dump: %" PRIu64,
+									config_FS.retardo, config_FS.tiempo_dump));
+
+	printf("\n"COLOR_ANSI_MAGENTA "> " COLOR_ANSI_RESET);
+	fflush(stdout);
+
+}
 
 
