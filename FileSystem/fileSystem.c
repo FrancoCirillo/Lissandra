@@ -64,17 +64,20 @@ registro_t* crearRegistro(mseg_t timestampNuevo, uint16_t keyNueva, char *valueN
 void imprimirContenidoArchivo(char* ruta, void (*funcion_log)(char *texto)) {
 	loggear_trace(string_from_format("---LEO ARCHIVO COMPLETO---"));
 	FILE* f = fopen(ruta, "r");
-	char caracter_leido = fgetc(f);
-	int leidos = 0;
-	char *texto = string_new();
+	if(f != NULL){
+		char caracter_leido = fgetc(f);
+		int leidos = 0;
+		char *texto = string_new();
 
-	while(caracter_leido != EOF){
-		string_append_with_format(&texto, "%c", caracter_leido);
-		caracter_leido = fgetc(f);
-		leidos++;
+		while(caracter_leido != EOF){
+			string_append_with_format(&texto, "%c", caracter_leido);
+			caracter_leido = fgetc(f);
+			leidos++;
+		}
+		funcion_log(texto);
+		funcion_log(string_from_format("Leidos: %d\n", leidos));
 	}
-	funcion_log(texto);
-	funcion_log(string_from_format("Leidos: %d\n", leidos));
+	else loggear_warning(string_from_format("No se pudo abrir el archivo %s", ruta));
 }
 
 //Se puede pasar el logger por parametro como en la funcion de arriba o directamente presetearle uno (si sabes que siempre vas a querer el mismo)

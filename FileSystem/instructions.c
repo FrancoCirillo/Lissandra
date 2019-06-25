@@ -194,11 +194,10 @@ void execute_select(instr_t* instruccion, char* remitente) {
 //	}
 
 	if(list_is_empty(registros_key)) {
-		loggear_debug(string_from_format("No hay registros de la key"));
-		char* cadena = string_from_format("No se encontraron registros con la key '%d'", key);
+		loggear_trace(string_from_format("No hay registros de la key"));
+		char* cadena = string_from_format("No se encontraron registros en la tabla %s con la key '%d'", tabla, key);
 		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		free(cadena);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 		return;
 	}
 
