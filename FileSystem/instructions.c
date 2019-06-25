@@ -11,32 +11,32 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 	switch (codigoNeto) {
 
 	case CODIGO_CREATE:
-		loggear_FS("Me llego una instruccion CREATE.");
+		loggear_debug(string_from_format("Me llego una instruccion CREATE."));
 		execute_create(instr, remitente);
 		break;
 
 	case CODIGO_INSERT:
-		loggear_FS("Me llego una instruccion INSERT.");
+		loggear_debug(string_from_format("Me llego una instruccion INSERT."));
 		ejecutar_instruccion_insert(instr, remitente);
 		break;
 
 	case CODIGO_SELECT:
-		loggear_FS("Me llego una instruccion SELECT.");
+		loggear_debug(string_from_format("Me llego una instruccion SELECT."));
 		execute_select(instr, remitente);
 		break;
 
 	case CODIGO_DESCRIBE:
-		loggear_FS("Me llego una instruccion DESCRIBE.");
+		loggear_trace(string_from_format("Me llego una instruccion DESCRIBE."));
 		execute_describe(instr, remitente);
 		break;
 
 	case CODIGO_DROP:
-		loggear_FS("Me llego una instruccion DROP.");
+		loggear_trace(string_from_format("Me llego una instruccion DROP."));
 		execute_drop(instr, remitente);
 		break;
 
 	case CODIGO_CERRAR:
-		loggear_FS("Se cerrara el File System.");
+		loggear_trace(string_from_format("Se cerrara el File System."));
 		finalizar_FS();
 		break;
 
@@ -46,7 +46,7 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 		break;
 
 	default:
-		loggear_FS("Me llego una instruccion invalida dentro del File System.");
+		loggear_warning(string_from_format("Me llego una instruccion invalida dentro del File System."));
 	}
 }
 
@@ -115,7 +115,7 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 	sem_wait(mutex_tabla);
 	agregar_registro(tabla, registro);
 	sem_post(mutex_tabla);
-	puts("--Tremendos esos semaforos--");
+		loggear_trace(string_from_format("--Tremendos esos semaforos--"));
 
 //	if(!sem_trywait(&mutex_tabla)){	//Testing: si puede hacer wait lo hace y devuelve 0
 //		agregar_registro(tabla, registro);
@@ -152,7 +152,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 	t_list *listaParam = list_create();
 
 	if (!existe_tabla(tabla)) {
-		puts("No existe la tabla");
+		loggear_trace(string_from_format("No existe la tabla"));
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
@@ -209,7 +209,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 //	}
 
 	if(list_is_empty(registros_key)) {
-		puts("No hay registros de la key");
+		loggear_debug(string_from_format("No hay registros de la key"));
 		char* cadena = string_from_format("No se encontraron registros con la key '%d'", key);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
@@ -217,7 +217,8 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		return;
 	}
 
-	puts("\nRegistro encontrado");
+	loggear_trace(string_from_format("\nRegistro encontrado"));
+
 	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);
 
 	list_add(listaParam, tabla);
@@ -256,7 +257,7 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 		resultadoDrop = eliminar_directorio(tabla);
 		sem_post(mutex_tabla);
 		eliminar_mutex_de_tabla(tabla);
-		puts("--Tremendos esos semaforos--");
+			loggear_trace(string_from_format("--Tremendos esos semaforos--"));
 
 
 //		if(!sem_trywait(mutex_tabla)){	//Testing: si puede hacer wait, lo hace y devuelve 0
@@ -327,7 +328,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 				list_add(listaParam, tiempo_comp);
 			}
 		}
-		puts("Tablas leidas, enviando");
+		loggear_trace(string_from_format("Tablas leidas, enviando"));
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 		free(ruta);
 		closedir(directorio);

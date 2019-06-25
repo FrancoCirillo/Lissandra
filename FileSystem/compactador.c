@@ -106,12 +106,12 @@ void compactador(char* tabla){
 
 
 t_list* listar_archivos(char* tabla){
-	printf("---Entre a listar_archivos de la tabla %s---\n", tabla);
+	loggear_trace(string_from_format("---Entre a listar_archivos de la tabla %s---\n", tabla));
 	char* ruta_tabla =  obtener_ruta_tabla(tabla);
 
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
-		puts("Error: No se pudo abrir el directorio");
+		loggear_error(string_from_format("Error: No se pudo abrir el directorio"));
 		//free(ruta_tabla);
 		exit(2);
 	}
@@ -124,7 +124,7 @@ t_list* listar_archivos(char* tabla){
 			if(string_contains(archivo, ".")) {
 				char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
 				list_add(archivos, ruta_archivo);
-				printf("la ruta del archivo leido es: %s", archivo);
+				loggear_debug(string_from_format("la ruta del archivo leido es: %s", archivo));
 			}
 			free(archivo);
 		}
@@ -160,29 +160,29 @@ void compactar5(){
 
 void pasar_a_tmpc(char* tabla) {
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
-	printf("RUTA TABLA: %s\n", ruta_tabla);
+	loggear_trace(string_from_format("RUTA TABLA: %s\n", ruta_tabla));
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
-		puts("Error: No se pudo abrir el directorio");
+		loggear_error(string_from_format("Error: No se pudo abrir el directorio"));
 		//free(ruta_tabla);
 		exit(2);
 	}
 	struct dirent* directorio_leido;
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		char* nombre_archivo = directorio_leido->d_name;
-		printf("Nombre archivo: %s\n", nombre_archivo);
+		loggear_debug(string_from_format("Nombre archivo: %s\n", nombre_archivo));
 		if(string_ends_with(nombre_archivo, ".tmp")) {
-			puts("Es un tmp");
+			loggear_trace(string_from_format("Es un tmp"));
 			char* nombre_viejo = string_from_format("%s/%s", ruta_tabla, nombre_archivo);
-			printf("Nombre viejo: %s\n", nombre_viejo);
+			loggear_trace(string_from_format("Nombre viejo: %s\n", nombre_viejo));
 			int length  = strlen(nombre_archivo);
-			printf("Letras del nombre: %d\n", length);
+			loggear_trace(string_from_format("Letras del nombre: %d\n", length));
 			char* nombre_sin_ext = string_substring_until(nombre_archivo, length-4);
-			printf("Nombre sin extension: %s\n", nombre_sin_ext);
+			loggear_trace(string_from_format("Nombre sin extension: %s\n", nombre_sin_ext));
 			char* nuevo_nombre = string_from_format("%s/%s.tmpc", ruta_tabla, nombre_sin_ext);
-			printf("Nuevo nombre: %s\n", nuevo_nombre);
+			loggear_info(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
 			int status = rename(nombre_viejo, nuevo_nombre);
-			printf("Status: %d\n", status);
+			loggear_trace(string_from_format("Status: %d\n", status));
 		}
 	}
 	//resetear_numero_dump(tabla);
