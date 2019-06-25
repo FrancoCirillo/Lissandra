@@ -40,7 +40,7 @@ sem_t* obtener_mutex_tabla(char* tabla){
 	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 }
 
-int obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
+int aux_obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
 	loggear_trace(string_from_format("Entre a obtener_mutex_tabla"));
 	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 	int sem_val;
