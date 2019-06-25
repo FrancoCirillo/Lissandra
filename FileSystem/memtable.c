@@ -7,7 +7,7 @@ void inicializar_memtable() {
 	DIR* directorio = opendir(g_ruta.tablas);
 	if (directorio != NULL)
 		levantar_tablas_directorio(directorio);
-	loggear_debug(string_from_format("Se inicializó la memtable."));
+	loggear_FS("Se inicializó la memtable.");
 }
 
 void finalizar_memtable() { //Borra y libera todos los registros y tablas.
@@ -69,13 +69,13 @@ t_list* crear_lista_registros() {
 void agregar_tabla(char* tabla) {
 	t_list* registros = crear_lista_registros();
 	dictionary_put(memtable, tabla, registros);
-	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
+	loggear_FS("Se agrego la tabla en la memtable.");
 }
 
 void agregar_registro(char* tabla, registro_t* registro) {
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	list_add(registros_tabla, registro);
-	loggear_info(string_from_format("Se inserto el registro en la memtable."));
+	loggear_FS("Se inserto el registro en la memtable.");
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {

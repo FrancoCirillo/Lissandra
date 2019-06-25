@@ -76,7 +76,6 @@ typedef struct config_FS_t {
 	int tamanio_value;
 	mseg_t retardo;
 	mseg_t tiempo_dump;
-	t_log_level LOG_LEVEL;
 } config_FS_t;
 
 typedef struct metadata_FS_t {
@@ -97,7 +96,7 @@ t_config* meta_config;
 /*TESTS*/
 registro_t* crearRegistro(mseg_t, uint16_t, char*);
 void		imprimirRegistro(void*);
-void		imprimirContenidoArchivo(char* ruta, void (*funcion_log)(char *texto));
+void		imprimirContenidoArchivo(char*);
 void		imprimirMetadata(char*);
 t_list*		listaRegistros();
 void		pruebaDump();
@@ -112,7 +111,6 @@ void iniciar_semaforos();
 void iniciar_rutas();
 void finalizar_rutas();
 void actualizar_config();
-void actualizar_log_level();
 
 /*FUNCIONES DE BLOQUES*/
 t_list* leer_binario(char*, uint16_t);
