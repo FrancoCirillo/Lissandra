@@ -253,8 +253,8 @@ instr_t *leer_a_instruccion(char *request, int queConsola)
 					break;
 				}
 			}
-			actual = strtok(NULL, " \n"); //(Si es el insert, el 2do parametro)
 		}
+		actual = strtok(NULL, " \n"); //(Si es el insert, el 2do parametro)
 	}
 
 	free(requestCopy);
