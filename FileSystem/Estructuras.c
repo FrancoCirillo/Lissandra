@@ -35,9 +35,10 @@ void agregar_a_dic_semaforos(char* tabla, sem_t* mutex_tabla){
 	dictionary_put(dic_semaforos_tablas, tabla, mutex_tabla);
 }
 
-//void obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
-//	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
-//}
+sem_t* obtener_mutex_tabla(char* tabla){
+	puts("Entre a obtener_mutex_tabla");
+	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
+}
 
 int obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
 	loggear_trace(string_from_format("Entre a obtener_mutex_tabla"));
@@ -45,11 +46,6 @@ int obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
 	int sem_val;
 	sem_getvalue(mutex_tabla, &sem_val);
 	return sem_val;
-}
-
-sem_t* aux_obtener_mutex_tabla(char* tabla){
-	loggear_trace(string_from_format("Entre a aux_obtener_mutex_tabla"));
-	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 }
 
 int existe_mutex(char* tabla){
@@ -108,7 +104,7 @@ int eliminar_directorio(char* tabla) {
 
 //---------------------------METADATA---------------------------
 char* obtener_path_metadata(char* tabla) {
-	return string_from_format("%s%sMetadata", g_ruta.tablas, tabla);
+	return string_from_format("%s%s/Metadata", g_ruta.tablas, tabla);
 }
 
 t_config* obtener_metadata(char* tabla) {
