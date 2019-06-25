@@ -273,6 +273,7 @@ void inicializar_FS(int argc, char* argv[]) {
 }
 
 void finalizar_FS() {
+	dumpear(memtable);
 	config_destroy(g_config);
 	finalizar_rutas();
 	finalizar_memtable();
@@ -282,7 +283,6 @@ void finalizar_FS() {
 }
 
 void iniciar_semaforos() {
-//TODO: Semaforos
 	crear_dic_semaforos_FS();
 	sem_init(&mutex_tiempo_dump_config, 0, 1);
 	sem_init(&mutex_tiempo_retardo_config, 0, 1);
@@ -314,7 +314,7 @@ void finalizar_rutas(){
 //------------FUNCIONES DE BLOQUES------------
 
 t_list* leer_binario(char* tabla, uint16_t key) {
-	loggear_trace(string_from_format("---Estoy buscando en el binario---"));
+	loggear_trace(string_from_format("---Buscando en el binario---"));
 	int particion = obtener_particion_key(tabla, key);
 	char* ruta_bin = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, particion);
 	imprimirContenidoArchivo(ruta_bin, loggear_debug); //Aca se podria pasar loggear_trace
@@ -325,18 +325,20 @@ t_list* leer_binario(char* tabla, uint16_t key) {
 }
 
 t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
-	loggear_trace(string_from_format("---Estoy buscando en los temporales---"));
+	loggear_trace(string_from_format("---Buscando en los temporales---"));
 	t_list* registros = crear_lista_registros();
 	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
 		loggear_error(string_from_format("Error: No se puede abrir el directorio %s\n", ruta_tabla));
-		exit(2);
+		free(ruta_tabla);
+		closedir(directorio);
+		return NULL;
 	}
 
 	struct dirent* directorio_leido;
 	while((directorio_leido = readdir(directorio)) != NULL) {
-		loggear_info(string_from_format("Directorio leido: %s\n", directorio_leido->d_name));
+		loggear_debug(string_from_format("Directorio leido: %s\n", directorio_leido->d_name));
 		char* nombre_archivo = directorio_leido->d_name;
 		if(string_ends_with(nombre_archivo, "tmp")) {
 			char* ruta_tmp = string_from_format("%s%s", ruta_tabla, nombre_archivo);
@@ -378,8 +380,6 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 //------------FUNCIONES AUXILIARES------------
 
 char* obtener_nombre_tabla(instr_t* instr) {
-	//char* tabla = obtener_parametro(instr, 0);
-	//return to_upper(tabla);
 	return obtener_parametro(instr, 0);
 }
 
@@ -442,12 +442,13 @@ int obtener_fd_out(char *proceso) {
 	sem_wait(&mutex_diccionario_conexiones);
 	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
 	sem_post(&mutex_diccionario_conexiones); //quizas en todo obtener_fd_out iria
+
 	if(idsProceso == NULL){
 		loggear_error(string_from_format("Se desconoce completamente el proceso %s", proceso));
 		return 0;
 	}
 	if (idsProceso->fd_out == 0) {
-		loggear_trace(string_from_format("Es la primera vez que se quiere enviar algo al proceso"));//Es la primera vez que se le quiere enviar algo a proceso
+		loggear_trace(string_from_format("Es la primera vez que se quiere enviar algo al proceso"));
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;
@@ -514,7 +515,7 @@ void actualizar_config(){
 	sem_post(&mutex_log);
 	config_destroy(auxConfig);
 
-	loggear_info(string_from_format("Config actualizado!\n"
+	loggear_info(string_from_format("Se ha actualizado el archivo de config.\n"
 									"Retardo: %" PRIu64 "\n"
 									"Tiempo de Dump: %" PRIu64
 									"\nLog level: %s",

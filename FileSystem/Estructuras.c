@@ -36,12 +36,12 @@ void agregar_a_dic_semaforos(char* tabla, sem_t* mutex_tabla){
 }
 
 sem_t* obtener_mutex_tabla(char* tabla){
-	puts("Entre a obtener_mutex_tabla");
+	loggear_trace(string_from_format("Obteniendo semaforo de tabla"));
 	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 }
 
 int aux_obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
-	loggear_trace(string_from_format("Entre a obtener_mutex_tabla"));
+	loggear_trace(string_from_format("Entre a aux_obtener_mutex_tabla"));
 	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 	int sem_val;
 	sem_getvalue(mutex_tabla, &sem_val);
@@ -49,7 +49,7 @@ int aux_obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
 }
 
 int existe_mutex(char* tabla){
-	loggear_trace(string_from_format("Entre a existe_mutex"));
+	loggear_trace(string_from_format("Verificando existencia de mutex"));
 	return dictionary_has_key(dic_semaforos_tablas, tabla);
 }
 
@@ -152,7 +152,6 @@ int tam_registro(registro_t* registro) {
 
 char* obtener_ruta_bloque(int nro_bloque) {
 	return string_from_format("%s%d.bin", g_ruta.bloques, nro_bloque);
-
 }
 
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {

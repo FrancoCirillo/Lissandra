@@ -16,14 +16,15 @@ void finalizar_memtable() { //Borra y libera todos los registros y tablas.
 }
 
 void levantar_tablas_directorio(DIR* directorio) {
-	puts("Entre a levantar_tablas_directorio");
+	loggear_trace(string_from_format("Levantando tablas del directorio"));
 	struct dirent* directorio_leido;
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		char* tabla = directorio_leido->d_name;
 		if(!string_contains(tabla, ".")) {
 			t_list* registros = crear_lista_registros();
-			agregar_a_contador_dumpeo(tabla);
 			dictionary_put(memtable, tabla, registros);
+			inicializar_semaforo_tabla(tabla);
+			agregar_a_contador_dumpeo(tabla);
 		}
 	}
 }
@@ -75,11 +76,12 @@ void agregar_tabla(char* tabla) {
 void agregar_registro(char* tabla, registro_t* registro) {
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	list_add(registros_tabla, registro);
-	loggear_info(string_from_format("Se inserto el registro en la memtable."));
+	loggear_debug(string_from_format("Se inserto el registro en la memtable."));
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {
-	puts("---Estoy buscando en la memtable---");
+	puts("");
+	loggear_trace(string_from_format("---Buscando en la memtable---"));
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 
 	_Bool es_key_registro(void* registro){
@@ -87,12 +89,11 @@ t_list* obtener_registros_mem(char* tabla, uint16_t key) {
 		return key_registro == key;
 	}
 	t_list* registros = list_filter(registros_tabla, &es_key_registro);
-	printf("Tam de lista mem: %d\n", list_size(registros));
+	loggear_trace(string_from_format("Tam de lista mem: %d\n", list_size(registros)));
 	return registros;
 }
 
 registro_t* obtener_registro(char* buffer) {
-//	puts("---OBTENER REGISTRO---");
 	char* bufferCopy = strdup(buffer);
 	registro_t* registro = malloc(sizeof(registro_t));
 	char* valor;
@@ -110,7 +111,6 @@ registro_t* obtener_registro(char* buffer) {
 	registro->value = valor;
 
 	free(bufferCopy);
-//	puts("Pase el registro formateado a registro");
 	return registro;
 }
 
@@ -124,9 +124,9 @@ registro_t* pasar_a_registro(instr_t* instr) {
 
 //NUMERO DE DUMP
 void resetear_numero_dump(char* tabla) {
-	int * rdo;
+	int* rdo;
 	sem_wait(&mutex_tablas_nro_dump);
-	rdo=dictionary_get(tablas_nro_dump, tabla);
+	rdo = dictionary_get(tablas_nro_dump, tabla);
 	(*rdo) = 0;
 	sem_post(&mutex_tablas_nro_dump);
 }
@@ -145,11 +145,13 @@ void inicializar_tablas_nro_dump() {
 	tablas_nro_dump = dictionary_create();
 }
 
-void finalizar_tablas_nro_dump() {
-//	void destroyer(void* value){
-//		free(value);
-//	}
+void eliminar_nro_dump_de_tabla(char* tabla){
+	sem_wait(&mutex_tablas_nro_dump);
+	dictionary_remove_and_destroy(tablas_nro_dump, tabla, free);
+	sem_post(&mutex_tablas_nro_dump);
+}
 
+void finalizar_tablas_nro_dump() {
 	dictionary_destroy_and_destroy_elements(tablas_nro_dump, &free);
 }
 
@@ -161,18 +163,20 @@ void agregar_a_contador_dumpeo(char* nombre_tabla) {//SE DEBE LLAMAR AL CREAR LA
 	sem_post(&mutex_tablas_nro_dump);
 }
 
+
+
 void ejemplo_nro_dump(){
 	iniciar_semaforos();
 	agregar_a_contador_dumpeo("Tabla1");
 	agregar_a_contador_dumpeo("Tabla2");
 	agregar_a_contador_dumpeo("Tabla53");
-	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
-	printf("El siguiente numero de dump para la tabla2 es %d\n",siguiente_nro_dump("Tabla2"));
-	printf("El siguiente numero de dump para la tabla2 es %d\n",siguiente_nro_dump("Tabla2"));
-	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
+	printf("El siguiente numero de dump para la tabla1 es %d\n", siguiente_nro_dump("Tabla1"));
+	printf("El siguiente numero de dump para la tabla2 es %d\n", siguiente_nro_dump("Tabla2"));
+	printf("El siguiente numero de dump para la tabla2 es %d\n", siguiente_nro_dump("Tabla2"));
+	printf("El siguiente numero de dump para la tabla1 es %d\n", siguiente_nro_dump("Tabla1"));
 	resetear_numero_dump("Tabla1");
 	printf("Se resetea numero de dump\n");
-	printf("El siguiente numero de dump para la tabla1 es %d\n",siguiente_nro_dump("Tabla1"));
+	printf("El siguiente numero de dump para la tabla1 es %d\n", siguiente_nro_dump("Tabla1"));
 
 }
 
@@ -183,16 +187,17 @@ void dumpear_tabla(char* tabla, void* registros) {
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 		FILE* temporal = crear_tmp(tabla, nombre_tmp);
-		puts("Creando temporal");
+
+		loggear_trace(string_from_format("Creando temporal"));
 		int nro_bloque = archivo_inicializar(temporal);
-		puts("Inicializando temporal");
+		loggear_trace(string_from_format("Inicializando temporal"));
 
 		char* ruta_bloque;
-		int ult_bloque;
+		//int ult_bloque;
 		//IMPORTANTE (Dai): agrego que lea el ult bloque, ya que antes escribia todo en uno solo, y eso esta mal.
 
 		void escribir_reg_en_tmp(void* registro) {
-			ult_bloque= obtener_ultimo_bloque(ruta_tmp);
+			//ult_bloque = obtener_ultimo_bloque(ruta_tmp);
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 			free(ruta_bloque);
@@ -202,7 +207,6 @@ void dumpear_tabla(char* tabla, void* registros) {
 
 		free(ruta_tmp);
 		free(nombre_tmp);
-		free(ruta_bloque);
 		fclose(temporal);
 	}
 }
@@ -220,13 +224,13 @@ void dumpeo() {    //Version sin uso del diccionario.
 
 	while (1) {
 		sleep(tiempo_dump);
-		puts("estoy dumpenado");
+		puts("estoy dumpeando");
 		mem = memtable;
 
 		dumpear(mem);
 
 		sem_wait(&mutex_memtable);
-		limpiar_memtable();  //la deja como nueva. sin tablas.
+		limpiar_memtable();  //La deja como nueva. Sin tablas.
 		sem_post(&mutex_memtable);
 
 		sem_wait(&mutex_tiempo_dump_config);

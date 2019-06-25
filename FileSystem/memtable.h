@@ -34,6 +34,7 @@ char* obtener_ruta_tabla(char*);
 
 void inicializar_tablas_nro_dump();
 void finalizar_tablas_nro_dump();
+void eliminar_nro_dump_de_tabla(char*);
 void agregar_a_contador_dumpeo(char*);
 int  siguiente_nro_dump(char*);
 void dumpear_tabla(char*, void*);

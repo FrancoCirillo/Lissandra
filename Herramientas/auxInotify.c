@@ -34,7 +34,7 @@ int watch_dir(int fd, const char *dirname, unsigned long watchFlags) {
 		loggear_error(
 				string_from_format("No se pudo agregar %s con los flags %lX al inotify watch: %s\n",dirname, watchFlags, strerror(errno)));
 	} else {
-		loggear_info(string_from_format("Vigilando la entrada %s WD=%d\n", dirname, wd));
+		loggear_trace(string_from_format("Vigilando la entrada %s WD=%d\n", dirname, wd));
 	}
 	return wd;
 }
@@ -63,7 +63,7 @@ void event_handler(int length, void (*actualizar_config)(void)){
 				if (event->mask & IN_ISDIR) {
 					loggear_warning(string_from_format("El directorio '%s' fue modificado", event->name));
 				} else if(string_ends_with(event->name, ".config")){
-					loggear_info(string_from_format("Archivo de congif '%s' modificado", event->name));
+					loggear_trace(string_from_format("Archivo de config '%s' modificado", event->name));
 					actualizar_config();
 				}
 			}
