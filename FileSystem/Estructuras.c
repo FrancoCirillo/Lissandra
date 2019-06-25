@@ -202,91 +202,96 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 //	loggear_trace(string_from_format("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
 //	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
 	t_config* archivo = config_create(ruta_archivo);
-	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
+	if(archivo != NULL){
+		char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
 
-	if(nro_bloque == -1) {
-		char* bloque = lista_bloques[0];
-		int mi_bloque = atoi(bloque);
-		config_destroy(archivo);
-		return mi_bloque;
-	} else {
-		int bloques_usados = cantidad_bloques_usados(ruta_archivo);
-		char* mi_bloque = string_itoa(nro_bloque);
-		for(int tam = 0; *(lista_bloques + tam); tam++) {
-//			printf("Entre al for, busco al bloque %s\n", mi_bloque);
-			char* bloque = *(lista_bloques + tam);
-//			printf("Bloque como string: %s\n", bloque);
-//			char* sig_bloque = *(lista_bloques + tam +1);
-//			printf("Siguiente bloque como string: %s\n", sig_bloque);
+		if(nro_bloque == -1) {
+			char* bloque = lista_bloques[0];
+			int mi_bloque = atoi(bloque);
+			config_destroy(archivo);
+			return mi_bloque;
+		} else {
+			int bloques_usados = cantidad_bloques_usados(ruta_archivo);
+			char* mi_bloque = string_itoa(nro_bloque);
+			for(int tam = 0; *(lista_bloques + tam); tam++) {
+	//			printf("Entre al for, busco al bloque %s\n", mi_bloque);
+				char* bloque = *(lista_bloques + tam);
+	//			printf("Bloque como string: %s\n", bloque);
+	//			char* sig_bloque = *(lista_bloques + tam +1);
+	//			printf("Siguiente bloque como string: %s\n", sig_bloque);
 
-			if(string_equals_ignore_case(bloque, mi_bloque) && tam+1 < bloques_usados) {
-//				printf("Entre al if\t%s\t%s\n", bloque, mi_bloque);
-				char* sig_bloque = *(lista_bloques + tam +1);
-				int bloque_siguiente = atoi(sig_bloque);
-				free(sig_bloque);
-//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
-				config_destroy(archivo);
-				return bloque_siguiente;
+				if(string_equals_ignore_case(bloque, mi_bloque) && tam+1 < bloques_usados) {
+	//				printf("Entre al if\t%s\t%s\n", bloque, mi_bloque);
+					char* sig_bloque = *(lista_bloques + tam +1);
+					int bloque_siguiente = atoi(sig_bloque);
+					free(sig_bloque);
+	//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
+					config_destroy(archivo);
+					return bloque_siguiente;
+				}
 			}
 		}
-    }
-    config_destroy(archivo);
+	}
+	else loggear_warning(string_from_format("No se pudo crear el config para el archivo %s", ruta_archivo));
     return -1;
 }
 
 t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=0, .tmp=1
 	loggear_trace(string_from_format("Entre a buscar_key_en_bloques"));
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
-	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-	imprimirContenidoArchivo(ruta_bloque, loggear_debug);
-	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-	t_list* registros = crear_lista_registros();
-	int status = 1;
+	if(nro_bloque != -1){
+		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+		imprimirContenidoArchivo(ruta_bloque, loggear_debug);
+		FILE* archivo_bloque = fopen(ruta_bloque, "r");
+		t_list* registros = crear_lista_registros();
+		int status = 1;
 
-	int cant_letras_ts= strlen(mseg_a_string(obtener_ts()));
-	loggear_trace(string_from_format("\n\ncant_letras_ts\n\n\n %d", cant_letras_ts));
-	char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + strlen(string_itoa((int)key)))); //   +4 por: \n ; ; \0
-	strcpy(buffer,"");
+		int cant_letras_ts= strlen(mseg_a_string(obtener_ts()));
+		loggear_trace(string_from_format("\n\ncant_letras_ts\n\n\n %d", cant_letras_ts));
+		char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + strlen(string_itoa((int)key)))); //   +4 por: \n ; ; \0
+		strcpy(buffer,"");
 
-	char* s_caracter;
-	char caracter_leido;
+		char* s_caracter;
+		char caracter_leido;
 
-	while(status) {
-		caracter_leido = fgetc(archivo_bloque);
+		while(status) {
+			caracter_leido = fgetc(archivo_bloque);
 
-		switch(caracter_leido) {
-		case '\n': //tengo un registro completo
-			strcat(buffer, "\n");
-			registro_t* registro = obtener_registro(buffer);
+			switch(caracter_leido) {
+			case '\n': //tengo un registro completo
+				strcat(buffer, "\n");
+				registro_t* registro = obtener_registro(buffer);
 
-			if(registro->key == key) {
-				list_add(registros, registro); //lo agrego solo si tiene la key que busco
-				status = tipo_archivo; //si es binario, se pone en 0 y corta el while
+				if(registro->key == key) {
+					list_add(registros, registro); //lo agrego solo si tiene la key que busco
+					status = tipo_archivo; //si es binario, se pone en 0 y corta el while
+				}
+				strcpy(buffer, "");
+				break;
+
+			case EOF: //se me acabo el archivo
+				fclose(archivo_bloque);
+				free(ruta_bloque);
+				int bloque_anterior = nro_bloque;
+				nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
+
+				if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
+					ruta_bloque = obtener_ruta_bloque(nro_bloque);
+					imprimirContenidoArchivo(ruta_bloque, loggear_debug);
+					archivo_bloque = fopen(ruta_bloque, "r");
+				} else
+					status = 0; //corta el while
+				break;
+
+			default:
+				s_caracter = string_from_format("%c", caracter_leido);
+				strcat(buffer, s_caracter);
+				break;
 			}
-			strcpy(buffer, "");
-			break;
-
-		case EOF: //se me acabo el archivo
-			fclose(archivo_bloque);
-			free(ruta_bloque);
-			int bloque_anterior = nro_bloque;
-			nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
-
-			if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
-				ruta_bloque = obtener_ruta_bloque(nro_bloque);
-				imprimirContenidoArchivo(ruta_bloque, loggear_debug);
-				archivo_bloque = fopen(ruta_bloque, "r");
-			} else
-				status = 0; //corta el while
-			break;
-
-		default:
-			s_caracter = string_from_format("%c", caracter_leido);
-			strcat(buffer, s_caracter);
-			break;
 		}
+		return registros; //En la funcion que lo llamo, tengo que validar que no este vacio y destruir la lista
 	}
-	return registros; //En la funcion que lo llamo, tengo que validar que no este vacio y destruir la lista
+	else return NULL;
 }
 
 //---------------------------BITARRAY---------------------------

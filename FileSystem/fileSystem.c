@@ -323,7 +323,8 @@ t_list* leer_binario(char* tabla, uint16_t key) {
 	imprimirContenidoArchivo(ruta_bin, loggear_debug); //Aca se podria pasar loggear_trace
 	t_list* registro_key = buscar_key_en_bloques(ruta_bin, key, 0);
 	free(ruta_bin);
-	loggear_debug(string_from_format("Tam de lista binarios: %d\n", list_size(registro_key)));
+	if(registro_key != NULL)
+		loggear_debug(string_from_format("Tam de lista binarios: %d\n", list_size(registro_key)));
 	return registro_key;
 }
 
@@ -371,8 +372,9 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registros_totales = crear_lista_registros(); //free
 	list_add_all(registros_totales, registros_mem);
 	list_add_all(registros_totales, registros_temp);
-	list_add_all(registros_totales, registro_bin);
-
+	if(registro_bin != NULL)
+		list_add_all(registros_totales, registro_bin);
+	else return NULL;
 //	borrar_lista_registros(registros_mem);
 //	borrar_lista_registros(registros_temp);
 //	borrar_lista_registros(registro_bin);
