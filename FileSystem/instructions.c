@@ -37,12 +37,12 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 
 	case CODIGO_CERRAR:
 		loggear_debug(string_from_format("Se cerrara el File System."));
-		finalizar_FS();
+		finalizar_FS(instr);
 		break;
 
 	case CODIGO_VALUE:
 		loggear_trace(string_from_format("Me llego un CODIGO_VALUE"));
-		enviar_tamanio_value(remitente);
+		enviar_tamanio_value(instr, remitente);
 		break;
 
 	default:

@@ -270,18 +270,25 @@ void inicializar_FS(int argc, char* argv[]) {
 	inicializar_bitmap();
 	bloques_disponibles = 0;
 	inicializar_bloques_disp();
-	inicializar_tablas_nro_dump();
 	loggear_info(string_from_format("-----------Fin inicialización LFS-----------"));
 
 }
 
-void finalizar_FS() {
+void finalizar_FS(instr_t* instruccion) {
+	list_destroy_and_destroy_elements(instruccion->parametros, free);
+	free(instruccion);
+
 	dumpear(memtable);
 	config_destroy(g_config);
 	finalizar_rutas();
 	finalizar_memtable();
-	finalizar_tablas_nro_dump();
-	loggear_info(string_from_format("-----------FIN PROCESO-----------"));
+
+	log_destroy(g_logger);
+	dictionary_destroy_and_destroy_elements(tablas_nro_dump, (void*)free);
+	dictionary_destroy_and_destroy_elements(dic_semaforos_tablas, free);
+	dictionary_destroy_and_destroy_elements(conexionesActuales, free);
+	dictionary_destroy_and_destroy_elements(auxiliarConexiones, (void*)free);
+	puts("-----------FIN PROCESO-----------");
 	exit(0);
 }
 
@@ -418,7 +425,7 @@ void inicializar_conexiones() {
 	vigilar_conexiones_entrantes(callback, actualizar_config, ".", CONSOLA_FS);
 }
 
-void enviar_tamanio_value(char* remitente) {
+void enviar_tamanio_value(instr_t* instruccion, char* remitente) {
 	int conexionMemoriaN = obtener_fd_out(remitente);
 	t_list *listaParam = list_create();
     char* tamanioValue = string_from_format("%d", config_FS.tamanio_value);
@@ -427,8 +434,11 @@ void enviar_tamanio_value(char* remitente) {
     list_add(listaParam, puntoMontaje);
 
     instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
-    enviar_request(miInstruccion, conexionMemoriaN);
+    enviar_liberando_request(miInstruccion, conexionMemoriaN);
     loggear_trace(string_from_format("Tamanio del value y punto de montaje enviados"));
+
+	list_destroy(instruccion->parametros);
+	free(instruccion);
 }
 
 void responderHandshake(identificador *idsConexionEntrante) {
@@ -471,13 +481,17 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		}
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionReceptor1 = obtener_fd_out(remitente);
+		t_list* listaABorrar = list_duplicate(miInstruccion->parametros);
 		enviar_request(miInstruccion, conexionReceptor1);
+		list_remove(listaABorrar, list_size(listaABorrar)-1);
+		list_destroy_and_destroy_elements(listaABorrar, free);
+		loggear_trace(string_from_format("Parametros freed"));
 		break;
 
 	case CONSOLA_MEMORIA:
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_MEMORIA, listaParam);
 		int conexionReceptor2 = obtener_fd_out(remitente);
-		enviar_request(miInstruccion, conexionReceptor2);
+		enviar_liberando_request(miInstruccion, conexionReceptor2);
 		break;
 
 	default: //Consola file system
@@ -494,6 +508,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 		break;
 	}
+	free(instruccion);
 }
 
 void actualizar_config(){

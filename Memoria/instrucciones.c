@@ -39,11 +39,8 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 			loggear_info(string_from_format("La key no se encontro en Memoria. Consultando al FS"));
 			int conexionFS = obtener_fd_out("FileSystem");
 			usleep(configuracion.RETARDO_FS * 1000);
-			t_list* listaABorrar = list_duplicate(instruccion->parametros);
-			if(enviar_request(instruccion, conexionFS)==-1){
+			if(enviar_liberando_request(instruccion, conexionFS)==-1)
 				loggear_error(string_from_format("No se logro enviar el Select al FS"));
-			}
-			list_destroy_and_destroy_elements(listaABorrar, free);
 		}
 	}
 	else
@@ -51,11 +48,9 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		loggear_info(string_from_format("La tabla no se encontro en Memoria. Consultando al FS"));
 		int conexionFS = obtener_fd_out("FileSystem");
 		usleep(configuracion.RETARDO_FS * 1000);
-		t_list* listaABorrar = list_duplicate(instruccion->parametros);
-		if(enviar_request(instruccion, conexionFS)==-1){
+		if(enviar_liberando_request(instruccion, conexionFS)==-1){
 			loggear_error(string_from_format("No se logro enviar el Select al FS"));
 		}
-		list_destroy_and_destroy_elements(listaABorrar, free);
 	}
 
 
@@ -178,11 +173,8 @@ void ejecutar_instruccion_create(instr_t *instruccion)
 	loggear_info(string_from_format("Ejecutando instruccion Create"));
 	int conexionFS = obtener_fd_out("FileSystem");
 	usleep(configuracion.RETARDO_FS * 1000);
-	t_list* listaABorrar = list_duplicate(instruccion->parametros);
-	if(enviar_request(instruccion, conexionFS)==-1){
+	if(enviar_liberando_request(instruccion, conexionFS)==-1)
 		loggear_error(string_from_format("No se envio el Create al FS"));
-	}
-	list_destroy_and_destroy_elements(listaABorrar, free);
 	loggear_trace(string_from_format("Se borraron los parametros del create"));
 }
 
@@ -191,12 +183,8 @@ void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente)
 	loggear_info(string_from_format("Ejecutando instruccion Describe"));
 	int conexionFS = obtener_fd_out("FileSystem");
 	usleep(configuracion.RETARDO_FS * 1000);
-	t_list* listaABorrar = list_duplicate(instruccion->parametros);
-	if(enviar_request(instruccion, conexionFS)==-1)
-	{
+	if(enviar_liberando_request(instruccion, conexionFS)==-1)
 		loggear_error(string_from_format("No se envio el Describe al FS"));
-	}
-	list_destroy_and_destroy_elements(listaABorrar, free);
 	loggear_trace(string_from_format("Se borraron los parametros del Describe"));
 }
 
@@ -208,11 +196,8 @@ void ejecutar_instruccion_drop(instr_t *instruccion)
 	eliminar_tabla(instruccion);
 	int conexionFS = obtener_fd_out("FileSystem");
 	usleep(configuracion.RETARDO_FS * 1000);
-	t_list* listaABorrar = list_duplicate(instruccion->parametros);
-	if(enviar_request(instruccion, conexionFS)==-1){
+	if(enviar_liberando_request(instruccion, conexionFS)==-1)
 		loggear_error(string_from_format("No se envio el Drop al FS"));
-	}
-	list_destroy_and_destroy_elements(listaABorrar, free);
 	loggear_trace(string_from_format("Se borraron los parametros del Drop"));
 }
 

@@ -360,6 +360,7 @@ void inicializar_bloques_disp() {
 }
 
 void eliminar_bitarray(t_bitarray* bitarray) {
+	free(bitarray->bitarray);
 	bitarray_destroy(bitarray);
 }
 

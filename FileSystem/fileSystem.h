@@ -107,7 +107,7 @@ void		pruebaGeneral();
 
 /*INICIALIZACION Y FINALIZACION*/
 void inicializar_FS();
-void finalizar_FS();
+void finalizar_FS(instr_t* instruccion);
 void iniciar_semaforos();
 void iniciar_rutas();
 void finalizar_rutas();
@@ -142,7 +142,7 @@ void (*callback)(instr_t *instruccion, char *remitente);
 void 	inicializar_conexiones();
 void 	imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
 int 	obtener_fd_out(char *proceso);
-void 	enviar_tamanio_value(char* remitente);
+void 	enviar_tamanio_value(instr_t* instruccion, char* remitente);
 t_dictionary *auxiliarConexiones;
 
 #endif /* FILE_SYSTEM_H */

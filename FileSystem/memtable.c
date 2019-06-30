@@ -5,9 +5,10 @@
 void inicializar_memtable() {
 	memtable = dictionary_create();
 	DIR* directorio = opendir(g_ruta.tablas);
-	if (directorio != NULL)
+	if (directorio != NULL){
 		levantar_tablas_directorio(directorio);
-	loggear_debug(string_from_format("Se inicializó la memtable."));
+		loggear_debug(string_from_format("Se inicializó la memtable."));
+	}
 }
 
 void finalizar_memtable() { //Borra y libera todos los registros y tablas.
@@ -27,6 +28,7 @@ void levantar_tablas_directorio(DIR* directorio) {
 			agregar_a_contador_dumpeo(tabla);
 		}
 	}
+	closedir(directorio);
 }
 
 void borrar_lista_registros(void* registros) {
@@ -141,18 +143,11 @@ int siguiente_nro_dump(char* tabla) {
 	return *rdo;
 }
 
-void inicializar_tablas_nro_dump() {
-	tablas_nro_dump = dictionary_create();
-}
 
 void eliminar_nro_dump_de_tabla(char* tabla){
 	sem_wait(&mutex_tablas_nro_dump);
 	dictionary_remove_and_destroy(tablas_nro_dump, tabla, free);
 	sem_post(&mutex_tablas_nro_dump);
-}
-
-void finalizar_tablas_nro_dump() {
-	dictionary_destroy_and_destroy_elements(tablas_nro_dump, &free);
 }
 
 void agregar_a_contador_dumpeo(char* nombre_tabla) {//SE DEBE LLAMAR AL CREAR LA TABLA!

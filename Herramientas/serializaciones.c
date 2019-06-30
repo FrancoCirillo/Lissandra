@@ -84,6 +84,14 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 	return s;
 }
 
+int enviar_liberando_request(instr_t *instruccionAEnviar, int socket_cliente)
+{
+	t_list* listaABorrar = list_duplicate(instruccionAEnviar->parametros);
+	int s = enviar_request(instruccionAEnviar, socket_cliente);
+	list_destroy_and_destroy_elements(listaABorrar, free);
+	return s;
+}
+
 //Hay que crear un buffer para los parametros
 void crear_buffer(t_paquete *paquete)
 {
