@@ -284,11 +284,12 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 	parametros_instr-=(!quien_pidio(instruccion))?1:0;
 	if(parametros_instr == 0) { //DESCRIBE
 		char* ruta = string_from_format("%s", g_ruta.tablas);
-		printf("Ruta: %s\n", ruta);
+		loggear_debug(string_from_format("La ruta es %s\n", ruta));
 		DIR* directorio = opendir(ruta);
 		if (directorio == NULL) {
-			printf("Error: No se puede abrir el directorio\n");
-			//free(ruta);
+			loggear_error(string_from_format("Error: No se puede abrir el directorio %s\n", ruta));
+			closedir(directorio);
+			free(ruta);
 			return;
 		}
 
@@ -296,7 +297,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		while((directorio_leido = readdir(directorio)) != NULL) {
 			char* tabla = directorio_leido->d_name;
 			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
-				printf("\n\n\nLa ruta de la tabla es %s\n\n\n\n\n HOLAAAA\n\n",tabla);
+				loggear_trace(string_from_format("La ruta de la tabla es %s\n", tabla));
 				imprimirMetadata(tabla);
 				char* consistencia = obtener_consistencia_metadata(tabla);
 				char* particiones = string_itoa(obtener_part_metadata(tabla));

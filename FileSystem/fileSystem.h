@@ -111,6 +111,7 @@ void finalizar_FS(instr_t* instruccion);
 void iniciar_semaforos();
 void iniciar_rutas();
 void finalizar_rutas();
+void finalizar_diccionarios_conexiones();
 void actualizar_config();
 void actualizar_log_level();
 

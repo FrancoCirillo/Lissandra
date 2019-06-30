@@ -93,7 +93,7 @@ int		obtener_tam_archivo(char*);
 void	aumentar_tam_archivo(char*, registro_t*);
 int		cantidad_bloques_usados(char*);
 int		espacio_restante_bloque(char*);
-void	liberar_bloques(char*);
+void	liberar_bloques(void*);
 int 	obtener_siguiente_bloque_archivo(char*, int);
 
 
@@ -105,6 +105,7 @@ sem_t* obtener_mutex_tabla(char*);
 int    aux_obtener_mutex_tabla(char*, sem_t*);
 int    existe_mutex(char*);
 void   eliminar_mutex_de_tabla(char*);
+void   finalizar_dic_semaforos_tablas();
 
 
 

@@ -24,9 +24,9 @@ int main(int argc, char* argv[]) {
 	inicializar_FS(argc, argv);
 
 	//ejemplo_aplanar();
-	pruebaGeneral();
+	//pruebaGeneral();
 
-	//inicializar_conexiones();
+	inicializar_conexiones();
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin, loggear_trace);
@@ -244,7 +244,6 @@ void pruebaTmp() {
 void pruebaGeneral() {
 	pruebaDump();
 
-
 	puts("Ya termino el dumpeo");
 
 //	char* bloque0 = obtener_ruta_bloque(0);
@@ -301,16 +300,17 @@ void finalizar_FS(instr_t* instruccion) {
 	free(instruccion);
 
 	dumpear(memtable);
+	//TODO: compactar todas las tablas
 	config_destroy(g_config);
+	log_destroy(g_logger);
+
 	finalizar_rutas();
 	finalizar_memtable();
+	finalizar_tablas_nro_dump();
+	finalizar_dic_semaforos_tablas();
+	finalizar_diccionarios_conexiones();
 
-	log_destroy(g_logger);
-	dictionary_destroy_and_destroy_elements(tablas_nro_dump, (void*)free);
-	dictionary_destroy_and_destroy_elements(dic_semaforos_tablas, free);
-	dictionary_destroy_and_destroy_elements(conexionesActuales, free);
-	dictionary_destroy_and_destroy_elements(auxiliarConexiones, (void*)free);
-	puts("-----------FIN PROCESO-----------");
+	printf(COLOR_ANSI_CYAN "\n\n************ FIN PROCESO ************\n\n" COLOR_ANSI_RESET);
 	exit(0);
 }
 
@@ -340,6 +340,11 @@ void finalizar_rutas(){
 	free(g_ruta.carpeta_metadata);
 	free(g_ruta.metadata);
 	free(g_ruta.bitmap);
+}
+
+void finalizar_diccionarios_conexiones(){
+	dictionary_destroy_and_destroy_elements(conexionesActuales, free);
+	dictionary_destroy_and_destroy_elements(auxiliarConexiones, (void*)free);
 }
 
 

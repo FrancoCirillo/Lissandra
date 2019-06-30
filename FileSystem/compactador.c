@@ -4,6 +4,8 @@
 
 void compactador(char* tabla){
 
+	mseg_t ts_inicial = obtener_ts();
+
 	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
 
 	t_list* particiones = list_create();
@@ -19,38 +21,51 @@ void compactador(char* tabla){
 
 	while(existe_tabla(tabla)){
 		sleep(tiempo_compactacion);
-		//sem_wait(mutex_tabla);
 
+		if (!existe_mutex(tabla))	//Failsafe innecesario
+			inicializar_semaforo_tabla(tabla);
+
+		sem_wait(&mutex_dic_semaforos);
+		sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
+		sem_post(&mutex_dic_semaforos);
+
+		sem_wait(mutex_tabla);
 		cant_tmpc = pasar_a_tmpc(tabla);
-
-		//sem_post(mutex_tabla); //TODO
+		sem_post(mutex_tabla);
+		loggear_trace(string_from_format("Semaforos de paso a tmpc funcionando correctamente"));
 
 		if(!cant_tmpc)
 			continue;
 
-
 		t_list* lista_archivos = listar_archivos(tabla);
-		for(int i = 0; i< list_size(lista_archivos);i++){
-			agregar_registros_en_particion(particiones, list_get(lista_archivos, i));
+
+		if(lista_archivos){
+			for(int i = 0; i < list_size(lista_archivos); i++){
+				agregar_registros_en_particion(particiones, list_get(lista_archivos, i));
+			}
+
+			sem_wait(mutex_tabla);
+
+			list_iterate((t_list*)lista_archivos, &liberar_bloques);
+			for(int j = 0; j< cantidad_particiones;j++){
+				finalizar_compactacion(list_get(particiones,j), tabla, j);
+			}
+			//borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
+
+			sem_post(mutex_tabla);
+			loggear_trace(string_from_format("Semaforos de compactacion funcionando correctamente"));
+
+			//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
+
+			mseg_t ts_final = obtener_ts();
+			mseg_t duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
+
+			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
+
+
 		}
-
-		//sem_wait(mutex_tabla);
-		list_iterate((t_list*)lista_archivos,&liberar_bloques);
-		for(int j = 0; j< cantidad_particiones;j++){
-			finalizar_compactacion(list_get(particiones,j), tabla, j);
-		}
-//		borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
-
-		//sem_post(mutex_tabla);
-
-
-//		vaciar_listas_registros(particiones);//TODO deja los diccionarios como nuevos.
-
-
-		//loggear duracion de la compactacion.
 
 	}
-
 
 
 //	liberar_recursos(particiones);
@@ -69,14 +84,15 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num){
 	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num);
 	t_config* archivo = config_create(ruta_archivo);
 
-	void bajar_registro(char* key, registro_t* reg){
+	void bajar_registro(char* key, void* reg){
+		registro_t* registro = reg;
 		if(nro_bloque != (ult_bloque = ultimo_bloque(archivo))){
 			nro_bloque = ult_bloque;
 			free(ruta_bloque);
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
 		}
 
-		escribir_registro_bloque(reg, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
+		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
 	}
 
 	dictionary_iterator((t_dictionary*)particion, &bajar_registro);
@@ -98,7 +114,7 @@ int ultimo_bloque(t_config* archivo){
 
 void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 
-	int cant_particiones= list_size(particiones);
+	int cant_particiones = list_size(particiones);
 	int index;
 
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
@@ -151,12 +167,13 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 			}
 }
 
-void agregar_por_ts( t_dictionary* dic, registro_t* reg_nuevo){  //Esto me tiro mil warnings..
+void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){  //Esto me tiro mil warnings..
 	char* key_nueva = string_itoa(reg_nuevo->key);
-	registro_t* reg_viejo= (registro_t*)dictionary_get( (t_dictionary*)dic,key_nueva);
+	registro_t* reg_viejo = (registro_t*)dictionary_get( (t_dictionary*)dic,key_nueva);
+
 	if( (!reg_viejo) || ((reg_viejo != NULL) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
-	dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
-	//TODO Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.
+		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
+	//TODO: Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.
 }
 
 
@@ -167,27 +184,27 @@ t_list* listar_archivos(char* tabla){
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
 		loggear_error(string_from_format("Error: No se pudo abrir el directorio"));
-		//free(ruta_tabla);
-		exit(2);
-	}
-	else{
-		struct dirent* directorio_leido;
-		t_list* archivos = list_create();
-
-		char* archivo;
-		while((directorio_leido = readdir(directorio)) != NULL) {
-			archivo = directorio_leido->d_name;
-			if(string_contains(archivo, ".")) {
-				char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
-				list_add(archivos, ruta_archivo);
-				loggear_debug(string_from_format("la ruta del archivo leido es: %s", archivo));
-			}
-			free(archivo);
-		}
+		closedir(directorio);
 		free(ruta_tabla);
-		//free(ruta_archivo) No lo hago porque es el que se usa en la lista... ver que no rompa.
-		return archivos;
+		return NULL;
 	}
+
+	struct dirent* directorio_leido;
+	t_list* archivos = list_create();
+
+	char* archivo;
+	while((directorio_leido = readdir(directorio)) != NULL) {
+		archivo = directorio_leido->d_name;
+		if(string_contains(archivo, ".")) {
+			char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
+			list_add(archivos, ruta_archivo);
+			loggear_debug(string_from_format("La ruta del archivo leido es: %s", archivo));
+		}
+		free(archivo);
+	}
+	free(ruta_tabla);
+	//free(ruta_archivo) No lo hago porque es el que se usa en la lista... ver que no rompa.
+	return archivos;
 }
 
 
@@ -221,11 +238,12 @@ int pasar_a_tmpc(char* tabla) {
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
 		loggear_error(string_from_format("Error: No se pudo abrir el directorio"));
-		//free(ruta_tabla);
-		exit(2);
+		closedir(directorio);
+		free(ruta_tabla);
+		return 0;
 	}
 	struct dirent* directorio_leido;
-	int contador =0;
+	int contador = 0;
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		char* nombre_archivo = directorio_leido->d_name;
 		loggear_debug(string_from_format("Nombre archivo: %s\n", nombre_archivo));

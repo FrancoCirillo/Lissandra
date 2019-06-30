@@ -58,6 +58,10 @@ void eliminar_mutex_de_tabla(char* tabla){
 	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
 }
 
+void   finalizar_dic_semaforos_tablas(){
+	dictionary_destroy_and_destroy_elements(dic_semaforos_tablas, free);
+}
+
 //---------------------------+DIRECTORIO---------------------------
 
 int eliminar_directorio(char* tabla) {
@@ -170,8 +174,11 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 		txt_write_in_file(archivo_bloque, string_registro);
 //		loggear_trace(string_from_format("Escribo el registro completo"));
 	} else {
-		if(cant_bloques_disponibles() == 0)
-			return; //TODO log: no hay bloques disponibles      //Y ESTO??
+
+		if(cant_bloques_disponibles() == 0){
+			loggear_error(string_from_format("No hay bloques disponibles."));
+			return;
+		}
 
 		int tam_restante = espacio_restante_bloque(ruta_archivo);
 		char* primera_mitad_registro = string_substring_until(string_registro, tam_restante);
@@ -378,14 +385,16 @@ int bloque_esta_ocupado(t_bitarray* bitmap, int nro_bloque) {
 }
 
 int siguiente_bloque_disponible() {
-	loggear_debug(string_from_format("Entre a sig bloque disp"));
+	loggear_debug(string_from_format("Buscando siguiente bloque disponible"));
 	int nro_bloque = 0;
 	t_bitarray* bitmap = get_bitmap();
+
 	while(nro_bloque < Metadata_FS.blocks && bloque_esta_ocupado(bitmap,nro_bloque))
 		nro_bloque++;
-	if(nro_bloque == Metadata_FS.blocks) {
+
+	if(nro_bloque == Metadata_FS.blocks)
 		return -1;
-	}
+
 	eliminar_bitarray(bitmap);
 	return nro_bloque;
 }
@@ -505,9 +514,6 @@ FILE* crear_tmp(char* tabla, char* nombre_tmp) {
 }
 
 int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
-	if(cant_bloques_disponibles() == 0) {
-		return 0; //TODO log: no hay bloques disponibles
-	}
 	t_config* archivo = config_create(ruta_archivo);
 	char** bloques_ant = config_get_array_value(archivo, "BLOCKS");
 	char* bloques_tot = agregar_bloque_bloques(bloques_ant, nro_bloque);
@@ -580,8 +586,9 @@ int espacio_restante_bloque(char* ruta_archivo) {
 	return espacio_disponible;
 }
 
-void liberar_bloques(char* ruta_archivo) {
+void liberar_bloques(void* ruta) {
 	int nro_bloque = -1;
+	char* ruta_archivo = (char*) ruta;
 	int bloque = obtener_siguiente_bloque_archivo(ruta_archivo, nro_bloque);
 //	printf("Nro bloque: %d\t Nro siguiente: %d\n", nro_bloque, bloque);
 	do {

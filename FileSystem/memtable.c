@@ -158,7 +158,9 @@ void agregar_a_contador_dumpeo(char* nombre_tabla) {//SE DEBE LLAMAR AL CREAR LA
 	sem_post(&mutex_tablas_nro_dump);
 }
 
-
+void finalizar_tablas_nro_dump(){
+	dictionary_destroy_and_destroy_elements(tablas_nro_dump, (void*)free);
+}
 
 void ejemplo_nro_dump(){
 	iniciar_semaforos();
