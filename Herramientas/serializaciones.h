@@ -104,6 +104,13 @@ void *serializar_request(instr_t *instruccionAEnviar, int *tamanio);
  */
 int enviar_request(instr_t *instruccionAEnviar, int socket_cliente);
 
+
+/*
+ * Envia instruccionAEnviar a travez de socket_cliente
+ * Llama a enviar_request pero ademas hace free de los parametros de instr
+ */
+int enviar_liberando_request(instr_t *instruccionAEnviar, int socket_cliente);
+
 /*
  * RECEPCION
  */

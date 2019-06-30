@@ -37,7 +37,8 @@ void inicializar_kernel(){
 	auxiliarConexiones = dictionary_create();
 
 	iniciar_servidor(miIPKernel, configuracion.puerto);
-	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Kernel", CONSOLA_KERNEL);
+	// . es el directorio Actual - Tener en cuenta que lo corremos desde la carpeta padre a la que tiene el binario
+	vigilar_conexiones_entrantes(callback, actualizar_config, ".", CONSOLA_KERNEL);
 
 }
 

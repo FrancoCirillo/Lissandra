@@ -11,42 +11,42 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 	switch (codigoNeto) {
 
 	case CODIGO_CREATE:
-		loggear_FS("Me llego una instruccion CREATE.");
+		loggear_debug(string_from_format("Me llego una instruccion CREATE."));
 		execute_create(instr, remitente);
 		break;
 
 	case CODIGO_INSERT:
-		loggear_FS("Me llego una instruccion INSERT.");
+		loggear_debug(string_from_format("Me llego una instruccion INSERT."));
 		ejecutar_instruccion_insert(instr, remitente);
 		break;
 
 	case CODIGO_SELECT:
-		loggear_FS("Me llego una instruccion SELECT.");
+		loggear_debug(string_from_format("Me llego una instruccion SELECT."));
 		execute_select(instr, remitente);
 		break;
 
 	case CODIGO_DESCRIBE:
-		loggear_FS("Me llego una instruccion DESCRIBE.");
+		loggear_debug(string_from_format("Me llego una instruccion DESCRIBE."));
 		execute_describe(instr, remitente);
 		break;
 
 	case CODIGO_DROP:
-		loggear_FS("Me llego una instruccion DROP.");
+		loggear_debug(string_from_format("Me llego una instruccion DROP."));
 		execute_drop(instr, remitente);
 		break;
 
 	case CODIGO_CERRAR:
-		loggear_FS("Se cerrara el File System.");
-		finalizar_FS();
+		loggear_debug(string_from_format("Se cerrara el File System."));
+		finalizar_FS(instr);
 		break;
 
 	case CODIGO_VALUE:
 		loggear_trace(string_from_format("Me llego un CODIGO_VALUE"));
-		enviar_tamanio_value(remitente);
+		enviar_tamanio_value(instr, remitente);
 		break;
 
 	default:
-		loggear_FS("Me llego una instruccion invalida dentro del File System.");
+		loggear_warning(string_from_format("Me llego una instruccion invalida dentro del File System."));
 	}
 }
 
@@ -98,43 +98,38 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) { //no esta chequead
 		return listaParam;
 	}
 
-	if (!existe_mutex(tabla)) {
-		//Provisorio hasta hacer mini-create de tablas pre-existentes
-		char* cadena = string_from_format("No se pudo realizar el INSERT porque esa tabla fue creada en otra sesion.\n");
-		string_append_with_format(&cadena, "Si desea realizar un INSERT en una tabla con el nombre '%s',", tabla);
-		string_append_with_format(&cadena, " por favor eliminela (DROP %s) y creela nuevamente.", tabla);
+	if (!existe_mutex(tabla))	//Failsafe innecesario
+		inicializar_semaforo_tabla(tabla);
 
-		list_add(listaParam, cadena);
-		return listaParam;
-	}
-
-	sem_t mutex_tabla;
 	sem_wait(&mutex_dic_semaforos);
-	int sem_value = obtener_mutex_tabla(tabla, &mutex_tabla);
+	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
 	sem_post(&mutex_dic_semaforos);
-	printf("Obtuve sem_value y es: %d\n", sem_value);	//Testing: Imprime el valor del semaforo
 
-	//sem_wait(&mutex_tabla);
-	if(!sem_trywait(&mutex_tabla)){	//Testing: si puede hacer wait lo hace y devuelve 0
-		agregar_registro(tabla, registro);
-		sem_post(&mutex_tabla);
-		puts("--Tremendos esos semaforos--");
-	}
-	else{	//Testing hasta que funcione correctamente
-		agregar_registro(tabla, registro);
-		puts("--Malisimos esos semaforos--");
+	sem_wait(mutex_tabla);
+	agregar_registro(tabla, registro);
+	sem_post(mutex_tabla);
+	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
-		//Testing2: si otro proceso lo bloquea y la cosa no funca
-		//char* cadena = string_from_format("No se pudo insertar %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
-		//string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
-		//string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
-		//string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
-		//string_append_with_format(&cadena, " porque alguien mas esta modificando la tabla");
-		//*codOp = ERROR_INSERT;
-
-		//list_add(listaParam, cadena);
-		//return listaParam;
-	}
+//	if(!sem_trywait(&mutex_tabla)){	//Testing: si puede hacer wait lo hace y devuelve 0
+//		agregar_registro(tabla, registro);
+//		sem_post(&mutex_tabla);
+//		puts("--Tremendos esos semaforos--");
+//	}
+//	else{	//Testing hasta que funcione correctamente
+//		agregar_registro(tabla, registro);
+//		puts("--Malisimos esos semaforos--");
+//
+//		//Testing2: si otro proceso lo bloquea y la cosa no funca
+//		//char* cadena = string_from_format("No se pudo insertar %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
+//		//string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
+//		//string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
+//		//string_append_with_format(&cadena, " %"PRIu64, (mseg_t)instruccion->timestamp); //Timestamp
+//		//string_append_with_format(&cadena, " porque alguien mas esta modificando la tabla");
+//		//*codOp = ERROR_INSERT;
+//
+//		//list_add(listaParam, cadena);
+//		//return listaParam;
+//	}
 
 	char* cadena = string_from_format("Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
 	string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
@@ -150,7 +145,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 	t_list *listaParam = list_create();
 
 	if (!existe_tabla(tabla)) {
-		puts("No existe la tabla");
+		loggear_trace(string_from_format("No existe la tabla"));
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
@@ -158,57 +153,62 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		return;
 	}
 
-	if (!existe_mutex(tabla)) {
-		//Provisorio hasta hacer mini-create de tablas pre-existentes
-		char* cadena = string_from_format("No se pudo obtener el valor porque la tabla '%s' fue creada en otra sesion.\n", tabla);
-		string_append_with_format(&cadena, "Por favor eliminela (DROP %s).", tabla);
+	if (!existe_mutex(tabla))	//Failsafe innecesario
+		inicializar_semaforo_tabla(tabla);
 
-		list_add(listaParam, cadena);
-		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		free(cadena);
-		return;
-	}
+//	sem_t* mutex_tabla;
+//	int key = (uint16_t)atoi(obtener_parametro(instruccion, 1));
+//	t_list* registros_key;
+//
+//	sem_wait(&mutex_dic_semaforos);
+//	int sem_value = obtener_mutex_tabla(tabla, &mutex_tabla);
+//	sem_post(&mutex_dic_semaforos);
+//	printf("Obtuve sem_value y es: %d\n", sem_value);
 
-	sem_t mutex_tabla;
 	int key = (uint16_t)atoi(obtener_parametro(instruccion, 1));
-	t_list* registros_key;
 
 	sem_wait(&mutex_dic_semaforos);
-	int sem_value = obtener_mutex_tabla(tabla, &mutex_tabla);
+	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
 	sem_post(&mutex_dic_semaforos);
-	printf("Obtuve sem_value y es: %d\n", sem_value);
 
-//	sem_wait(&mutex_tabla);
-//	t_list* registros_key = obtener_registros_key(tabla, key);
-//	sem_post(&mutex_tabla);
+	sem_wait(mutex_tabla);
+	t_list* registros_key = obtener_registros_key(tabla, key);
+	sem_post(mutex_tabla);
+	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
-	if(!sem_trywait(&mutex_tabla)){	//Testing: si puede hacer wait, lo hace y devuelve 0
-		registros_key = obtener_registros_key(tabla, key);
-		sem_post(&mutex_tabla);
-		puts("--Tremendos esos semaforos--");
-	}
-	else{
-		registros_key = obtener_registros_key(tabla, key);
-		puts("--Malisimos esos semaforos--");
+//	if(!sem_trywait(&mutex_tabla)){	//Testing: si puede hacer wait, lo hace y devuelve 0
+//		registros_key = obtener_registros_key(tabla, key);
+//		sem_post(&mutex_tabla);
+//		puts("--Tremendos esos semaforos--");
+//	}
+//	else{
+//		registros_key = obtener_registros_key(tabla, key);
+//		puts("--Malisimos esos semaforos--");
+//
+//		//Testing2: Si otro proceso lo bloquea y la cosa no funca
+//		//char* cadena = string_from_format("No se pudo obtener el dato porque alguien mas esta modificando la tabla");
+//		//list_add(listaParam, cadena);
+//		//imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
+//		//free(cadena);
+//		//return;
+//	}
 
-		//Testing2: Si otro proceso lo bloquea y la cosa no funca
-		//char* cadena = string_from_format("No se pudo obtener el dato porque alguien mas esta modificando la tabla");
-		//list_add(listaParam, cadena);
-		//imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		//free(cadena);
-		//return;
-	}
-
-	if(list_is_empty(registros_key)) {
-		puts("No hay registros de la key");
-		char* cadena = string_from_format("No se encontraron registros con la key '%d'", key);
+	if(registros_key == NULL){
+		loggear_trace(string_from_format("No se pudo abrir el .bin"));
+		char* cadena = string_from_format("No se pudo abrir el .bin correspondiente a la tabla %s con la key '%d'", tabla, key);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		free(cadena);
+		return;
+	}
+	if(list_is_empty(registros_key)) {
+		loggear_trace(string_from_format("No hay registros de la key"));
+		char* cadena = string_from_format("No se encontraron registros en la tabla %s con la key '%d'", tabla, key);
+		list_add(listaParam, cadena);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 		return;
 	}
 
-	puts("\nRegistro encontrado");
+	loggear_trace(string_from_format("Registro encontrado"));
 
 	char* value_registro_reciente = obtener_registro_mas_reciente(registros_key);
 
@@ -232,43 +232,37 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 		return;
 	}
 
-	int resultadoDrop = -1;
+	if (!existe_mutex(tabla))	//Failsafe innecesario
+		inicializar_semaforo_tabla(tabla);
 
-	if (!existe_mutex(tabla)) {	//Provisorio hasta hacer mini-create de tablas pre-existentes
-		resultadoDrop = eliminar_directorio(tabla);
-		eliminar_tabla_de_mem(tabla);
-	}
-	else{
-		sem_t mutex_tabla;
-		sem_wait(&mutex_dic_semaforos);
-		int sem_value = obtener_mutex_tabla(tabla, &mutex_tabla);
-		sem_post(&mutex_dic_semaforos);
-		printf("Obtuve sem_value y es: %d\n", sem_value);	//Testing: Imprime el valor del semaforo
+	sem_wait(&mutex_dic_semaforos);
+	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
+	sem_post(&mutex_dic_semaforos);
 
-		//sem_wait(&mutex_tabla);
-		if(!sem_trywait(&mutex_tabla)){	//Testing: si puede hacer wait, lo hace y devuelve 0
-			resultadoDrop = eliminar_directorio(tabla);
-			//TODO: eliminar_numero_de_dump(tabla);
-			eliminar_tabla_de_mem(tabla);
-			eliminar_mutex_de_tabla(tabla);
-			sem_post(&mutex_tabla);
-			puts("--Tremendos esos semaforos--");
-		}
-		else{	//Testing hasta que funcione correctamente
-			resultadoDrop = eliminar_directorio(tabla);
-			//TODO: eliminar_numero_de_dump(tabla);
-			eliminar_tabla_de_mem(tabla);
-			eliminar_mutex_de_tabla(tabla);
-			puts("--Malisimos esos semaforos--");
+	sem_wait(mutex_tabla);
+	eliminar_nro_dump_de_tabla(tabla);
+	eliminar_tabla_de_mem(tabla);
+	int resultadoDrop = eliminar_directorio(tabla);
+	sem_post(mutex_tabla);
+	eliminar_mutex_de_tabla(tabla);
+	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
-			//Testing2: Si otro proceso lo bloquea y la cosa no funca
-			//char* cadena = string_from_format("No se pudo elimninar porque alguien mas esta modificando la tabla");
-			//list_add(listaParam, cadena);
-			//imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-			//free(cadena);
-			//return;
-		}
-	}
+
+//	if(!sem_trywait(mutex_tabla)){	//Testing: si puede hacer wait, lo hace y devuelve 0
+//		PROCESAR DROP
+//		sem_post(mutex_tabla);
+//		puts("--Tremendos esos semaforos--");
+//	}
+//	else{	//Testing hasta que funcione correctamente
+//		PROCESAR DROP
+//		puts("--Malisimos esos semaforos--");
+//		//Testing2: Si otro proceso lo bloquea y la cosa no funca
+//		//char* cadena = string_from_format("No se pudo elimninar porque alguien mas esta modificando la tabla");
+//		//list_add(listaParam, cadena);
+//		//imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
+//		//free(cadena);
+//		//return;
+//	}
 
 	if(resultadoDrop == 0){
 		char* cadena = string_from_format("Se elimino correctamente la tabla '%s'", tabla);
@@ -302,6 +296,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		while((directorio_leido = readdir(directorio)) != NULL) {
 			char* tabla = directorio_leido->d_name;
 			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
+				printf("\n\n\nLa ruta de la tabla es %s\n\n\n\n\n HOLAAAA\n\n",tabla);
 				imprimirMetadata(tabla);
 				char* consistencia = obtener_consistencia_metadata(tabla);
 				char* particiones = string_itoa(obtener_part_metadata(tabla));
@@ -313,7 +308,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 				list_add(listaParam, tiempo_comp);
 			}
 		}
-		puts("Tablas leidas, enviando");
+		loggear_trace(string_from_format("Tablas leidas, enviando"));
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 		free(ruta);
 		closedir(directorio);

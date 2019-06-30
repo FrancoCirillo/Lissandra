@@ -45,7 +45,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 
 		break;
 	default:
-		loggear_debug(string_from_format("Loggeando resultado instruccion"));
+		loggear_trace(string_from_format("Loggeando resultado instruccion"));
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 		if (codigoOperacion == CODIGO_EXITO)
 			loggear_exito_proceso(miInstruccion);

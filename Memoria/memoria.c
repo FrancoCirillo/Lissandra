@@ -12,11 +12,12 @@ int main(int argc, char *argv[])
 	
 	inicializar_estructuras_conexiones();
 	empezar_conexiones(argv);
-//	iniciar_ejecutador_journal();
+	iniciar_ejecutador_journal();
 
-//	iniciar_ejecutador_gossiping();
+	iniciar_ejecutador_gossiping();
 
-	vigilar_conexiones_entrantes(callback, actualizar_config, "/home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Memoria", CONSOLA_MEMORIA);
+	// . es el directorio Actual - Tener en cuenta que lo corremos desde la carpeta padre a la que tiene el binario
+	vigilar_conexiones_entrantes(callback, actualizar_config, ".", CONSOLA_MEMORIA);
 
 	return 0;
 }

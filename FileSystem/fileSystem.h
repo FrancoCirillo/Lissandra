@@ -69,6 +69,7 @@ typedef struct config_FS_t {
 	int tamanio_value;
 	mseg_t retardo;
 	mseg_t tiempo_dump;
+	t_log_level LOG_LEVEL;
 } config_FS_t;
 
 typedef struct metadata_FS_t {
@@ -96,7 +97,7 @@ t_config* meta_config;
 /*TESTS*/
 registro_t* crearRegistro(mseg_t, uint16_t, char*);
 void		imprimirRegistro(void*);
-void		imprimirContenidoArchivo(char*);
+void		imprimirContenidoArchivo(char* ruta, void (*funcion_log)(char *texto));
 void		imprimirMetadata(char*);
 t_list*		listaRegistros();
 void		pruebaDump();
@@ -106,11 +107,12 @@ void		pruebaGeneral();
 
 /*INICIALIZACION Y FINALIZACION*/
 void inicializar_FS();
-void finalizar_FS();
+void finalizar_FS(instr_t* instruccion);
 void iniciar_semaforos();
 void iniciar_rutas();
 void finalizar_rutas();
 void actualizar_config();
+void actualizar_log_level();
 
 /*FUNCIONES DE BLOQUES*/
 t_list* leer_binario(char*, uint16_t);
@@ -140,7 +142,7 @@ void (*callback)(instr_t *instruccion, char *remitente);
 void 	inicializar_conexiones();
 void 	imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam, char *remitente);
 int 	obtener_fd_out(char *proceso);
-void 	enviar_tamanio_value(char* remitente);
+void 	enviar_tamanio_value(instr_t* instruccion, char* remitente);
 t_dictionary *auxiliarConexiones;
 
 #endif /* FILE_SYSTEM_H */
