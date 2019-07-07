@@ -110,7 +110,7 @@ int vigilar_conexiones_entrantes(
 						}
 						else
 						{
-							loggear_trace(string_from_format("select() iniciado"));
+//							loggear_trace(string_from_format("select() iniciado"));
 							//							char* ipCliente = ip_cliente(remoteaddr);
 							FD_SET(newfd, &master);					 // se agrega al set master
 							fdmax = (fdmax < newfd) ? newfd : fdmax; // mantener cual es el fd mas grande

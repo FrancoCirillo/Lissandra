@@ -25,4 +25,6 @@ void ejecutar_instruccion_drop(instr_t *instruccion);
 void ejecutar_instruccion_exito(instr_t *instruccion);
 void ejecutar_instruccion_error(instr_t * instruccion);
 
+void sleep_acceso_memoria();
+void sleep_acceso_fs();
 #endif /* INSTRUCCIONES_H_ */

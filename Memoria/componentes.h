@@ -14,6 +14,7 @@
 void *memoriaPrincipal;
 t_dictionary *tablaDeSegmentos;
 sem_t mutex_diccionario_conexiones;
+sem_t mutex_config;
 
 /* MEMORIA PRINCIPAL */
 void gran_malloc_inicial();
@@ -63,7 +64,7 @@ filaTabPags* fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada);
 
 /* JOURNAL */
 sem_t mutex_journal;
-void ejecutar_instruccion_journal(instr_t *instruccion);
+void ejecutar_instruccion_journal(instr_t *instruccion, int liberar);
 void *ejecutar_journal(); //Job para el journal
 instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp);
 instr_t *registro_a_instr(char* tablaAInsertar, registro* unRegistro, cod_op codOp);

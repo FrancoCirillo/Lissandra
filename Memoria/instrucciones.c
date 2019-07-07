@@ -80,7 +80,6 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 	if(flagMod) loggear_info(string_from_format("Ejecutando instruccion Insert")); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
 	usleep(configuracion.RETARDO_MEMORIA * 1000);
 	int numeroDePaginaInsertada;
-
 	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
 	{
 		t_list *listaParam = list_create();
@@ -99,18 +98,23 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 		if(suTablaDePaginas == NULL){ //No existia un segmento correspondiente a esa tabla
 			void *paginaAgregada = NULL;
 			paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-			char* paginaShow = pagina_a_str(paginaAgregada);
-			loggear_debug(string_from_format("\nPagina agregada: \n%s\n", paginaShow));
-			free(paginaShow);
-			suTablaDePaginas = nueva_tabla_de_paginas();
-			dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
+			if(paginaAgregada !=NULL){
+				char* paginaShow = pagina_a_str(paginaAgregada);
+				loggear_debug(string_from_format("\nPagina agregada: \n%s\n", paginaShow));
+				free(paginaShow);
+				suTablaDePaginas = nueva_tabla_de_paginas();
+				dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
 
-			filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-			loggear_trace(string_from_format("\nTabla de paginas actual: (Nueva)"));
-			loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
-			loggear_trace(string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
+				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+				loggear_trace(string_from_format("\nTabla de paginas actual: (Nueva)"));
+				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
+				loggear_trace(string_from_format(" ~~~~~~~~~~~~~~~~~~~~\n"));
 
-			numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+			}
+			else{ //Se ejecuto el Journal, se reintenta insertar
+				return ejecutar_instruccion_insert(instruccion, flagMod);
+			}
 		}
 
 
@@ -138,15 +142,20 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 //CASO 3:
 			else{ //No existia la key en ese segment
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
-				char* paginaStr = pagina_a_str(paginaAgregada);
-				loggear_trace(string_from_format("\nPagina agregada: \n%s\n", paginaStr));
-				free(paginaStr);
-				filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
-				loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
-				loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
-				loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
+				if(paginaAgregada != NULL){
+					char* paginaStr = pagina_a_str(paginaAgregada);
+					loggear_trace(string_from_format("\nPagina agregada: \n%s\n", paginaStr));
+					free(paginaStr);
+					filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
+					loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
+					loggear_tabla_de_paginas(suTablaDePaginas, loggear_trace);
+					loggear_trace(string_from_format("~~~~~~~~~~~~~~~~~~~~\n"));
 
-				numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+					numeroDePaginaInsertada = filaAgregada->numeroDePagina;
+				}
+				else{//Se ejecuto el Journal, se reintenta insertar
+					return ejecutar_instruccion_insert(instruccion, flagMod);
+				}
 			}
 
 		}
@@ -211,4 +220,18 @@ void ejecutar_instruccion_error(instr_t * instruccion)
 {
 	imprimir_donde_corresponda(instruccion->codigo_operacion, instruccion, instruccion->parametros);
 	free(instruccion);
+}
+
+void sleep_acceso_memoria(){
+	sem_wait(&mutex_config);
+	int retardo = configuracion.RETARDO_MEMORIA;
+	sem_post(&mutex_config);
+	usleep(retardo* 1000);
+}
+
+void sleep_acceso_fs(){
+	sem_wait(&mutex_config);
+	int retardo = configuracion.RETARDO_FS;
+	sem_post(&mutex_config);
+	usleep(retardo* 1000);
 }

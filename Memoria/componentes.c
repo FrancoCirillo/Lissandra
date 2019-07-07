@@ -4,13 +4,15 @@
 
 void gran_malloc_inicial()
 {
+	sem_wait(&mutex_config);
 	int tamanioMemoria = configuracion.TAMANIO_MEMORIA;
+	sem_post(&mutex_config);
 	memoriaPrincipal = malloc(tamanioMemoria);
 	if (memoriaPrincipal == NULL)
 	{
 		loggear_error(string_from_format("No se pudo reservar espacio para la memoria principal"));
 	}
-	loggear_debug(string_from_format("Espacio para la memoria principal reservada"));
+	loggear_info(string_from_format("Espacio para la memoria principal reservada"));
 }
 void inicializar_tabla_segmentos()
 {
@@ -21,10 +23,13 @@ void inicializar_tabla_segmentos()
 void inicializar_sectores_memoria()
 {
 	tamanioRegistro = sizeof(mseg_t) + sizeof(uint16_t) + tamanioValue + 1; //Porque guardamos el \0
-	cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro; //Se trunca automaticamente al entero (por ser todos int)
-
+	sem_wait(&mutex_config);
+	if((cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro) == 0){	//Se trunca automaticamente al entero (por ser todos int)
+		loggear_error(string_from_format("La Memoria es muy pequenia. No puede almacenar un value tan grande."));
+	}
 	loggear_trace(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
-
+	sem_post(&mutex_config);
+	loggear_info(string_from_format("La Memoria Principal quedo dividida en %d paginas", cantidadDeSectores));
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
 	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool));
 }
@@ -52,14 +57,17 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 {
 	int desplazamiento = 0;
 	registro *reg = obtener_registro_de_instruccion(instruccion);
+	loggear_trace(string_from_format("REGISTRO:	Timestamp:	%" PRIu64 "\n	Key:		%u\n	Value:		%s\n", reg->timestamp, reg->key, reg->value));
 
-	printf("REGISTRO:	Timestamp:	%" PRIu64 "\n	Key:		%u\n	Value:		%s\n", reg->timestamp, reg->key, reg->value);
 	int sectorDisponible = get_proximo_sector_disponible();
-	if (sectorDisponible == -1)
+
+	if(sectorDisponible == -1)
 	{
 		if (memoria_esta_full())
 		{
-			ejecutar_instruccion_journal(instruccion);
+			loggear_info(string_from_format("La memoria esta full - Todas las paginas presentes estan modificadas"));
+			ejecutar_instruccion_journal(instruccion, 0);
+			return NULL;
 		}
 		else
 		{ //Algoritmo de reemplazo:
@@ -96,8 +104,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 			return memoriaPrincipal + ((*numeroDeSector) * tamanioRegistro);
 		}
 	}
-	else
-	{
+	else{
 		sectorOcupado[sectorDisponible] = true;
 		desplazamiento += (sectorDisponible * tamanioRegistro);
 		memcpy(memoriaPrincipal + desplazamiento, &reg->timestamp, sizeof(mseg_t));
@@ -112,7 +119,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		return memoriaPrincipal + (sectorDisponible * tamanioRegistro);
 	}
 
-	loggear_error(string_from_format("Error al insertrar la pagina en Memoria"));
+	loggear_error(string_from_format("No se pudo insertar lal pagina en memoria"));
 	return NULL;
 }
 
@@ -126,6 +133,10 @@ void actualizar_pagina(void *paginaAActualizar, mseg_t nuevoTimestamp, char *nue
 	loggear_debug(string_from_format("Se esta actualizando la pagina con el value %s", nuevoValue));
 	memcpy(paginaAActualizar + desplazamiento, nuevoValue, strlen(nuevoValue)+1);
 }
+
+/*
+ * Despues de hacer esto se puede borrar la instruccion tranquilamente, hace un malloc nuevo
+ */
 registro *obtener_registro_de_instruccion(instr_t *instruccion)
 {
 	char *keyChar = strdup((char *)list_get(instruccion->parametros, 1));
@@ -183,10 +194,10 @@ registro *obtener_registro_de_pagina(void *pagina)
 {
 	mseg_t timestamp = get_ts_pagina(pagina);
 	uint16_t key = get_key_pagina(pagina);
-	registro * miRegistro = calloc(1, tamanioRegistro + 1);
+	loggear_error(string_from_format("El tamanio del Registro es %d", tamanioRegistro));
+	registro * miRegistro = calloc(1, sizeof(registro));
 	miRegistro->timestamp = timestamp;
 	miRegistro->key = key;
-	miRegistro->value = NULL;
 	miRegistro->value = calloc(1, tamanioValue + 1);
 	memcpy(miRegistro->value, pagina + sizeof(mseg_t) + sizeof(uint16_t), tamanioValue + 1);
 
@@ -369,7 +380,7 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 		return filaEncontrada;
 }
 
-void ejecutar_instruccion_journal(instr_t *instruccion)
+void ejecutar_instruccion_journal(instr_t *instruccion, int liberar)
 {
 	loggear_info(string_from_format("Ejecutando instruccion Journal"));
 	int conexionConFS = obtener_fd_out("FileSystem");
@@ -421,10 +432,12 @@ void ejecutar_instruccion_journal(instr_t *instruccion)
 	list_add(listaParam, cadena);
 	cod_op codOp = CODIGO_EXITO;
 	imprimir_donde_corresponda(codOp, instruccion, listaParam);
-	loggear_trace(string_from_format("Se van a borrar los parametros de la instruccion"));
-	list_destroy_and_destroy_elements(instruccion->parametros, free);
-	loggear_trace(string_from_format("Se va a liberar instruccion"));
-	free(instruccion);
+	if(liberar){
+		loggear_trace(string_from_format("Se van a borrar los parametros de la instruccion"));
+		list_destroy_and_destroy_elements(instruccion->parametros, free);
+		loggear_trace(string_from_format("Se va a liberar instruccion"));
+		free(instruccion);
+	}
 	loggear_trace(string_from_format("Journal finalizado por completo"));
 }
 
@@ -509,10 +522,13 @@ void *ejecutar_journal()
 
 	while (1)
 	{
-		usleep(configuracion.RETARDO_JOURNAL * 1000);
+		sem_wait(&mutex_config);
+		int retardoJournal = configuracion.RETARDO_JOURNAL;
+		sem_post(&mutex_config);
+		usleep(retardoJournal * 1000);
 		instr_t *miInstruccion = leer_a_instruccion("JOURNAL", CONSOLA_MEMORIA);
 		sem_wait(&mutex_journal);
-		ejecutar_instruccion_journal(miInstruccion);
+		ejecutar_instruccion_journal(miInstruccion, 1);
 		sem_post(&mutex_journal);
 	}
 }
@@ -523,7 +539,10 @@ void *ejecutar_gossiping()
 	{
 		ejecutar_instruccion_gossip();
 		loggear_debug(string_from_format("Fin gossip programado"));
-		usleep(configuracion.RETARDO_GOSSIPING * 1000);
+		sem_wait(&mutex_config);
+		int retardoGossiping = configuracion.RETARDO_GOSSIPING;
+		sem_post(&mutex_config);
+		usleep(retardoGossiping * 1000);
 	}
 }
 

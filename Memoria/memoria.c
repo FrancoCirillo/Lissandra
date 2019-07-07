@@ -65,6 +65,7 @@ char *obtener_por_clave(char *clave)
 
 void inicializar_semaforos()
 {
+	sem_init(&mutex_config, 0,1);
 	sem_init(&mutex_log, 0,1);
 	sem_init(&mutex_journal, 0, 1);
 	sem_init(&mutex_diccionario_conexiones, 0, 1);
@@ -129,7 +130,7 @@ void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 			ejecutar_instruccion_drop(instruccion);
 			break;
 		case CODIGO_JOURNAL:
-			ejecutar_instruccion_journal(instruccion);
+			ejecutar_instruccion_journal(instruccion, 1);
 			break;
 		case CODIGO_EXITO:
 			ejecutar_instruccion_exito(instruccion);
@@ -215,11 +216,14 @@ void actualizar_config(){
 		config_destroy(auxConfig);
 	}
 
+	sem_wait(&mutex_config);
 	configuracion.RETARDO_MEMORIA = config_get_int_value(auxConfig, "RETARDO_MEMORIA");
 	configuracion.RETARDO_FS = config_get_int_value(auxConfig, "RETARDO_FS");
 	configuracion.RETARDO_JOURNAL = config_get_int_value(auxConfig, "RETARDO_JOURNAL");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
 	configuracion.LOG_LEVEL = log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
+	sem_post(&mutex_config);
+
 	sem_wait(&mutex_log);
 	actualizar_log_level();
 	sem_post(&mutex_log);

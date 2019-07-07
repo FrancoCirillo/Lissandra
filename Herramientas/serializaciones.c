@@ -71,16 +71,16 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 	a_enviar = serializar_request(instruccionAEnviar, &tamanio);
 	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
 
-	loggear_trace(string_from_format("Se va a destruir la lista de parametros de la instruccion"));
+//	loggear_trace(string_from_format("Se va a destruir la lista de parametros de la instruccion"));
 	list_destroy(instruccionAEnviar->parametros);
 
-	loggear_trace(string_from_format("Se va a hacer free(instruccionAEnviar"));
+//	loggear_trace(string_from_format("Se va a hacer free(instruccionAEnviar"));
 	free(instruccionAEnviar);
 
-	loggear_trace(string_from_format("Se va a hacer free(a_enviar)"));
+//	loggear_trace(string_from_format("Se va a hacer free(a_enviar)"));
 	free(a_enviar);
 
-	loggear_trace(string_from_format("Request enviado y borrado"));
+	loggear_trace(string_from_format("Request enviado. Instruccion y parametros libreados"));
 	return s;
 }
 
@@ -136,9 +136,9 @@ void recibir_paquete(int socket_cliente, t_list * valores)
 	void *buffer;
 	int tamanio;
 
-	loggear_trace(string_from_format("Se va a recibir_buffer"));
+//	loggear_trace(string_from_format("Se va a recibir_buffer"));
 	buffer = recibir_buffer(&size, socket_cliente);
-	loggear_trace(string_from_format("buffer recibido, copiandolo"));
+//	loggear_trace(string_from_format("buffer recibido, copiandolo"));
 	while (desplazamiento < size)
 	{
 		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
@@ -149,7 +149,7 @@ void recibir_paquete(int socket_cliente, t_list * valores)
 		list_add(valores, valor);
 	}
 	free(buffer);
-	loggear_trace(string_from_format("free(buffer) hecho"));
+//	loggear_trace(string_from_format("free(buffer) hecho"));
 
 }
 
@@ -165,7 +165,7 @@ int recibir_request(int socket_cliente, instr_t **instruccion)
 		return t;
 	t_list *listaParam = list_create();
 
-	loggear_trace(string_from_format("Se va a recibir el buffer!"));
+//	loggear_trace(string_from_format("Se va a recibir el buffer!"));
 	recibir_paquete(socket_cliente, listaParam); //del TP0
 	*instruccion = malloc(sizeof(instr_t));
 	(*instruccion)->timestamp = nuevoTimestamp;
