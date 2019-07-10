@@ -145,13 +145,9 @@ void metrics(){//TODO Porcentaje de uso por memoria
 		promedio_insert=(double)tiempo_inserts/(double)cantidad_inserts;
 	if(cantidad_selects)
 		promedio_selects=(double)tiempo_selects/(double)cantidad_selects;
-<<<<<<< HEAD
 	printf("\n\n");
 	loggear_info(string_from_format("METRICS RESULTADO: \n \t Writes=%d Write Latency=%lf \n\t Reads=%d Reads Latency=%lf\n",cantidad_inserts,promedio_insert,cantidad_selects, promedio_selects));
 	printf("\n\n");
-=======
-	loggear_info(string_from_format("METRICS RESULTADO: \n \t Writes=%d Write Latency=%lf \n\t Reads=%d Reads Latency=%lf\n",cantidad_inserts,promedio_insert,cantidad_selects, promedio_selects));
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 	//TODO memload
 }
 void agregar_a_metricas(instr_t* i){
@@ -333,22 +329,13 @@ int ejecutar(){
 			pthread_attr_init(&attr);
 			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
 			loggear_debug(string_from_format("Se creo un hilo para atender la solicitud!"));
-<<<<<<< HEAD
 			pthread_detach(un_hilo);
-=======
-
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 			subir_cantidad_hilos();
 			loggear_debug(string_from_format("Se subio la cantidad de hilos!"));
 
 			//		pthread_join(un_hilo,NULL);
-<<<<<<< HEAD
 
 			loggear_debug(string_from_format("Hilo detacheado"));
-=======
-			pthread_detach(un_hilo);
-			loggear_trace(string_from_format("Hilo detacheado"));
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 		}
 		loggear_info(string_from_format("No hay mas hilos disponibles o procesos pendientes para ejecutar"));
 
@@ -377,11 +364,7 @@ void* ejecutar_proceso(void* un_proceso){
 				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){
 					loggear_trace(string_from_format("Se agrega a metricas"));
 					mseg_t tiempo_exec=respuesta->timestamp;
-<<<<<<< HEAD
 					loggear_trace(string_from_format("\n El tiempo que tardo en ejecutarse fue= %"PRIu64"  \n",tiempo_exec));
-=======
-					loggear_trace(string_from_format("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec));
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 					instruccion_obtenida->timestamp=respuesta->timestamp;
 					agregar_a_metricas(instruccion_obtenida);
 				}else{
@@ -436,14 +419,11 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	instr_t* respuesta;
 	loggear_debug(string_from_format("#### Se ejecuta una instruccion"));
 	imprimir_instruccion(i, loggear_trace);
-<<<<<<< HEAD
 
 	if(i->codigo_operacion==22){
 		loggear_debug(string_from_format("### FINALIZANDO KERNEL, GRACIAS POR UTILIZARLO! ###"));
 		exit(0);
 	}
-=======
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
 	}
@@ -501,11 +481,7 @@ instr_t *validar(instr_t * i){
 
 instr_t* enviar_i(instr_t* i){
 
-<<<<<<< HEAD
 	loggear_info(string_from_format(" ENVIANDO INSTRUCCION NUMERO-> %s\n",(char*)obtener_ultimo_parametro(i)));
-=======
-	loggear_info(string_from_format(" ENVIANDO INSTRUCCION CODIGO %s\n",(char*)obtener_ultimo_parametro(i)));
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 	//imprimir_instruccion(i);
 
 	hilo_enviado* h=malloc(sizeof(hilo_enviado));
@@ -524,11 +500,7 @@ instr_t* enviar_i(instr_t* i){
 
 	loggear_debug(string_from_format("Determinando memoria para request"));
 	int conexionMemoria = obtener_fd_memoria(i);
-<<<<<<< HEAD
 	if(conexionMemoria<0 ||!conexionMemoria){
-=======
-	if(conexionMemoria<0){
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 		loggear_debug(string_from_format("No se pudo encontrar una memoria para el criterio indicado"));
 		char* mensaje="No existe una memoria asignada para dicha instruccion";
 		instr_t* respuesta=malloc(sizeof(instr_t));
@@ -542,10 +514,7 @@ instr_t* enviar_i(instr_t* i){
 	}
 
 	loggear_trace(string_from_format("ENVIANDO INSTRUCCION:  "));
-<<<<<<< HEAD
 	printf("\n a la conexion %d",conexionMemoria);
-=======
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 	enviar_request(i, conexionMemoria);
 
 	loggear_trace(string_from_format("\n##### Instruccion enviada, esperando respuesta###\n"));
@@ -1121,11 +1090,7 @@ void imprimir_config_actual(){
 
 	char *texto = string_new();
 	string_append_with_format(&texto, "Config actual:\n");
-<<<<<<< HEAD
 
-=======
-	
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 	int i=0;
 	void imprimir(char* valor){
 		string_append_with_format(&texto,"IP: %s\n", valor);
