@@ -506,7 +506,7 @@ instr_t* enviar_i(instr_t* i){
 	}
 
 	loggear_trace(string_from_format("ENVIANDO INSTRUCCION:  "));
-	enviar_request(i, conexionMemoria);
+	enviar_request_simple(i, conexionMemoria);
 
 	loggear_trace(string_from_format("\n##### Instruccion enviada, esperando respuesta###\n"));
 
@@ -603,7 +603,7 @@ int obtener_codigo_criterio(char* criterio){
 
 }
 void enviar_a(instr_t* i,char* destino){
-	enviar_request(i,obtener_fd_out(destino));
+	enviar_request_simple(i,obtener_fd_out(destino));
 }
 int obtener_fd_out(char *proceso)
 {
@@ -626,7 +626,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	instr_t *miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 
 	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, 1);
-	enviar_request(miInstruccion, fd_saliente);
+	enviar_request_simple(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
 void recibi_respuesta(instr_t* respuesta, char* remitente){
@@ -892,7 +892,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 
 
 	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
-	enviar_request(miInstruccion, conexionRemitente);
+	enviar_request_simple(miInstruccion, conexionRemitente);
 	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
 
 
@@ -999,7 +999,7 @@ void enviar_lista_gossiping(char* nombreProceso){
 		loggear_debug(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
 		t_list* listaGossiping = conexiones_para_gossiping();
 		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
-		enviar_request(miInstruccion, conexionVieja);
+		enviar_request_simple(miInstruccion, conexionVieja);
 	}
 }
 
@@ -1042,9 +1042,9 @@ void gossipear_con_procesos_desconectados(){
 				puts("Conexion creada");
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
-				enviar_request(miInstruccion, conexion);
+				enviar_request_simple(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
-				enviar_request(peticionDeSuTabla, conexion);
+				enviar_request_simple(peticionDeSuTabla, conexion);
 
 			}
 		}
