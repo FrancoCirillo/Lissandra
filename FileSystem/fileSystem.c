@@ -299,8 +299,8 @@ void finalizar_FS(instr_t* instruccion) {
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 
-	dumpear(memtable);
-	//TODO: compactar todas las tablas
+	dumpear_memtable();
+	//todo: compactar_memtable();
 	config_destroy(g_config);
 	log_destroy(g_logger);
 
@@ -510,7 +510,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		int conexionReceptor1 = obtener_fd_out(remitente);
 		t_list* listaABorrar = list_duplicate(miInstruccion->parametros);
 		enviar_request(miInstruccion, conexionReceptor1);
-		list_remove(listaABorrar, list_size(listaABorrar)-1);
+		//list_remove(listaABorrar, list_size(listaABorrar)-1);
 		list_destroy_and_destroy_elements(listaABorrar, free);
 		loggear_trace(string_from_format("Parametros freed"));
 		break;

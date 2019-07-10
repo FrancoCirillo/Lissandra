@@ -15,7 +15,8 @@
 #include <stdlib.h>
 #include "registros.h"
 
-void 	compactar();
+void 	compactar_memtable();
+void 	compactacion_final(char* tabla, void* registros);
 void 	compactador(char* tabla);
 t_list* listar_archivos(char* tabla);
 int 	hay_tmp(char* tabla);
