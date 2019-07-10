@@ -14,6 +14,7 @@
 void *memoriaPrincipal;
 t_dictionary *tablaDeSegmentos;
 sem_t mutex_diccionario_conexiones;
+sem_t mutex_config;
 
 /* MEMORIA PRINCIPAL */
 void gran_malloc_inicial();
@@ -34,7 +35,7 @@ bool memoria_esta_full();
 /* TABLA DE SEGMENTOS */
 void inicializar_tabla_segmentos();
 t_list * segmento_de_esa_tabla(char* tabla);
-int eliminar_tabla(instr_t* instruccion);
+void eliminar_tabla(instr_t* instruccion);
 
 /* GETTERS */
 
@@ -46,7 +47,7 @@ registro *obtener_registro_de_pagina(void* pagina);
 
 char* pagina_a_str(void* pagina);
 char* registro_a_str(registro* registro);
-void loggear_tabla_de_paginas(t_list *tablaDePaginas, t_log* logger);
+void loggear_tabla_de_paginas(t_list *tablaDePaginas, void (*funcion_log)(char *texto));
 
 
 /* ALGORITMO DE REEMPLAZO */
@@ -63,14 +64,14 @@ filaTabPags* fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada);
 
 /* JOURNAL */
 sem_t mutex_journal;
-void ejecutar_instruccion_journal(instr_t *instruccion);
+void ejecutar_instruccion_journal(instr_t *instruccion, int liberar);
 void *ejecutar_journal(); //Job para el journal
 instr_t	 *fila_a_instr(char* tablaAInsertar, filaTabPags* fila, cod_op codOp);
 instr_t *registro_a_instr(char* tablaAInsertar, registro* unRegistro, cod_op codOp);
 void limpiar_memoria();
 void limpiar_memoria_principal();
 void limpiar_segmentos();
-
+void liberar_value(t_list* instruccion);
 
 /* SHOW */
 void mostrar_paginas(instr_t* instruccion);

@@ -25,6 +25,7 @@ typedef struct config
 	int RETARDO_GOSSIPING;
 	int MEMORY_NUMBER;
 	char *RUTA_LOG;
+	t_log_level LOG_LEVEL;
 } config;
 
 typedef struct registro
@@ -38,17 +39,16 @@ extern sem_t mutex_log;
 extern sem_t mutex_journal;
 extern sem_t mutex_diccionario_conexiones;
 extern t_log *g_logger;
-extern t_log *debug_logger;
 extern t_config *g_config;
 extern config configuracion;
 extern int tamanioValue;
+extern char* puntoMontaje;
 extern int tamanioRegistro;
 extern bool* sectorOcupado;
 extern int cantidadDeSectores;
 extern t_dictionary *conexionesActuales;
 extern char* miIPMemoria;
 extern char* nombreDeMemoria;
-extern identificador *idsNuevasConexiones;
 
 extern t_dictionary *tablaDeSegmentos;
 

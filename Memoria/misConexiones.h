@@ -27,6 +27,7 @@ void pedir_tamanio_value();
 void actualizar_tamanio_value(instr_t* instruccion);
 
 /* GOSSIPING */
+int fd_out_inicial;
 void ejecutar_instruccion_gossip();
 void *ejecutar_gossiping();
 void devolver_gossip(instr_t* instruccion, char* remitente);

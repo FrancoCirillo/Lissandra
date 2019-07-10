@@ -47,6 +47,7 @@ typedef struct config{
 	t_list* IP_SEEDS;
 	int RETARDO_GOSSIPING;
 	int tiempoMetricas;
+	t_log_level LOG_LEVEL;
 }config_t;
 
 
@@ -124,10 +125,12 @@ void inicializar_criterios();
 void inicializarConfiguracion();
 void inicializar_semaforos();
 void iniciar_metricas();
+char* rutaConfiguracion;
 
 //Conexiones Franquito
 config_t configuracion;
 t_dictionary *conexionesActuales;
+t_dictionary *auxiliarConexiones;
 void check_inicial(int argc, char* argv[]);
 void (*callback)(instr_t *instruccion, char *remitente);
 void ejecutar_requestRecibido(instr_t * instruccion,char* remitente);
@@ -139,7 +142,7 @@ void conectar_nueva_memoria(char* IPMemoria, char* PuertoMemoria, char* NombreMe
 //Getter y setters
 instr_t *obtener_instruccion(proceso* p);
 proceso* obtener_sig_proceso();
-char* obtener_por_clave(char* ruta, char* key);
+char* obtener_por_clave(char* key);
 void encolar_proceso(proceso *p);
 char* obtener_parametroN(instr_t* i,int index);
 int obtener_codigo_request();
@@ -164,14 +167,16 @@ bool existe_tabla(char* tablaBuscada);
 void iniciar_consola();
 void* consola(void* c);
 void agregar_a_metricas(instr_t* i);
+void actualizar_config();
+void actualizar_log_level();
 
 //Gossiping
+int fd_out_inicial;
 void iniciar_ejecutador_gossiping();
 void *ejecutar_gossiping();
 void ejecutar_instruccion_gossip();
 void gossipear_con_procesos_desconectados();
 void gossipear_con_conexiones_actuales();
-
 char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado);
 bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado);
 void enviar_lista_gossiping(char* nombre);

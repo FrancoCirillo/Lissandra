@@ -3,7 +3,10 @@
 #ifndef MEMORIA_DEFINICIONESCONEXIONES_H_
 #define MEMORIA_DEFINICIONESCONEXIONES_H_
 
+#include <semaphore.h>
 #include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
+#include <commons/log.h>
 #include "tiempo.h"
 #include <errno.h>
 #include <inttypes.h>
@@ -55,6 +58,7 @@ typedef enum cod_op {
 	PETICION_GOSSIP = 14,
 	RECEPCION_GOSSIP = 15,
 	SOLICITUD_DATOS = 16,
+	CODIGO_CERRAR = 22,
 	CODIGO_SHOW = 51,
 
 	ERROR_SELECT = BASE_COD_ERROR + CODIGO_SELECT,
@@ -67,7 +71,7 @@ typedef enum cod_op {
 	ERROR_RUN = BASE_COD_ERROR + CODIGO_RUN,
 	ERROR_METRICS = BASE_COD_ERROR + CODIGO_METRICS,
 
-	// Solo para saber si devolver los resultados al Kernel o Memoria para que imprima
+	// TODO: Borrar - no se usa
 	CONSOLA_FS_EXITO = BASE_CONSOLA_FS + CODIGO_EXITO,
 	CONSOLA_MEM_EXITO = BASE_CONSOLA_MEMORIA + CODIGO_EXITO,
 	CONSOLA_KRN_EXITO = BASE_CONSOLA_KERNEL + CODIGO_EXITO,
@@ -96,7 +100,6 @@ typedef enum cod_op {
 	CONSOLA_KRN_ADD = BASE_CONSOLA_KERNEL + CODIGO_ADD,
 	CONSOLA_KRN_RUN = BASE_CONSOLA_KERNEL + CODIGO_RUN,
 	CONSOLA_KRN_METRICS = BASE_CONSOLA_KERNEL + CODIGO_METRICS
-
 
 } cod_op;
 
@@ -149,5 +152,12 @@ typedef struct identificador
 	char puerto[8];
 	char ip_proceso[17]; //"000.000.000.000\n"
 } identificador;
+
+extern t_dictionary *conexionesActuales;
+extern t_dictionary *auxiliarConexiones;
+extern sem_t mutex_diccionario_conexiones;
+extern t_log *g_logger;
+extern sem_t mutex_log;
+extern int fd_out_inicial;
 
 #endif /* MEMORIA_DEFINICIONESCONEXIONES_H_ */

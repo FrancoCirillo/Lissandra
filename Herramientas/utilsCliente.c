@@ -3,7 +3,7 @@
 #include "utilsCliente.h"
 
 //Conecta el socket_cliente con el Servidor con ip ip y puerto puerto.
-int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar, t_log* logger, sem_t* mutex_log)
+int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar)
 {
 	struct addrinfo hints; //Es para pasarle nuestras preferencias a getaddrinfo
 	struct addrinfo *server_info;
@@ -16,15 +16,21 @@ int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar, t_log
 	hints.ai_flags = AI_PASSIVE;	 //Rellena la IP por nosotros TODO:Chequear si queremos esto. Creo que igual no importa xq llenamos el primer argumento de getaddrinfo con ip
 
 	//Rellena la estructura server_info con la info del Servidor (En realidad es un addrinfo**)
-	int addr= getaddrinfo(ip, puerto, &hints, &server_info);
-	if(addr!=0) return addr;
+	int addr = getaddrinfo(ip, puerto, &hints, &server_info);
+
+	//Puede pasar durante el gossiping
+	if(addr!=0){
+		loggear_error(string_from_format("Error al hacer getaddrinfo: %s", gai_strerror(addr)));
+		freeaddrinfo(server_info);
+		return addr;
+	}
 
 	//Crea el socket_cliente
 	//TODO: recorrer la lista "server_info" en vez de asumir que el primero funciona (Beeje's)
 
 	if ((socket_cliente = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol)) < 0)
 	{
-		loggear_error(logger, mutex_log, string_from_format("Error al crear el socket cliente \n"));
+		loggear_error(string_from_format("Error al crear el socket cliente  %s\n", strerror(errno)));
 		close(socket_cliente);
 		return socket_cliente; //
 	}
@@ -39,12 +45,14 @@ int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar, t_log
 	//ai_addr contiene el puerto e ip del servidor
 	if (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1)
 	{
-		puts("No se pudo conectar");
 		if(flagReintentar){
-			loggear_warning(logger, mutex_log, string_from_format("El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n"));
+			loggear_warning(string_from_format("El proceso necesita otros servicios para funcionar.\nPor favor inicielos.\nReintentado..\n"));
 			while (connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen) == -1);
 		}
-		else return -1;
+		else {
+			freeaddrinfo(server_info);
+			return -1;
+		}
 	}
 	freeaddrinfo(server_info);
 

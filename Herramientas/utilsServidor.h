@@ -17,14 +17,16 @@
 #include "serializaciones.h"
 #include "utilsCliente.h"
 #include "logging.h"
+#include "auxInotify.h"
 
 #define TAMANIO_MAX_INPUT_CONSOLA 200
+
 instr_t *request;
-int server_fd;
+int listener;
 
 void imprimir_quien_se_conecto(struct sockaddr_storage remoteaddr);
-int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir, t_log *logger, sem_t *mutex_log);
-int vigilar_conexiones_entrantes(int listener, void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), t_dictionary *conexionesConocidas, sem_t* mutex_diccionarioConexiones, int queConsola, t_log *logger, sem_t* mutex_log);
+int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir);
+int vigilar_conexiones_entrantes(void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente), void (*actualizar_config)(void), char* rutaConfig, int queConsola);
 char *ip_cliente(struct sockaddr_storage remoteaddr);
 
 #endif /* UTILS_SERVIDOR */

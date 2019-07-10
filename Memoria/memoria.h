@@ -23,24 +23,25 @@
 #include "instrucciones.h"
 
 	/* CONFIG Y LOG */
+char *rutaConfig;
 sem_t mutex_log;
 t_log *g_logger;
-t_log *debug_logger;
 t_config *g_config;
 config configuracion;
 void inicializar_configuracion();
 void iniciar_log();
 char *obtener_por_clave(char *clave);
-
+void actualizar_config();
+void actualizar_log_level();
 
 	/* CONEXIONES */
 
-identificador *idsNuevasConexiones;
 t_dictionary *conexionesActuales;
+t_dictionary *auxiliarConexiones;
 char* miIPMemoria;
 char* nombreDeMemoria;
-int listenner;
 int tamanioValue;
+char* puntoMontaje;
 int tamanioRegistro;
 bool* sectorOcupado;
 int cantidadDeSectores;
@@ -61,5 +62,6 @@ void iniciar_ejecutador_gossiping();
 	/* TESTING */
 
 void check_inicial(int argc, char* argv[]);
+void terminar_memoria(instr_t* instruccion);
 
 #endif /* MEMORIA_MEMORIA_H_ */

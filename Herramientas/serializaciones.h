@@ -28,7 +28,8 @@ enum cantidadParametros{
     CANT_PARAM_JOURNAL = 0, 
     CANT_PARAM_ADD = 4,
     CANT_PARAM_METRICS = 0, 
-    CANT_PARAM_RUN = 1 
+    CANT_PARAM_RUN = 1,
+	CANT_PARAM_CERRAR = 0
 };
 
 /*
@@ -103,6 +104,13 @@ void *serializar_request(instr_t *instruccionAEnviar, int *tamanio);
  */
 int enviar_request(instr_t *instruccionAEnviar, int socket_cliente);
 
+
+/*
+ * Envia instruccionAEnviar a travez de socket_cliente
+ * Llama a enviar_request pero ademas hace free de los parametros de instr
+ */
+int enviar_liberando_request(instr_t *instruccionAEnviar, int socket_cliente);
+
 /*
  * RECEPCION
  */
@@ -114,21 +122,21 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente);
  * Si hay un error al recibir el ts o la operación devuelve el el código de error
  * Devuelve 1 en exito
  */
-int recibir_request(int socket_cliente, instr_t **instruccion, t_log *logger, sem_t* mutex_log);
+int recibir_request(int socket_cliente, instr_t **instruccion);
 
 /*
  * Recibe mseg_t bytes de socket_cliente
  *
  * Devuelve el resultado del recv
  */
-int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp,  t_log *logger, sem_t* mutex_log);
+int recibir_timestamp(int socket_cliente, mseg_t *nuevoTimestamp);
 
 /*
  * Recibe cod_op bytes del socket cliente, el Codigo de Operacion.
  *
  * Devuelve el resultado del recv
  */
-int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion, t_log *logger, sem_t *mutex_log);
+int recibir_operacion(int socket_cliente, cod_op *nuevaOperacion);
 
 
 /*
@@ -139,9 +147,9 @@ void *recibir_buffer(int *size, int socket_cliente);
 
 /*
  * Por mas que se llame recibir paquete, lo que hace es
- * recibir_buffer y lo deserializa en una nueva t_list
+ * recibir_buffer y lo deserializa en t_list
  */
-t_list *recibir_paquete(int socketCliente);
+void recibir_paquete(int socketCliente, t_list* valores);
 
 
 /*
@@ -181,7 +189,7 @@ int es_comando_valido(cod_op comando, t_list *listaParam);
 /*
  * Imprime instruccion en stdout
  */
-void imprimir_instruccion(instr_t *instruccion);
+void imprimir_instruccion(instr_t *instruccion, void (*funcion_log)(char *texto));
 
 
 /*
@@ -196,24 +204,24 @@ cod_op quien_pidio(instr_t *instruccion);
 /*
  *  Imprime un registro presente en instr_t (siempre y cuando Key y Value sean char*)
  */
-void imprimir_registro(instr_t *instruccion);
+void imprimir_registro(instr_t *instruccion, void (*funcion_log)(char *texto));
 
 
 /*
  * Imprime el primer parametro de instruccion
  */
-void loggear_exito_proceso(instr_t *miInstruccion, t_log* logger, sem_t *mutex_log);
+void loggear_exito_proceso(instr_t *miInstruccion);
 
 
 /*
  * Imprime el primer parametro de instruccion, en rojo
  */
-void loggear_error_proceso(instr_t *miInstruccion, t_log* logger, sem_t* mutex_log);
+void loggear_error_proceso(instr_t *miInstruccion);
 
 /*
  * Imprime un diccionario de conexiones
  */
-void imprimir_conexiones(t_dictionary *diccionario);
+void imprimir_conexiones(t_dictionary *diccionario, void (*funcion_log)(char *texto));
 
 /*
  * Conversion de char* a uint16_t
