@@ -257,7 +257,6 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 		int status = 1;
 
 		int cant_letras_ts= strlen(mseg_a_string(obtener_ts()));
-		loggear_trace(string_from_format("\n\ncant_letras_ts\n\n\n %d", cant_letras_ts));
 		char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + strlen(string_itoa((int)key)))); //   +4 por: \n ; ; \0
 		strcpy(buffer,"");
 
@@ -648,11 +647,9 @@ int puede_crear_particiones(instr_t* i) {
 	int resultado;
 	sem_wait(&mutex_cant_bloques);
 	resultado = (bloques_disponibles >= particiones);
-	if(resultado) {
-		bloques_disponibles= bloques_disponibles - particiones;// Esto reserva la cantidad de bloques para que finalice bien el CREATE.
-	}
 	sem_post(&mutex_cant_bloques);
 	return resultado;
+
 }
 
 void crear_particiones(instr_t* instr) {

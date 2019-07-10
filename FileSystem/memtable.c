@@ -9,6 +9,8 @@ void inicializar_memtable() {
 		levantar_tablas_directorio(directorio);
 		loggear_debug(string_from_format("Se inicializó la memtable."));
 	}
+
+	//TODO  HACER DETACH de el dumpeo(); es un while 1 para todas las tablas.
 }
 
 void finalizar_memtable() { //Borra y libera todos los registros y tablas.
@@ -49,7 +51,7 @@ void borrar_registros(char* tabla, void* registros) {
 	//en caso de ya existir la key actualiza la data.
 }
 
-void limpiar_memtable() {   //Semaforos??
+void limpiar_memtable() {
 	dictionary_iterator(memtable, &borrar_registros);
 }
 
@@ -82,7 +84,7 @@ void agregar_registro(char* tabla, registro_t* registro) {
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {
-	puts("");
+
 	loggear_trace(string_from_format("---Buscando en la memtable---"));
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 
@@ -162,6 +164,7 @@ void finalizar_tablas_nro_dump(){
 	dictionary_destroy_and_destroy_elements(tablas_nro_dump, (void*)free);
 }
 
+//TESTEO borrar
 void ejemplo_nro_dump(){
 	iniciar_semaforos();
 	agregar_a_contador_dumpeo("Tabla1");
@@ -190,11 +193,9 @@ void dumpear_tabla(char* tabla, void* registros) {
 		loggear_trace(string_from_format("Inicializando temporal"));
 
 		char* ruta_bloque;
-		//int ult_bloque;
-		//IMPORTANTE (Dai): agrego que lea el ult bloque, ya que antes escribia todo en uno solo, y eso esta mal.
 
 		void escribir_reg_en_tmp(void* registro) {
-			//ult_bloque = obtener_ultimo_bloque(ruta_tmp);
+			nro_bloque = obtener_ultimo_bloque(ruta_tmp);
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 			free(ruta_bloque);

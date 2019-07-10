@@ -24,7 +24,10 @@ int main(int argc, char* argv[]) {
 	inicializar_FS(argc, argv);
 
 	//ejemplo_aplanar();
-	//pruebaGeneral();
+
+	//pruebaDump();
+
+	//ejemplo_nro_dump();
 
 	inicializar_conexiones();
 
@@ -134,19 +137,12 @@ t_list* listaRegistros() {
 	list_add(registros, registro9);
 	list_add(registros, registro10);
 
-//Para testeo.
-
-//	void escribir(registro_t* reg){
-//		int bloque= obtener_ultimo_bloque("/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp");
-//		char* ruta_bloque= obtener_ruta_bloque(bloque);
-//		escribir_registro_bloque(reg,  ruta_bloque, "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp");
-//	}
-//
-//	list_iterate(registros, &escribir);
-
 	return registros;
 }
 
+
+//Testeo de prueba de dumpear_tabla(); //Tiene el mismo codigo.
+//Lo adapto para usar en compactacion. Genera tmps que uso para testear.
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
 		loggear_trace(string_from_format("-------------------Entre a dump-------------------"));
@@ -168,7 +164,7 @@ void pruebaDump() {
 
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 
-			loggear_trace(string_from_format("Escribi el registro en bloque"));
+		//	loggear_trace(string_from_format("Escribi el registro en bloque"));
 		}
 
 		list_iterate((t_list*)registros, &escribir_reg_en_tmp);
@@ -183,34 +179,35 @@ void pruebaDump() {
 
 	//--agrego una tabla con registros---
 	t_list* reg = listaRegistros();
-	dictionary_put(mockMem, "TABLA1", reg);
+	dictionary_put(mockMem, "T1", reg);
 
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
 
 	//--agrego otra tabla--
 	t_list* registros = crear_lista_registros();
-	dictionary_put(mockMem, "TABLA2", registros);
+	dictionary_put(mockMem, "T2", registros);
 
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
 
 	//--creo registros--
-	registro_t* registro2 = crearRegistro(4324234, 25, "HolaSoyOtraPrueba");
+	registro_t* registro2 = crearRegistro(4324234, 10, "HolaVoyEnT2");
 	loggear_info(string_from_format("Cree un registro:"));
 	imprimirRegistro(registro2);
 
-	registro_t* registro = crearRegistro(4324234, 32, "HolaSoyUnaPrueba");
+	registro_t* registro = crearRegistro(4324234, 32, "HolaTmbVoyEnT2");
 	loggear_info(string_from_format("Cree un registro:"));
 	imprimirRegistro(registro);
 
 	//--agrego registros--
-	t_list* registros_tabla = dictionary_get(mockMem, "TABLA2");
+	t_list* registros_tabla = dictionary_get(mockMem, "T2");
 	list_add(registros_tabla, registro);
 	list_add(registros_tabla, registro2);
 
-	loggear_info(string_from_format("Se inserto el registro en la memtable."));
+	loggear_info(string_from_format("Se inserto el registro en la tabla T2 en la memtable."));
 
 	//--hago dump--
 	dictionary_iterator(mockMem, &dump);
+
 }
 
 void pruebaTmp() {
@@ -407,8 +404,13 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	list_add_all(registros_totales, registros_mem);
 	list_add_all(registros_totales, registros_temp);
 	if(registro_bin != NULL)
+	{
 		list_add_all(registros_totales, registro_bin);
-	else return NULL;
+	}
+	else {
+		//TODO FREES?
+		return NULL;
+	}
 //	borrar_lista_registros(registros_mem);
 //	borrar_lista_registros(registros_temp);
 //	borrar_lista_registros(registro_bin);
