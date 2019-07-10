@@ -194,7 +194,6 @@ registro *obtener_registro_de_pagina(void *pagina)
 {
 	mseg_t timestamp = get_ts_pagina(pagina);
 	uint16_t key = get_key_pagina(pagina);
-	loggear_error(string_from_format("El tamanio del Registro es %d", tamanioRegistro));
 	registro * miRegistro = calloc(1, sizeof(registro));
 	miRegistro->timestamp = timestamp;
 	miRegistro->key = key;

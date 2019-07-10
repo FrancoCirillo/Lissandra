@@ -59,7 +59,6 @@ void execute_create(instr_t* instruccion, char* remitente) {
 			char* cadena = string_from_format("No hay bloques disponibles para crear las particiones de la tabla'%s'.", tabla);
 			list_add(listaParam, cadena);
 			imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
-			free(cadena);
 			return;
 		}
 		agregar_tabla(tabla); //la agrega a la mem
@@ -71,13 +70,11 @@ void execute_create(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
-		free(cadena);
 	}
 	else {
 		char* cadena = string_from_format("Error al crear la tabla '%s', ya existe en el FS.", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
-		free(cadena);
 	}
 }
 
@@ -149,7 +146,6 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		free(cadena);
 		return;
 	}
 
@@ -189,7 +185,6 @@ void execute_select(instr_t* instruccion, char* remitente) {
 //		//char* cadena = string_from_format("No se pudo obtener el dato porque alguien mas esta modificando la tabla");
 //		//list_add(listaParam, cadena);
 //		//imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-//		//free(cadena);
 //		//return;
 //	}
 
@@ -228,7 +223,6 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
-		free(cadena);
 		return;
 	}
 
@@ -260,7 +254,6 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 //		//char* cadena = string_from_format("No se pudo elimninar porque alguien mas esta modificando la tabla");
 //		//list_add(listaParam, cadena);
 //		//imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-//		//free(cadena);
 //		//return;
 //	}
 
@@ -268,13 +261,11 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("Se elimino correctamente la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
-		free(cadena);
 	}
 	else {
 		char* cadena = string_from_format("La tabla '%s' no pudo ser eliminada", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
-		free(cadena);
 	}
 }
 
@@ -295,7 +286,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 
 		struct dirent* directorio_leido;
 		while((directorio_leido = readdir(directorio)) != NULL) {
-			char* tabla = directorio_leido->d_name;
+			char* tabla = string_from_format("%s", directorio_leido->d_name);
 			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
 				loggear_trace(string_from_format("La ruta de la tabla es %s\n", tabla));
 				imprimirMetadata(tabla);
@@ -331,7 +322,6 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		list_add(listaParam, particiones);
 		list_add(listaParam, tiempo_comp);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
-		//TODO: free
 	}
 }
 
@@ -347,14 +337,12 @@ void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 		char* cadena = string_from_format("El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)", tam_value, config_FS.tamanio_value);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		//TODO: free
 	}
 
 	if(quien_pidio(instruccion) == CONSOLA_FS){
 		resultadoInsert = list_duplicate(execute_insert(instruccion, &codOp));
 		imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
 		//return (int) codOp;
-		//TODO: free
 	}
 	else{
 		resultadoInsert = execute_insert(instruccion, &codOp);
@@ -363,7 +351,6 @@ void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 			imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
 		}
 		//return (int) codOp;
-		//TODO: free
 	}
 }
 
