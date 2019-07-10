@@ -283,11 +283,17 @@ void inicializar_FS(int argc, char* argv[]) {
 	loggear_info(string_from_format("-----------INICIO PROCESO-----------"));
 	iniciar_rutas();
 	inicializar_memtable();
+
+	///////iniciar_dumpeo();//// HACER UN DETACH de esto. Va aca. es un while 1 para todas las tablas.
+
 	inicializar_directorios();
-	crear_bloques(); //inicializa tambien la var globlal de bloques disp.
+	crear_bloques();
 	inicializar_bitmap();
-	bloques_disponibles = 0;   //Esto que es??
-	inicializar_bloques_disp();
+	bloques_disponibles = 0; //inicializamos var. global.
+	inicializar_bloques_disp();  //Actualiza el valor.
+
+	//inicializar_compactacion(); TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
+
 	loggear_info(string_from_format("-----------Fin inicialización LFS-----------"));
 
 }
@@ -296,8 +302,8 @@ void finalizar_FS(instr_t* instruccion) {
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 
-	dumpear(memtable);
-	//TODO: compactar todas las tablas
+	//dumpear_memtable();  ESTO NO VA ACA (Dai) es un while(1)
+	//todo: compactar_memtable(); ESTO NO VA ACA  es Por tabla y con while tambien. En inicializar.
 	config_destroy(g_config);
 	log_destroy(g_logger);
 
@@ -512,7 +518,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		int conexionReceptor1 = obtener_fd_out(remitente);
 		t_list* listaABorrar = list_duplicate(miInstruccion->parametros);
 		enviar_request(miInstruccion, conexionReceptor1);
-		list_remove(listaABorrar, list_size(listaABorrar)-1);
+		//list_remove(listaABorrar, list_size(listaABorrar)-1);
 		list_destroy_and_destroy_elements(listaABorrar, free);
 		loggear_trace(string_from_format("Parametros freed"));
 		break;

@@ -29,7 +29,7 @@ void inicializar_semaforo_tabla(char* tabla){
 	agregar_a_dic_semaforos(tabla, mutex_tabla);
 	sem_post(&mutex_dic_semaforos);
 
-	loggear_debug(string_from_format("Semáforo inicializado y agregado al diccionario de semáforos."));
+	loggear_trace(string_from_format("Semáforo inicializado y agregado al diccionario de semáforos."));
 }
 
 void agregar_a_dic_semaforos(char* tabla, sem_t* mutex_tabla){
@@ -42,7 +42,6 @@ sem_t* obtener_mutex_tabla(char* tabla){
 }
 
 int aux_obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
-	loggear_trace(string_from_format("Entre a aux_obtener_mutex_tabla"));
 	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 	int sem_val;
 	sem_getvalue(mutex_tabla, &sem_val);
@@ -50,7 +49,6 @@ int aux_obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
 }
 
 int existe_mutex(char* tabla){
-	loggear_trace(string_from_format("Verificando existencia de mutex"));
 	return dictionary_has_key(dic_semaforos_tablas, tabla);
 }
 
@@ -723,7 +721,6 @@ void crear_bloques() {  //Los bloques van a partir del numero 0 al n-1
 	if(carpeta_esta_vacia(g_ruta.bloques)) {
 		loggear_debug(string_from_format("Los bloques no existen"));
 		int cantidad = Metadata_FS.blocks;
-		bloques_disponibles = cantidad;
 		char* num;
 		for (int i = 0; i < cantidad; i++) {
 			num = string_itoa(i);

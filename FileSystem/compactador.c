@@ -2,7 +2,65 @@
 
 #include "compactador.h"
 
-void compactador(char* tabla){
+void compactar_memtable() {
+	dictionary_iterator(memtable, &compactacion_final);
+}
+
+void compactacion_final(char* tabla, void* registros) {
+	//Los registros tambien por el dictionary_iterator - se ignoran
+
+	t_list* particiones = list_create();
+
+	int cantidad_particiones = obtener_part_metadata(tabla);
+	int cant_tmpc;
+
+	for(int num = 0; num < cantidad_particiones; num++) {
+		//inicia tantos diccionarios vacios como particiones tenga la tabla.
+		list_add(particiones, dictionary_create());
+	}
+
+	if(existe_tabla(tabla)){
+
+		if (!existe_mutex(tabla))	//Failsafe innecesario
+			inicializar_semaforo_tabla(tabla);
+
+		sem_wait(&mutex_dic_semaforos);
+		sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
+		sem_post(&mutex_dic_semaforos);
+
+		sem_wait(mutex_tabla);
+		cant_tmpc = pasar_a_tmpc(tabla);
+		sem_post(mutex_tabla);
+		loggear_trace(string_from_format("Semaforos de paso a tmpc funcionando correctamente"));
+
+		if(cant_tmpc){
+			t_list* lista_archivos = listar_archivos(tabla);
+
+			if(lista_archivos){
+				for(int i = 0; i < list_size(lista_archivos); i++){
+					agregar_registros_en_particion(particiones, list_get(lista_archivos, i));
+				}
+
+				sem_wait(mutex_tabla);
+
+				list_iterate((t_list*)lista_archivos, &liberar_bloques);
+				for(int j = 0; j< cantidad_particiones;j++){
+					finalizar_compactacion(list_get(particiones,j), tabla, j);
+				}
+				//borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
+
+				sem_post(mutex_tabla);
+				loggear_trace(string_from_format("Semaforos de compactacion_final funcionando correctamente"));
+
+				//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
+			}
+		}
+	}
+	//liberar_recursos(particiones);
+	//free(de todo lo que use);
+}
+
+void compactador(char* tabla) {
 
 	mseg_t ts_inicial = obtener_ts();
 
@@ -35,7 +93,7 @@ void compactador(char* tabla){
 		loggear_trace(string_from_format("Semaforos de paso a tmpc funcionando correctamente"));
 
 		if(!cant_tmpc)
-			continue;
+			break;
 
 		t_list* lista_archivos = listar_archivos(tabla);
 
@@ -67,16 +125,15 @@ void compactador(char* tabla){
 
 	}
 
-
-//	liberar_recursos(particiones);
+	//liberar_recursos(particiones);
 	//free(de todo lo que use);
 }
 
 
 
-void finalizar_compactacion(t_dictionary* particion, char* tabla, int num){
+void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	char* nom = string_from_format("Part%d", num);
-	FILE* f = crear_archivo(nom, tabla,".bin"); //lo crea como nuevo.
+	FILE* f = crear_archivo(nom, tabla, ".bin"); //Lo crea como nuevo.
 
 	int ult_bloque;
 	int nro_bloque = archivo_inicializar(f);
@@ -121,10 +178,9 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
 
-	char* buffer= string_new();
+	char* buffer = string_new();
 	char caracter_leido;
-	int status=1;
-	char* s_caracter;
+	int status = 1;
 
 	while(status) {
 		caracter_leido = fgetc(archivo_bloque);
@@ -157,14 +213,12 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 				break;
 
 			default:
-				s_caracter = string_from_format("%c", caracter_leido);
-				strcat(buffer, s_caracter);
-			break;
-
+				string_append_with_format(&buffer, "%s", caracter_leido);
+				break;
 			}
 
-			caracter_leido = fgetc(archivo_bloque);
-			}
+		caracter_leido = fgetc(archivo_bloque);
+	}
 }
 
 void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){  //Esto me tiro mil warnings..
@@ -178,7 +232,7 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){  //Esto me tiro m
 
 
 t_list* listar_archivos(char* tabla){
-	loggear_trace(string_from_format("---Entre a listar_archivos de la tabla %s---\n", tabla));
+	loggear_trace(string_from_format("Listando archivos de la tabla '%s'\n", tabla));
 	char* ruta_tabla =  obtener_ruta_tabla(tabla);
 
 	DIR* directorio = opendir(ruta_tabla);
@@ -198,10 +252,10 @@ t_list* listar_archivos(char* tabla){
 		if(string_contains(archivo, ".")) {
 			char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
 			list_add(archivos, ruta_archivo);
-			loggear_debug(string_from_format("La ruta del archivo leido es: %s", archivo));
+			loggear_trace(string_from_format("La ruta del archivo leido es: %s", archivo));
 		}
-		free(archivo);
 	}
+	closedir(directorio);
 	free(ruta_tabla);
 	//free(ruta_archivo) No lo hago porque es el que se usa en la lista... ver que no rompa.
 	return archivos;
@@ -246,17 +300,17 @@ int pasar_a_tmpc(char* tabla) {
 	int contador = 0;
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		char* nombre_archivo = directorio_leido->d_name;
-		loggear_debug(string_from_format("Nombre archivo: %s\n", nombre_archivo));
+		loggear_trace(string_from_format("Nombre archivo: %s\n", nombre_archivo));
 		if(string_ends_with(nombre_archivo, ".tmp")) {
-			loggear_trace(string_from_format("Es un tmp"));
+			//loggear_trace(string_from_format("Es un tmp"));
 			char* nombre_viejo = string_from_format("%s/%s", ruta_tabla, nombre_archivo);
-			loggear_trace(string_from_format("Nombre viejo: %s\n", nombre_viejo));
+			//loggear_trace(string_from_format("Nombre viejo: %s\n", nombre_viejo));
 			int length  = strlen(nombre_archivo);
-			loggear_trace(string_from_format("Letras del nombre: %d\n", length));
+			//loggear_trace(string_from_format("Letras del nombre: %d\n", length));
 			char* nombre_sin_ext = string_substring_until(nombre_archivo, length-4);
-			loggear_trace(string_from_format("Nombre sin extension: %s\n", nombre_sin_ext));
+			//loggear_trace(string_from_format("Nombre sin extension: %s\n", nombre_sin_ext));
 			char* nuevo_nombre = string_from_format("%s/%s.tmpc", ruta_tabla, nombre_sin_ext);
-			loggear_info(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
+			loggear_trace(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
 			int status = rename(nombre_viejo, nuevo_nombre);
 
 			contador++;
@@ -264,7 +318,7 @@ int pasar_a_tmpc(char* tabla) {
 		}
 	}
 	return contador;
-	//resetear_numero_dump(tabla);
+	//resetear_numero_dump(tabla);   //Importante esto!
 }
 
 

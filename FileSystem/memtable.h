@@ -23,6 +23,8 @@ t_list* 	crear_lista_registros();
 void 		borrar_lista_registros(void*);
 void 		agregar_registro(char*, registro_t*);
 void 		borrar_registro(void*);
+void 		borrar_registros(void*);
+void 		limpiar_registros(char*, void*);
 registro_t* obtener_registro(char*);
 registro_t* pasar_a_registro(instr_t*);
 t_list* 	obtener_registros_mem(char*, uint16_t);
@@ -33,15 +35,17 @@ void  agregar_tabla(char*);
 void  eliminar_tabla_de_mem(char*);
 char* obtener_ruta_tabla(char*);
 
-void inicializar_tablas_nro_dump();
-void eliminar_nro_dump_de_tabla(char*);
-void finalizar_tablas_nro_dump();
-void agregar_a_contador_dumpeo(char*);
-int  siguiente_nro_dump(char*);
-void dumpear_tabla(char*, void*);
-void dumpear(t_dictionary*);
-void dumpeo();
+void  inicializar_tablas_nro_dump();
+void  eliminar_nro_dump_de_tabla(char*);
+void  finalizar_tablas_nro_dump();
+void  agregar_a_contador_dumpeo(char*);
+int   siguiente_nro_dump(char*);
+t_dictionary*  dumpear_memtable();
+void  dumpear_tabla(char*, void*);
+void  iniciar_dumpeo();
 
+
+void dumpeo();
 
 
 #endif /* MEMTABLE_H_ */
