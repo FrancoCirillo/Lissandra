@@ -62,8 +62,6 @@ void compactacion_final(char* tabla, void* registros) {
 
 void compactador(char* tabla) {
 
-	mseg_t ts_inicial = obtener_ts();
-
 	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
 
 	t_list* particiones = (t_list*)list_create();
@@ -91,8 +89,14 @@ void compactador(char* tabla) {
 
 	int i=1;
 
-	while(existe_tabla(tabla)){
+	mseg_t ts_inicial;
+	mseg_t ts_final;
+	mseg_t duracion_compactacion;
+
+	while(existe_tabla(tabla)){ //&& threads_locker) ?
+
 		sleep(tiempo_compactacion);
+		ts_inicial = obtener_ts();
 
 		printf("Compactacion nro: %d\n", i);
 
@@ -101,8 +105,9 @@ void compactador(char* tabla) {
 		sem_post(mutex_tabla);
 		//loggear_trace(string_from_format("Semaforos de paso a tmpc funcionando correctamente"));
 
-//		if(!cant_tmpc)
-//			continue;     ESTO NO ME FUNCA??
+		if(!cant_tmpc){
+			continue;
+		}
 
 		t_list* lista_archivos = listar_archivos(tabla);
 
@@ -111,35 +116,40 @@ void compactador(char* tabla) {
 				char* lectura=(char*)list_get((t_list*)lista_archivos, i);
 				agregar_registros_en_particion(particiones, lectura);
 				loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
-				sleep(3);
 			}
-			puts("ya agregue_registros_en_particion\n\n");
+		puts("ya agregue_registros_en_particion\n\n");
 
-			sem_wait(mutex_tabla);
+		sleep(5);
 
-			list_iterate((t_list*)lista_archivos, &liberar_bloques);
+		sem_wait(mutex_tabla);
 
-			puts("Ya libere los bloques\n\n ENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+		list_iterate((t_list*)lista_archivos, &liberar_bloques);
 
-			//Hasta aca estoy segura que funciona.
+		puts("Ya libere los bloques\n\n ENTRO AL FOR DE FINALIZAR COMPACTACION\n");
 
-			for(int j = 0; j< cantidad_particiones;j++){
-				finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
+		sleep(5);
 
-			}
+		//Hasta aca estoy segura que funciona.
 
-			borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
+		for(int j = 0; j< cantidad_particiones;j++){
+			finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
+			loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
+		}
 
-			sem_post(mutex_tabla);
+		borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
 
-			loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n  "));
+		puts("ya borre los tmpcs\n\n");
 
-			//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
+		sem_post(mutex_tabla);
 
-			mseg_t ts_final = obtener_ts();
-			mseg_t duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
+		loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n  "));
 
-			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
+		//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
+
+		ts_final = obtener_ts();
+		duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
+
+		loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
 
 
 		}
@@ -149,40 +159,43 @@ void compactador(char* tabla) {
 
 	//liberar_recursos(particiones);
 	//free(de todo lo que use);
+
 }
 
 
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
-	puts("=========== FINALIZAR_COMPACTACION ======");
 	char* nom = string_from_format("Part%d", num);
 	FILE* f = crear_archivo(nom, tabla, ".bin"); //Lo crea como nuevo.
 
 	int ult_bloque;
 	int nro_bloque = archivo_inicializar(f);
+	printf("%d\n\n", nro_bloque);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+	printf("%s\n\n", ruta_bloque);
 	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num);
+	printf("LA RUTA ES: %s\n\n", ruta_archivo);
 	t_config* archivo = config_create(ruta_archivo);
 
 	void bajar_registro(char* key, void* reg){
 		registro_t* registro = reg;
-		if(nro_bloque != (ult_bloque = ultimo_bloque(archivo))){
-			nro_bloque = ult_bloque;
+		if(nro_bloque != ultimo_bloque(archivo)){
+			nro_bloque = ultimo_bloque(archivo);
 			free(ruta_bloque);
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
 			loggear_trace(string_from_format("Cambio de bloque en el archivo de la ruta %s\n\n", ruta_archivo));
 		}
-
+		sleep(2);
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
 		loggear_trace(string_from_format("Escribi 1 registro en el bloque de la ruta %s\n\n", ruta_bloque));
 	}
-	puts("Empiezo con bajar_registro");
+	loggear_trace(string_from_format("Empiezo con bajar_registros de la tabla %s\n", tabla));
+	sleep(2);
 	dictionary_iterator((t_dictionary*)particion, &bajar_registro);
 	config_destroy(archivo);
 	fclose(f);
 	free(nom);
-
-	puts("=========== FIN FINALIZAR_COMPACTACION ======");
+	puts("\n\nFIN FINALIZAR_COMPACTACION\n\n");
 }
 
 
@@ -225,15 +238,18 @@ void eliminar_archivo(char* ruta_archivo){
 void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	puts("\n\n--------------estoy en agregar_registros_en_particion------------\n\n");
 
+	printf("Agregando reg de la ruta: %s \n", ruta_archivo);
+
 	if(!obtener_tam_archivo(ruta_archivo))
-		exit(1);//Sale 1
+		return;//Sale
 
 	int cant_particiones = list_size(particiones);
 	int index;
 
-	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);//
+	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-	FILE* archivo_bloque = fopen(ruta_bloque, "r");//
+
+	FILE* archivo_bloque = fopen(ruta_bloque, "r");
 	loggear_trace(string_from_format("El archivo es: %s\n", ruta_bloque));
 	int cant_letras_ts= strlen(mseg_a_string(obtener_ts()));
 	char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + 10)); //   +4 por: \n ; ; \0 //Le mando 10 de cabeza. es para que sobre.
@@ -348,7 +364,7 @@ void compactar5(){
 int pasar_a_tmpc(char* tabla) {
 
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
-	loggear_trace(string_from_format("RUTA TABLA: %s\n", ruta_tabla));
+//	loggear_trace(string_from_format("RUTA TABLA: %s\n", ruta_tabla));
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
 		loggear_error(string_from_format("Error: No se pudo abrir el directorio"));
@@ -378,9 +394,9 @@ int pasar_a_tmpc(char* tabla) {
 		}
 	}
 
-	loggear_trace(string_from_format("Se pasaron a tmpc los archivos de la tabla %s\n", tabla));
+//	loggear_trace(string_from_format("Se pasaron a tmpc los archivos de la tabla %s\n", tabla));
 	resetear_numero_dump(tabla);   //Importante esto!
-	loggear_trace(string_from_format("Se reseteo el numero de dump\n"));
+//	loggear_trace(string_from_format("Se reseteo el numero de dump\n"));
 
 	return contador;
 

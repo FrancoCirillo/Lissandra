@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 	
 	inicializar_FS(argc, argv);
 
-//	compactador("T1");
+	//compactador("T1");
 
 	//ejemplo_aplanar();
 
