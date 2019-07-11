@@ -12,15 +12,10 @@ sem_t mutex_tablas_nro_dump;
 sem_t mutex_diccionario_conexiones;
 
 // --------FUNCIONES DE MEMTABLE--------
-void levantar_tablas_directorio();
-void inicializar_memtable();
-void finalizar_memtable();
-void limpiar_memtable();
-void resetear_numero_dump(char* tabla);
-t_dictionary*  dumpear_memtable();
-void  dumpear_tabla(char*, void*);
-void  iniciar_dumpeo();
-void  dumpeo_final_memtable();
+void  levantar_tablas_directorio();
+void  inicializar_memtable();
+void  finalizar_memtable();
+void  limpiar_memtable();
 
 // --------FUNCIONES DE REGISTROS--------
 t_list* 	crear_lista_registros();
@@ -34,16 +29,21 @@ registro_t* pasar_a_registro(instr_t*);
 t_list* 	obtener_registros_mem(char*, uint16_t);
 
 // --------FUNCIONES DE TABLAS--------
-int   existe_tabla(char*);
-void  agregar_tabla(char*);
+int   existe_tabla_en_mem(char*);
+void  agregar_tabla_a_mem(char*);
 void  eliminar_tabla_de_mem(char*);
 char* obtener_ruta_tabla(char*);
 
-void  inicializar_tablas_nro_dump();
+// --------FUNCIONES DE DUMP--------
+void  iniciar_dumpeo();
+void* dumpeo();
+void  dumpear_memtable();
+void  dumpear_tabla(char*, void*);
+void  agregar_a_contador_dumpeo(char*);
+void  resetear_numero_dump(char*);
+int   siguiente_nro_dump(char*);
 void  eliminar_nro_dump_de_tabla(char*);
 void  finalizar_tablas_nro_dump();
-void  agregar_a_contador_dumpeo(char*);
-int   siguiente_nro_dump(char*);
 
 
 

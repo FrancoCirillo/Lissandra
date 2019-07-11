@@ -2,62 +2,18 @@
 
 #include "compactador.h"
 
-void compactactar_todos_los_tmpc() {
-	dictionary_iterator(memtable, &compactacion_final);
-}
-
-void compactacion_final(char* tabla, void* registros) {
-	//Los registros tambien por el dictionary_iterator - se ignoran
-
-	t_list* particiones = list_create();
-
-	int cantidad_particiones = obtener_part_metadata(tabla);
-	int cant_tmpc;
-
-	for(int num = 0; num < cantidad_particiones; num++) {
-		//inicia tantos diccionarios vacios como particiones tenga la tabla.
-		list_add(particiones, dictionary_create());
-	}
-
-	if(existe_tabla(tabla)){
-
-		if (!existe_mutex(tabla))	//Failsafe innecesario
-			inicializar_semaforo_tabla(tabla);
-
-		sem_wait(&mutex_dic_semaforos);
-		sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
-		sem_post(&mutex_dic_semaforos);
-
-		sem_wait(mutex_tabla);
-		cant_tmpc = pasar_a_tmpc(tabla);
-		sem_post(mutex_tabla);
-		loggear_trace(string_from_format("Semaforos de paso a tmpc funcionando correctamente"));
-
-		if(cant_tmpc){
-			t_list* lista_archivos = listar_archivos(tabla);
-
-			if(lista_archivos){
-				for(int i = 0; i < list_size(lista_archivos); i++){
-					agregar_registros_en_particion(particiones, list_get(lista_archivos, i));
-				}
-
-				sem_wait(mutex_tabla);
-
-				list_iterate((t_list*)lista_archivos, &liberar_bloques);
-				for(int j = 0; j< cantidad_particiones;j++){
-					finalizar_compactacion(list_get(particiones,j), tabla, j);
-				}
-				//borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
-
-				sem_post(mutex_tabla);
-				loggear_trace(string_from_format("Semaforos de compactacion_final funcionando correctamente"));
-
-				//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
-			}
+void compactar_todas_las_tablas() {
+	DIR* directorio = opendir(g_ruta.tablas);
+	if (directorio != NULL){
+		struct dirent* directorio_leido;
+		while((directorio_leido = readdir(directorio)) != NULL) {
+			char* tabla = directorio_leido->d_name;
+			if(!string_contains(tabla, "."))
+				compactador(tabla);
 		}
 	}
-	//liberar_recursos(particiones);
-	//free(de todo lo que use);
+	closedir(directorio);
+	inhabilitar_compactacion();
 }
 
 void compactador(char* tabla) {
@@ -80,9 +36,6 @@ void compactador(char* tabla) {
 		list_add(particiones, dic);
 	}
 
-	if (!existe_mutex(tabla))	//Failsafe innecesario
-		inicializar_semaforo_tabla(tabla);
-
 	sem_wait(&mutex_dic_semaforos);
 	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
 	sem_post(&mutex_dic_semaforos);
@@ -93,21 +46,25 @@ void compactador(char* tabla) {
 	mseg_t ts_final;
 	mseg_t duracion_compactacion;
 
-	while(existe_tabla(tabla)){ //&& threads_locker) ?
 
-		sleep(tiempo_compactacion);
+
+	while(existe_tabla_en_mem(tabla) || compactation_locker) {
 		ts_inicial = obtener_ts();
+
+		if(existe_tabla_en_mem(tabla))
+			sleep(tiempo_compactacion);
 
 		printf("Compactacion nro: %d\n", i);
 
 		sem_wait(mutex_tabla);
 		cant_tmpc = pasar_a_tmpc(tabla);
 		sem_post(mutex_tabla);
-		//loggear_trace(string_from_format("Semaforos de paso a tmpc funcionando correctamente"));
+
 
 		if(!cant_tmpc){
 			continue;
 		}
+
 
 		t_list* lista_archivos = listar_archivos(tabla);
 
@@ -117,42 +74,52 @@ void compactador(char* tabla) {
 				agregar_registros_en_particion(particiones, lectura);
 				loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
 			}
-		puts("ya agregue_registros_en_particion\n\n");
+			puts("ya agregue_registros_en_particion\n\n");
 
-		sleep(5);
+			sleep(5);
 
-		sem_wait(mutex_tabla);
+			sem_wait(mutex_tabla);
 
-		list_iterate((t_list*)lista_archivos, &liberar_bloques);
+			list_iterate((t_list*)lista_archivos, &liberar_bloques);
 
-		puts("Ya libere los bloques\n\n ENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+			puts("Ya libere los bloques\n\n ENTRO AL FOR DE FINALIZAR COMPACTACION\n");
 
-		sleep(5);
+			sleep(5);
 
-		//Hasta aca estoy segura que funciona.
+			//Hasta aca estoy segura que funciona.
 
-		for(int j = 0; j< cantidad_particiones;j++){
+			for(int j = 0; j< cantidad_particiones;j++){
 			finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
 			loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
+			}
+
+			borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
+
+			puts("ya borre los tmpcs\n\n");
+
+			sem_post(mutex_tabla);
+
+
+			loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n  "));
+
+			//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
+
+			ts_final = obtener_ts();
+			duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
+
+			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
+
 		}
 
-		borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
+		if(compactation_locker)
+			break;
 
-		puts("ya borre los tmpcs\n\n");
-
-		sem_post(mutex_tabla);
-
-		loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n  "));
-
-		//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
 
 		ts_final = obtener_ts();
 		duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
 
 		loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
 
-
-		}
 		i++;
 		puts("FIN de 1 while de la compactacion.");
 	}
@@ -162,9 +129,8 @@ void compactador(char* tabla) {
 
 }
 
-
-
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
+
 	char* nom = string_from_format("Part%d", num);
 	FILE* f = crear_archivo(nom, tabla, ".bin"); //Lo crea como nuevo.
 
@@ -196,8 +162,12 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	fclose(f);
 	free(nom);
 	puts("\n\nFIN FINALIZAR_COMPACTACION\n\n");
+
 }
 
+void inhabilitar_compactacion() {
+	compactation_locker = 0;
+}
 
 int ultimo_bloque(t_config* archivo){
 	char* lista_bloques = config_get_string_value(archivo, "BLOCKS");
@@ -242,6 +212,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 
 	if(!obtener_tam_archivo(ruta_archivo))
 		return;//Sale
+
 
 	int cant_particiones = list_size(particiones);
 	int index;
@@ -337,30 +308,6 @@ t_list* listar_archivos(char* tabla){
 	return archivos;
 }
 
-
-
-
-
-
-//Para probar detach que no segui intentando..
-void compactar2(){
-	//pthread_create(hilo, tabla, compactar_tabla);
-	while(1){
-		puts("estoy compactando cada 2 segundos\n");
-	}
-}
-
-void compactar5(){
-	//pthread_create(hilo, tabla, compactar_tabla);
-	while(1){
-		puts("estoy compactando cada 5 segundos\n");
-
-	}
-
-}
-
-
-
 int pasar_a_tmpc(char* tabla) {
 
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
@@ -387,7 +334,7 @@ int pasar_a_tmpc(char* tabla) {
 //			loggear_trace(string_from_format("Nombre sin extension: %s\n", nombre_sin_ext));
 			char* nuevo_nombre = string_from_format("%s/%s.tmpc", ruta_tabla, nombre_sin_ext);
 			loggear_trace(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
-			int status = rename(nombre_viejo, nuevo_nombre);
+			rename(nombre_viejo, nuevo_nombre);
 
 			contador++;
 //			loggear_trace(string_from_format("Status: %d\n", status));
@@ -401,5 +348,4 @@ int pasar_a_tmpc(char* tabla) {
 	return contador;
 
 }
-
 

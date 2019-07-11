@@ -2,21 +2,6 @@
 
 #include "fileSystem.h"
 
-char* to_upper(char* str){
-	char* upr = "";
-	char ch;
-	int tam = strlen(str);
-	for(int i = 0; i < tam; i++) {
-//		printf("%c\n", *(str+i));
-		ch = toupper((char)*(str+i));
-		upr = string_from_format("%s%c", upr, ch);
-//		printf("%s\n", upr);
-	}
-	return upr;
-}
-
-
-
 int main(int argc, char* argv[]) {
 
 	printf(COLOR_ANSI_CYAN "\n\n************ PROCESO FILESYSTEM ************\n\n" COLOR_ANSI_RESET);
@@ -29,8 +14,6 @@ int main(int argc, char* argv[]) {
 
 
 //	pruebaDump();
-
-//	ejemplo_nro_dump();
 
 	inicializar_conexiones();
 
@@ -315,12 +298,11 @@ void inicializar_FS(int argc, char* argv[]) {
 	loggear_info(string_from_format("-----------INICIO PROCESO-----------"));
 	iniciar_rutas();
 	inicializar_memtable();
-
-	///////iniciar_dumpeo();//// HACER UN DETACH de esto. Va aca. es un while 1 para todas las tablas.
-
+	iniciar_dumpeo();
 	inicializar_directorios();
 	crear_bloques();
 	inicializar_bitmap();
+	compactation_locker = 0;
 	bloques_disponibles = 0; //inicializamos var. global.
 	inicializar_bloques_disp();  //Actualiza el valor.
 
@@ -334,13 +316,14 @@ void finalizar_FS(instr_t* instruccion) {
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 
-	dumpeo_final_memtable();  //Esto limpia lo ultimo de la mem antes de cerrar el FS.
-	compactactar_todos_los_tmpc(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
+	dumpear_memtable();  //Esto limpia lo ultimo de la mem antes de cerrar el FS.
+	finalizar_memtable();
+	compactation_locker = 1;
+	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
 	config_destroy(g_config);
 	log_destroy(g_logger);
 
 	finalizar_rutas();
-	finalizar_memtable();
 	finalizar_tablas_nro_dump();
 	finalizar_dic_semaforos_tablas();
 	finalizar_diccionarios_conexiones();
