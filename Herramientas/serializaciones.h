@@ -111,6 +111,13 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente);
  */
 int enviar_liberando_request(instr_t *instruccionAEnviar, int socket_cliente);
 
+
+/*
+ * Igual que enviar_request, pero no libera nada
+ * Sirve para el Kernel, que se guarda las instrucciones
+ */
+int enviar_request_simple(instr_t *instruccionAEnviar, int socket_cliente);
+
 /*
  * RECEPCION
  */

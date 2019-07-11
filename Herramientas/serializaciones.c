@@ -511,3 +511,14 @@ t_list *string_array_to_list(char **stringArray)
 
 	return listaStrings;
 }
+
+int enviar_request_simple(instr_t *instruccionAEnviar, int socket_cliente)
+{
+	int tamanio=0;
+	void *a_enviar = NULL;
+	a_enviar = serializar_request(instruccionAEnviar, &tamanio);
+	int s = send(socket_cliente, a_enviar, tamanio, MSG_DONTWAIT);
+	free(a_enviar);
+	return s;
+}
+
