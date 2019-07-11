@@ -1042,7 +1042,7 @@ void enviar_lista_gossiping(char* nombreProceso){
 		loggear_debug(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
 		t_list* listaGossiping = conexiones_para_gossiping();
 		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
-		enviar_request_simple(miInstruccion, conexionVieja);
+		enviar_request(miInstruccion, conexionVieja);
 	}
 }
 
@@ -1085,9 +1085,9 @@ void gossipear_con_procesos_desconectados(){
 				puts("Conexion creada");
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
-				enviar_request_simple(miInstruccion, conexion);
+				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
-				enviar_request_simple(peticionDeSuTabla, conexion);
+				enviar_request(peticionDeSuTabla, conexion);
 
 			}
 		}
