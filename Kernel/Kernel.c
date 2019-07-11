@@ -945,7 +945,6 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 
 void actualizar_tabla_gossiping(instr_t* instruccion){
 
-
 	loggear_debug(string_from_format("Actualizando tabla de gossiping"));
 
 	int saltearProximos = 0;
@@ -1011,6 +1010,8 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 	imprimir_conexiones(conexionesActuales, loggear_info);
 	sem_post(&mutex_diccionario_conexiones);
 
+	list_destroy(instruccion->parametros);
+	free(instruccion);
 //	imprimir_config_actual();
 }
 
