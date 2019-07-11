@@ -536,9 +536,10 @@ instr_t* enviar_i(instr_t* i){
 	pthread_mutex_unlock(h->mutex_t);
 
 	loggear_debug(string_from_format("Hilo despierto!"));
-//	free(h);
+	instr_t * rta=h->respuesta;
+	free(h);
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
-	return h->respuesta;
+	return rta;
 }
 
 int obtener_fd_memoria(instr_t *i){
@@ -600,14 +601,14 @@ int obtener_fd_memoria(instr_t *i){
 	return fd;
 }
 void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit){
-	sem_wait(crit->mutex_criterio);
-	for(int i=0;list_size(i<crit->lista_memorias);i++){
+	sem_wait(&(crit->mutex_criterio));
+	for(int i=0;i<list_size(crit->lista_memorias);i++){
 		char* mem =list_get(crit->lista_memorias,i);
 		if(!strcmp(mem,numero_memoria)){
 			list_remove(crit->lista_memorias,i);
 		}
 	}
-	sem_post(crit->mutex_criterio);
+	sem_post(&(crit->mutex_criterio));
 }
 void memoria_desconectada(char* nombre_memoria){
 	char* numero=nombre_memoria+8;
