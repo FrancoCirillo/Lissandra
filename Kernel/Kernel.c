@@ -52,8 +52,12 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 		p->sig=NULL;
 		list_add(p->instrucciones,instruccion);
 		//Agrego código de instrucción
-		char*  codigo=malloc(sizeof(char)*12);
-		sprintf(codigo,"%d",obtener_codigo_request());
+		int codigo_req=obtener_codigo_request();
+		char*  codigo=malloc(sizeof(char)*(codigo_req/10+1)+1);
+		loggear_info(string_from_format("Tamanio de request %d tamaio maloqueado %d",sizeof(codigo),(sizeof(char)*(codigo_req/10+1)+1)));
+		sprintf(codigo,"%d",codigo_req);
+		loggear_info(string_from_format("Tamanio de request %d tamaio maloqueado %d",sizeof(codigo),(sizeof(char)*(codigo_req/10+1)+1)));
+
 		list_add(instruccion->parametros,codigo);
 
 		p->size++;
@@ -86,6 +90,7 @@ void iniciar_ejecutador(){
 	loggear_info(string_from_format("Se inicia ejecutador"));
 	pthread_t hilo_ejecutador;
 	pthread_attr_t attr;
+
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_ejecutador,&attr,ejecutar,NULL);
 	pthread_detach(hilo_ejecutador);
@@ -188,6 +193,7 @@ instr_t* kernel_run(instr_t *i){
 	char line[64];
 	t_list* instrucciones = list_create();
 	proceso* p=malloc(sizeof(proceso));
+	//free(p->instrucciones);
 	p->current=0;
 	p->size=0;
 	p->instrucciones=instrucciones;
@@ -205,9 +211,10 @@ instr_t* kernel_run(instr_t *i){
 			//TODO FREES
 			return respuesta;
 		}
-		char*  codigo=malloc(sizeof(char)*12);
-		sprintf(codigo,"%d",obtener_codigo_request());
-		//		printf("EL codigo es %s",codigo);
+		int cod=obtener_codigo_request();
+		char*  codigo=malloc(sizeof(char)*(cod/10+1)+1);
+		sprintf(codigo,"%d",cod);
+		printf("\n\n EL codigo es %d, el tamanio es %d y contenido es %s",cod,sizeof(codigo),codigo);
 
 		list_add(nueva_instruccion->parametros,codigo);
 
@@ -271,6 +278,7 @@ instr_t* kernel_add(instr_t* i){
 	instr_t * respuesta=malloc(sizeof(instr_t));
 	respuesta->codigo_operacion=0;
 	char* mensaje="ADD EJECUTADO CORRECTAMENTE!";
+//	list_destroy(respuesta->parametros);
 	t_list * params=list_create();
 	list_add(params,mensaje);
 	respuesta->parametros=params;
@@ -359,29 +367,33 @@ void* ejecutar_proceso(void* un_proceso){
 				loggear_trace(string_from_format("Fin de instruccion"));
 				//METRICS
 				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){
+					instr_t* a_metricar=malloc(sizeof(instr_t));
 					loggear_trace(string_from_format("Se agrega a metricas"));
 					mseg_t tiempo_exec=respuesta->timestamp;
 					loggear_trace(string_from_format("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec));
-					instruccion_obtenida->timestamp=respuesta->timestamp;
+					a_metricar->timestamp=respuesta->timestamp;
+					a_metricar->codigo_operacion=instruccion_obtenida->codigo_operacion;
 					agregar_a_metricas(instruccion_obtenida);
 				}else{
-					//TODO FREES
+					//NO es insert ni select
 				}
 
 			}else{
 
 				loggear_debug(string_from_format("ERROR al ejecutar la instruccion, finalizando proceso"));
 				//printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
-				bajar_cantidad_hilos();
+				//bajar_cantidad_hilos();
 				imprimir_instruccion(respuesta, loggear_warning);
+
+				finalizar_proceso(un_proceso);
 				return NULL;
 			}
+			liberar_instruccion(respuesta);
+
 		}else{
 
 			loggear_info(string_from_format("Ultima instruccion finalizada, fin de proceso"));
 			finalizar_proceso(p);
-
-			bajar_cantidad_hilos();
 
 			return NULL;
 		}
@@ -390,8 +402,6 @@ void* ejecutar_proceso(void* un_proceso){
 
 	}
 	loggear_trace(string_from_format("Fin de quantum, encolando o finalizando"));
-
-	bajar_cantidad_hilos();
 
 	encolar_o_finalizar_proceso(p);
 
@@ -416,6 +426,14 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	instr_t* respuesta;
 	loggear_debug(string_from_format("#### Se ejecuta una instruccion"));
 	imprimir_instruccion(i, loggear_trace);
+	if(i->codigo_operacion==22){
+
+		loggear_debug("#### FINALIZANDO KERNEL ####");
+		list_destroy(configuracion.IP_SEEDS);
+		list_destroy(configuracion.PUERTO_SEEDS);
+
+		exit(0);
+	}
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
 	}
@@ -465,6 +483,7 @@ instr_t *validar(instr_t * i){
 			mensaje_error->codigo_operacion=ERROR_CREATE;
 		}
 	}
+	free(mensaje_error->parametros);
 	mensaje_error->parametros=list_create();
 	list_add(mensaje_error->parametros,mensaje);
 
@@ -476,18 +495,6 @@ instr_t* enviar_i(instr_t* i){
 	loggear_info(string_from_format(" ENVIANDO INSTRUCCION CODIGO %s\n",(char*)obtener_ultimo_parametro(i)));
 	//imprimir_instruccion(i);
 
-	hilo_enviado* h=malloc(sizeof(hilo_enviado));
-	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-	pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-	h->cond_t=&cond;
-	h->mutex_t=&lock;
-
-	loggear_trace(string_from_format("Agrego a diccionario"));
-
-	sem_wait(&mutex_diccionario_enviados);
-	//printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
-	dictionary_put(diccionario_enviados, obtener_ultimo_parametro(i), h);
-	sem_post(&mutex_diccionario_enviados);
 
 
 	loggear_debug(string_from_format("Determinando memoria para request"));
@@ -505,18 +512,29 @@ instr_t* enviar_i(instr_t* i){
 		return respuesta;
 	}
 
+	hilo_enviado* h=malloc(sizeof(hilo_enviado));
+	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+	pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+	h->cond_t=&cond;
+	h->mutex_t=&lock;
+
+	loggear_trace(string_from_format("Agrego hilo a diccionario"));
+
+	sem_wait(&mutex_diccionario_enviados);
+	//printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
+	dictionary_put(diccionario_enviados, obtener_ultimo_parametro(i), h);
+	sem_post(&mutex_diccionario_enviados);
 	loggear_trace(string_from_format("ENVIANDO INSTRUCCION:  "));
 	enviar_request_simple(i, conexionMemoria);
 
 	loggear_trace(string_from_format("\n##### Instruccion enviada, esperando respuesta###\n"));
-
-	loggear_debug(string_from_format("Hilo bloqueado hasta recibir respuesta!"));
+	loggear_debug(string_from_format("Bloqueando hilo hasta recibir respuesta!"));
 	pthread_mutex_lock(h->mutex_t);
 	pthread_cond_wait(h->cond_t,h->mutex_t);
 	pthread_mutex_unlock(h->mutex_t);
 
 	loggear_debug(string_from_format("Hilo despierto!"));
-
+//	free(h);
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
 	return h->respuesta;
 }
@@ -572,9 +590,12 @@ int obtener_fd_memoria(instr_t *i){
 		loggear_warning(string_from_format("NO se pudo obtener la memoria para dicha instruccion"));
 		return -100;
 	}
-	loggear_info(string_from_format("Memoria obtenida: %s%s", memoria, alias_memoria));
 
-	return obtener_fd_out(krn_concat(memoria,alias_memoria));
+	char* nombre_memoria=krn_concat(memoria,alias_memoria);
+	loggear_info(string_from_format("Memoria obtenida: %s", nombre_memoria));
+	int fd=obtener_fd_out(nombre_memoria);
+	free(nombre_memoria);
+	return fd;
 }
 char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
@@ -662,20 +683,39 @@ void encolar_o_finalizar_proceso(proceso* p){
 	if(p->current==p->size){//Pudo justo haber quedado parado al final
 		loggear_debug(string_from_format("FIN DE PROCESO"));
 		finalizar_proceso(p);
+
 	}else{
 		encolar_proceso(p);
 	}
 
 }
+void liberar_instruccion(instr_t* instruccion){
+	for(int i=0;list_size(instruccion->parametros)>0;i++){
+		printf("\nSe borra el parametro %s\n",list_get(instruccion->parametros,0));
+		//Se borra el 0 n veces
+		list_remove_and_destroy_element(instruccion->parametros,0,free);
 
+	}
+	list_destroy(instruccion->parametros);
+	free(instruccion);
+//	list_destroy_and_destroy_elements(instruccion->parametros,free);
+}
 void finalizar_proceso(proceso* p){
-	//	instruccion_t* aux;
-	//	loggear_debug(string_from_format("finalizando");
-	//	while((aux=p->instrucciones)!=NULL){
-	//		p->instrucciones=p->instrucciones->sig;
-	//		free(&aux);
-	//	}
-	loggear_debug(string_from_format("Se finalizo correctamente un proceso !!. Se libera su memoria"));
+	loggear_info(string_from_format("Se finalizo correctamente un proceso !!. Se libera su memoria"));
+	for(int i=0;list_size(p->instrucciones)>0;i++){
+		instr_t* instruccion=list_get(p->instrucciones,0);
+		loggear_info(string_from_format("Se elimina la memoria para la instruccion %d",i));
+		imprimir_instruccion(instruccion, loggear_debug);
+		liberar_instruccion(instruccion);
+		list_remove(p->instrucciones,0);
+	}
+
+	p->sig=NULL;
+	free(p);
+
+	loggear_debug(string_from_format("Memoria liberada!"));
+
+	bajar_cantidad_hilos();
 	continuar_ejecucion();
 }
 void encolar_proceso(proceso *p){
@@ -776,7 +816,6 @@ void inicializar_semaforos(){
 	sem_init(&mutex_lista_instrucciones_ejecutadas,0,1);
 	sem_init(&mutex_diccionario_conexiones,0,1);
 	diccionario_enviados=dictionary_create();
-	//diccionario_criterios=dictionary_create();
 	lista_tablas=list_create();
 	lista_instrucciones_ejecutadas=list_create();
 	puts("Semaforos inicializados");
@@ -892,7 +931,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 
 
 	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
-	enviar_request_simple(miInstruccion, conexionRemitente);
+	enviar_request(miInstruccion, conexionRemitente);
 	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
 
 
@@ -1048,6 +1087,9 @@ void gossipear_con_procesos_desconectados(){
 
 			}
 		}
+		if(nombreProceso!=NULL){
+			free(nombreProceso);
+		}
 		i++;
 	}
 	list_iterate(configuracion.IP_SEEDS, (void*)enviar_tabla_gossiping);
@@ -1068,6 +1110,8 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
 			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
+		}else{
+			free(nombreEncontrado);
 		}
 	}
 	sem_wait(&mutex_diccionario_conexiones);
