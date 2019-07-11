@@ -187,7 +187,6 @@ instr_t* kernel_run(instr_t *i){
 		char* mensaje=string_from_format(" ARCHIVO NO ENCONTRADO!");
 		list_add(params,mensaje);
 		return respuesta;
-		//TODO FREES;
 
 	}
 	char line[64];
@@ -208,7 +207,6 @@ instr_t* kernel_run(instr_t *i){
 			respuesta->codigo_operacion=ERROR_RUN;
 			char* mensaje=string_from_format("EL ARCHIVO POSEE INPUTS INVALIDOS!");
 			list_add(params,mensaje);
-			//TODO FREES
 			return respuesta;
 		}
 		int cod=obtener_codigo_request();
@@ -309,6 +307,12 @@ int hay_procesos(){
 	sem_wait(&semaforo_procesos_ready);
 	int hay=cola_ready!=NULL;
 	sem_post(&semaforo_procesos_ready);
+	if(hay){
+		printf("\n HAY PRCOESOS");
+	}
+	else{
+		printf("\n NO HAY PROCESOS");
+	}
 	return hay;
 }
 int ejecutar(){
@@ -363,7 +367,7 @@ void* ejecutar_proceso(void* un_proceso){
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear_debug(string_from_format("Se ejecuto correctamente la instruccion!, respuesta:"));
-				imprimir_instruccion(respuesta, loggear_debug);
+				//imprimir_instruccion(respuesta, loggear_debug);
 				loggear_trace(string_from_format("Fin de instruccion"));
 				//METRICS
 				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){

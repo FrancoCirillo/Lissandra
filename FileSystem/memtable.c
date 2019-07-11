@@ -96,7 +96,7 @@ t_list* obtener_registros_mem(char* tabla, uint16_t key) {
 }
 
 registro_t* obtener_registro(char* buffer) {
-	//char* bufferCopy = string_from_format("%s", buffer);
+
 	char* bufferCopy = strdup(buffer);
 	registro_t* registro = malloc(sizeof(registro_t));
 	char* valor;
@@ -104,10 +104,13 @@ registro_t* obtener_registro(char* buffer) {
 	char* actual = strtok(bufferCopy, ";");
 	valor = strdup(actual);
 	registro->timestamp = string_a_mseg(valor);
+	free(valor);   //IMPORTANTE agrego este free
 
 	actual = strtok(NULL, ";");
 	valor = strdup(actual);
 	registro->key = (uint16_t)atoi(valor);
+	free(valor);	//IMPORTANTE agrego este free
+
 
 	actual = strtok(NULL, "\n");
 	valor = strdup(actual);

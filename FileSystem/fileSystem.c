@@ -2,6 +2,53 @@
 
 #include "fileSystem.h"
 
+
+void pruebaString(){
+	FILE* f= fopen("59.bin", "r"); //Archivo con 2 registros escritos. 0 de MEMORY LEAKS. y 0 ERRORES!
+	char* res=mseg_a_string(obtener_ts());
+	int cant_letras_ts= strlen(res);
+	free(res);//IMPORTANTE
+	char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + 10)); //   +4 por: \n ; ; \0 //Le mando 10 de cabeza. es para que sobre.
+		strcpy(buffer,"");
+		char caracter_leido;
+		int status = 1;
+		char* s_caracter;
+
+		while(status) {
+			caracter_leido = fgetc(f);
+			switch(caracter_leido){
+
+				case EOF: //se me acabo el archivo
+					status = 0; //corta el while
+					printf("EOF - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
+					break;
+
+				case '\n': //registro completo.
+					printf("BARRA N - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
+					strcat(buffer, "\n");
+					registro_t* registro = obtener_registro(buffer);
+					strcpy(buffer, "");
+					puts("IMPRIMO REG EN EL SWITCH");
+					imprimirRegistro(registro);    //No genera leaks.
+					borrar_registro(registro);	//IMPORTANTE para los leaks.
+
+					printf("FIN BARRA N - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
+					break;
+
+				default:
+					printf("DEFAULT - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
+
+					s_caracter = string_from_format("%c", caracter_leido);
+					strcat(buffer, s_caracter);
+					free(s_caracter);		//IMPORTANTE
+					printf("FIN DEFAULT - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
+					break;
+				}
+		}
+		puts("Fin lectura.");
+		free(buffer);		//IMPORTANTE
+}
+
 int main(int argc, char* argv[]) {
 
 	printf(COLOR_ANSI_CYAN "\n\n************ PROCESO FILESYSTEM ************\n\n" COLOR_ANSI_RESET);
@@ -10,13 +57,16 @@ int main(int argc, char* argv[]) {
 
 	//ejemplo_aplanar();
 
+//	pruebaString();
+
+
 //	pruebaDump();
 //
 //	compactation_locker = 1;
 //
-//	compactador("T1");
+	compactador("T1");
 
-	inicializar_conexiones();
+//	inicializar_conexiones();
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin, loggear_trace);
@@ -159,7 +209,7 @@ t_list* listaRegistros2() {
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
 		loggear_trace(string_from_format("-------------------Entre a dump-------------------"));
-		int nro_dump = 2;
+		int nro_dump = 1;
 		loggear_trace(string_from_format("Numero de Dump: %d\n", nro_dump));
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
@@ -191,7 +241,7 @@ void pruebaDump() {
 	t_dictionary* mockMem = dictionary_create();
 
 	//--agrego una tabla con registros---
-	t_list* reg = listaRegistros2();
+	t_list* reg = listaRegistros();
 	dictionary_put(mockMem, "T1", reg);
 
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
@@ -204,11 +254,11 @@ void pruebaDump() {
 
 	//--creo registros--
 	registro_t* registro2 = crearRegistro(4324234, 10, "HolaVoyEnT2");
-	loggear_info(string_from_format("Cree un registro:"));
+//	loggear_info(string_from_format("Cree un registro:"));
 	imprimirRegistro(registro2);
 
 	registro_t* registro = crearRegistro(4324234, 32, "HolaTmbVoyEnT2");
-	loggear_info(string_from_format("Cree un registro:"));
+//	loggear_info(string_from_format("Cree un registro:"));
 	imprimirRegistro(registro);
 
 	//--agrego registros--

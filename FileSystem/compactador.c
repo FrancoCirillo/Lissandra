@@ -90,7 +90,7 @@ void compactador(char* tabla) {
 			}
 
 			borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
-			puts("ya borre los tmpcs\n\n");
+
 
 			sem_post(mutex_tabla);
 
@@ -119,50 +119,55 @@ void compactador(char* tabla) {
 }
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
-
+	puts("Estoy en FINALIZAR COMPACTACION");
+	sleep(3);
 	char* nom = string_from_format("Part%d", num);
 	FILE* f = crear_archivo(tabla, nom, ".bin"); //Lo crea como nuevo.
 
 	int nro_bloque = archivo_inicializar(f);
-	printf("%d\n\n", nro_bloque);
-	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-	printf("%s\n\n", ruta_bloque);
+	printf("BLOQUE nuevo de la Particion: %d es %d\n\n", num ,nro_bloque);
+	//char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+	char* ruta_bloque ;
+	//printf("%s\n\n", ruta_bloque);
 	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num);
 	printf("LA RUTA ES: %s\n\n", ruta_archivo);
-	t_config* archivo = config_create(ruta_archivo);
+//	t_config* archivo = config_create(ruta_archivo);
+
 
 	void bajar_registro(char* key, void* reg){
+		printf("Estoy bajando_registro de key %s\n",key );
+		sleep(3);
 		registro_t* registro = reg;
-		if(nro_bloque != ultimo_bloque(archivo)){
-			nro_bloque = ultimo_bloque(archivo);
-			free(ruta_bloque);
-			ruta_bloque = obtener_ruta_bloque(nro_bloque);
-			loggear_trace(string_from_format("Cambio de bloque en el archivo de la ruta %s\n\n", ruta_archivo));
-		}
+		nro_bloque = obtener_ultimo_bloque(ruta_archivo);
+		ruta_bloque = obtener_ruta_bloque(nro_bloque);
+		loggear_trace(string_from_format("Num bloque del archivo de la ruta %s es %d\n\n", ruta_archivo, nro_bloque));
 		sleep(2);
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
-		loggear_trace(string_from_format("Escribi 1 registro en el bloque de la ruta %s\n\n", ruta_bloque));
+		printf("ya termine de bajar el reg de key %s\n",key );
+		sleep(2);
+		free(ruta_bloque);
 	}
 	loggear_trace(string_from_format("Empiezo con bajar_registros de la tabla %s\n", tabla));
 	sleep(2);
 	dictionary_iterator((t_dictionary*)particion, &bajar_registro);
-	config_destroy(archivo);
+//	config_destroy(archivo);
 	fclose(f);
 	free(nom);
-	puts("\n\nFIN FINALIZAR_COMPACTACION\n\n");
+	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s \n\n", tabla);
 }
 
 void inhabilitar_compactacion() {
 	compactation_locker = 0;
 }
 
-int ultimo_bloque(t_config* archivo){
-	char* lista_bloques = config_get_string_value(archivo, "BLOCKS");
-	char* s_ult_bloque = string_substring(lista_bloques, strlen(lista_bloques)-2, 1);
-	int ult_bloque = atoi(s_ult_bloque);
-	free(lista_bloques);
-	return ult_bloque;
-}
+
+//int ultimo_bloque(t_config* archivo){
+//	char* lista_bloques = config_get_string_value(archivo, "BLOCKS");
+//	char* s_ult_bloque = string_substring(lista_bloques, strlen(lista_bloques)-2, 1);
+//	int ult_bloque = atoi(s_ult_bloque);
+//	free(lista_bloques);
+//	return ult_bloque;
+//}
 
 void borrar_tmpcs(char* tabla){
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
@@ -192,8 +197,7 @@ void eliminar_archivo(char* ruta_archivo){
 
 
 void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
-	puts("\n\n--------------estoy en agregar_registros_en_particion------------\n\n");
-
+	puts("\n\n--------------estoy en agregar_registros_en_particion------------");
 	printf("Agregando reg de la ruta: %s \n", ruta_archivo);
 
 	if(!obtener_tam_archivo(ruta_archivo))
@@ -234,10 +238,12 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 				//strcat(buffer, "\n");
 				string_append(&buffer, "\n");
 				registro_t* registro = obtener_registro(buffer);
+				free(buffer);
 				buffer = string_new();
 				index = registro->key % cant_particiones;
 				t_dictionary* dic = list_get(particiones, index);
 				agregar_por_ts(dic, registro);
+				borrar_registro(registro);
 				break;
 
 			default:
@@ -248,8 +254,13 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	}    //ESTO FUNCA!
 }
 
-void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){  //Esto me tiro mil warnings..
+void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
+	loggear_trace("Estoy en agregar_por_ts");
+
 	char* key_nueva = string_itoa(reg_nuevo->key);
+
+	loggear_trace(string_from_format("\nla key a agregar es %s\n", key_nueva));
+
 	registro_t* reg_viejo = (registro_t*)dictionary_get( (t_dictionary*)dic,key_nueva);
 
 	if( (!reg_viejo) || ((reg_viejo != NULL) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))

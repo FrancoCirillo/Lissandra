@@ -402,6 +402,10 @@ void ocupar_bloque(int nro_bloque) {
 //	printf("\nBitmap levantado, seteando valor para bloque %d\n",nro_bloque);
 	bitarray_set_bit(bitarray, nro_bloque);
 //	loggear_trace(string_from_format("Actualizando bitmap");
+
+	//(DAI) Agrego que vacie el bloque porque me escribia sobre lo anterior.
+	char* num = string_itoa(nro_bloque);
+	crear_bloque(num);
 	actualizar_bitmap();
 }
 
@@ -681,7 +685,8 @@ int archivo_inicializar(FILE* f) {
 	//fwrite(contenido, sizeof(char), sizeof(char)*strlen(contenido), f);
 	ocupar_bloque(bloque_num);
 	restar_bloques_disponibles(1);
-
+	//AGREGO FREE()
+	free(contenido);
 //	printf("Numero de bloque: %d\n", bloque_num);
 	return bloque_num;
 }
