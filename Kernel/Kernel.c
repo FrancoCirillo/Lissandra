@@ -428,7 +428,7 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	imprimir_instruccion(i, loggear_trace);
 	if(i->codigo_operacion==22){
 
-		loggear_debug("#### FINALIZANDO KERNEL ####");
+		loggear_debug(string_from_format("#### FINALIZANDO KERNEL ####"));
 		list_destroy(configuracion.IP_SEEDS);
 		list_destroy(configuracion.PUERTO_SEEDS);
 
@@ -648,7 +648,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	instr_t *miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 
 	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, 1);
-	enviar_request_simple(miInstruccion, fd_saliente);
+	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
 void recibi_respuesta(instr_t* respuesta, char* remitente){
@@ -700,6 +700,7 @@ void liberar_instruccion(instr_t* instruccion){
 //	list_destroy(instruccion->parametros);
 //	free(instruccion);
 	list_destroy_and_destroy_elements(instruccion->parametros,free);
+//	free(instruccion->parametros);
 	free(instruccion);
 }
 void finalizar_proceso(proceso* p){
