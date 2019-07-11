@@ -8,12 +8,13 @@ int main(int argc, char* argv[]) {
 	
 	inicializar_FS(argc, argv);
 
-	//compactador("T1");
-
 	//ejemplo_aplanar();
 
-
 //	pruebaDump();
+//
+//	compactation_locker = 1;
+//
+//	compactador("T1");
 
 	inicializar_conexiones();
 
@@ -29,9 +30,6 @@ int main(int argc, char* argv[]) {
 //	pruebaGeneral();
 //	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
 //	imprimirContenidoArchivo(rutaDump1, loggear_trace);
-
-//	finalizar_FS();
-
 
 	return 0;
 }
@@ -166,7 +164,7 @@ void pruebaDump() {
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 		loggear_debug(string_from_format("Ruta Temporal: %s\n", ruta_tmp));
-		FILE* temporal = crear_tmp(tabla, nombre_tmp);
+		FILE* temporal = crear_archivo(tabla, nombre_tmp, ".tmp");
 		int nro_bloque = archivo_inicializar(temporal); //TODO
 		loggear_debug(string_from_format("Al temporal %s se le asigno el bloque %d\n", nombre_tmp, nro_bloque));
 
@@ -299,14 +297,15 @@ void inicializar_FS(int argc, char* argv[]) {
 	iniciar_rutas();
 	inicializar_memtable();
 	iniciar_dumpeo();
+	compactation_locker = 0; //Se inicializa var. global
 	inicializar_directorios();
 	crear_bloques();
 	inicializar_bitmap();
-	compactation_locker = 0;
-	bloques_disponibles = 0; //inicializamos var. global.
-	inicializar_bloques_disp();  //Actualiza el valor.
+	inicializar_bitarray();
+	inicializar_bloques_disp();
 
-	//inicializar_compactacion(); TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
+	//iniciar_compactacion();
+	//TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
 
 	loggear_info(string_from_format("-----------Fin inicialización LFS-----------"));
 
@@ -320,6 +319,8 @@ void finalizar_FS(instr_t* instruccion) {
 	finalizar_memtable();
 	compactation_locker = 1;
 	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
+	puts("Pase compactacion");
+	finalizar_bitarray();
 	config_destroy(g_config);
 	log_destroy(g_logger);
 
@@ -338,6 +339,7 @@ void iniciar_semaforos() {
 	sem_init(&mutex_tiempo_retardo_config, 0, 1);
 	sem_init(&mutex_memtable, 0, 1);
 	sem_init(&mutex_log, 0, 1);
+	sem_init(&mutex_bitarray, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
 	sem_init(&mutex_tablas_nro_dump, 0, 1);
 	sem_init(&mutex_diccionario_conexiones, 0, 1);

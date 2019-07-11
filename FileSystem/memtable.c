@@ -172,7 +172,7 @@ void dumpear_tabla(char* tabla, void* registros) {
 		int nro_dump = siguiente_nro_dump(tabla);
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
-		FILE* temporal = crear_tmp(tabla, nombre_tmp);
+		FILE* temporal = crear_archivo(tabla, nombre_tmp, ".tmp");
 
 		loggear_trace(string_from_format("Creando temporal"));
 		int nro_bloque = archivo_inicializar(temporal);

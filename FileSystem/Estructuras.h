@@ -21,7 +21,10 @@ void iniciar_logger();
 int  bloques_disponibles;
 char* rutaConfiguracion;
 t_config* g_config;
+t_bitarray* bitarray;
 t_dictionary* dic_semaforos_tablas;
+sem_t mutex_bitarray;
+sem_t mutex_cant_bloques;
 sem_t mutex_dic_semaforos;
 
 //LOGS Y CONFIG
@@ -48,10 +51,11 @@ void 	  leer_metadata_FS();
 int 		bloques_en_bytes();
 void 		inicializar_bitmap();
 t_bitarray* levantar_bitmap();
-void 		actualizar_bitmap(t_bitarray*);
+void 		actualizar_bitmap();
 int 		cant_bloques_disp();
-void 		eliminar_bitarray(t_bitarray*);
-int			bloque_esta_ocupado(t_bitarray*, int);
+void 		inicializar_bitarray();
+void 		finalizar_bitarray();
+int			bloque_esta_ocupado(int);
 int 		siguiente_bloque_disponible(); //NO VALIDA SI HAY BLOQUES DISPONIBLES
 void 		ocupar_bloque(int);
 void 		liberar_bloque(int);
@@ -86,7 +90,6 @@ int		obtener_ultimo_bloque(char*);
 char*	aplanar(char**);
 char*	agregar_bloque_bloques(char**, int);
 int		agregar_bloque_archivo(char*, int);
-FILE*	crear_tmp(char*, char*);
 void	crear_particiones(instr_t*);
 int		tam_registro(registro_t*);
 int		obtener_tam_archivo(char*);
