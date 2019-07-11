@@ -135,6 +135,7 @@ void check_inicial(int argc, char* argv[]);
 void (*callback)(instr_t *instruccion, char *remitente);
 void ejecutar_requestRecibido(instr_t * instruccion,char* remitente);
 void enviar_a(instr_t* i,char* destino);
+int obtener_fd_out_sin_diccionario(char* proceso);
 int obtener_fd_out(char *proceso);
 void responderHandshake(identificador *idsConexionEntrante);
 char* miIPKernel;

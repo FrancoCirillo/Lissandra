@@ -647,6 +647,19 @@ int obtener_codigo_criterio(char* criterio){
 void enviar_a(instr_t* i,char* destino){
 	enviar_request_simple(i,obtener_fd_out(destino));
 }
+
+int obtener_fd_out_sin_diccionario(char* proceso){
+	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if(idsProceso == NULL){
+		loggear_warning(string_from_format("Se desconoce completamente el proceso %s. fd_out devuelto incorrecto.", proceso));
+		return 0;
+	}
+	if (idsProceso->fd_out == 0)
+	{ //Es la primera vez que se le quiere enviar algo a proceso
+		responderHandshake(idsProceso);
+	}
+	return idsProceso->fd_out;
+}
 int obtener_fd_out(char *proceso)
 {
 	sem_wait(&mutex_diccionario_conexiones);
@@ -798,7 +811,9 @@ void inicializarConfiguracion() {
 	configuracion.puerto = obtener_por_clave("PUERTO");
 	configuracion.rutaLog = obtener_por_clave("rutaLog");
 
-	configuracion.IP_SEEDS = string_array_to_list(config_get_array_value(g_config, "IP_SEEDS"));
+	char** ip_seeds = config_get_array_value(g_config, "IP_SEEDS");
+	configuracion.IP_SEEDS = string_array_to_list(ip_seeds);
+	free(ip_seeds);
 	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
 	imprimir_config_actual();
 
@@ -1059,7 +1074,7 @@ t_list *conexiones_para_gossiping(){
 }
 void enviar_lista_gossiping(char* nombreProceso){
 	if(strcmp(nombreProceso, "Kernel")!=0){
-		int conexionVieja = obtener_fd_out(nombreProceso);
+		int conexionVieja = obtener_fd_out_sin_diccionario(nombreProceso);
 		loggear_debug(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
 		t_list* listaGossiping = conexiones_para_gossiping();
 		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
@@ -1081,9 +1096,7 @@ void gossipear_con_conexiones_actuales(){
 
 	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
 	void su_nombre(char* nombre, identificador* ids){
-		sem_post(&mutex_diccionario_conexiones);
 		enviar_lista_gossiping(nombre);
-		sem_wait(&mutex_diccionario_conexiones);
 	}
 	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)su_nombre);
