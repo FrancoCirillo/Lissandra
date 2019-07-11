@@ -820,7 +820,10 @@ void inicializarConfiguracion() {
 	char** ip_seeds = config_get_array_value(g_config, "IP_SEEDS");
 	configuracion.IP_SEEDS = string_array_to_list(ip_seeds);
 	free(ip_seeds);
-	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
+
+	char** PUERTO_SEEDS=config_get_array_value(g_config, "PUERTO_SEEDS");
+	configuracion.PUERTO_SEEDS = string_array_to_list(PUERTO_SEEDS);
+	free(PUERTO_SEEDS);
 	imprimir_config_actual();
 
 	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave("RETARDO_GOSSIPING"));
