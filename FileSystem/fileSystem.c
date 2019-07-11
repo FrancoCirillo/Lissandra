@@ -64,9 +64,9 @@ int main(int argc, char* argv[]) {
 //
 //	compactation_locker = 1;
 //
-	compactador("T1");
+//	compactador("T1");
 
-//	inicializar_conexiones();
+	inicializar_conexiones();
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin, loggear_trace);
