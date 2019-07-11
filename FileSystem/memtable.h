@@ -17,6 +17,10 @@ void inicializar_memtable();
 void finalizar_memtable();
 void limpiar_memtable();
 void resetear_numero_dump(char* tabla);
+t_dictionary*  dumpear_memtable();
+void  dumpear_tabla(char*, void*);
+void  iniciar_dumpeo();
+void  dumpeo_final_memtable();
 
 // --------FUNCIONES DE REGISTROS--------
 t_list* 	crear_lista_registros();
@@ -40,12 +44,8 @@ void  eliminar_nro_dump_de_tabla(char*);
 void  finalizar_tablas_nro_dump();
 void  agregar_a_contador_dumpeo(char*);
 int   siguiente_nro_dump(char*);
-t_dictionary*  dumpear_memtable();
-void  dumpear_tabla(char*, void*);
-void  iniciar_dumpeo();
 
 
-void dumpeo();
 
 
 #endif /* MEMTABLE_H_ */

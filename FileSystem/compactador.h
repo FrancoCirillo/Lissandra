@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include "registros.h"
 
-void 	compactar_memtable();
+void    compactactar_todos_los_tmpc();
 void 	compactacion_final(char* tabla, void* registros);
 void 	compactador(char* tabla);
 t_list* listar_archivos(char* tabla);
@@ -26,6 +26,8 @@ t_list* levantar_registros(char* ruta_archivo);
 void 	liberar_todos_los_bloques(char* tabla);
 void 	finalizar_compactacion(t_dictionary*, char* tabla, int num);
 int  	ultimo_bloque(t_config* archivo);
+void    eliminar_archivo(char* ruta_archivo);
+void    borrar_tmpcs(char* tabla);
 
 //ELiminar
 void 	compactar2();

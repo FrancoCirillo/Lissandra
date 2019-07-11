@@ -191,6 +191,10 @@ t_dictionary* dumpear_memtable() {
 	return mem_aux;
 }
 
+void dumpeo_final_memtable() {
+	dictionary_iterator(memtable, &dumpear_tabla);
+}
+
 void dumpear_tabla(char* tabla, void* registros) {
 
 	if(!list_is_empty((t_list*)registros)) { //Si se hicieron inserts

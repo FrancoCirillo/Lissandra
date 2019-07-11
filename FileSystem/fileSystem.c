@@ -23,11 +23,14 @@ int main(int argc, char* argv[]) {
 	
 	inicializar_FS(argc, argv);
 
+//	compactador("T1");
+
 	//ejemplo_aplanar();
 
-	//pruebaDump();
 
-	//ejemplo_nro_dump();
+//	pruebaDump();
+
+//	ejemplo_nro_dump();
 
 	inicializar_conexiones();
 
@@ -140,13 +143,42 @@ t_list* listaRegistros() {
 	return registros;
 }
 
+t_list* listaRegistros2() {
+	t_list* registros = crear_lista_registros();
+
+	registro_t* registro1 = obtener_registro("55242345;253;registro1-2\n");
+	registro_t* registro2 = obtener_registro("11242345;43;registro2-2\n");
+	registro_t* registro3 = obtener_registro("66242345;54;registro3-2\n");
+	registro_t* registro4 = obtener_registro("66242345;5;registro4-2\n");
+	registro_t* registro5 = obtener_registro("22992999;5;registro5-2\n");
+	registro_t* registro6 = obtener_registro("88242345;34;registro6-2\n");
+	registro_t* registro7 = obtener_registro("88224345;64;registro7-2\n");
+	registro_t* registro8 = obtener_registro("11224345;11;registro8-2\n");
+	registro_t* registro9 = obtener_registro("66224345;34;registro9-2\n");
+	registro_t* registro10 = obtener_registro("93224345;5;registro10-2\n");
+
+
+	list_add(registros, registro1);
+	list_add(registros, registro2);
+	list_add(registros, registro3);
+	list_add(registros, registro4);
+	list_add(registros, registro5);
+	list_add(registros, registro6);
+	list_add(registros, registro7);
+	list_add(registros, registro8);
+	list_add(registros, registro9);
+	list_add(registros, registro10);
+
+	return registros;
+}
+
 
 //Testeo de prueba de dumpear_tabla(); //Tiene el mismo codigo.
 //Lo adapto para usar en compactacion. Genera tmps que uso para testear.
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
 		loggear_trace(string_from_format("-------------------Entre a dump-------------------"));
-		int nro_dump = 1;
+		int nro_dump = 2;
 		loggear_trace(string_from_format("Numero de Dump: %d\n", nro_dump));
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
@@ -178,7 +210,7 @@ void pruebaDump() {
 	t_dictionary* mockMem = dictionary_create();
 
 	//--agrego una tabla con registros---
-	t_list* reg = listaRegistros();
+	t_list* reg = listaRegistros2();
 	dictionary_put(mockMem, "T1", reg);
 
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
@@ -302,8 +334,8 @@ void finalizar_FS(instr_t* instruccion) {
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 
-	//dumpear_memtable();  ESTO NO VA ACA (Dai) es un while(1)
-	//todo: compactar_memtable(); ESTO NO VA ACA  es Por tabla y con while tambien. En inicializar.
+	dumpeo_final_memtable();  //Esto limpia lo ultimo de la mem antes de cerrar el FS.
+	compactactar_todos_los_tmpc(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
 	config_destroy(g_config);
 	log_destroy(g_logger);
 

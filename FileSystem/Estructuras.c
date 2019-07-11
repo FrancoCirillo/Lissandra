@@ -339,13 +339,13 @@ t_bitarray* get_bitmap() {
 	FILE* archivo_bitmap = fopen(g_ruta.bitmap, "r");
 	char* bitmap = malloc(cant_bytes() + 1);//Crear struct.
 	int resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cant_bytes()+1, archivo_bitmap);
-	//TODO: resultado_read
 	bitmap[cant_bytes()] = 0;
 	t_bitarray* bitarray = bitarray_create_with_mode(bitmap, cant_bytes(), LSB_FIRST);
 	fclose(archivo_bitmap);
 	//TODO free(bitmap);
 
-	return bitarray;
+	return bitarray;   //Retornar un struct. con el Bitarray y el char*bitmap.
+	//Para que cada uno que lo pida, haga el free todo junto del bitarray y del char*
 }
 
 void actualizar_bitmap(t_bitarray* bitarray) {
