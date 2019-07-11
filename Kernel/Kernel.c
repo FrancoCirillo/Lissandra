@@ -166,7 +166,7 @@ instr_t* kernel_metrics(instr_t * i){
 	respuesta->timestamp=i->timestamp;
 	t_list * params=list_create();
 	respuesta->parametros=params;
-	char* mensaje=" Ejecutando metricas!";
+	char* mensaje=string_from_format("Metricas ejecutadas!");
 	list_add(params,mensaje);
 	respuesta->codigo_operacion=0;
 
@@ -184,7 +184,7 @@ instr_t* kernel_run(instr_t *i){
 	if(!f){
 		loggear_debug(string_from_format("Archivo no encontrado!"));
 		respuesta->codigo_operacion=ERROR_RUN;
-		char* mensaje=" ARCHIVO NO ENCONTRADO!";
+		char* mensaje=string_from_format(" ARCHIVO NO ENCONTRADO!");
 		list_add(params,mensaje);
 		return respuesta;
 		//TODO FREES;
@@ -206,7 +206,7 @@ instr_t* kernel_run(instr_t *i){
 		if(!nueva_instruccion){//Input invalido
 			loggear_debug(string_from_format("El archivo posee inputs invalidos"));
 			respuesta->codigo_operacion=ERROR_RUN;
-			char* mensaje="EL ARCHIVO POSEE INPUTS INVALIDOS!";
+			char* mensaje=string_from_format("EL ARCHIVO POSEE INPUTS INVALIDOS!");
 			list_add(params,mensaje);
 			//TODO FREES
 			return respuesta;
@@ -230,7 +230,7 @@ instr_t* kernel_run(instr_t *i){
 	//RESPUESTA
 
 	respuesta->codigo_operacion=0;
-	char* mensaje="RUN EJECUTADO CORRECTAMENTE!";
+	char* mensaje=string_from_format("RUN EJECUTADO CORRECTAMENTE!");
 	list_add(params,mensaje);
 	loggear_trace(string_from_format("FIN RUN!"));
 	return respuesta;
@@ -247,7 +247,7 @@ instr_t* kernel_add(instr_t* i){
 		if(list_size(criterio_strong_consistency->lista_memorias)>0){
 			instr_t * respuesta=malloc(sizeof(instr_t));
 			respuesta->codigo_operacion=1007;
-			char* mensaje="ERROR EN ADD, EL CRITERIO SC YA POSEE UNA MEMORIA ASIGNADA!";
+			char* mensaje=string_from_format("ERROR EN ADD, EL CRITERIO SC YA POSEE UNA MEMORIA ASIGNADA!");
 			t_list * params=list_create();
 			list_add(params,mensaje);
 			respuesta->parametros=params;
@@ -277,7 +277,7 @@ instr_t* kernel_add(instr_t* i){
 
 	instr_t * respuesta=malloc(sizeof(instr_t));
 	respuesta->codigo_operacion=0;
-	char* mensaje="ADD EJECUTADO CORRECTAMENTE!";
+	char* mensaje=string_from_format("ADD EJECUTADO CORRECTAMENTE!");
 //	list_destroy(respuesta->parametros);
 	t_list * params=list_create();
 	list_add(params,mensaje);
@@ -428,9 +428,10 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	imprimir_instruccion(i, loggear_trace);
 	if(i->codigo_operacion==22){
 
-		loggear_debug("#### FINALIZANDO KERNEL ####");
+		loggear_debug(string_from_format("#### FINALIZANDO KERNEL ####"));
 		list_destroy(configuracion.IP_SEEDS);
 		list_destroy(configuracion.PUERTO_SEEDS);
+		liberar_instruccion(i);
 
 		exit(0);
 	}
@@ -460,8 +461,9 @@ instr_t* ejecutar_instruccion(instr_t* i){
 instr_t *validar(instr_t * i){
 	instr_t* mensaje_error=malloc(sizeof(instr_t));
 	mensaje_error->timestamp=i->timestamp;
-	char* mensaje="ERROR!";
+	char* mensaje=string_from_format("ERROR!");
 	if(i->codigo_operacion!=2&&i->codigo_operacion!=3 && i->codigo_operacion!=1){
+		free(mensaje_error);
 		return NULL;
 	}
 	if(i->codigo_operacion==2 || i->codigo_operacion==1){
@@ -501,7 +503,7 @@ instr_t* enviar_i(instr_t* i){
 	int conexionMemoria = obtener_fd_memoria(i);
 	if(conexionMemoria<0){
 		loggear_debug(string_from_format("No se pudo encontrar una memoria para el criterio indicado"));
-		char* mensaje="No existe una memoria asignada para dicha instruccion";
+		char* mensaje=string_from_format("No existe una memoria asignada para dicha instruccion");
 		instr_t* respuesta=malloc(sizeof(instr_t));
 		respuesta->timestamp=i->timestamp;
 		respuesta->codigo_operacion=1000;
@@ -534,9 +536,10 @@ instr_t* enviar_i(instr_t* i){
 	pthread_mutex_unlock(h->mutex_t);
 
 	loggear_debug(string_from_format("Hilo despierto!"));
-//	free(h);
+	instr_t * rta=h->respuesta;
+	free(h);
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
-	return h->respuesta;
+	return rta;
 }
 
 int obtener_fd_memoria(instr_t *i){
@@ -597,11 +600,29 @@ int obtener_fd_memoria(instr_t *i){
 	free(nombre_memoria);
 	return fd;
 }
+void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit){
+	sem_wait(&(crit->mutex_criterio));
+	for(int i=0;i<list_size(crit->lista_memorias);i++){
+		char* mem =list_get(crit->lista_memorias,i);
+		if(!strcmp(mem,numero_memoria)){
+			list_remove(crit->lista_memorias,i);
+		}
+	}
+	sem_post(&(crit->mutex_criterio));
+}
+void memoria_desconectada(char* nombre_memoria){
+	char* numero=nombre_memoria+8;
+	loggear_info(string_from_format("Se desconecto la memoria %s, se borra de criterios",numero));
+	borrar_memoria_de_criterio(numero,criterio_strong_consistency);
+	borrar_memoria_de_criterio(numero,criterio_eventual_consistency);
+	borrar_memoria_de_criterio(numero,criterio_strong_hash_consistency);
+
+}
 char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
 	strcpy(rdo,s1);
 	strcat(rdo,s2);
-//	loggear_debug(string_from_format(rdo);
+	loggear_debug(string_from_format(rdo));
 	return rdo;
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
@@ -647,7 +668,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 	instr_t *miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 
 	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, 1);
-	enviar_request_simple(miInstruccion, fd_saliente);
+	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
 void recibi_respuesta(instr_t* respuesta, char* remitente){
@@ -690,15 +711,17 @@ void encolar_o_finalizar_proceso(proceso* p){
 
 }
 void liberar_instruccion(instr_t* instruccion){
-	for(int i=0;list_size(instruccion->parametros)>0;i++){
-		printf("\nSe borra el parametro %s\n",list_get(instruccion->parametros,0));
-		//Se borra el 0 n veces
-		list_remove_and_destroy_element(instruccion->parametros,0,free);
-
-	}
-	list_destroy(instruccion->parametros);
+//	for(int i=0;list_size(instruccion->parametros)>0;i++){
+//		printf("\nSe borra el parametro %s\n",list_get(instruccion->parametros,0));
+//		//Se borra el 0 n veces
+//		list_remove_and_destroy_element(instruccion->parametros,0,free);
+//
+//	}
+//	list_destroy(instruccion->parametros);
+//	free(instruccion);
+	list_destroy_and_destroy_elements(instruccion->parametros,free);
+//	free(instruccion->parametros);
 	free(instruccion);
-//	list_destroy_and_destroy_elements(instruccion->parametros,free);
 }
 void finalizar_proceso(proceso* p){
 	loggear_info(string_from_format("Se finalizo correctamente un proceso !!. Se libera su memoria"));
@@ -709,6 +732,7 @@ void finalizar_proceso(proceso* p){
 		liberar_instruccion(instruccion);
 		list_remove(p->instrucciones,0);
 	}
+	list_destroy(p->instrucciones);
 
 	p->sig=NULL;
 	free(p);
@@ -941,7 +965,6 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 
 void actualizar_tabla_gossiping(instr_t* instruccion){
 
-
 	loggear_debug(string_from_format("Actualizando tabla de gossiping"));
 
 	int saltearProximos = 0;
@@ -1007,6 +1030,8 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 	imprimir_conexiones(conexionesActuales, loggear_info);
 	sem_post(&mutex_diccionario_conexiones);
 
+	list_destroy(instruccion->parametros);
+	free(instruccion);
 //	imprimir_config_actual();
 }
 
@@ -1038,7 +1063,7 @@ void enviar_lista_gossiping(char* nombreProceso){
 		loggear_debug(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
 		t_list* listaGossiping = conexiones_para_gossiping();
 		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
-		enviar_request_simple(miInstruccion, conexionVieja);
+		enviar_request(miInstruccion, conexionVieja);
 	}
 }
 
@@ -1081,9 +1106,9 @@ void gossipear_con_procesos_desconectados(){
 				puts("Conexion creada");
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
-				enviar_request_simple(miInstruccion, conexion);
+				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
-				enviar_request_simple(peticionDeSuTabla, conexion);
+				enviar_request(peticionDeSuTabla, conexion);
 
 			}
 		}

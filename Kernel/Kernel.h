@@ -170,7 +170,8 @@ void agregar_a_metricas(instr_t* i);
 void actualizar_config();
 void actualizar_log_level();
 void liberar_instruccion(instr_t* instruccion);
-
+void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit);
+void memoria_desconectada(char* nombre_memoria);
 //Gossiping
 int fd_out_inicial;
 void iniciar_ejecutador_gossiping();
