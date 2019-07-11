@@ -2,67 +2,21 @@
 
 #include "compactador.h"
 
-void compactactar_todos_los_tmpc() {
-	dictionary_iterator(memtable, &compactacion_final);
-}
-
-void compactacion_final(char* tabla, void* registros) {
-	//Los registros tambien por el dictionary_iterator - se ignoran
-
-	t_list* particiones = list_create();
-
-	int cantidad_particiones = obtener_part_metadata(tabla);
-	int cant_tmpc;
-
-	for(int num = 0; num < cantidad_particiones; num++) {
-		//inicia tantos diccionarios vacios como particiones tenga la tabla.
-		list_add(particiones, dictionary_create());
-	}
-
-	if(existe_tabla(tabla)){
-
-		if (!existe_mutex(tabla))	//Failsafe innecesario
-			inicializar_semaforo_tabla(tabla);
-
-		sem_wait(&mutex_dic_semaforos);
-		sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
-		sem_post(&mutex_dic_semaforos);
-
-		sem_wait(mutex_tabla);
-		cant_tmpc = pasar_a_tmpc(tabla);
-		sem_post(mutex_tabla);
-		loggear_trace(string_from_format("Semaforos de paso a tmpc funcionando correctamente"));
-
-		if(cant_tmpc){
-			t_list* lista_archivos = listar_archivos(tabla);
-
-			if(lista_archivos){
-				for(int i = 0; i < list_size(lista_archivos); i++){
-					agregar_registros_en_particion(particiones, list_get(lista_archivos, i));
-				}
-
-				sem_wait(mutex_tabla);
-
-				list_iterate((t_list*)lista_archivos, &liberar_bloques);
-				for(int j = 0; j< cantidad_particiones;j++){
-					finalizar_compactacion(list_get(particiones,j), tabla, j);
-				}
-				//borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
-
-				sem_post(mutex_tabla);
-				loggear_trace(string_from_format("Semaforos de compactacion_final funcionando correctamente"));
-
-				//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
-			}
+void compactar_todas_las_tablas() {
+	DIR* directorio = opendir(g_ruta.tablas);
+	if (directorio != NULL){
+		struct dirent* directorio_leido;
+		while((directorio_leido = readdir(directorio)) != NULL) {
+			char* tabla = directorio_leido->d_name;
+			if(!string_contains(tabla, "."))
+				compactador(tabla);
 		}
 	}
-	//liberar_recursos(particiones);
-	//free(de todo lo que use);
+	closedir(directorio);
+	inhabilitar_compactacion();
 }
 
 void compactador(char* tabla) {
-
-	mseg_t ts_inicial = obtener_ts();
 
 	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
 
@@ -82,27 +36,26 @@ void compactador(char* tabla) {
 		list_add(particiones, dic);
 	}
 
-	if (!existe_mutex(tabla))	//Failsafe innecesario
-		inicializar_semaforo_tabla(tabla);
-
 	sem_wait(&mutex_dic_semaforos);
 	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
 	sem_post(&mutex_dic_semaforos);
 
 	int i=1;
 
-	while(existe_tabla(tabla)){
-		sleep(tiempo_compactacion);
+	while(existe_tabla_en_mem(tabla) || compactation_locker) {
+		mseg_t ts_inicial = obtener_ts();
+
+		if(existe_tabla_en_mem(tabla))
+			sleep(tiempo_compactacion);
 
 		printf("Compactacion nro: %d\n", i);
 
 		sem_wait(mutex_tabla);
 		cant_tmpc = pasar_a_tmpc(tabla);
 		sem_post(mutex_tabla);
-		//loggear_trace(string_from_format("Semaforos de paso a tmpc funcionando correctamente"));
 
 //		if(!cant_tmpc)
-//			continue;     ESTO NO ME FUNCA??
+//			continue;     Todo: ver que onda
 
 		t_list* lista_archivos = listar_archivos(tabla);
 
@@ -136,13 +89,16 @@ void compactador(char* tabla) {
 
 			//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
 
-			mseg_t ts_final = obtener_ts();
-			mseg_t duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
-
-			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
-
-
 		}
+
+		if(compactation_locker)
+			break;
+
+		mseg_t ts_final = obtener_ts();
+		mseg_t duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
+
+		loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
+
 		i++;
 		puts("FIN de 1 while de la compactacion.");
 	}
@@ -151,10 +107,8 @@ void compactador(char* tabla) {
 	//free(de todo lo que use);
 }
 
-
-
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
-	puts("=========== FINALIZAR_COMPACTACION ======");
+	puts("======= FINALIZAR_COMPACTACION =======");
 	char* nom = string_from_format("Part%d", num);
 	FILE* f = crear_archivo(nom, tabla, ".bin"); //Lo crea como nuevo.
 
@@ -182,9 +136,12 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	fclose(f);
 	free(nom);
 
-	puts("=========== FIN FINALIZAR_COMPACTACION ======");
+	puts("======= FIN FINALIZAR_COMPACTACION =======");
 }
 
+void inhabilitar_compactacion() {
+	compactation_locker = 0;
+}
 
 int ultimo_bloque(t_config* archivo){
 	char* lista_bloques = config_get_string_value(archivo, "BLOCKS");
@@ -226,7 +183,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	puts("\n\n--------------estoy en agregar_registros_en_particion------------\n\n");
 
 	if(!obtener_tam_archivo(ruta_archivo))
-		exit(1);//Sale 1
+		return;
 
 	int cant_particiones = list_size(particiones);
 	int index;
@@ -321,30 +278,6 @@ t_list* listar_archivos(char* tabla){
 	return archivos;
 }
 
-
-
-
-
-
-//Para probar detach que no segui intentando..
-void compactar2(){
-	//pthread_create(hilo, tabla, compactar_tabla);
-	while(1){
-		puts("estoy compactando cada 2 segundos\n");
-	}
-}
-
-void compactar5(){
-	//pthread_create(hilo, tabla, compactar_tabla);
-	while(1){
-		puts("estoy compactando cada 5 segundos\n");
-
-	}
-
-}
-
-
-
 int pasar_a_tmpc(char* tabla) {
 
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
@@ -371,7 +304,7 @@ int pasar_a_tmpc(char* tabla) {
 //			loggear_trace(string_from_format("Nombre sin extension: %s\n", nombre_sin_ext));
 			char* nuevo_nombre = string_from_format("%s/%s.tmpc", ruta_tabla, nombre_sin_ext);
 			loggear_trace(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
-			int status = rename(nombre_viejo, nuevo_nombre);
+			rename(nombre_viejo, nuevo_nombre);
 
 			contador++;
 //			loggear_trace(string_from_format("Status: %d\n", status));
@@ -385,5 +318,4 @@ int pasar_a_tmpc(char* tabla) {
 	return contador;
 
 }
-
 
