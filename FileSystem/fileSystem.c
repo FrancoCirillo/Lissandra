@@ -2,21 +2,6 @@
 
 #include "fileSystem.h"
 
-char* to_upper(char* str){
-	char* upr = "";
-	char ch;
-	int tam = strlen(str);
-	for(int i = 0; i < tam; i++) {
-//		printf("%c\n", *(str+i));
-		ch = toupper((char)*(str+i));
-		upr = string_from_format("%s%c", upr, ch);
-//		printf("%s\n", upr);
-	}
-	return upr;
-}
-
-
-
 int main(int argc, char* argv[]) {
 
 	printf(COLOR_ANSI_CYAN "\n\n************ PROCESO FILESYSTEM ************\n\n" COLOR_ANSI_RESET);
@@ -25,9 +10,11 @@ int main(int argc, char* argv[]) {
 
 	//ejemplo_aplanar();
 
-	//pruebaDump();
-
-	//ejemplo_nro_dump();
+//	pruebaDump();
+//
+//	compactation_locker = 1;
+//
+//	compactador("T1");
 
 	inicializar_conexiones();
 
@@ -43,9 +30,6 @@ int main(int argc, char* argv[]) {
 //	pruebaGeneral();
 //	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
 //	imprimirContenidoArchivo(rutaDump1, loggear_trace);
-
-//	finalizar_FS();
-
 
 	return 0;
 }
@@ -140,18 +124,47 @@ t_list* listaRegistros() {
 	return registros;
 }
 
+t_list* listaRegistros2() {
+	t_list* registros = crear_lista_registros();
+
+	registro_t* registro1 = obtener_registro("55242345;253;registro1-2\n");
+	registro_t* registro2 = obtener_registro("11242345;43;registro2-2\n");
+	registro_t* registro3 = obtener_registro("66242345;54;registro3-2\n");
+	registro_t* registro4 = obtener_registro("66242345;5;registro4-2\n");
+	registro_t* registro5 = obtener_registro("22992999;5;registro5-2\n");
+	registro_t* registro6 = obtener_registro("88242345;34;registro6-2\n");
+	registro_t* registro7 = obtener_registro("88224345;64;registro7-2\n");
+	registro_t* registro8 = obtener_registro("11224345;11;registro8-2\n");
+	registro_t* registro9 = obtener_registro("66224345;34;registro9-2\n");
+	registro_t* registro10 = obtener_registro("93224345;5;registro10-2\n");
+
+
+	list_add(registros, registro1);
+	list_add(registros, registro2);
+	list_add(registros, registro3);
+	list_add(registros, registro4);
+	list_add(registros, registro5);
+	list_add(registros, registro6);
+	list_add(registros, registro7);
+	list_add(registros, registro8);
+	list_add(registros, registro9);
+	list_add(registros, registro10);
+
+	return registros;
+}
+
 
 //Testeo de prueba de dumpear_tabla(); //Tiene el mismo codigo.
 //Lo adapto para usar en compactacion. Genera tmps que uso para testear.
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
 		loggear_trace(string_from_format("-------------------Entre a dump-------------------"));
-		int nro_dump = 1;
+		int nro_dump = 2;
 		loggear_trace(string_from_format("Numero de Dump: %d\n", nro_dump));
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 		loggear_debug(string_from_format("Ruta Temporal: %s\n", ruta_tmp));
-		FILE* temporal = crear_tmp(tabla, nombre_tmp);
+		FILE* temporal = crear_archivo(tabla, nombre_tmp, ".tmp");
 		int nro_bloque = archivo_inicializar(temporal); //TODO
 		loggear_debug(string_from_format("Al temporal %s se le asigno el bloque %d\n", nombre_tmp, nro_bloque));
 
@@ -178,7 +191,7 @@ void pruebaDump() {
 	t_dictionary* mockMem = dictionary_create();
 
 	//--agrego una tabla con registros---
-	t_list* reg = listaRegistros();
+	t_list* reg = listaRegistros2();
 	dictionary_put(mockMem, "T1", reg);
 
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
@@ -283,16 +296,16 @@ void inicializar_FS(int argc, char* argv[]) {
 	loggear_info(string_from_format("-----------INICIO PROCESO-----------"));
 	iniciar_rutas();
 	inicializar_memtable();
-
-	///////iniciar_dumpeo();//// HACER UN DETACH de esto. Va aca. es un while 1 para todas las tablas.
-
+	iniciar_dumpeo();
+	compactation_locker = 0; //Se inicializa var. global
 	inicializar_directorios();
 	crear_bloques();
 	inicializar_bitmap();
-	bloques_disponibles = 0; //inicializamos var. global.
-	inicializar_bloques_disp();  //Actualiza el valor.
+	inicializar_bitarray();
+	inicializar_bloques_disp();
 
-	//inicializar_compactacion(); TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
+	//iniciar_compactacion();
+	//TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
 
 	loggear_info(string_from_format("-----------Fin inicialización LFS-----------"));
 
@@ -302,13 +315,16 @@ void finalizar_FS(instr_t* instruccion) {
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 
-	//dumpear_memtable();  ESTO NO VA ACA (Dai) es un while(1)
-	//todo: compactar_memtable(); ESTO NO VA ACA  es Por tabla y con while tambien. En inicializar.
+	dumpear_memtable();  //Esto limpia lo ultimo de la mem antes de cerrar el FS.
+	finalizar_memtable();
+	compactation_locker = 1;
+	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
+	puts("Pase compactacion");
+	finalizar_bitarray();
 	config_destroy(g_config);
 	log_destroy(g_logger);
 
 	finalizar_rutas();
-	finalizar_memtable();
 	finalizar_tablas_nro_dump();
 	finalizar_dic_semaforos_tablas();
 	finalizar_diccionarios_conexiones();
@@ -323,6 +339,7 @@ void iniciar_semaforos() {
 	sem_init(&mutex_tiempo_retardo_config, 0, 1);
 	sem_init(&mutex_memtable, 0, 1);
 	sem_init(&mutex_log, 0, 1);
+	sem_init(&mutex_bitarray, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
 	sem_init(&mutex_tablas_nro_dump, 0, 1);
 	sem_init(&mutex_diccionario_conexiones, 0, 1);

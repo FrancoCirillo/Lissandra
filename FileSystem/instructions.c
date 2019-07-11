@@ -36,7 +36,7 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 		break;
 
 	case CODIGO_CERRAR:
-		loggear_debug(string_from_format("Se cerrara el File System."));
+		loggear_info(string_from_format("Se cerrara el File System."));
 		finalizar_FS(instr);
 		break;
 
@@ -54,14 +54,14 @@ void execute_create(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list* listaParam = list_create();
 
-	if (!existe_tabla(tabla)) {
+	if (!existe_tabla_en_mem(tabla)) {
 		if(!puede_crear_particiones(instruccion)) {
 			char* cadena = string_from_format("No hay bloques disponibles para crear las particiones de la tabla'%s'.", tabla);
 			list_add(listaParam, cadena);
 			imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
 			return;
 		}
-		agregar_tabla(tabla); //la agrega a la mem
+		agregar_tabla_a_mem(tabla); //la agrega a la mem
 		inicializar_semaforo_tabla(tabla);
 		agregar_a_contador_dumpeo(tabla);
 		crear_directorio(g_ruta.tablas, tabla);
@@ -86,7 +86,7 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	registro_t* registro = pasar_a_registro(instruccion);
 
-	if (!existe_tabla(tabla)) {
+	if (!existe_tabla_en_mem(tabla)) {
 		char* cadena = string_from_format("No se pudo insertar %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
 		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
 		string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 2)); //Value
@@ -98,9 +98,6 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) {
 		return listaParam;
 	}
 
-	if (!existe_mutex(tabla))	//Failsafe innecesario
-		inicializar_semaforo_tabla(tabla);
-
 	sem_wait(&mutex_dic_semaforos);
 	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
 	sem_post(&mutex_dic_semaforos);
@@ -108,7 +105,7 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) {
 	sem_wait(mutex_tabla);
 	agregar_registro(tabla, registro);
 	sem_post(mutex_tabla);
-	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
+	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
 	char* cadena = string_from_format("Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
 	string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
@@ -123,16 +120,13 @@ void execute_select(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list *listaParam = list_create();
 
-	if (!existe_tabla(tabla)) {
+	if (!existe_tabla_en_mem(tabla)) {
 		loggear_trace(string_from_format("No existe la tabla"));
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
 		return;
 	}
-
-	if (!existe_mutex(tabla))	//Failsafe innecesario
-		inicializar_semaforo_tabla(tabla);
 
 	int key = (uint16_t)atoi(obtener_parametro(instruccion, 1));
 
@@ -143,7 +137,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 	sem_wait(mutex_tabla);
 	t_list* registros_key = obtener_registros_key(tabla, key);
 	sem_post(mutex_tabla);
-	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
+	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
 
 	if(registros_key == NULL){
@@ -177,15 +171,12 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list *listaParam = list_create();
 
-	if (!existe_tabla(tabla)) {
+	if (!existe_tabla_en_mem(tabla)) {
 		char* cadena = string_from_format("No existe la tabla '%s'", tabla);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_DROP, instruccion, listaParam, remitente);
 		return;
 	}
-
-	if (!existe_mutex(tabla))	//Failsafe innecesario
-		inicializar_semaforo_tabla(tabla);
 
 	sem_wait(&mutex_dic_semaforos);
 	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
@@ -197,7 +188,7 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 	int resultadoDrop = eliminar_directorio(tabla);
 	sem_post(mutex_tabla);
 	eliminar_mutex_de_tabla(tabla);
-	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
+	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
 	if(resultadoDrop == 0){
 		char* cadena = string_from_format("Se elimino correctamente la tabla '%s'", tabla);
@@ -250,7 +241,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 	}
 	else { //DESCRIBE <NOMBRE_TABLA>
 		char* tabla = obtener_nombre_tabla(instruccion);
-		if(!existe_tabla(tabla)) {
+		if(!existe_tabla_en_mem(tabla)) {
 			imprimir_donde_corresponda(ERROR_DESCRIBE, instruccion, listaParam, remitente);
 			return;
 		}

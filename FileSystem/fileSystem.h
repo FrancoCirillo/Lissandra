@@ -84,7 +84,6 @@ sem_t mutex_tiempo_dump_config;
 sem_t mutex_tiempo_retardo_config;
 sem_t mutex_memtable;
 sem_t mutex_log;
-sem_t mutex_cant_bloques;
 
 config_FS_t config_FS;
 metadata_FS_t Metadata_FS;
