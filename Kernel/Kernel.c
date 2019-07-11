@@ -431,6 +431,7 @@ instr_t* ejecutar_instruccion(instr_t* i){
 		loggear_debug(string_from_format("#### FINALIZANDO KERNEL ####"));
 		list_destroy(configuracion.IP_SEEDS);
 		list_destroy(configuracion.PUERTO_SEEDS);
+		liberar_instruccion(i);
 
 		exit(0);
 	}
