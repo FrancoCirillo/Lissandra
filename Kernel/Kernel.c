@@ -713,6 +713,7 @@ void finalizar_proceso(proceso* p){
 		liberar_instruccion(instruccion);
 		list_remove(p->instrucciones,0);
 	}
+	list_destroy(p->instrucciones);
 
 	p->sig=NULL;
 	free(p);
