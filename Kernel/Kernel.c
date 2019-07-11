@@ -381,6 +381,7 @@ void* ejecutar_proceso(void* un_proceso){
 				}else{
 					//NO es insert ni select
 				}
+				liberar_instruccion(respuesta);
 
 			}else{
 
@@ -388,11 +389,10 @@ void* ejecutar_proceso(void* un_proceso){
 				//printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
 				//bajar_cantidad_hilos();
 				imprimir_instruccion(respuesta, loggear_warning);
-
+				liberar_instruccion(respuesta);
 				finalizar_proceso(un_proceso);
 				return NULL;
 			}
-			liberar_instruccion(respuesta);
 
 		}else{
 
@@ -463,11 +463,8 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	return respuesta;
 }
 instr_t *validar(instr_t * i){
-	instr_t* mensaje_error=malloc(sizeof(instr_t));
-	mensaje_error->timestamp=i->timestamp;
-	char* mensaje=string_from_format("ERROR!");
+	int codigo_error;
 	if(i->codigo_operacion!=2&&i->codigo_operacion!=3 && i->codigo_operacion!=1){
-		free(mensaje_error);
 		return NULL;
 	}
 	if(i->codigo_operacion==2 || i->codigo_operacion==1){
@@ -475,7 +472,7 @@ instr_t *validar(instr_t * i){
 			loggear_debug(string_from_format("Existe la tabla para el insert o select "));
 			return NULL;
 		}else{
-			mensaje_error->codigo_operacion=ERROR_INSERT;
+			codigo_error=ERROR_INSERT;
 			loggear_warning(string_from_format("La tabla %s no existe!",obtener_parametroN(i,0)));
 			//mensaje="LA TABLA NO EXISTE!";
 		}
@@ -486,13 +483,16 @@ instr_t *validar(instr_t * i){
 			return NULL;
 		}else{
 			//mensaje="LA TABLA YA EXISTE";
-			mensaje_error->codigo_operacion=ERROR_CREATE;
+			codigo_error=ERROR_CREATE;
 		}
 	}
+	char* mensaje=string_from_format("ERROR!");
+	instr_t* mensaje_error=malloc(sizeof(instr_t));
+	mensaje_error->codigo_operacion=codigo_error;
+	mensaje_error->timestamp=i->timestamp;
 	free(mensaje_error->parametros);
 	mensaje_error->parametros=list_create();
 	list_add(mensaje_error->parametros,mensaje);
-
 	return mensaje_error;
 }
 
@@ -541,8 +541,10 @@ instr_t* enviar_i(instr_t* i){
 
 	loggear_debug(string_from_format("Hilo despierto!"));
 	instr_t * rta=h->respuesta;
-	free(h);
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
+	free(h);
+
+
 	return rta;
 }
 
