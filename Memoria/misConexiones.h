@@ -18,6 +18,7 @@
 #include "../Herramientas/tiempo.h"
 #include "admin.h"
 
+int obtener_fd_out_sin_semaforo(char* proceso);
 int obtener_fd_out(char *proceso);
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_list *listaParam);
 void responderHandshake(identificador *idsConexionEntrante);

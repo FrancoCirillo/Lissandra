@@ -2,6 +2,19 @@
 
 #include "misConexiones.h"
 
+int obtener_fd_out_sin_semaforo(char* proceso){
+	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if(idsProceso == NULL){
+		loggear_warning(string_from_format("Se desconoce completamente el proceso %s. fd_out devuelto incorrecto.", proceso));
+		return 0;
+	}
+	if (idsProceso->fd_out == 0)
+	{ //Es la primera vez que se le quiere enviar algo a proceso
+		responderHandshake(idsProceso);
+	}
+	return idsProceso->fd_out;
+}
+
 int obtener_fd_out(char *proceso)
 {
 	sem_wait(&mutex_diccionario_conexiones);
@@ -266,7 +279,7 @@ t_list *conexiones_para_gossiping(){
 
 void enviar_lista_gossiping(char* nombreProceso){
 	if(strcmp(nombreDeMemoria, nombreProceso)!=0 && strcmp(nombreProceso, "FileSystem")!=0){
-		int conexionVieja = obtener_fd_out(nombreProceso);
+		int conexionVieja = obtener_fd_out_sin_semaforo(nombreProceso);
 		loggear_debug(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
 		t_list* listaGossiping = conexiones_para_gossiping();
 		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
@@ -314,9 +327,7 @@ void gossipear_con_conexiones_actuales(){
 
 	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
 	void su_nombre(char* nombre, identificador* ids){
-		sem_post(&mutex_diccionario_conexiones);
 		enviar_lista_gossiping(nombre);
-		sem_wait(&mutex_diccionario_conexiones);
 	}
 	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)su_nombre);
