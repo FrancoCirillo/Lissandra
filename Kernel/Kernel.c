@@ -308,10 +308,10 @@ int hay_procesos(){
 	int hay=cola_ready!=NULL;
 	sem_post(&semaforo_procesos_ready);
 	if(hay){
-		printf("\n HAY PRCOESOS");
+		//printf("\n HAY PRCOESOS");
 	}
 	else{
-		printf("\n NO HAY PROCESOS");
+		//printf("\n NO HAY PROCESOS");
 	}
 	return hay;
 }
@@ -338,7 +338,7 @@ int ejecutar(){
 
 			pthread_attr_init(&attr);
 			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
-			loggear_debug(string_from_format("Se creo un hilo para atender la solicitud!"));
+			loggear_info(string_from_format("Se creo un hilo para atender la solicitud!"));
 
 			subir_cantidad_hilos();
 
@@ -707,7 +707,7 @@ void recibi_respuesta(instr_t* respuesta, char* remitente){
 		else loggear_warning(string_from_format("El hilo no existe"));
 		sem_post(&mutex_diccionario_enviados);
 
-		loggear_info(string_from_format("Asigno respuesta y revivo hilo"));
+		loggear_debug(string_from_format("Asigno respuesta y revivo hilo"));
 		h->respuesta=respuesta;
 
 		pthread_mutex_lock(h->mutex_t);
