@@ -599,11 +599,29 @@ int obtener_fd_memoria(instr_t *i){
 	free(nombre_memoria);
 	return fd;
 }
+void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit){
+	sem_wait(crit->mutex_criterio);
+	for(int i=0;list_size(i<crit->lista_memorias);i++){
+		char* mem =list_get(crit->lista_memorias,i);
+		if(!strcmp(mem,numero_memoria)){
+			list_remove(crit->lista_memorias,i);
+		}
+	}
+	sem_post(crit->mutex_criterio);
+}
+void memoria_desconectada(char* nombre_memoria){
+	char* numero=nombre_memoria+8;
+	loggear_info(string_from_format("Se desconecto la memoria %s, se borra de criterios",numero));
+	borrar_memoria_de_criterio(numero,criterio_strong_consistency);
+	borrar_memoria_de_criterio(numero,criterio_eventual_consistency);
+	borrar_memoria_de_criterio(numero,criterio_strong_hash_consistency);
+
+}
 char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
 	strcpy(rdo,s1);
 	strcat(rdo,s2);
-//	loggear_debug(string_from_format(rdo);
+	loggear_debug(string_from_format(rdo));
 	return rdo;
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
