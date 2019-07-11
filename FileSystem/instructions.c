@@ -36,7 +36,7 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 		break;
 
 	case CODIGO_CERRAR:
-		loggear_debug(string_from_format("Se cerrara el File System."));
+		loggear_info(string_from_format("Se cerrara el File System."));
 		finalizar_FS(instr);
 		break;
 
@@ -105,7 +105,7 @@ t_list* execute_insert(instr_t* instruccion, cod_op* codOp) {
 	sem_wait(mutex_tabla);
 	agregar_registro(tabla, registro);
 	sem_post(mutex_tabla);
-	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
+	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
 	char* cadena = string_from_format("Se inserto %s |", (char *)list_get(instruccion->parametros, 0)); //Tabla
 	string_append_with_format(&cadena, " %s |", (char *)list_get(instruccion->parametros, 1)); //Key
@@ -137,7 +137,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 	sem_wait(mutex_tabla);
 	t_list* registros_key = obtener_registros_key(tabla, key);
 	sem_post(mutex_tabla);
-	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
+	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
 
 	if(registros_key == NULL){
@@ -188,7 +188,7 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 	int resultadoDrop = eliminar_directorio(tabla);
 	sem_post(mutex_tabla);
 	eliminar_mutex_de_tabla(tabla);
-	loggear_trace(string_from_format("Semaforos funcionando correctamente"));
+	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
 	if(resultadoDrop == 0){
 		char* cadena = string_from_format("Se elimino correctamente la tabla '%s'", tabla);

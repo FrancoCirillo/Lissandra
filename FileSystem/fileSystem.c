@@ -4,7 +4,7 @@
 
 
 void pruebaString(){
-	FILE* f= fopen("58.bin", "r"); //Archivo con 2 registros escritos. 0 de MEMORY LEAKS. y 0 ERRORES!
+	FILE* f= fopen("59.bin", "r"); //Archivo con 2 registros escritos. 0 de MEMORY LEAKS. y 0 ERRORES!
 	char* res=mseg_a_string(obtener_ts());
 	int cant_letras_ts= strlen(res);
 	free(res);//IMPORTANTE
@@ -29,8 +29,8 @@ void pruebaString(){
 					registro_t* registro = obtener_registro(buffer);
 					strcpy(buffer, "");
 					puts("IMPRIMO REG EN EL SWITCH");
-					imprimirRegistro(registro);    //IMPORTANTE
-					borrar_registro(registro);	//IMPORTANTE
+					imprimirRegistro(registro);    //No genera leaks.
+					borrar_registro(registro);	//IMPORTANTE para los leaks.
 
 					printf("FIN BARRA N - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
 					break;
@@ -55,12 +55,16 @@ int main(int argc, char* argv[]) {
 	
 	inicializar_FS(argc, argv);
 
-	//compactador("T1");
-
 	//ejemplo_aplanar();
-	pruebaString();
+
+//	pruebaString();
+
 
 //	pruebaDump();
+//
+//	compactation_locker = 1;
+//
+	compactador("T1");
 
 //	inicializar_conexiones();
 
@@ -76,9 +80,6 @@ int main(int argc, char* argv[]) {
 //	pruebaGeneral();
 //	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
 //	imprimirContenidoArchivo(rutaDump1, loggear_trace);
-
-//	finalizar_FS();
-
 
 	return 0;
 }
@@ -208,12 +209,12 @@ t_list* listaRegistros2() {
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
 		loggear_trace(string_from_format("-------------------Entre a dump-------------------"));
-		int nro_dump = 2;
+		int nro_dump = 1;
 		loggear_trace(string_from_format("Numero de Dump: %d\n", nro_dump));
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
 		loggear_debug(string_from_format("Ruta Temporal: %s\n", ruta_tmp));
-		FILE* temporal = crear_tmp(tabla, nombre_tmp);
+		FILE* temporal = crear_archivo(tabla, nombre_tmp, ".tmp");
 		int nro_bloque = archivo_inicializar(temporal); //TODO
 		loggear_debug(string_from_format("Al temporal %s se le asigno el bloque %d\n", nombre_tmp, nro_bloque));
 
@@ -240,7 +241,7 @@ void pruebaDump() {
 	t_dictionary* mockMem = dictionary_create();
 
 	//--agrego una tabla con registros---
-	t_list* reg = listaRegistros2();
+	t_list* reg = listaRegistros();
 	dictionary_put(mockMem, "T1", reg);
 
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
@@ -253,11 +254,11 @@ void pruebaDump() {
 
 	//--creo registros--
 	registro_t* registro2 = crearRegistro(4324234, 10, "HolaVoyEnT2");
-	loggear_info(string_from_format("Cree un registro:"));
+//	loggear_info(string_from_format("Cree un registro:"));
 	imprimirRegistro(registro2);
 
 	registro_t* registro = crearRegistro(4324234, 32, "HolaTmbVoyEnT2");
-	loggear_info(string_from_format("Cree un registro:"));
+//	loggear_info(string_from_format("Cree un registro:"));
 	imprimirRegistro(registro);
 
 	//--agrego registros--
@@ -346,14 +347,15 @@ void inicializar_FS(int argc, char* argv[]) {
 	iniciar_rutas();
 	inicializar_memtable();
 	iniciar_dumpeo();
+	compactation_locker = 0; //Se inicializa var. global
 	inicializar_directorios();
 	crear_bloques();
 	inicializar_bitmap();
-	compactation_locker = 0;
-	bloques_disponibles = 0; //inicializamos var. global.
-	inicializar_bloques_disp();  //Actualiza el valor.
+	inicializar_bitarray();
+	inicializar_bloques_disp();
 
-	//inicializar_compactacion(); TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
+	//iniciar_compactacion();
+	//TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
 
 	loggear_info(string_from_format("-----------Fin inicialización LFS-----------"));
 
@@ -367,6 +369,8 @@ void finalizar_FS(instr_t* instruccion) {
 	finalizar_memtable();
 	compactation_locker = 1;
 	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
+	puts("Pase compactacion");
+	finalizar_bitarray();
 	config_destroy(g_config);
 	log_destroy(g_logger);
 
@@ -385,6 +389,7 @@ void iniciar_semaforos() {
 	sem_init(&mutex_tiempo_retardo_config, 0, 1);
 	sem_init(&mutex_memtable, 0, 1);
 	sem_init(&mutex_log, 0, 1);
+	sem_init(&mutex_bitarray, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
 	sem_init(&mutex_tablas_nro_dump, 0, 1);
 	sem_init(&mutex_diccionario_conexiones, 0, 1);

@@ -169,6 +169,7 @@ void* consola(void* c);
 void agregar_a_metricas(instr_t* i);
 void actualizar_config();
 void actualizar_log_level();
+void liberar_instruccion(instr_t* instruccion);
 
 //Gossiping
 int fd_out_inicial;
