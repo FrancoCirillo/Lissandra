@@ -357,9 +357,6 @@ void inicializar_FS(int argc, char* argv[]) {
 	inicializar_bitarray();
 	inicializar_bloques_disp();
 
-	//iniciar_compactacion();
-	//TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
-
 	loggear_info(string_from_format("-----------Fin inicialización LFS-----------"));
 
 }
@@ -370,7 +367,6 @@ void finalizar_FS(instr_t* instruccion) {
 
 	dumpear_memtable();  //Esto limpia lo ultimo de la mem antes de cerrar el FS.
 	finalizar_memtable();
-	compactation_locker = 1;
 	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
 	puts("Pase compactacion");
 	finalizar_bitarray();
@@ -451,7 +447,7 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		loggear_debug(string_from_format("Directorio leido: %s\n", directorio_leido->d_name));
 		char* nombre_archivo = directorio_leido->d_name;
-		if(string_ends_with(nombre_archivo, "tmp")) {
+		if(string_ends_with(nombre_archivo, "tmp") || string_ends_with(nombre_archivo, "tmpc")) {
 			char* ruta_tmp = string_from_format("%s%s", ruta_tabla, nombre_archivo);
 			loggear_info(string_from_format("RUTA:%s\n", ruta_tmp));
 //			imprimirContenidoArchivo(ruta_tmp, loggear_trace);

@@ -26,12 +26,13 @@ void levantar_tablas_directorio(DIR* directorio) {
 			dictionary_put(memtable, tabla, registros);
 			inicializar_semaforo_tabla(tabla);
 			agregar_a_contador_dumpeo(tabla);
+			//todo: crear_hilo_compactador(tabla);
 		}
 	}
 	closedir(directorio);
 }
 
-int existe_tabla_en_mem(char* tabla) {
+_Bool existe_tabla_en_mem(char* tabla) {
 	return dictionary_has_key(memtable, tabla);
 }
 
@@ -157,6 +158,7 @@ void* dumpeo() {
 		tiempo_dump = obtener_tiempo_dump_config();
 		sem_post(&mutex_tiempo_dump_config);
 	}
+
 }
 
 void dumpear_memtable() {
