@@ -2,14 +2,14 @@
 
 #include "compactador.h"
 
-//void crear_hilo_compactador(char* tabla){
-//	pthread_t hilo_compactador_tabla;
-//	pthread_attr_t attr_tabla;
-//	pthread_attr_init(&attr_tabla);
-//	pthread_create(&hilo_compactador_tabla, &attr_tabla, &compactador, NULL);
-//	pthread_detach(hilo_compactador_tabla);
-//	loggear_trace(string_from_format("Se creo el hilo de compactacion de la tabla '%s'", tabla));
-//}
+void crear_hilo_compactador(char* tabla){
+	pthread_t hilo_compactador_tabla;
+	pthread_attr_t attr_tabla;
+	pthread_attr_init(&attr_tabla);
+	pthread_create(&hilo_compactador_tabla, &attr_tabla, &compactador, NULL);
+	pthread_detach(hilo_compactador_tabla);
+	loggear_trace(string_from_format("Se creo el hilo de compactacion de la tabla '%s'", tabla));
+}
 
 void compactar_todas_las_tablas() {
 	DIR* directorio = opendir(g_ruta.tablas);
@@ -351,5 +351,5 @@ void eliminar_archivo(char* ruta_archivo){
 }   //FUNCA
 
 void vaciar_diccionario(void* dic){
-	dictionary_clean_and_destroy_elements((t_dictionary*)dic, free);
+	dictionary_clean((t_dictionary*)dic);
 }

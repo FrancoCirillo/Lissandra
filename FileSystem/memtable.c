@@ -26,7 +26,7 @@ void levantar_tablas_directorio(DIR* directorio) {
 			dictionary_put(memtable, tabla, registros);
 			inicializar_semaforo_tabla(tabla);
 			agregar_a_contador_dumpeo(tabla);
-			//todo: crear_hilo_compactador(tabla);
+			//crear_hilo_compactador(tabla);
 		}
 	}
 	closedir(directorio);
@@ -57,7 +57,7 @@ void borrar_registros(void* registros) {
 }
 
 void borrar_registro(void* registro){
-	free(((registro_t*)registro)->value);
+	//free(((registro_t*)registro)->value);
 	free((registro_t*)registro);
 }
 

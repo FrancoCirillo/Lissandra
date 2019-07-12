@@ -67,7 +67,7 @@ void execute_create(instr_t* instruccion, char* remitente) {
 		crear_directorio(g_ruta.tablas, tabla);
 		crear_particiones(instruccion);
 		crear_metadata(instruccion);
-		//todo: crear_hilo_compactador(tabla);
+		//crear_hilo_compactador(tabla);
 
 		char* cadena = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 		list_add(listaParam, cadena);
@@ -128,16 +128,8 @@ void execute_select(instr_t* instruccion, char* remitente) {
 	}
 
 	int key = (uint16_t)atoi(obtener_parametro(instruccion, 1));
-
-	sem_wait(&mutex_dic_semaforos);
-	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
-	sem_post(&mutex_dic_semaforos);
-
-	sem_wait(mutex_tabla);
 	t_list* registros_key = obtener_registros_key(tabla, key);
-	sem_post(mutex_tabla);
-	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
-
+	//Semaforos dentro de obtener_registros_key
 
 	if(registros_key == NULL){
 		loggear_trace(string_from_format("No se pudo abrir el .bin"));

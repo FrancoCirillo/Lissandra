@@ -367,7 +367,7 @@ void finalizar_FS(instr_t* instruccion) {
 
 	dumpear_memtable();  //Esto limpia lo ultimo de la mem antes de cerrar el FS.
 	finalizar_memtable();
-//	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS. //ESTO NO FUNCIONA
+	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS. //ESTO NO FUNCIONA
 	puts("Pase compactacion");
 	finalizar_bitarray();
 	config_destroy(g_config);
@@ -468,9 +468,15 @@ char* obtener_registro_mas_reciente(t_list* registros_de_key) {
 }
 
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
+	sem_wait(&mutex_dic_semaforos);
+	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
+	sem_post(&mutex_dic_semaforos);
+
+	sem_wait(mutex_tabla);
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
 	t_list* registro_bin = leer_binario(tabla, key);
+	sem_post(mutex_tabla);
 
 	t_list* registros_totales = crear_lista_registros(); //free
 	list_add_all(registros_totales, registros_mem);
