@@ -26,9 +26,9 @@ int main(int argc, char* argv[]) {
 	inicializar_kernel();
 	//iniciar_consola();
 
-	loggear_debug(string_from_format("### FINALIZANDO KERNEL ###"));
-	sleep(2);
-	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
+//	loggear_debug(string_from_format("### FINALIZANDO KERNEL ###"));
+//	sleep(2);
+//	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
 	return 0;
 }
 void inicializar_kernel(){
@@ -130,8 +130,8 @@ void metrics(){//TODO Porcentaje de uso por memoria
 	double promedio_selects=0;
 
 	sem_wait(&mutex_lista_instrucciones_ejecutadas);
-	for(int index=0;index<list_size(lista_instrucciones_ejecutadas);index++){
-		instr_t* i=(instr_t*)list_get(lista_instrucciones_ejecutadas,index);
+	for(int index=0;list_size(lista_instrucciones_ejecutadas)>0;index++){
+		instr_t* i=(instr_t*)list_remove(lista_instrucciones_ejecutadas,0);
 		if(i->codigo_operacion==CODIGO_INSERT){
 			cantidad_inserts++;
 			tiempo_inserts+=(double)i->timestamp/(double)1000;
@@ -141,6 +141,7 @@ void metrics(){//TODO Porcentaje de uso por memoria
 			tiempo_selects+=(double)i->timestamp/(double)1000;
 			loggear_debug(string_from_format("El promedio del select fue de %lf\n",tiempo_selects));
 		}
+		liberar_instruccion(i);
 	}
 	list_destroy(lista_instrucciones_ejecutadas);
 	lista_instrucciones_ejecutadas=list_create();
@@ -308,10 +309,10 @@ int hay_procesos(){
 	int hay=cola_ready!=NULL;
 	sem_post(&semaforo_procesos_ready);
 	if(hay){
-		printf("\n HAY PRCOESOS\n\n");
+		//printf("\n HAY PRCOESOS\n\n");
 	}
 	else{
-		printf("\n NO HAY PROCESOS\n\n");
+		//printf("\n NO HAY PROCESOS\n\n");
 	}
 	return hay;
 }
@@ -378,7 +379,7 @@ void* ejecutar_proceso(void* un_proceso){
 					loggear_trace(string_from_format("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec));
 					a_metricar->timestamp=respuesta->timestamp;
 					a_metricar->codigo_operacion=instruccion_obtenida->codigo_operacion;
-					agregar_a_metricas(instruccion_obtenida);
+					agregar_a_metricas(a_metricar);
 				}else{
 					//NO es insert ni select
 				}
@@ -810,10 +811,10 @@ int hilos_disponibles(){
 	int hay=configuracion.gradoMultiprocesamiento>total_hilos;
 	sem_post(&mutex_cantidad_hilos);
 	if(hay){
-		printf("\n HAY PRCOESOS\n\n");
+		//printf("\n HAY PRCOESOS\n\n");
 	}
 	else{
-		printf("\n NO HAY PROCESOS\n\n");
+		//printf("\n NO HAY PROCESOS\n\n");
 	}
 	return hay;
 }
