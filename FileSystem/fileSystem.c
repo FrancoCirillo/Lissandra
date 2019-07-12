@@ -3,51 +3,6 @@
 #include "fileSystem.h"
 
 
-void pruebaString(){
-	FILE* f= fopen("59.bin", "r"); //Archivo con 2 registros escritos. 0 de MEMORY LEAKS. y 0 ERRORES!
-	char* res=mseg_a_string(obtener_ts());
-	int cant_letras_ts= strlen(res);
-	free(res);//IMPORTANTE
-	char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 +config_FS.tamanio_value + 10)); //   +4 por: \n ; ; \0 //Le mando 10 de cabeza. es para que sobre.
-		strcpy(buffer,"");
-		char caracter_leido;
-		int status = 1;
-		char* s_caracter;
-
-		while(status) {
-			caracter_leido = fgetc(f);
-			switch(caracter_leido){
-
-				case EOF: //se me acabo el archivo
-					status = 0; //corta el while
-					printf("EOF - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
-					break;
-
-				case '\n': //registro completo.
-					printf("BARRA N - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
-					strcat(buffer, "\n");
-					registro_t* registro = obtener_registro(buffer);
-					strcpy(buffer, "");
-					puts("IMPRIMO REG EN EL SWITCH");
-					imprimirRegistro(registro);    //No genera leaks.
-					borrar_registro(registro);	//IMPORTANTE para los leaks.
-
-					printf("FIN BARRA N - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
-					break;
-
-				default:
-					printf("DEFAULT - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
-
-					s_caracter = string_from_format("%c", caracter_leido);
-					strcat(buffer, s_caracter);
-					free(s_caracter);		//IMPORTANTE
-					printf("FIN DEFAULT - El buffer tiene: %s y el caracter leido: %c\n", buffer, caracter_leido);
-					break;
-				}
-		}
-		puts("Fin lectura.");
-		free(buffer);		//IMPORTANTE
-}
 
 int main(int argc, char* argv[]) {
 
@@ -56,9 +11,6 @@ int main(int argc, char* argv[]) {
 	inicializar_FS(argc, argv);
 
 	//ejemplo_aplanar();
-
-//	pruebaString();
-
 
 //	pruebaDump();
 //
