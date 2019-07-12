@@ -524,7 +524,7 @@ void inicializar_conexiones() {
 	fd_out_inicial = 0;
 	iniciar_servidor(miIP, config_FS.puerto_escucha);
 	// . es el directorio Actual - Tener en cuenta que lo corremos desde la carpeta padre a la que tiene el binario
-	vigilar_conexiones_entrantes(callback, actualizar_config, ".", CONSOLA_FS);
+	vigilar_conexiones_entrantes(callback, actualizar_config, proceso_desconectado, ".", CONSOLA_FS);
 }
 
 void enviar_tamanio_value(instr_t* instruccion, char* remitente) {
@@ -652,3 +652,5 @@ void actualizar_log_level(){
 	log_destroy(g_logger);
 	g_logger = log_create("Lissandra.log", "FileSystem", 1, config_FS.LOG_LEVEL);
 }
+
+void proceso_desconectado(char* nombreProceso){}

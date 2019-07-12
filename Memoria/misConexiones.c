@@ -149,8 +149,9 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
 	loggear_trace(string_from_format("Datos enviados"));
+	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
-
+	sem_post(&mutex_diccionario_conexiones);
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
 
@@ -269,10 +270,7 @@ t_list *conexiones_para_gossiping(){
 
 		}
 	}
-
-	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)juntar_ip_y_puerto);
-	sem_post(&mutex_diccionario_conexiones);
 	return tablaGossiping;
 
 }
@@ -311,6 +309,7 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 	char* nombreEncontrado = NULL;
 
 	void su_nombre(char* nombre, identificador* ids){
+
 		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
