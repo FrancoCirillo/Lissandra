@@ -997,8 +997,9 @@ void *ejecutar_gossiping()
 		ejecutar_instruccion_gossip();
 		loggear_debug(string_from_format("Fin gossiping programado"));
 		sem_wait(&mutex_configuracion);
-		usleep(configuracion.RETARDO_GOSSIPING * 1000);
+		int retardoGossiping = configuracion.RETARDO_GOSSIPING;
 		sem_post(&mutex_configuracion);
+		usleep(retardoGossiping * 1000);
 	}
 }
 

@@ -5,8 +5,7 @@
 void ejecutar_instruccion_select(instr_t *instruccion)
 {
 	loggear_info(string_from_format("Ejecutando instruccion Select"));
-	usleep(configuracion.RETARDO_MEMORIA * 1000);
-
+	sleep_acceso_memoria();
 	char* tabla = (char *)list_get(instruccion->parametros, 0);
 	t_list *suTablaDePaginas = segmento_de_esa_tabla(tabla);
 	if (suTablaDePaginas != NULL) //El segmento ya existia, se encontro su tabla de paginas
@@ -38,7 +37,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 		{
 			loggear_info(string_from_format("La key no se encontro en Memoria. Consultando al FS"));
 			int conexionFS = obtener_fd_out("FileSystem");
-			usleep(configuracion.RETARDO_FS * 1000);
+			sleep_acceso_fs();
 			if(enviar_liberando_request(instruccion, conexionFS)==-1)
 				loggear_error(string_from_format("No se logro enviar el Select al FS"));
 		}
@@ -47,7 +46,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 	{
 		loggear_info(string_from_format("La tabla no se encontro en Memoria. Consultando al FS"));
 		int conexionFS = obtener_fd_out("FileSystem");
-		usleep(configuracion.RETARDO_FS * 1000);
+		sleep_acceso_fs();
 		if(enviar_liberando_request(instruccion, conexionFS)==-1){
 			loggear_error(string_from_format("No se logro enviar el Select al FS"));
 		}
@@ -93,7 +92,7 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
 {
 	if(flagMod) loggear_info(string_from_format("Ejecutando instruccion Insert")); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
-	usleep(configuracion.RETARDO_MEMORIA * 1000);
+	sleep_acceso_memoria();
 	int numeroDePaginaInsertada;
 	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
 	{
@@ -196,7 +195,7 @@ void ejecutar_instruccion_create(instr_t *instruccion)
 {
 	loggear_info(string_from_format("Ejecutando instruccion Create"));
 	int conexionFS = obtener_fd_out("FileSystem");
-	usleep(configuracion.RETARDO_FS * 1000);
+	sleep_acceso_fs();
 	if(enviar_liberando_request(instruccion, conexionFS)==-1)
 		loggear_error(string_from_format("No se envio el Create al FS"));
 	loggear_trace(string_from_format("Se borraron los parametros del create"));
@@ -206,7 +205,7 @@ void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente)
 {
 	loggear_info(string_from_format("Ejecutando instruccion Describe"));
 	int conexionFS = obtener_fd_out("FileSystem");
-	usleep(configuracion.RETARDO_FS * 1000);
+	sleep_acceso_fs();
 	if(enviar_liberando_request(instruccion, conexionFS)==-1)
 		loggear_error(string_from_format("No se envio el Describe al FS"));
 	loggear_trace(string_from_format("Se borraron los parametros del Describe"));
@@ -214,12 +213,12 @@ void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente)
 
 void ejecutar_instruccion_drop(instr_t *instruccion)
 {
-	usleep(configuracion.RETARDO_MEMORIA * 1000);
+	sleep_acceso_memoria();
 	loggear_info(string_from_format("Ejecutando instruccion Drop"));
 
 	eliminar_tabla(instruccion);
 	int conexionFS = obtener_fd_out("FileSystem");
-	usleep(configuracion.RETARDO_FS * 1000);
+	sleep_acceso_fs();
 	if(enviar_liberando_request(instruccion, conexionFS)==-1)
 		loggear_error(string_from_format("No se envio el Drop al FS"));
 	loggear_trace(string_from_format("Se borraron los parametros del Drop"));
