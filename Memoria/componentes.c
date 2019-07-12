@@ -27,7 +27,7 @@ void inicializar_sectores_memoria()
 	if((cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro) == 0){	//Se trunca automaticamente al entero (por ser todos int)
 		loggear_error(string_from_format("La Memoria es muy pequenia. No puede almacenar un value tan grande."));
 	}
-	loggear_trace(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
+//	loggear_trace(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
 	sem_post(&mutex_config);
 	loggear_info(string_from_format("La Memoria Principal quedo dividida en %d paginas", cantidadDeSectores));
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
@@ -197,7 +197,6 @@ registro *obtener_registro_de_pagina(void *pagina)
 	miRegistro->key = key;
 	miRegistro->value = calloc(1, tamanioValue + 1);
 	memcpy(miRegistro->value, pagina + sizeof(mseg_t) + sizeof(uint16_t), tamanioValue + 1);
-	loggear_trace(string_from_format(registro_a_str(miRegistro)));
 	return miRegistro;
 }
 
@@ -474,13 +473,13 @@ void liberar_value(t_list* listaParam){
 instr_t *fila_a_instr(char *tablaAInsertar, filaTabPags *fila, cod_op codOp)
 {
 	registro *suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
-	loggear_trace(string_from_format("Se tienen los datos de la pagina"));
+//	loggear_trace(string_from_format("Se tienen los datos de la pagina"));
 	return registro_a_instr(tablaAInsertar, suRegistro, codOp);
 }
 
 instr_t *registro_a_instr(char *tablaAInsertar, registro *unRegistro, cod_op codOp)
 {
-	loggear_trace(string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
+//	loggear_trace(string_from_format("Registro: %s\n", registro_a_str(unRegistro)));
 	t_list *listaParam = list_create();
 
 	loggear_trace(string_from_format("Lista param creada\n"));
@@ -488,7 +487,6 @@ instr_t *registro_a_instr(char *tablaAInsertar, registro *unRegistro, cod_op cod
 
 	loggear_trace(string_from_format("Nombre de la tabla a insertar agregado\n"));
 	char* keyChar = string_from_format("%d", unRegistro->key);
-//	uint16_to_str()
 	loggear_trace(string_from_format("Se agrego la key %s", keyChar));
 	list_add(listaParam, keyChar);
 
@@ -498,7 +496,6 @@ instr_t *registro_a_instr(char *tablaAInsertar, registro *unRegistro, cod_op cod
 	instr_t *instruccionCreada = crear_instruccion(unRegistro->timestamp, codOp, listaParam);
 	free(unRegistro->value);
 	free(unRegistro);
-	imprimir_instruccion(instruccionCreada, loggear_trace);
 	return instruccionCreada;
 }
 

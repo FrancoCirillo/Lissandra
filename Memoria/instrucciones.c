@@ -63,6 +63,15 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	char* keyEncontrada = string_from_format((char *)list_get(instruccion->parametros, 1));
 	char* valueEncontrado = string_from_format((char *)list_get(instruccion->parametros, 2));
 	mseg_t timestamp = (mseg_t)instruccion->timestamp;
+	cod_op codOp = instruccion->codigo_operacion;
+	t_list* listaDuplicada = list_create();
+	list_add(listaDuplicada, tablaEncontrada);
+	list_add(listaDuplicada, keyEncontrada);
+	list_add(listaDuplicada, valueEncontrado);
+	if(quien_pidio(instruccion)==CONSOLA_KERNEL){
+		list_add(listaDuplicada, obtener_ultimo_parametro(instruccion));
+	}
+	instr_t* miInstruccion = crear_instruccion(timestamp, codOp, listaDuplicada);
 
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
 	se_uso(paginaInsertada);
@@ -75,7 +84,10 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 			valueEncontrado, //Value
 			(mseg_t)timestamp); //Timestamp
 	list_add(listaParam, cadena);
-	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
+	imprimir_donde_corresponda(CODIGO_EXITO, miInstruccion, listaParam);
+
+	list_destroy_and_destroy_elements(miInstruccion->parametros, free);
+	free(miInstruccion);
 }
 
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
