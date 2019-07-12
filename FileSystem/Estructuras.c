@@ -138,16 +138,9 @@ int obtener_tiempo_compactacion_metadata(char* tabla) {
 }
 
 //---------------------------BLOQUES---------------------------
-char* formatear_registro(registro_t* registro) {
-	uint16_t key = registro->key;
-	char* value = registro->value;
-	char* ts = mseg_a_string(registro->timestamp);
-	return string_from_format("%s;%d;%s\n", ts, key, value);
-}
-
 int tam_registro(registro_t* registro) {
 //	loggear_trace(string_from_format("----------------------Entre a tam_registro---------------------"));
-	char* registro_formateado = formatear_registro(registro);
+	char* registro_formateado = registro_a_string(registro);
 	int tam_registro = strlen(registro_formateado);
 	free(registro_formateado);
 	return tam_registro;
@@ -160,7 +153,7 @@ char* obtener_ruta_bloque(int nro_bloque) {
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
 //	loggear_trace(string_from_format("-----------Entre a escribir_registro_bloque-------------------"));
 	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
-	char* string_registro = formatear_registro(registro);
+	char* string_registro = registro_a_string(registro);
 //	loggear_trace(string_from_format("Ruta bloque: %s\n", ruta_bloque));
 //	printf("Formateo registro: %s\n", string_registro);
 //	int tam = strlen(string_registro);

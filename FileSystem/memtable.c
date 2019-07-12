@@ -11,9 +11,16 @@ void inicializar_memtable() {
 	}
 }
 
-void finalizar_memtable() { //Borra y libera todos los registros y tablas.
-	//IMPORTANTE: la variable global no se puede usar a menos que hagan otro diccionary_create
-	dictionary_destroy_and_destroy_elements(memtable, &borrar_registros);
+void finalizar_memtable() {
+	dumpear_memtable(); //Esto limpia lo ultimo de la mem antes de cerrar el FS.
+
+	dictionary_clean_and_destroy_elements(memtable, &borrar_registros); //Borra y libera todos los registros y tablas.
+	//No se destruye el diccionario por la comprobacion de la compactacion.
+
+	compactar_todas_las_tablas(); //NO FUNCIONA?
+	//Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
+
+	dictionary_destroy(memtable); //Se libera el diccionario
 }
 
 void levantar_tablas_directorio(DIR* directorio) {
@@ -33,7 +40,7 @@ void levantar_tablas_directorio(DIR* directorio) {
 }
 
 _Bool existe_tabla_en_mem(char* tabla) {
-	return dictionary_has_key(memtable, tabla);
+		return dictionary_has_key(memtable, tabla);
 }
 
 char* obtener_ruta_tabla(char* tabla) {
@@ -127,6 +134,13 @@ registro_t* pasar_a_registro(instr_t* instr) {
 	registro->value = obtener_parametro(instr, 2); //tengo que hacer algun malloc?
 	registro->timestamp = instr->timestamp;
 	return registro;
+}
+
+char* registro_a_string(registro_t* registro) {
+	char* ts = mseg_a_string(registro->timestamp);
+	char* key = string_itoa(registro->key);
+	char* value = registro->value;
+	return string_from_format("%s;%s;%s\n", ts, key, value);
 }
 
 //DUMPEO

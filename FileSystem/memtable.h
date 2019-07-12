@@ -26,6 +26,7 @@ void 		borrar_registros(void*);
 void 		limpiar_registros(char*, void*);
 registro_t* obtener_registro(char*);
 registro_t* pasar_a_registro(instr_t*);
+char* 		registro_a_string(registro_t*);
 t_list* 	obtener_registros_mem(char*, uint16_t);
 
 // --------FUNCIONES DE TABLAS--------

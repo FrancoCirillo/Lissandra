@@ -72,7 +72,6 @@ FILE* crear_archivo(char*, char*, char*);
 //BLOQUES
 void  crear_bloque(char*);
 void  crear_bloques();
-char* formatear_registro(registro_t*);
 char* obtener_ruta_bloque(int);
 
 void inicializar_bloques_disp();

@@ -365,10 +365,7 @@ void finalizar_FS(instr_t* instruccion) {
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 
-	dumpear_memtable();  //Esto limpia lo ultimo de la mem antes de cerrar el FS.
 	finalizar_memtable();
-	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS. //ESTO NO FUNCIONA
-	puts("Pase compactacion");
 	finalizar_bitarray();
 	config_destroy(g_config);
 	log_destroy(g_logger);

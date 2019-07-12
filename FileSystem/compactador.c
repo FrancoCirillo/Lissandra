@@ -67,7 +67,6 @@ void compactador(char* tabla) {
 		cant_tmpc = pasar_a_tmpc(tabla);
 		sem_post(mutex_tabla);
 
-
 		if(!cant_tmpc) {
 			if(compactation_locker) break;
 			else continue;
@@ -89,7 +88,7 @@ void compactador(char* tabla) {
 			sem_wait(mutex_tabla);
 
 			list_iterate((t_list*)lista_archivos, &liberar_bloques);
-			puts("Ya libere los bloques\n\n ENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+			puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
 
 			sleep(2);
 
@@ -99,14 +98,12 @@ void compactador(char* tabla) {
 			}
 
 			borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
-			puts("Borre los tmpcs");
 
 			sem_post(mutex_tabla);
 
-			loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n  "));
+			loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n"));
 
 			list_iterate(particiones, &vaciar_diccionario);
-
 		}
 
 		if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
@@ -143,7 +140,7 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 
 
 	void bajar_registro(char* key, void* reg){
-		printf("Estoy bajando_registro de key %s\n",key );
+		printf("Estoy bajando_registro de key %s\n", key);
 		sleep(3);
 		registro_t* registro = reg;
 		nro_bloque = obtener_ultimo_bloque(ruta_archivo);
@@ -151,7 +148,7 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 		loggear_trace(string_from_format("Num bloque del archivo escrito es: %d\n\n", nro_bloque));
 		sleep(2);
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
-		printf("ya termine de bajar el reg de key %s\n",key );
+		printf("Ya termine de bajar el reg de key %s\n",key );
 		sleep(2);
 		free(ruta_bloque);
 	}
@@ -223,7 +220,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 				loggear_trace(string_from_format("Pertenece al Diccionario-Particion nro: %d\n", index));
 				t_dictionary* dic = list_get(particiones, index);
 				agregar_por_ts(dic, registro);
-				borrar_registro(registro);
+				//borrar_registro(registro); //NO, genera invalid read
 				break;
 
 			default:
@@ -235,13 +232,13 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 }
 
 void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
-	loggear_trace("Estoy en agregar_por_ts");
+	loggear_trace(string_from_format("Estoy en agregar_por_ts"));
 
 	char* key_nueva = string_itoa(reg_nuevo->key);
 
-	loggear_trace(string_from_format("\nla key leida a agregar en el diccionario que corresponda es %s\n", key_nueva));
+	loggear_trace(string_from_format("\nLa key leida a agregar en el diccionario que corresponda es %s\n", key_nueva));
 
-	registro_t* reg_viejo = (registro_t*)dictionary_get( (t_dictionary*)dic,key_nueva);
+	registro_t* reg_viejo = (registro_t*)dictionary_get( (t_dictionary*)dic, key_nueva);
 
 	if( (!reg_viejo) || ((reg_viejo != NULL) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
