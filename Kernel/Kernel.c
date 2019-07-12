@@ -308,10 +308,10 @@ int hay_procesos(){
 	int hay=cola_ready!=NULL;
 	sem_post(&semaforo_procesos_ready);
 	if(hay){
-		//printf("\n HAY PRCOESOS");
+		printf("\n HAY PRCOESOS\n\n");
 	}
 	else{
-		//printf("\n NO HAY PROCESOS");
+		printf("\n NO HAY PROCESOS\n\n");
 	}
 	return hay;
 }
@@ -783,7 +783,7 @@ void encolar_proceso(proceso *p){
 	loggear_trace(string_from_format("Proceso encolado!"));
 	//Se ejecuta siempre que haya un hilo disponible y proceso para procesar.
 	// Siempre implica un encolar, ya sea por agregar un hilo a la cola o porque un hilo se libero y disminuyo la cantidad corriendo.
-	//ejecutar();
+	bajar_cantidad_hilos();
 	continuar_ejecucion();
 }
 proceso* obtener_sig_proceso(){
@@ -809,6 +809,12 @@ int hilos_disponibles(){
 	//Compara el total de config con la cantidad creada;
 	int hay=configuracion.gradoMultiprocesamiento>total_hilos;
 	sem_post(&mutex_cantidad_hilos);
+	if(hay){
+		printf("\n HAY PRCOESOS\n\n");
+	}
+	else{
+		printf("\n NO HAY PROCESOS\n\n");
+	}
 	return hay;
 }
 
@@ -1006,7 +1012,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 	void acutalizar_tabla(char* parametro){
 		saltearProximos--;
-		loggear_trace(string_from_format("Saltear Proximos = %d\n", saltearProximos));
+		//loggear_trace(string_from_format("Saltear Proximos = %d\n", saltearProximos));
 		if(saltearProximos <= 0){
 			if(i % 3 == 0){
 				sem_wait(&mutex_diccionario_conexiones);
@@ -1072,11 +1078,11 @@ t_list *conexiones_para_gossiping(){
 
 	void juntar_ip_y_puerto(char* nombre, identificador* ids){
 		if(strcmp(nombre, "Kernel")!=0){
-			loggear_trace(string_from_format("Agregando nombre %s", nombre));
+			//loggear_trace(string_from_format("Agregando nombre %s", nombre));
 			list_add(tablaGossiping, nombre);
-			loggear_trace(string_from_format("Agregando IP %s", ids->ip_proceso));
+			//loggear_trace(string_from_format("Agregando IP %s", ids->ip_proceso));
 			list_add(tablaGossiping, ids->ip_proceso);
-			loggear_trace(string_from_format("Agregando puerto %s", ids->puerto));
+			//loggear_trace(string_from_format("Agregando puerto %s", ids->puerto));
 			list_add(tablaGossiping, ids->puerto);
 		}
 	}
