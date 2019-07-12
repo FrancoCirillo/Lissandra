@@ -59,20 +59,23 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 {
 	loggear_debug(string_from_format("FS devolvio la tabla solicitada."));
-	t_list* listaABorrar = list_duplicate(instruccion->parametros);
+	char* tablaEncontrada = string_from_format((char *)list_get(instruccion->parametros, 0));
+	char* keyEncontrada = string_from_format((char *)list_get(instruccion->parametros, 1));
+	char* valueEncontrado = string_from_format((char *)list_get(instruccion->parametros, 2));
+	mseg_t timestamp = (mseg_t)instruccion->timestamp;
+
 	int paginaInsertada = ejecutar_instruccion_insert(instruccion, false);
 	se_uso(paginaInsertada);
+
 	t_list *listaParam = list_create();
 	char* cadena = string_from_format(
 			"Se encontro %s%s | %s | %s | %"PRIu64" en FS",
-			puntoMontaje, (char *)list_get(instruccion->parametros, 0), //Tabla
-			(char *)list_get(instruccion->parametros, 1),//Key
-			(char *)list_get(instruccion->parametros, 2), //Value
-			(mseg_t)instruccion->timestamp); //Timestamp
-
+			puntoMontaje, tablaEncontrada, //Tabla
+			keyEncontrada,//Key
+			valueEncontrado, //Value
+			(mseg_t)timestamp); //Timestamp
 	list_add(listaParam, cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
-	list_destroy_and_destroy_elements(listaABorrar, free);
 }
 
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
