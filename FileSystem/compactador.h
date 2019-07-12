@@ -32,6 +32,7 @@ int  	ultimo_bloque(t_config* archivo);
 void    eliminar_archivo(char* ruta_archivo);
 int 	pasar_a_tmpc(char* tabla);
 void    borrar_tmpcs(char* tabla);
+void 	vaciar_diccionario(void* dic);
 
 
 #endif /* COMPACTADOR_H_ */

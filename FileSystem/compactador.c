@@ -93,7 +93,7 @@ void compactador(char* tabla) {
 
 			sleep(2);
 
-			for(int j = 0; j< cantidad_particiones;j++){
+			for(int j = 0; j< cantidad_particiones; j++){
 				loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
 				finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
 			}
@@ -103,10 +103,9 @@ void compactador(char* tabla) {
 
 			sem_post(mutex_tabla);
 
-
 			loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n  "));
 
-			//vaciar_listas_registros(particiones);//TODO: deja los diccionarios como nuevos.
+			list_iterate(particiones, &vaciar_diccionario);
 
 		}
 
@@ -173,39 +172,11 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 //	return ult_bloque;
 //}
 
-void borrar_tmpcs(char* tabla){
-	char* ruta_tabla = obtener_ruta_tabla(tabla);
-	DIR* directorio = opendir(ruta_tabla);
-	struct dirent* directorio_leido;
-
-	char* archivo;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-		archivo = directorio_leido->d_name;
-		if(string_contains(archivo, ".tmpc")) {
-			char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
-			eliminar_archivo(ruta_archivo);
-			//loggear_trace(string_from_format("El archivo leido es: %s \n Y fue ELIMINADO :(\n\n", archivo));
-		}
-	}
-
-//	loggear_trace(string_from_format("\n\n **** Ya lei los archivos de la tabla %s ****\n\n", tabla));
-	closedir(directorio);
-	free(ruta_tabla);
-
-	//FUNCA
-}
-
-void eliminar_archivo(char* ruta_archivo){
-	remove(ruta_archivo);
-}   //FUNCA
-
-
 void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	puts("\n\n--------------estoy en agregar_registros_en_particion------------");
 	printf("Agregando registros al diccionario de particiones de la ruta:\n %s \n", ruta_archivo);
 
-	if(!obtener_tam_archivo(ruta_archivo))
-	{
+	if(!obtener_tam_archivo(ruta_archivo)) {
 		loggear_trace(string_from_format("No hay registros\n"));
 		return;
 	}
@@ -353,3 +324,32 @@ int pasar_a_tmpc(char* tabla) {
 
 }
 
+void borrar_tmpcs(char* tabla){
+	char* ruta_tabla = obtener_ruta_tabla(tabla);
+	DIR* directorio = opendir(ruta_tabla);
+	struct dirent* directorio_leido;
+
+	char* archivo;
+	while((directorio_leido = readdir(directorio)) != NULL) {
+		archivo = directorio_leido->d_name;
+		if(string_contains(archivo, ".tmpc")) {
+			char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
+			eliminar_archivo(ruta_archivo);
+			//loggear_trace(string_from_format("El archivo leido es: %s \n Y fue ELIMINADO :(\n\n", archivo));
+		}
+	}
+
+//	loggear_trace(string_from_format("\n\n **** Ya lei los archivos de la tabla %s ****\n\n", tabla));
+	closedir(directorio);
+	free(ruta_tabla);
+
+	//FUNCA
+}
+
+void eliminar_archivo(char* ruta_archivo){
+	remove(ruta_archivo);
+}   //FUNCA
+
+void vaciar_diccionario(void* dic){
+	dictionary_clean_and_destroy_elements((t_dictionary*)dic, free);
+}
