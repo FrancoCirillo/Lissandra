@@ -424,6 +424,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion, int liberar)
 				imprimir_instruccion(instruccionAEnviar, loggear_trace);
 				t_list* listaABorrar = list_duplicate(instruccionAEnviar->parametros);
 				enviar_request(instruccionAEnviar, conexionConFS);
+				liberar_key(listaABorrar);
 				liberar_value(listaABorrar);
 			}
 		}
@@ -437,11 +438,11 @@ void ejecutar_instruccion_journal(instr_t *instruccion, int liberar)
 	limpiar_memoria();
 
 	loggear_trace(string_from_format("Se recorrieron todas las paginas"));
-	t_list *listaParam = list_create();
-	char *cadena = string_from_format("Journal realizado.");
-	list_add(listaParam, cadena);
-	cod_op codOp = CODIGO_EXITO;
 	if(quien_pidio(instruccion)!=CONSOLA_KERNEL){
+		t_list *listaParam = list_create();
+		char *cadena = string_from_format("Journal realizado.");
+		list_add(listaParam, cadena);
+		cod_op codOp = CODIGO_EXITO;
 		imprimir_donde_corresponda(codOp, instruccion, listaParam);
 	}
 	if(liberar){
@@ -453,7 +454,21 @@ void ejecutar_instruccion_journal(instr_t *instruccion, int liberar)
 	loggear_trace(string_from_format("Journal finalizado por completo"));
 }
 
+void liberar_key(t_list* listaParam){
+	int i = 0;
 
+	void borrar_value(char* parametro){
+
+		if(i==1){
+			loggear_trace(string_from_format("Se va a borrar el parametro (Value): %s", parametro));
+			free(parametro);
+			i = -1;
+		}
+		i++;
+	}
+	list_iterate(listaParam, (void*)borrar_value);
+
+}
 void liberar_value(t_list* listaParam){
 
 	int i = 0;
