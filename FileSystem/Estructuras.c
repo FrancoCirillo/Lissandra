@@ -120,7 +120,7 @@ t_config* obtener_metadata(char* tabla) {
 char* obtener_dato_metadata(char* tabla, char* dato_buscado) {
 	sem_wait(&mutex_config);
 	t_config* metadata = obtener_metadata(tabla);
-	char* valor = config_get_string_value(metadata, dato_buscado);
+	char* valor = string_from_format(config_get_string_value(metadata, dato_buscado));
 	sem_post(&mutex_config);
 	config_destroy(metadata);
 	return valor;
