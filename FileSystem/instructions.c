@@ -2,7 +2,22 @@
 
 #include "instructions.h"
 
-void evaluar_instruccion(instr_t* instr, char* remitente) {
+void evaluar_instruccion(instr_t* instr, char* remitente){
+	loggear_info(string_from_format("Se inicia ejecutador"));
+	pthread_t hilo_ejecutador;
+	pthread_attr_t attr;
+	instr_remitente* in=malloc(sizeof(instr_remitente));
+	in->instruccion=instr;
+	in->remitente=remitente;
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_ejecutador,&attr,evaluar_instruccion2,in);
+	pthread_detach(hilo_ejecutador);
+	loggear_trace(string_from_format("Ejecutador iniciado"));
+}
+
+void evaluar_instruccion2(instr_remitente* in) {
+	char* remitente=in->remitente;
+	instr_t* instr=in->instruccion;
 
 	loggear_trace(string_from_format("Evaluando instruccion recibida"));
 
@@ -48,7 +63,10 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 	default:
 		loggear_warning(string_from_format("Me llego una instruccion invalida dentro del File System."));
 	}
+
 	liberar_instruccion(instr);
+	free(in->remitente);
+	free(in);
 }
 void liberar_instruccion(instr_t* instruccion){
 
