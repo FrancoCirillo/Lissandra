@@ -760,24 +760,21 @@ void encolar_o_finalizar_proceso(proceso* p){
 
 }
 void liberar_instruccion(instr_t* instruccion){
-//	for(int i=0;list_size(instruccion->parametros)>0;i++){
-//		printf("\nSe borra el parametro %s\n",list_get(instruccion->parametros,0));
-//		//Se borra el 0 n veces
-//		list_remove_and_destroy_element(instruccion->parametros,0,free);
-//
-//	}
-//	list_destroy(instruccion->parametros);
-//	free(instruccion);
-	list_destroy_and_destroy_elements(instruccion->parametros,free);
-//	free(instruccion->parametros);
+
+	if(instruccion->codigo_operacion == CODIGO_DESCRIBE){
+		list_destroy(instruccion->parametros);
+	}
+	else{
+		list_destroy_and_destroy_elements(instruccion->parametros,free);
+	}
 	free(instruccion);
 }
 void finalizar_proceso(proceso* p){
 	loggear_info(string_from_format("Proceso pasa a estado FINALIZADO. Se libera su memoria"));
 	for(int i=0;list_size(p->instrucciones)>0;i++){
 		instr_t* instruccion=list_get(p->instrucciones,0);
-		loggear_debug(string_from_format("Se libera la memoria para la instruccion %d",i));
-		imprimir_instruccion(instruccion, loggear_debug);
+		loggear_trace(string_from_format("Se libera la memoria para la instruccion %d",i));
+		//imprimir_instruccion(instruccion, loggear_debug);
 		liberar_instruccion(instruccion);
 		list_remove(p->instrucciones,0);
 	}
@@ -786,7 +783,7 @@ void finalizar_proceso(proceso* p){
 	p->sig=NULL;
 	free(p);
 
-	loggear_debug(string_from_format("Memoria liberada!"));
+	loggear_trace(string_from_format("Memoria liberada!"));
 
 	bajar_cantidad_hilos();
 	continuar_ejecucion();
