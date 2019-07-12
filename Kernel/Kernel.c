@@ -341,7 +341,6 @@ int ejecutar(){
 
 	while(1){
 		//Espero a la senial para seguir
-		actualizar_configuracion();
 		loggear_debug(string_from_format("Esperando!"));
 		pthread_mutex_lock(&lock_ejecutar);
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
@@ -998,8 +997,9 @@ void *ejecutar_gossiping()
 		ejecutar_instruccion_gossip();
 		loggear_debug(string_from_format("Fin gossiping programado"));
 		sem_wait(&mutex_configuracion);
-		usleep(configuracion.RETARDO_GOSSIPING * 1000);
+		int retardoGossiping = configuracion.RETARDO_GOSSIPING;
 		sem_post(&mutex_configuracion);
+		usleep(retardoGossiping * 1000);
 	}
 }
 

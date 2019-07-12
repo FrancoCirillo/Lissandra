@@ -48,8 +48,18 @@ void evaluar_instruccion(instr_t* instr, char* remitente) {
 	default:
 		loggear_warning(string_from_format("Me llego una instruccion invalida dentro del File System."));
 	}
+	liberar_instruccion(instr);
 }
+void liberar_instruccion(instr_t* instruccion){
 
+	if(instruccion->codigo_operacion == CODIGO_DESCRIBE){
+		list_destroy(instruccion->parametros);
+	}
+	else{
+		list_destroy_and_destroy_elements(instruccion->parametros,free);
+	}
+	free(instruccion);
+}
 void execute_create(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list* listaParam = list_create();

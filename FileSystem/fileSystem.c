@@ -447,7 +447,7 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 //------------FUNCIONES AUXILIARES------------
 
 char* obtener_nombre_tabla(instr_t* instr) {
-	return obtener_parametro(instr, 0);
+	return string_from_format(obtener_parametro(instr, 0));
 }
 
 char* obtener_parametro(instr_t * instr, int index) {

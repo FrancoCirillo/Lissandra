@@ -14,5 +14,5 @@ void 	execute_drop(instr_t*, char* remitente);
 
 void 	ejecutar_instruccion_insert(instr_t* instruccion, char* remitente);
 
-
+void liberar_instruccion(instr_t* instruccion);
 #endif /* INSTRUCTIONS_H_ */
