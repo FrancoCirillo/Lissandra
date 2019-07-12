@@ -400,6 +400,7 @@ void* ejecutar_proceso(void* un_proceso){
 					loggear_trace(string_from_format("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec));
 					a_metricar->timestamp=respuesta->timestamp;
 					a_metricar->codigo_operacion=instruccion_obtenida->codigo_operacion;
+					a_metricar->parametros=list_create();
 					agregar_a_metricas(a_metricar);
 				}else{
 					if(instruccion_obtenida->codigo_operacion==CODIGO_DESCRIBE){
