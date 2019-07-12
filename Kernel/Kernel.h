@@ -111,6 +111,7 @@ void encolar_o_finalizar_proceso(proceso* p);
 void* consola(void *param);
 void iniciar_ejecutador();
 void iniciar_consola();
+instr_t* kernel_journal(instr_t* i);
 instr_t* kernel_run(instr_t *nombre_archivo);
 instr_t* kernel_add(instr_t *nombre_archivo);
 instr_t *validar(instr_t * i);
