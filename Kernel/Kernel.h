@@ -157,7 +157,6 @@ void agregar_tabla_a_criterio(instr_t* i);
 int hilos_disponibles();
 void loggear(char* mensaje);
 void informarMetricas();
-void actualizar_configuracion();
 void ejemplo_procesos();
 void iniciar_log();
 void procesar_instruccion_consola(char *instruccion);
