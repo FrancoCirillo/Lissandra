@@ -29,7 +29,11 @@ void compactar_todas_las_tablas() {
 void* compactador(void* tab) {
 	char* tabla = tab;
 
+<<<<<<< HEAD
 	t_list* particiones =list_create();
+=======
+	t_list* particiones = list_create();
+>>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 
 	int tiempo_compactacion = atoi(obtener_dato_metadata(tabla, "COMPACTATION_TIME"))/1000; //en segundos
 
@@ -39,7 +43,7 @@ void* compactador(void* tab) {
 
 	for(int num = 0; num < cantidad_particiones; num++) {
 		//inicia tantos diccionarios vacios como particiones tenga la tabla.
-		t_dictionary* dic = (t_dictionary*)dictionary_create();
+		t_dictionary* dic = dictionary_create();
 		list_add(particiones, dic);
 	}
 
@@ -47,7 +51,7 @@ void* compactador(void* tab) {
 	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
 	sem_post(&mutex_dic_semaforos);
 
-	int i=0;
+	//int i=0;
 	int j;
 
 	mseg_t ts_inicial;
@@ -59,9 +63,9 @@ void* compactador(void* tab) {
 			sleep(tiempo_compactacion);
 
 		ts_inicial = obtener_ts();
-		i++;
+	//	i++;
 
-		printf("Compactacion nro: %d\n", i);
+//		printf("Compactacion nro: %d\n", i);
 
 		sem_wait(mutex_tabla);
 		cant_tmpc = pasar_a_tmpc(tabla);
@@ -72,6 +76,7 @@ void* compactador(void* tab) {
 			else continue;
 		}
 
+		loggear_info(string_from_format("Estoy compactando la tabla %s", tabla));
 		t_list* lista_archivos = listar_archivos(tabla);
 
 		if(lista_archivos){
@@ -81,16 +86,13 @@ void* compactador(void* tab) {
 				agregar_registros_en_particion(particiones, lectura);
 //				loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
 			}
-			puts("Ya agregue_registros_en_particion\n\n");
 
-			sleep(3);
+			puts("Ya agregue_registros_en_particion\n\n");
 
 			sem_wait(mutex_tabla);
 
 			list_iterate((t_list*)lista_archivos, &liberar_bloques);
 			puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
-
-			sleep(2);
 
 			for(j = 0; j< cantidad_particiones;j++){
 
@@ -115,7 +117,7 @@ void* compactador(void* tab) {
 
 		loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
 
-		i++;
+		//i++;
 		puts("FIN de 1 while de la compactacion.");
 	}
 
@@ -132,22 +134,20 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 
 	int nro_bloque = archivo_inicializar(f);
 	printf("BLOQUE nuevo de la Particion: %d es %d\n\n", num ,nro_bloque);
-	//char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
+
 	char* ruta_bloque ;
-	//printf("%s\n\n", ruta_bloque);
+
 	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num);
 	printf("LA RUTA ES: %s\n\n", ruta_archivo);
-//	t_config* archivo = config_create(ruta_archivo);
+
 
 
 	void bajar_registro(char* key, void* reg){
 		printf("Estoy bajando_registro de key %s\n", key);
-		sleep(3);
 		registro_t* registro = reg;
 		nro_bloque = obtener_ultimo_bloque(ruta_archivo);
 		ruta_bloque = obtener_ruta_bloque(nro_bloque);
 		loggear_trace(string_from_format("Num bloque del archivo escrito es: %d\n\n", nro_bloque));
-		sleep(2);
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
 		printf("Ya termine de bajar el reg de key %s\n",key );
 		sleep(2);
@@ -265,9 +265,7 @@ t_list* listar_archivos(char* tabla){
 	char* archivo;
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		archivo = directorio_leido->d_name;
-		if(string_contains(archivo, ".")) {
-			if (!strcmp(directorio_leido->d_name, ".") || !strcmp(directorio_leido->d_name, ".."))
-				continue;
+		if(string_contains(archivo, ".bin") || string_contains(archivo, ".tmpc")) {
 			char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
 			list_add(archivos, ruta_archivo);
 			loggear_trace(string_from_format("La ruta del archivo leido es: %s", archivo));

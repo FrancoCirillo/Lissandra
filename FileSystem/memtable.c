@@ -81,7 +81,7 @@ void limpiar_registros(char* tabla, void* registros) {
 void agregar_tabla_a_mem(char* tabla) {
 	t_list* registros = crear_lista_registros();
 	dictionary_put(memtable, tabla, registros);
-	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
+	//loggear_info(string_from_format("Se agrego la tabla en la memtable."));
 }
 
 void agregar_registro(char* tabla, registro_t* registro) {
@@ -152,16 +152,17 @@ void iniciar_dumpeo() {
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_dumpeo, &attr, &dumpeo, NULL);
 	pthread_detach(hilo_dumpeo);
-	loggear_trace(string_from_format("Dumpeo iniciado"));
+	loggear_info(string_from_format("Dumpeo iniciado."));
 }
 
 void* dumpeo() {
+
 	sem_wait(&mutex_config);
-	int tiempo_dump = obtener_tiempo_dump_config();
+	mseg_t tiempo_dump = obtener_tiempo_dump_config();
 	sem_post(&mutex_config);
 
 	while(1){
-		sleep(tiempo_dump);
+		usleep(tiempo_dump);
 		loggear_debug(string_from_format("Realizando dumpeo programado."));
 
 		dumpear_memtable();
@@ -190,6 +191,7 @@ void dumpear_tabla(char* tabla, void* registros) {
 	sem_wait(mutex_tabla);
 
 	if(!list_is_empty((t_list*)registros)) { //Si se hicieron inserts
+		loggear_info(string_from_format("Estoy dumpeando la tabla %s", tabla));
 		int nro_dump = siguiente_nro_dump(tabla);
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);

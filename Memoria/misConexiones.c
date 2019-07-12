@@ -145,7 +145,7 @@ void actualizar_tamanio_value(instr_t* instruccion){
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){
-	loggear_info(string_from_format("Devolviendo el gossip"));
+//	loggear_info(string_from_format("Devolviendo el gossip"));
 	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
 	loggear_trace(string_from_format("Datos enviados"));
@@ -155,7 +155,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
 
-	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
+//	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
 	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
 
@@ -167,7 +167,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 void actualizar_tabla_gossiping(instr_t* instruccion){
 
 
-	loggear_debug(string_from_format("Recibi una tabla de Gossiping"));
+//	loggear_debug(string_from_format("Recibi una tabla de Gossiping"));
 
 	int saltearProximos = 0;
 	int i = 0;
@@ -177,7 +177,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 	void acutalizar_tabla(char* parametro){
 		saltearProximos--;
-		loggear_trace(string_from_format("Saltear Proximos = %d\n", saltearProximos));
+//		loggear_trace(string_from_format("Saltear Proximos = %d\n", saltearProximos));
 		if(saltearProximos <= 0){
 			if(i % 3 == 0){
 				sem_wait(&mutex_diccionario_conexiones);
