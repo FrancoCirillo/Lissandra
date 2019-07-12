@@ -173,6 +173,27 @@ instr_t* kernel_metrics(instr_t * i){
 
 	return respuesta;
 }
+instr_t* kernel_journal(instr_t* i){
+	loggear_info(string_from_format("Ejecutando Journal"));
+
+	void pedir_journal(char* nombreMemoria, identificador* ids){
+		loggear_debug(string_from_format("Enviando Journal a %s", nombreMemoria));
+		int conexion = obtener_fd_out_sin_diccionario(nombreMemoria);
+		enviar_request_simple(i, conexion);
+	}
+	sem_wait(&mutex_diccionario_conexiones);
+	dictionary_iterator(conexionesActuales, (void*)pedir_journal);
+	sem_post(&mutex_diccionario_conexiones);
+
+	instr_t * respuesta=malloc(sizeof(instr_t));
+	respuesta->timestamp=i->timestamp;
+	t_list * params=list_create();
+	respuesta->parametros=params;
+	char* mensaje=string_from_format("Journal ejecutado!");
+	list_add(params,mensaje);
+	respuesta->codigo_operacion=0;
+	return respuesta;
+}
 instr_t* kernel_run(instr_t *i){
 	loggear_info(string_from_format("Ejecutando run. Proceso en estado NUEVO"));
 	char* nombre_archivo=obtener_parametroN(i,0);
@@ -441,6 +462,9 @@ instr_t* ejecutar_instruccion(instr_t* i){
 
 		exit(0);
 	}
+	if(i->codigo_operacion==CODIGO_JOURNAL){
+			return kernel_journal(i);
+	}
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
 	}
@@ -492,7 +516,7 @@ instr_t *validar(instr_t * i){
 	instr_t* mensaje_error=malloc(sizeof(instr_t));
 	mensaje_error->codigo_operacion=codigo_error;
 	mensaje_error->timestamp=i->timestamp;
-	free(mensaje_error->parametros);
+	//free(mensaje_error->parametros);
 	mensaje_error->parametros=list_create();
 	list_add(mensaje_error->parametros,mensaje);
 	return mensaje_error;
