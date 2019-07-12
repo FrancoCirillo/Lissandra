@@ -613,8 +613,10 @@ void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit){
 		char* mem =list_get(crit->lista_memorias,i);
 		if(!strcmp(mem,numero_memoria)){
 			list_remove(crit->lista_memorias,i);
+			free(mem);
 		}
 	}
+
 	sem_post(&(crit->mutex_criterio));
 }
 void memoria_desconectada(char* nombre_memoria){
