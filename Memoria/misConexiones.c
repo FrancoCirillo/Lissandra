@@ -2,6 +2,19 @@
 
 #include "misConexiones.h"
 
+int obtener_fd_out_sin_semaforo(char* proceso){
+	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if(idsProceso == NULL){
+		loggear_warning(string_from_format("Se desconoce completamente el proceso %s. fd_out devuelto incorrecto.", proceso));
+		return 0;
+	}
+	if (idsProceso->fd_out == 0)
+	{ //Es la primera vez que se le quiere enviar algo a proceso
+		responderHandshake(idsProceso);
+	}
+	return idsProceso->fd_out;
+}
+
 int obtener_fd_out(char *proceso)
 {
 	sem_wait(&mutex_diccionario_conexiones);
@@ -136,8 +149,9 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
 	loggear_trace(string_from_format("Datos enviados"));
+	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
-
+	sem_post(&mutex_diccionario_conexiones);
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
 
@@ -256,17 +270,14 @@ t_list *conexiones_para_gossiping(){
 
 		}
 	}
-
-	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)juntar_ip_y_puerto);
-	sem_post(&mutex_diccionario_conexiones);
 	return tablaGossiping;
 
 }
 
 void enviar_lista_gossiping(char* nombreProceso){
 	if(strcmp(nombreDeMemoria, nombreProceso)!=0 && strcmp(nombreProceso, "FileSystem")!=0){
-		int conexionVieja = obtener_fd_out(nombreProceso);
+		int conexionVieja = obtener_fd_out_sin_semaforo(nombreProceso);
 		loggear_debug(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
 		t_list* listaGossiping = conexiones_para_gossiping();
 		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
@@ -298,6 +309,7 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 	char* nombreEncontrado = NULL;
 
 	void su_nombre(char* nombre, identificador* ids){
+
 		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
@@ -314,9 +326,7 @@ void gossipear_con_conexiones_actuales(){
 
 	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
 	void su_nombre(char* nombre, identificador* ids){
-		sem_post(&mutex_diccionario_conexiones);
 		enviar_lista_gossiping(nombre);
-		sem_wait(&mutex_diccionario_conexiones);
 	}
 	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)su_nombre);

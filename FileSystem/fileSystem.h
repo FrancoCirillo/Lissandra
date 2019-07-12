@@ -128,6 +128,7 @@ char*	obtener_parametro(instr_t*, int);
 int  	obtener_particion_key(char*, int);
 char*	obtener_nombre_tabla(instr_t*);
 _Bool 	es_registro_mas_reciente(void*, void*);
+void proceso_desconectado(char* nombreProceso);
 
 /*Comunicación*/
 //eliminar

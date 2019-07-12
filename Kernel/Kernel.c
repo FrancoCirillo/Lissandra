@@ -38,7 +38,7 @@ void inicializar_kernel(){
 
 	iniciar_servidor(miIPKernel, configuracion.puerto);
 	// . es el directorio Actual - Tener en cuenta que lo corremos desde la carpeta padre a la que tiene el binario
-	vigilar_conexiones_entrantes(callback, actualizar_config, ".", CONSOLA_KERNEL);
+	vigilar_conexiones_entrantes(callback, actualizar_config, memoria_desconectada, ".", CONSOLA_KERNEL);
 
 }
 
@@ -108,7 +108,7 @@ void iniciar_metricas(){
 }
 void *metricar(){
 	while(1){
-		//actualizar_configuracion();
+		actualizar_configuracion();
 		sem_wait(&mutex_configuracion);
 		int tiempo=configuracion.tiempoMetricas;
 		sem_post(&mutex_configuracion);
@@ -173,7 +173,7 @@ instr_t* kernel_metrics(instr_t * i){
 	return respuesta;
 }
 instr_t* kernel_run(instr_t *i){
-	loggear_info(string_from_format("EJECUTANDO RUN!"));
+	loggear_info(string_from_format("Ejecutando run. Proceso en estado NUEVO"));
 	char* nombre_archivo=obtener_parametroN(i,0);
 	FILE *f=fopen(nombre_archivo,"r");
 	instr_t * respuesta=malloc(sizeof(instr_t));
@@ -235,7 +235,7 @@ instr_t* kernel_run(instr_t *i){
 
 }
 instr_t* kernel_add(instr_t* i){
-	char* numero_memoria=obtener_parametroN(i,1);
+	char* numero_memoria=string_from_format(obtener_parametroN(i,1));
 	int codigo=obtener_codigo_criterio(obtener_parametroN(i,3));
 	loggear_info(string_from_format("EJECUTANDO ADD PARA MEMORIA %s", numero_memoria));
 	switch(codigo){
@@ -308,10 +308,10 @@ int hay_procesos(){
 	int hay=cola_ready!=NULL;
 	sem_post(&semaforo_procesos_ready);
 	if(hay){
-		printf("\n HAY PRCOESOS");
+		//printf("\n HAY PRCOESOS");
 	}
 	else{
-		printf("\n NO HAY PROCESOS");
+		//printf("\n NO HAY PROCESOS");
 	}
 	return hay;
 }
@@ -320,6 +320,7 @@ int ejecutar(){
 
 	while(1){
 		//Espero a la senial para seguir
+		actualizar_configuracion();
 		loggear_debug(string_from_format("Esperando!"));
 		pthread_mutex_lock(&lock_ejecutar);
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
@@ -338,7 +339,7 @@ int ejecutar(){
 
 			pthread_attr_init(&attr);
 			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
-			loggear_debug(string_from_format("Se creo un hilo para atender la solicitud!"));
+			loggear_info(string_from_format("Se creo un hilo para atender la solicitud!"));
 
 			subir_cantidad_hilos();
 
@@ -353,7 +354,7 @@ int ejecutar(){
 	return 1;
 }
 void* ejecutar_proceso(void* un_proceso){
-	loggear_info(string_from_format("Ejecutando proceso..."));
+	loggear_info(string_from_format("Ejecutando proceso. Proceso pasa a estado EXEC"));
 	proceso* p=(proceso*)un_proceso;
 	instr_t* instruccion_obtenida;
 	for(int i=0;i<configuracion.quantum;/*i++*/){
@@ -381,6 +382,7 @@ void* ejecutar_proceso(void* un_proceso){
 				}else{
 					//NO es insert ni select
 				}
+				liberar_instruccion(respuesta);
 
 			}else{
 
@@ -388,11 +390,10 @@ void* ejecutar_proceso(void* un_proceso){
 				//printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
 				//bajar_cantidad_hilos();
 				imprimir_instruccion(respuesta, loggear_warning);
-
+				liberar_instruccion(respuesta);
 				finalizar_proceso(un_proceso);
 				return NULL;
 			}
-			liberar_instruccion(respuesta);
 
 		}else{
 
@@ -463,11 +464,8 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	return respuesta;
 }
 instr_t *validar(instr_t * i){
-	instr_t* mensaje_error=malloc(sizeof(instr_t));
-	mensaje_error->timestamp=i->timestamp;
-	char* mensaje=string_from_format("ERROR!");
+	int codigo_error;
 	if(i->codigo_operacion!=2&&i->codigo_operacion!=3 && i->codigo_operacion!=1){
-		free(mensaje_error);
 		return NULL;
 	}
 	if(i->codigo_operacion==2 || i->codigo_operacion==1){
@@ -475,7 +473,7 @@ instr_t *validar(instr_t * i){
 			loggear_debug(string_from_format("Existe la tabla para el insert o select "));
 			return NULL;
 		}else{
-			mensaje_error->codigo_operacion=ERROR_INSERT;
+			codigo_error=ERROR_INSERT;
 			loggear_warning(string_from_format("La tabla %s no existe!",obtener_parametroN(i,0)));
 			//mensaje="LA TABLA NO EXISTE!";
 		}
@@ -486,13 +484,16 @@ instr_t *validar(instr_t * i){
 			return NULL;
 		}else{
 			//mensaje="LA TABLA YA EXISTE";
-			mensaje_error->codigo_operacion=ERROR_CREATE;
+			codigo_error=ERROR_CREATE;
 		}
 	}
+	char* mensaje=string_from_format("ERROR!");
+	instr_t* mensaje_error=malloc(sizeof(instr_t));
+	mensaje_error->codigo_operacion=codigo_error;
+	mensaje_error->timestamp=i->timestamp;
 	free(mensaje_error->parametros);
 	mensaje_error->parametros=list_create();
 	list_add(mensaje_error->parametros,mensaje);
-
 	return mensaje_error;
 }
 
@@ -541,8 +542,10 @@ instr_t* enviar_i(instr_t* i){
 
 	loggear_debug(string_from_format("Hilo despierto!"));
 	instr_t * rta=h->respuesta;
-	free(h);
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
+	free(h);
+
+
 	return rta;
 }
 
@@ -609,9 +612,12 @@ void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit){
 	for(int i=0;i<list_size(crit->lista_memorias);i++){
 		char* mem =list_get(crit->lista_memorias,i);
 		if(!strcmp(mem,numero_memoria)){
+			loggear_info(string_from_format("Memorio encontrada y removida en posicion %d",i));
 			list_remove(crit->lista_memorias,i);
+			free(mem);
 		}
 	}
+
 	sem_post(&(crit->mutex_criterio));
 }
 void memoria_desconectada(char* nombre_memoria){
@@ -650,6 +656,19 @@ int obtener_codigo_criterio(char* criterio){
 }
 void enviar_a(instr_t* i,char* destino){
 	enviar_request_simple(i,obtener_fd_out(destino));
+}
+
+int obtener_fd_out_sin_diccionario(char* proceso){
+	identificador *idsProceso = (identificador *)dictionary_get(conexionesActuales, proceso);
+	if(idsProceso == NULL){
+		loggear_warning(string_from_format("Se desconoce completamente el proceso %s. fd_out devuelto incorrecto.", proceso));
+		return 0;
+	}
+	if (idsProceso->fd_out == 0)
+	{ //Es la primera vez que se le quiere enviar algo a proceso
+		responderHandshake(idsProceso);
+	}
+	return idsProceso->fd_out;
 }
 int obtener_fd_out(char *proceso)
 {
@@ -692,7 +711,7 @@ void recibi_respuesta(instr_t* respuesta, char* remitente){
 		else loggear_warning(string_from_format("El hilo no existe"));
 		sem_post(&mutex_diccionario_enviados);
 
-		loggear_info(string_from_format("Asigno respuesta y revivo hilo"));
+		loggear_debug(string_from_format("Asigno respuesta y revivo hilo"));
 		h->respuesta=respuesta;
 
 		pthread_mutex_lock(h->mutex_t);
@@ -728,7 +747,7 @@ void liberar_instruccion(instr_t* instruccion){
 	free(instruccion);
 }
 void finalizar_proceso(proceso* p){
-	loggear_info(string_from_format("Se finalizo correctamente un proceso !!. Se libera su memoria"));
+	loggear_info(string_from_format("Proceso pasa a estado FINALIZADO. Se libera su memoria"));
 	for(int i=0;list_size(p->instrucciones)>0;i++){
 		instr_t* instruccion=list_get(p->instrucciones,0);
 		loggear_info(string_from_format("Se elimina la memoria para la instruccion %d",i));
@@ -747,8 +766,9 @@ void finalizar_proceso(proceso* p){
 	continuar_ejecucion();
 }
 void encolar_proceso(proceso *p){
+
 	sem_wait(&semaforo_procesos_ready);
-	loggear_debug(string_from_format("Encolando proceso!"));
+	loggear_info(string_from_format("Encolando proceso. Proceso pasa a estado READY"));
 	proceso *aux=cola_ready;
 	if(aux==NULL){
 		cola_ready=p;
@@ -802,8 +822,13 @@ void inicializarConfiguracion() {
 	configuracion.puerto = obtener_por_clave("PUERTO");
 	configuracion.rutaLog = obtener_por_clave("rutaLog");
 
-	configuracion.IP_SEEDS = string_array_to_list(config_get_array_value(g_config, "IP_SEEDS"));
-	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
+	char** ip_seeds = config_get_array_value(g_config, "IP_SEEDS");
+	configuracion.IP_SEEDS = string_array_to_list(ip_seeds);
+	free(ip_seeds);
+
+	char** PUERTO_SEEDS=config_get_array_value(g_config, "PUERTO_SEEDS");
+	configuracion.PUERTO_SEEDS = string_array_to_list(PUERTO_SEEDS);
+	free(PUERTO_SEEDS);
 	imprimir_config_actual();
 
 	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave("RETARDO_GOSSIPING"));
@@ -953,7 +978,9 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
 	loggear_trace(string_from_format("Datos enviados"));
+	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
+	sem_post(&mutex_diccionario_conexiones);
 
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
@@ -1054,16 +1081,14 @@ t_list *conexiones_para_gossiping(){
 		}
 	}
 
-	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)juntar_ip_y_puerto);
-	sem_post(&mutex_diccionario_conexiones);
 
 	return tablaGossiping;
 
 }
 void enviar_lista_gossiping(char* nombreProceso){
 	if(strcmp(nombreProceso, "Kernel")!=0){
-		int conexionVieja = obtener_fd_out(nombreProceso);
+		int conexionVieja = obtener_fd_out_sin_diccionario(nombreProceso);
 		loggear_debug(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
 		t_list* listaGossiping = conexiones_para_gossiping();
 		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
@@ -1085,9 +1110,7 @@ void gossipear_con_conexiones_actuales(){
 
 	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
 	void su_nombre(char* nombre, identificador* ids){
-		sem_post(&mutex_diccionario_conexiones);
 		enviar_lista_gossiping(nombre);
-		sem_wait(&mutex_diccionario_conexiones);
 	}
 	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)su_nombre);
@@ -1117,6 +1140,7 @@ void gossipear_con_procesos_desconectados(){
 			}
 		}
 		if(nombreProceso!=NULL){
+			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			free(nombreProceso);
 		}
 		i++;
@@ -1133,14 +1157,11 @@ bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBusca
 char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 	char* nombreEncontrado = NULL;
-
 	void su_nombre(char* nombre, identificador* ids){
 		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
 			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
-		}else{
-			free(nombreEncontrado);
 		}
 	}
 	sem_wait(&mutex_diccionario_conexiones);

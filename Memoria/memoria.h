@@ -45,12 +45,12 @@ char* puntoMontaje;
 int tamanioRegistro;
 bool* sectorOcupado;
 int cantidadDeSectores;
-
 	/* CONEXIONES */
 
 void inicializar_estructuras_conexiones();
 void empezar_conexiones();
 void (*callback)(instr_t *instruccion, char *remitente);
+void proceso_desconectado(char* nombreProceso);
 
 	/* PROCESO MEMORIA */
 void inicializar_estructuras_memoria();
