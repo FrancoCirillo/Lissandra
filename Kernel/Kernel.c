@@ -857,7 +857,7 @@ void iniciar_log(){
 char* obtener_por_clave(char* key) {
 	char* valor;
 	valor = config_get_string_value(g_config, key);
-	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------\n",key,valor);
+//	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------\n",key,valor);
 	return valor;
 }
 
