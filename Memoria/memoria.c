@@ -228,6 +228,7 @@ void actualizar_config(){
 	actualizar_log_level();
 	sem_post(&mutex_log);
 	config_destroy(auxConfig);
+	sem_wait(&mutex_config);
 	loggear_info(string_from_format("Config actualizado!\n"
 			"Retardo de accseso a Memoria Principal: %d\n"
 			"Retardo de accseso a File System: %d\n"
@@ -236,6 +237,7 @@ void actualizar_config(){
 			"Log level: %s"
 			"\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET,
 			configuracion.RETARDO_MEMORIA, configuracion.RETARDO_FS, configuracion.RETARDO_JOURNAL, configuracion.RETARDO_GOSSIPING, log_level_as_string(configuracion.LOG_LEVEL)));
+	sem_post(&mutex_config);
 	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 	fflush(stdout);
 }
