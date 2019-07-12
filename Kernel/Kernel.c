@@ -235,7 +235,7 @@ instr_t* kernel_run(instr_t *i){
 
 }
 instr_t* kernel_add(instr_t* i){
-	char* numero_memoria=obtener_parametroN(i,1);
+	char* numero_memoria=string_from_format("%s", obtener_parametroN(i,1));
 	int codigo=obtener_codigo_criterio(obtener_parametroN(i,3));
 	loggear_info(string_from_format("EJECUTANDO ADD PARA MEMORIA %s", numero_memoria));
 	switch(codigo){
