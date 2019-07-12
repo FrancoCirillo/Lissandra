@@ -164,6 +164,7 @@ void procesar_instruccion_consola(char *instruccion);
 void subir_cantidad_hilos();
 void bajar_cantidad_hilos();
 char* krn_concat(char* s1,char* s2);
+void actualizar_metadata_tablas(instr_t* respuesta);
 void agregar_tabla(char* tabla);
 bool existe_tabla(char* tablaBuscada);
 void iniciar_consola();

@@ -402,7 +402,9 @@ void* ejecutar_proceso(void* un_proceso){
 					a_metricar->codigo_operacion=instruccion_obtenida->codigo_operacion;
 					agregar_a_metricas(a_metricar);
 				}else{
-					//NO es insert ni select
+					if(instruccion_obtenida->codigo_operacion==CODIGO_DESCRIBE){
+						actualizar_metadata_tablas(respuesta);
+					}
 				}
 				liberar_instruccion(respuesta);
 
@@ -516,7 +518,6 @@ instr_t *validar(instr_t * i){
 	instr_t* mensaje_error=malloc(sizeof(instr_t));
 	mensaje_error->codigo_operacion=codigo_error;
 	mensaje_error->timestamp=i->timestamp;
-	//free(mensaje_error->parametros);
 	mensaje_error->parametros=list_create();
 	list_add(mensaje_error->parametros,mensaje);
 	return mensaje_error;
@@ -1256,4 +1257,19 @@ void actualizar_config(){
 void actualizar_log_level(){
 	log_destroy(g_logger);
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
+}
+
+
+void actualizar_metadata_tablas(instr_t* respuesta){
+
+	int i = 0;
+	int ultimo = list_size(respuesta->parametros) - 2;
+	void agregar_metadata_tablas(char* valor){
+		if(i%4 ==0 && i < ultimo){
+			agregar_tabla(valor);
+		}
+		i++;
+	}
+
+	list_iterate(respuesta->parametros, (void*) agregar_metadata_tablas);
 }
