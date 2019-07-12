@@ -491,9 +491,6 @@ void enviar_tamanio_value(instr_t* instruccion, char* remitente) {
     instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
     enviar_liberando_request(miInstruccion, conexionMemoriaN);
     loggear_trace(string_from_format("Tamanio del value y punto de montaje enviados"));
-
-	list_destroy(instruccion->parametros);
-	free(instruccion);
 }
 
 void responderHandshake(identificador *idsConexionEntrante) {
