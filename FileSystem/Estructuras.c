@@ -122,6 +122,7 @@ char* obtener_dato_metadata(char* tabla, char* dato_buscado) {
 	t_config* metadata = obtener_metadata(tabla);
 	char* valor = config_get_string_value(metadata, dato_buscado);
 	sem_post(&mutex_config);
+	config_destroy(metadata);
 	return valor;
 }
 
@@ -214,13 +215,18 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 					free(sig_bloque);
 	//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
 					config_destroy(archivo);
+					free(mi_bloque);
+					free(lista_bloques);
 					return bloque_siguiente;
 				}
 			}
+			free(mi_bloque);
 		}
 	}
 	else loggear_warning(string_from_format("No se pudo crear el config para el archivo %s", ruta_archivo));
-    return -1;
+
+	config_destroy(archivo);
+	return -1;
 }
 
 
@@ -546,6 +552,8 @@ int cantidad_bloques_usados(char* ruta_archivo) {
 	while(*(lista_bloques + cant_bloques))
 		cant_bloques++;
 //    printf("Cantidad de Bloques usados: %d\n",cant_bloques);
+	config_destroy(archivo);
+	free(lista_bloques);
 	return cant_bloques;
 }
 

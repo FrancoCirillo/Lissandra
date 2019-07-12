@@ -108,7 +108,6 @@ void iniciar_metricas(){
 }
 void *metricar(){
 	while(1){
-		actualizar_configuracion();
 		sem_wait(&mutex_configuracion);
 		int tiempo=configuracion.tiempoMetricas;
 		sem_post(&mutex_configuracion);
@@ -234,7 +233,7 @@ instr_t* kernel_run(instr_t *i){
 		int cod=obtener_codigo_request();
 		char*  codigo=malloc(sizeof(char)*(cod/10+1)+1);
 		sprintf(codigo,"%d",cod);
-		printf("\n\n EL codigo es %d, el tamanio es %d y contenido es %s",cod,sizeof(codigo),codigo);
+		//printf("\n\n EL codigo es %d, el tamanio es %d y contenido es %s",cod,sizeof(codigo),codigo);
 
 		list_add(nueva_instruccion->parametros,codigo);
 
@@ -379,7 +378,11 @@ void* ejecutar_proceso(void* un_proceso){
 	loggear_info(string_from_format("Ejecutando proceso. Proceso pasa a estado EXEC"));
 	proceso* p=(proceso*)un_proceso;
 	instr_t* instruccion_obtenida;
-	for(int i=0;i<configuracion.quantum;/*i++*/){
+
+	sem_wait(&mutex_configuracion);
+	int quantum = configuracion.quantum;
+	sem_post(&mutex_configuracion);
+	for(int i=0;i<quantum;/*i++*/){
 		loggear_debug(string_from_format("Hay quantum!"));
 		instruccion_obtenida=obtener_instruccion(p);
 		//no se pudo obtener
@@ -400,6 +403,7 @@ void* ejecutar_proceso(void* un_proceso){
 					loggear_trace(string_from_format("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec));
 					a_metricar->timestamp=respuesta->timestamp;
 					a_metricar->codigo_operacion=instruccion_obtenida->codigo_operacion;
+					a_metricar->parametros=list_create();
 					agregar_a_metricas(a_metricar);
 				}else{
 					if(instruccion_obtenida->codigo_operacion==CODIGO_DESCRIBE){
@@ -830,7 +834,9 @@ instr_t* obtener_instruccion(proceso* p){
 int hilos_disponibles(){
 	sem_wait(&mutex_cantidad_hilos);
 	//Compara el total de config con la cantidad creada;
+	sem_wait(&mutex_configuracion);
 	int hay=configuracion.gradoMultiprocesamiento>total_hilos;
+	sem_post(&mutex_configuracion);
 	sem_post(&mutex_cantidad_hilos);
 	if(hay){
 		//printf("\n HAY PRCOESOS\n\n");
@@ -865,13 +871,6 @@ void inicializarConfiguracion() {
 	configuracion.LOG_LEVEL =  log_level_from_string(obtener_por_clave("LOG_LEVEL"));
 
 
-}
-void actualizar_configuracion(){
-	sem_wait(&mutex_configuracion);
-	configuracion.quantum = atoi(obtener_por_clave("quantum"));
-	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave("gradoMultiprocesamiento"));
-	configuracion.tiempoMetricas = atoi(obtener_por_clave("tiempoMetricas"));
-	sem_post(&mutex_configuracion);
 }
 void iniciar_log(){
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
@@ -998,7 +997,9 @@ void *ejecutar_gossiping()
 	{
 		ejecutar_instruccion_gossip();
 		loggear_debug(string_from_format("Fin gossiping programado"));
+		sem_wait(&mutex_configuracion);
 		usleep(configuracion.RETARDO_GOSSIPING * 1000);
+		sem_post(&mutex_configuracion);
 	}
 }
 
@@ -1075,8 +1076,10 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						sem_wait(&mutex_diccionario_conexiones);
 						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
 						sem_post(&mutex_diccionario_conexiones);
+						sem_wait(&mutex_configuracion);
 						list_add(configuracion.IP_SEEDS, ip);
 						list_add(configuracion.PUERTO_SEEDS, puerto);
+						sem_post(&mutex_configuracion);
 						i++;
 					}
 		}
@@ -1152,12 +1155,17 @@ void gossipear_con_procesos_desconectados(){
 
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
+		sem_post(&mutex_configuracion);
 //		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
 //		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+		sem_wait(&mutex_configuracion);
 		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
-		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0){
+		sem_post(&mutex_configuracion);
+		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0)
+			sem_wait(&mutex_configuracion);{
 			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPKernel, 0);
+			sem_post(&mutex_configuracion);
 			if(conexion != -1){
 //				puts("Conexion creada");
 				fd_out_inicial = conexion;
@@ -1172,8 +1180,11 @@ void gossipear_con_procesos_desconectados(){
 			free(nombreProceso);
 		}
 		i++;
+		sem_wait(&mutex_configuracion);
 	}
+	sem_wait(&mutex_configuracion);
 	list_iterate(configuracion.IP_SEEDS, (void*)enviar_tabla_gossiping);
+	sem_post(&mutex_configuracion);
 }
 
 
@@ -1218,7 +1229,9 @@ instr_t* mis_datos(cod_op codigoOperacion){
 	t_list *listaParam = list_create();
 	list_add(listaParam, "Kernel");
 	list_add(listaParam, miIPKernel);
+	sem_wait(&mutex_configuracion);
 	list_add(listaParam, configuracion.puerto);
+	sem_post(&mutex_configuracion);
 	return crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 }
 
@@ -1232,13 +1245,16 @@ void actualizar_config(){
 		config_destroy(auxConfig);
 	}
 
+	sem_wait(&mutex_configuracion);
 	configuracion.quantum = config_get_int_value(auxConfig, "quantum");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
 	configuracion.tiempoMetricas = config_get_int_value(auxConfig, "tiempoMetricas");
 	configuracion.LOG_LEVEL =  log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
+	sem_post(&mutex_configuracion);
 	sem_wait(&mutex_log);
 	actualizar_log_level();
 	sem_post(&mutex_log);
+	sem_wait(&mutex_configuracion);
 	loggear_info(string_from_format(
 			"Config actualizado!\n"
 			"Quantum: %d\n"
@@ -1246,6 +1262,7 @@ void actualizar_config(){
 			"Tiempo de Metricas: %d\n"
 			"Log level: %s",
 			configuracion.quantum, configuracion.RETARDO_GOSSIPING, configuracion.tiempoMetricas , log_level_as_string(configuracion.LOG_LEVEL)));
+	sem_post(&mutex_configuracion);
 	config_destroy(auxConfig);
 	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 	fflush(stdout);
@@ -1253,7 +1270,9 @@ void actualizar_config(){
 
 void actualizar_log_level(){
 	log_destroy(g_logger);
+	sem_wait(&mutex_configuracion);
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
+	sem_wait(&mutex_configuracion);
 }
 
 

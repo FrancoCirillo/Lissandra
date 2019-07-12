@@ -307,7 +307,7 @@ int pasar_a_tmpc(char* tabla) {
 			//loggear_trace(string_from_format("Status: %d\n", status));
 		}
 	}
-
+	closedir(directorio);
 //	loggear_trace(string_from_format("Se pasaron a tmpc los archivos de la tabla %s\n", tabla));
 	resetear_numero_dump(tabla);   //Importante esto!
 	//loggear_trace(string_from_format("Se reseteo el numero de dump\n"));
