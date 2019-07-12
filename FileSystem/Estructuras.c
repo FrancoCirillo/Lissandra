@@ -5,7 +5,7 @@
 
 
 int obtener_tiempo_dump_config() {
-	return (int) config_FS.tiempo_dump * 1000;
+	return (int) config_FS.tiempo_dump*1000;
 }
 
 //void borrar_lista_parametros_impresion(t_list* listaParam){

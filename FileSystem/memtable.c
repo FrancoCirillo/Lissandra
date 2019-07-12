@@ -80,7 +80,7 @@ void limpiar_registros(char* tabla, void* registros) {
 void agregar_tabla_a_mem(char* tabla) {
 	t_list* registros = crear_lista_registros();
 	dictionary_put(memtable, tabla, registros);
-	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
+	//loggear_info(string_from_format("Se agrego la tabla en la memtable."));
 }
 
 void agregar_registro(char* tabla, registro_t* registro) {
@@ -155,12 +155,13 @@ void iniciar_dumpeo() {
 }
 
 void* dumpeo() {
+
 	sem_wait(&mutex_config);
-	int tiempo_dump = obtener_tiempo_dump_config();
+	mseg_t tiempo_dump = obtener_tiempo_dump_config();
 	sem_post(&mutex_config);
 
 	while(1){
-		sleep(tiempo_dump);
+		usleep(tiempo_dump);
 		loggear_debug(string_from_format("Realizando dumpeo programado."));
 
 		dumpear_memtable();
