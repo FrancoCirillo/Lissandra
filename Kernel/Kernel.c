@@ -108,7 +108,7 @@ void iniciar_metricas(){
 }
 void *metricar(){
 	while(1){
-		actualizar_configuracion();
+		//actualizar_configuracion();
 		sem_wait(&mutex_configuracion);
 		int tiempo=configuracion.tiempoMetricas;
 		sem_post(&mutex_configuracion);
@@ -320,7 +320,7 @@ int ejecutar(){
 
 	while(1){
 		//Espero a la senial para seguir
-		actualizar_configuracion();
+		//actualizar_configuracion();
 		loggear_debug(string_from_format("Esperando!"));
 		pthread_mutex_lock(&lock_ejecutar);
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
@@ -837,13 +837,13 @@ void inicializarConfiguracion() {
 
 
 }
-void actualizar_configuracion(){
-	sem_wait(&mutex_configuracion);
-	configuracion.quantum = atoi(obtener_por_clave("quantum"));
-	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave("gradoMultiprocesamiento"));
-	configuracion.tiempoMetricas = atoi(obtener_por_clave("tiempoMetricas"));
-	sem_post(&mutex_configuracion);
-}
+//void actualizar_configuracion(){
+//	sem_wait(&mutex_configuracion);
+//	configuracion.quantum = atoi(obtener_por_clave("quantum"));
+//	configuracion.gradoMultiprocesamiento = atoi(obtener_por_clave("gradoMultiprocesamiento"));
+//	configuracion.tiempoMetricas = atoi(obtener_por_clave("tiempoMetricas"));
+//	sem_post(&mutex_configuracion);
+//}
 void iniciar_log(){
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
 }
