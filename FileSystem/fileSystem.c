@@ -64,9 +64,9 @@ int main(int argc, char* argv[]) {
 //
 //	compactation_locker = 1;
 //
-	compactador("T1");
+//	compactador("T2");
 
-//	inicializar_conexiones();
+	inicializar_conexiones();
 
 //	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
 //	imprimirContenidoArchivo(ruta0bin, loggear_trace);
@@ -209,7 +209,7 @@ t_list* listaRegistros2() {
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
 		loggear_trace(string_from_format("-------------------Entre a dump-------------------"));
-		int nro_dump = 1;
+		int nro_dump = 2;
 		loggear_trace(string_from_format("Numero de Dump: %d\n", nro_dump));
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
@@ -241,7 +241,7 @@ void pruebaDump() {
 	t_dictionary* mockMem = dictionary_create();
 
 	//--agrego una tabla con registros---
-	t_list* reg = listaRegistros();
+	t_list* reg = listaRegistros2();
 	dictionary_put(mockMem, "T1", reg);
 
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
@@ -253,11 +253,11 @@ void pruebaDump() {
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
 
 	//--creo registros--
-	registro_t* registro2 = crearRegistro(4324234, 10, "HolaVoyEnT2");
+	registro_t* registro2 = crearRegistro(4324234, 10, "ChauVoyEnT2");
 //	loggear_info(string_from_format("Cree un registro:"));
 	imprimirRegistro(registro2);
 
-	registro_t* registro = crearRegistro(4324234, 32, "HolaTmbVoyEnT2");
+	registro_t* registro = crearRegistro(4324234, 3, "ChauTmbVoyEnT2");
 //	loggear_info(string_from_format("Cree un registro:"));
 	imprimirRegistro(registro);
 

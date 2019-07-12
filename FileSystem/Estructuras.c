@@ -161,7 +161,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 //	loggear_trace(string_from_format("-----------Entre a escribir_registro_bloque-------------------"));
 	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
 	char* string_registro = formatear_registro(registro);
-	loggear_trace(string_from_format("Ruta bloque: %s\n", ruta_bloque));
+//	loggear_trace(string_from_format("Ruta bloque: %s\n", ruta_bloque));
 //	printf("Formateo registro: %s\n", string_registro);
 //	int tam = strlen(string_registro);
 //	printf("Tam registro: %d\n", tam);
@@ -190,7 +190,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 		FILE* archivo_nuevo_bloque = txt_open_for_append(nuevo_bloque);
 		char* mitad_restante_registro = string_substring_from(string_registro, tam_restante);
 		txt_write_in_file(archivo_nuevo_bloque, mitad_restante_registro);
-		loggear_debug(string_from_format("Ruta bloque: %s\n", nuevo_bloque));
+//		loggear_debug(string_from_format("Ruta bloque: %s\n", nuevo_bloque));
 
 		txt_close_file(archivo_nuevo_bloque);
 		free(primera_mitad_registro);
@@ -199,7 +199,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	}
 
 	aumentar_tam_archivo(ruta_archivo, registro);
-	loggear_trace(string_from_format("Aumente tam archivo"));
+//	loggear_trace(string_from_format("Aumente tam archivo"));
 	txt_close_file(archivo_bloque);
 	free(string_registro);
 }
@@ -386,7 +386,7 @@ int bloque_esta_ocupado(int nro_bloque) {
 }
 
 int siguiente_bloque_disponible() {
-	loggear_debug(string_from_format("Buscando siguiente bloque disponible"));
+//	loggear_debug(string_from_format("Buscando siguiente bloque disponible"));
 	int nro_bloque = 0;
 
 	while(nro_bloque < Metadata_FS.blocks && bloque_esta_ocupado(nro_bloque))
@@ -522,12 +522,12 @@ int obtener_ultimo_bloque(char* ruta_archivo){
 	t_config* archivo = config_create(ruta_archivo);
 	char** bloques = config_get_array_value(archivo, "BLOCKS");
 	int tam = cantidad_bloques_usados(ruta_archivo);
-	loggear_trace(string_from_format("tam bloques: %d\n", tam));
+//	loggear_trace(string_from_format("tam bloques: %d\n", tam));
 	int ultimo = tam;
 	ultimo--;
-	loggear_trace(string_from_format("ultimo: %d\n", ultimo));
+//	loggear_trace(string_from_format("ultimo: %d\n", ultimo));
 	char* ultimo_bloque = bloques[ultimo];
-	loggear_debug(string_from_format("char bloque: %s\n", ultimo_bloque));
+//	loggear_debug(string_from_format("char bloque: %s\n", ultimo_bloque));
 	int rdo = atoi(ultimo_bloque);
 	return rdo;
 }
@@ -678,7 +678,7 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 }
 
 int archivo_inicializar(FILE* f) {
-	loggear_trace(string_from_format("-------------------Entre a archivo_inicializar-------------------"));
+//	loggear_trace(string_from_format("-------------------Entre a archivo_inicializar-------------------"));
 	int bloque_num = siguiente_bloque_disponible();
 	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
 	txt_write_in_file(f, contenido);
