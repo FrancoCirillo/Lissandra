@@ -87,6 +87,7 @@ void agregar_registro(char* tabla, registro_t* registro) {
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	list_add(registros_tabla, registro);
 	loggear_debug(string_from_format("Se inserto el registro en la memtable."));
+	loggear_trace(string_from_format(registro_a_string(registro)));
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {
