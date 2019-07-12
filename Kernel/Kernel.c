@@ -341,7 +341,6 @@ int ejecutar(){
 
 	while(1){
 		//Espero a la senial para seguir
-		actualizar_configuracion();
 		loggear_debug(string_from_format("Esperando!"));
 		pthread_mutex_lock(&lock_ejecutar);
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
