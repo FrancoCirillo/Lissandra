@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 
 	inicializar_criterios();
 
-//	iniciar_metricas();
+	iniciar_metricas();
 
 	iniciar_ejecutador();
 
@@ -981,10 +981,10 @@ void *ejecutar_gossiping()
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){
-	loggear_info(string_from_format("Devolviendo el gossip"));
-	loggear_trace(string_from_format("Enviando datos a %s", remitente));
+	loggear_info(string_from_format("Devolviendo el gossip a %s", remitente));
+//	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
-	loggear_trace(string_from_format("Datos enviados"));
+//	loggear_trace(string_from_format("Datos enviados"));
 	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
 	sem_post(&mutex_diccionario_conexiones);
@@ -993,7 +993,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 
 	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
-	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
+//	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
 
 
 	actualizar_tabla_gossiping(instruccion);
@@ -1032,12 +1032,12 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 			}
 				else if(i % 3 == 1){
 					ip = strdup(parametro);
-					loggear_trace(string_from_format("Su ip es %s", ip));
+//					loggear_trace(string_from_format("Su ip es %s", ip));
 					i++;
 				}
 					else if(i % 3 == 2){
 						puerto = strdup(parametro);
-						loggear_trace(string_from_format("Su puerto es %s", puerto));
+//						loggear_trace(string_from_format("Su puerto es %s", puerto));
 						identificador identificadores = {
 								.fd_out = 0,
 								.fd_in = 0
@@ -1130,14 +1130,14 @@ void gossipear_con_procesos_desconectados(){
 
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
-		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
-		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+//		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
+//		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
 		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0){
 			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPKernel, 0);
 			if(conexion != -1){
-				puts("Conexion creada");
+//				puts("Conexion creada");
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);
@@ -1146,7 +1146,7 @@ void gossipear_con_procesos_desconectados(){
 			}
 		}
 		if(nombreProceso!=NULL){
-			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+//			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			free(nombreProceso);
 		}
 		i++;
@@ -1164,10 +1164,10 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 	char* nombreEncontrado = NULL;
 	void su_nombre(char* nombre, identificador* ids){
-		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
+//		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
-			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
+//			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
 		}
 	}
 	sem_wait(&mutex_diccionario_conexiones);

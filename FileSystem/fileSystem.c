@@ -581,6 +581,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 	switch (quien_pidio(instruccion)) {
 	case CONSOLA_KERNEL:
+		puts("La instrucicon la pidio la consola del Kernel");
 		if (ultimoParametro != NULL){
 				list_add(listaParam, (char*)ultimoParametro);
 		}
@@ -594,12 +595,14 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		break;
 
 	case CONSOLA_MEMORIA:
+		puts("La instrucicon la pidio la consola de Memoria");
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_MEMORIA, listaParam);
 		int conexionReceptor2 = obtener_fd_out(remitente);
 		enviar_liberando_request(miInstruccion, conexionReceptor2);
 		break;
 
 	default: //Consola file system
+		puts("La instrucicon la pidio la consola del FS");
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 
 		if (codigoOperacion == DEVOLUCION_SELECT) //Se pidio desde la consola de FS
