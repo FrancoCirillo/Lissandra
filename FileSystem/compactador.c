@@ -29,11 +29,8 @@ void compactar_todas_las_tablas() {
 void* compactador(void* tab) {
 	char* tabla = tab;
 
-<<<<<<< HEAD
 	t_list* particiones =list_create();
-=======
 	t_list* particiones = list_create();
->>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2019-1c-Como-PCs-en-el-agua.git
 
 	int tiempo_compactacion = atoi(obtener_dato_metadata(tabla, "COMPACTATION_TIME"))/1000; //en segundos
 
