@@ -9,6 +9,7 @@ void inicializar_memtable() {
 		levantar_tablas_directorio(directorio);
 		loggear_info(string_from_format("Se inicializó la memtable."));
 	}
+	//No se cierra el directorio porque rompe con los hilos de compactacion
 }
 
 void finalizar_memtable() {
@@ -20,7 +21,7 @@ void finalizar_memtable() {
 	compactar_todas_las_tablas(); //NO FUNCIONA?
 	//Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
 
-	dictionary_destroy(memtable); //Se libera el diccionario
+	dictionary_destroy(memtable);
 }
 
 void levantar_tablas_directorio(DIR* directorio) {
@@ -33,10 +34,9 @@ void levantar_tablas_directorio(DIR* directorio) {
 			dictionary_put(memtable, tabla, registros);
 			inicializar_semaforo_tabla(tabla);
 			agregar_a_contador_dumpeo(tabla);
-			//crear_hilo_compactador(tabla);
+			crear_hilo_compactador(tabla);
 		}
 	}
-	closedir(directorio);
 }
 
 _Bool existe_tabla_en_mem(char* tabla) {
@@ -155,9 +155,9 @@ void iniciar_dumpeo() {
 }
 
 void* dumpeo() {
-	sem_wait(&mutex_tiempo_dump_config);
+	sem_wait(&mutex_config);
 	int tiempo_dump = obtener_tiempo_dump_config();
-	sem_post(&mutex_tiempo_dump_config);
+	sem_post(&mutex_config);
 
 	while(1){
 		sleep(tiempo_dump);
@@ -169,9 +169,9 @@ void* dumpeo() {
 		limpiar_memtable();  //La deja como nueva. Sin tablas.
 		sem_post(&mutex_memtable);
 
-		sem_wait(&mutex_tiempo_dump_config);
+		sem_wait(&mutex_config);
 		tiempo_dump = obtener_tiempo_dump_config();
-		sem_post(&mutex_tiempo_dump_config);
+		sem_post(&mutex_config);
 	}
 
 }

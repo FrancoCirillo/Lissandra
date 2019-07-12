@@ -19,8 +19,8 @@ _Bool compactation_locker;
 
 void 	crear_hilo_compactador(char* tabla);
 void    compactar_todas_las_tablas();
-//void* 	compactador(void* tabla);
-void 	compactador(char* tabla);
+void* 	compactador(void* tabla);
+//void 	compactador(char* tabla);
 t_list* listar_archivos(char* tabla);
 int 	hay_tmp(char* tabla);
 void 	agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo);

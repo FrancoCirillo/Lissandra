@@ -33,7 +33,6 @@ void  loggear_FS_error(char*, instr_t*);
 void  inicializar_configuracion(void);
 void  actualizar_tiempo_retardo_config(mseg_t);
 void  actualizar_tiempo_dump_config(mseg_t);
-//char* obtener_por_clave(char* , char*);
 int   obtener_tiempo_dump_config();
 
 
@@ -41,9 +40,8 @@ int   obtener_tiempo_dump_config();
 void	  metadata_inicializar(FILE*, instr_t*);
 void      crear_metadata(instr_t*);
 t_config* obtener_metadata(char*);
-int 	  obtener_part_metadata(char*);
-char* 	  obtener_consistencia_metadata(char*);
-int 	  obtener_tiempo_compactacion_metadata(char*);
+char*	  obtener_path_metadata(char*);
+char* 	  obtener_dato_metadata(char*, char*);
 
 void 	  leer_metadata_FS();
 

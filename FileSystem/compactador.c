@@ -6,7 +6,7 @@ void crear_hilo_compactador(char* tabla){
 	pthread_t hilo_compactador_tabla;
 	pthread_attr_t attr_tabla;
 	pthread_attr_init(&attr_tabla);
-	pthread_create(&hilo_compactador_tabla, &attr_tabla, &compactador, NULL);
+	pthread_create(&hilo_compactador_tabla, &attr_tabla, &compactador, tabla);
 	pthread_detach(hilo_compactador_tabla);
 	loggear_trace(string_from_format("Se creo el hilo de compactacion de la tabla '%s'", tabla));
 }
@@ -26,16 +26,14 @@ void compactar_todas_las_tablas() {
 	closedir(directorio);
 }
 
-//void* compactador(void* tab) {
-//	char* tabla = tab;
-
-void compactador(char* tabla) {
+void* compactador(void* tab) {
+	char* tabla = tab;
 
 	t_list* particiones = (t_list*)list_create();
 
-	int tiempo_compactacion = obtener_tiempo_compactacion_metadata(tabla)/1000; //en segundos
+	int tiempo_compactacion = atoi(obtener_dato_metadata(tabla, "COMPACTATION_TIME"))/1000; //en segundos
 
-	int cantidad_particiones = obtener_part_metadata(tabla);
+	int cantidad_particiones = atoi(obtener_dato_metadata(tabla, "PARTITIONS"));
 
 	int cant_tmpc;
 
@@ -57,11 +55,11 @@ void compactador(char* tabla) {
 	mseg_t duracion_compactacion;
 
 	while(existe_tabla_en_mem(tabla) || compactation_locker) {
-		ts_inicial = obtener_ts();
-		i++;
-
 		if(existe_tabla_en_mem(tabla))
 			sleep(tiempo_compactacion);
+
+		ts_inicial = obtener_ts();
+		i++;
 
 		printf("Compactacion nro: %d\n", i);
 
@@ -125,12 +123,6 @@ void compactador(char* tabla) {
 	//free(de todo lo que use);
 
 }
-
-
-//void vaciar_listas_registros(particiones){
-
-
-//}
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	printf("Estoy en FINALIZAR COMPACTACION \nDe la Particion: %d en tabla %s\n\n", num , tabla);

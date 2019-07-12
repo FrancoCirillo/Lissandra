@@ -90,11 +90,11 @@ void imprimirMetadata(char* tabla){
 	loggear_trace(string_from_format("-------------------Entro a imprimir metadata-------------------"));
 	char *texto = string_new();
 	string_append_with_format(&texto, "Metadata de la tabla %s\n", tabla);
-	int part = obtener_part_metadata(tabla);
+	int part = atoi(obtener_dato_metadata(tabla, "PARTITIONS"));
 	string_append_with_format(&texto, "\tParticiones: %d\n", part);
-	char* consist = obtener_consistencia_metadata(tabla);
+	char* consist = obtener_dato_metadata(tabla, "CONSISTENCY");
 	string_append_with_format(&texto, "\tConsistencia: %s\n", consist);
-	int tiempoComp = obtener_tiempo_compactacion_metadata(tabla);
+	int tiempoComp = atoi(obtener_dato_metadata(tabla, "COMPACTATION_TIME"));
 	string_append_with_format(&texto, "\tTiempo de Compactacion: %d\n", tiempoComp);
 
 	loggear_info(texto);
@@ -333,8 +333,7 @@ void finalizar_FS(instr_t* instruccion) {
 
 void iniciar_semaforos() {
 	crear_dic_semaforos_FS();
-	sem_init(&mutex_tiempo_dump_config, 0, 1);
-	sem_init(&mutex_tiempo_retardo_config, 0, 1);
+	sem_init(&mutex_config, 0, 1);
 	sem_init(&mutex_memtable, 0, 1);
 	sem_init(&mutex_log, 0, 1);
 	sem_init(&mutex_bitarray, 0, 1);
@@ -456,7 +455,7 @@ char* obtener_parametro(instr_t * instr, int index) {
 }
 
 int obtener_particion_key(char* tabla, int key) {
-	int cant_particiones = obtener_part_metadata(tabla);
+	int cant_particiones = atoi(obtener_dato_metadata(tabla, "PARTITIONS"));
 	return key % cant_particiones;
 }
 
@@ -583,13 +582,10 @@ void actualizar_config(){
 		config_destroy(auxConfig);
 	}
 
-	sem_wait(&mutex_tiempo_retardo_config);
+	sem_wait(&mutex_config);
 	config_FS.retardo = (mseg_t)config_get_int_value(auxConfig, "RETARDO");
-	sem_post(&mutex_tiempo_retardo_config);
-
-	sem_wait(&mutex_tiempo_dump_config);
 	config_FS.tiempo_dump = (mseg_t)config_get_int_value(auxConfig, "TIEMPO_DUMP");
-	sem_post(&mutex_tiempo_dump_config);
+	sem_post(&mutex_config);
 
 	config_FS.LOG_LEVEL = log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
 	sem_wait(&mutex_log);

@@ -117,24 +117,12 @@ t_config* obtener_metadata(char* tabla) {
 	return metadata;
 }
 
-int obtener_part_metadata(char* tabla) {
+char* obtener_dato_metadata(char* tabla, char* dato_buscado) {
+	sem_wait(&mutex_config);
 	t_config* metadata = obtener_metadata(tabla);
-	int particiones = config_get_int_value(metadata, "PARTITIONS");
-	config_destroy(metadata);
-	return particiones;
-}
-
-char* obtener_consistencia_metadata(char* tabla) {
-	t_config* metadata = obtener_metadata(tabla);
-	char* consistencia = config_get_string_value(metadata, "CONSISTENCY");
-	return consistencia; //config_destroy(metadata);
-}
-
-int obtener_tiempo_compactacion_metadata(char* tabla) {
-	t_config* metadata = obtener_metadata(tabla);
-	int tiempo_compactacion = config_get_int_value(metadata, "COMPACTATION_TIME");
-	config_destroy(metadata);
-	return tiempo_compactacion;
+	char* valor = config_get_string_value(metadata, dato_buscado);
+	sem_post(&mutex_config);
+	return valor;
 }
 
 //---------------------------BLOQUES---------------------------

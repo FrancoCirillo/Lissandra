@@ -67,7 +67,7 @@ void execute_create(instr_t* instruccion, char* remitente) {
 		crear_directorio(g_ruta.tablas, tabla);
 		crear_particiones(instruccion);
 		crear_metadata(instruccion);
-		//crear_hilo_compactador(tabla);
+		crear_hilo_compactador(tabla);
 
 		char* cadena = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 		list_add(listaParam, cadena);
@@ -214,9 +214,9 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
 				loggear_trace(string_from_format("La ruta de la tabla es %s\n", tabla));
 				imprimirMetadata(tabla);
-				char* consistencia = obtener_consistencia_metadata(tabla);
-				char* particiones = string_itoa(obtener_part_metadata(tabla));
-				char* tiempo_comp = string_itoa(obtener_tiempo_compactacion_metadata(tabla));
+				char* consistencia = obtener_dato_metadata(tabla, "CONSISTENCY");
+				char* particiones = obtener_dato_metadata(tabla, "PARTITIONS");
+				char* tiempo_comp = obtener_dato_metadata(tabla, "COMPACTATION_TIME");
 
 				list_add(listaParam, tabla);
 				list_add(listaParam, consistencia);
@@ -236,9 +236,9 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 			imprimir_donde_corresponda(ERROR_DESCRIBE, instruccion, listaParam, remitente);
 			return;
 		}
-		char* consistencia = obtener_consistencia_metadata(tabla);
-		char* particiones = string_itoa(obtener_part_metadata(tabla));
-		char* tiempo_comp = string_itoa(obtener_tiempo_compactacion_metadata(tabla));
+		char* consistencia = obtener_dato_metadata(tabla, "CONSISTENCY");
+		char* particiones = obtener_dato_metadata(tabla, "PARTITIONS");
+		char* tiempo_comp = obtener_dato_metadata(tabla, "COMPACTATION_TIME");
 		imprimirMetadata(tabla);
 
 		list_add(listaParam, tabla);
