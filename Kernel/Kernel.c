@@ -26,9 +26,9 @@ int main(int argc, char* argv[]) {
 	inicializar_kernel();
 	//iniciar_consola();
 
-	loggear_debug(string_from_format("### FINALIZANDO KERNEL ###"));
-	sleep(2);
-	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
+//	loggear_debug(string_from_format("### FINALIZANDO KERNEL ###"));
+//	sleep(2);
+//	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
 	return 0;
 }
 void inicializar_kernel(){
