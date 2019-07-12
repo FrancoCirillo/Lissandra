@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 	iniciar_ejecutador_gossiping();
 
 	// . es el directorio Actual - Tener en cuenta que lo corremos desde la carpeta padre a la que tiene el binario
-	vigilar_conexiones_entrantes(callback, actualizar_config, ".", CONSOLA_MEMORIA);
+	vigilar_conexiones_entrantes(callback, actualizar_config, proceso_desconectado, ".", CONSOLA_MEMORIA);
 
 	return 0;
 }
@@ -279,4 +279,4 @@ void terminar_memoria(instr_t* instruccion){
 	exit(0);
 }
 
-
+void proceso_desconectado(char* nombreProceso){}

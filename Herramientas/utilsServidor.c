@@ -52,6 +52,7 @@ int iniciar_servidor(char *ip_proceso, char *puerto_a_abrir)
 int vigilar_conexiones_entrantes(
 		void (*ejecutar_requestRecibido)(instr_t *instruccionAEjecutar, char *remitente),
 		void (*actualizar_config)(void),
+		void (*proceso_desconectado)(char* nombreDesconectado),
 		char* rutaConfig,
 		int queConsola)
 {
@@ -187,6 +188,7 @@ int vigilar_conexiones_entrantes(
 						{
 							loggear_warning(string_from_format("El cliente '%s'se desconecto\n", quienLoEnvia));
 							FD_CLR(i, &master);
+							proceso_desconectado(quienLoEnvia);
 							sem_wait(&mutex_diccionario_conexiones);
 							dictionary_remove_and_destroy(conexionesActuales, quienLoEnvia, free); //No and_destroy porque se libera solo afuera del else
 							sem_post(&mutex_diccionario_conexiones);

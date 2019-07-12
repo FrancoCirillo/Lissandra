@@ -38,7 +38,7 @@ void inicializar_kernel(){
 
 	iniciar_servidor(miIPKernel, configuracion.puerto);
 	// . es el directorio Actual - Tener en cuenta que lo corremos desde la carpeta padre a la que tiene el binario
-	vigilar_conexiones_entrantes(callback, actualizar_config, ".", CONSOLA_KERNEL);
+	vigilar_conexiones_entrantes(callback, actualizar_config, memoria_desconectada, ".", CONSOLA_KERNEL);
 
 }
 
@@ -978,7 +978,9 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
 	loggear_trace(string_from_format("Datos enviados"));
+	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
+	sem_post(&mutex_diccionario_conexiones);
 
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
@@ -1079,9 +1081,7 @@ t_list *conexiones_para_gossiping(){
 		}
 	}
 
-	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)juntar_ip_y_puerto);
-	sem_post(&mutex_diccionario_conexiones);
 
 	return tablaGossiping;
 
@@ -1140,6 +1140,7 @@ void gossipear_con_procesos_desconectados(){
 			}
 		}
 		if(nombreProceso!=NULL){
+			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			free(nombreProceso);
 		}
 		i++;
@@ -1156,14 +1157,11 @@ bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBusca
 char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 	char* nombreEncontrado = NULL;
-
 	void su_nombre(char* nombre, identificador* ids){
 		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
 			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
-		}else{
-			free(nombreEncontrado);
 		}
 	}
 	sem_wait(&mutex_diccionario_conexiones);
