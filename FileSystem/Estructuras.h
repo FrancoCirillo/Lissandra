@@ -17,7 +17,6 @@
 
 
 //GLOBALES
-void iniciar_logger();
 int  bloques_disponibles;
 char* rutaConfiguracion;
 t_config* g_config;
@@ -28,11 +27,12 @@ sem_t mutex_cant_bloques;
 sem_t mutex_dic_semaforos;
 
 //LOGS Y CONFIG
+void  iniciar_logger();
 void  loggear_FS(char*);
 void  loggear_FS_error(char*, instr_t*);
 void  inicializar_configuracion(void);
-void  actualizar_tiempo_retardo_config(mseg_t);   //ver si le llega mseg_t o un char*
-void  actualizar_tiempo_dump_config(mseg_t);		//ver si le llega mseg_t o un char*
+void  actualizar_tiempo_retardo_config(mseg_t);
+void  actualizar_tiempo_dump_config(mseg_t);
 //char* obtener_por_clave(char* , char*);
 int   obtener_tiempo_dump_config();
 

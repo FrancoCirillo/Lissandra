@@ -2,23 +2,34 @@
 
 #include "compactador.h"
 
+//void crear_hilo_compactador(char* tabla){
+//	pthread_t hilo_compactador_tabla;
+//	pthread_attr_t attr_tabla;
+//	pthread_attr_init(&attr_tabla);
+//	pthread_create(&hilo_compactador_tabla, &attr_tabla, &compactador, NULL);
+//	pthread_detach(hilo_compactador_tabla);
+//	loggear_trace(string_from_format("Se creo el hilo de compactacion de la tabla '%s'", tabla));
+//}
+
 void compactar_todas_las_tablas() {
 	DIR* directorio = opendir(g_ruta.tablas);
 	if (directorio != NULL){
 		struct dirent* directorio_leido;
+		compactation_locker = 1; //Se habilita una ultima compactacion
 		while((directorio_leido = readdir(directorio)) != NULL) {
 			char* tabla = directorio_leido->d_name;
 			if(!string_contains(tabla, "."))
 				compactador(tabla);
 		}
+		compactation_locker = 0;
 	}
 	closedir(directorio);
-	inhabilitar_compactacion();
 }
 
-void compactador(char* tabla) {
+//void* compactador(void* tab) {
+//	char* tabla = tab;
 
-	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
+void compactador(char* tabla) {
 
 	t_list* particiones = (t_list*)list_create();
 	int tiempo_compactacion = obtener_tiempo_compactacion_metadata(tabla)/1000; //en segundos
@@ -71,7 +82,7 @@ void compactador(char* tabla) {
 				agregar_registros_en_particion(particiones, lectura);
 //				loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
 			}
-			puts("ya agregue_registros_en_particion\n\n");
+			puts("Ya agregue_registros_en_particion\n\n");
 
 			sleep(3);
 
@@ -153,11 +164,6 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	free(nom);
 	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s particion %d \n\n", tabla, num);
 }
-
-void inhabilitar_compactacion() {
-	compactation_locker = 0;
-}
-
 
 //int ultimo_bloque(t_config* archivo){
 //	char* lista_bloques = config_get_string_value(archivo, "BLOCKS");

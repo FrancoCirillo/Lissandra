@@ -67,8 +67,7 @@ void execute_create(instr_t* instruccion, char* remitente) {
 		crear_directorio(g_ruta.tablas, tabla);
 		crear_particiones(instruccion);
 		crear_metadata(instruccion);
-
-		//TODO crear_hilo_compactador(tabla);
+		//todo: crear_hilo_compactador(tabla);
 
 		char* cadena = string_from_format("Se creo el directorio, el metadata y las particiones de la tabla: %s", tabla);
 		list_add(listaParam, cadena);
