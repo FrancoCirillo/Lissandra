@@ -21,13 +21,10 @@ void compactador(char* tabla) {
 	//iniciar con detach a partir del CREATE o de la lectura cuando se inicia el FS.
 
 	t_list* particiones = (t_list*)list_create();
-
 	int tiempo_compactacion = obtener_tiempo_compactacion_metadata(tabla)/1000; //en segundos
 
-	printf(" el tiempo de compactacion es %d\n", tiempo_compactacion);
-
 	int cantidad_particiones = obtener_part_metadata(tabla);
-	printf(" La cantidad de particiones es %d\n", cantidad_particiones);
+
 	int cant_tmpc;
 
 	for(int num = 0; num < cantidad_particiones; num++) {
@@ -40,7 +37,7 @@ void compactador(char* tabla) {
 	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
 	sem_post(&mutex_dic_semaforos);
 
-	int i=1;
+	int i=0;
 
 	mseg_t ts_inicial;
 	mseg_t ts_final;
@@ -48,6 +45,7 @@ void compactador(char* tabla) {
 
 	while(existe_tabla_en_mem(tabla) || compactation_locker) {
 		ts_inicial = obtener_ts();
+		i++;
 
 		if(existe_tabla_en_mem(tabla))
 			sleep(tiempo_compactacion);
@@ -67,30 +65,30 @@ void compactador(char* tabla) {
 		t_list* lista_archivos = listar_archivos(tabla);
 
 		if(lista_archivos){
+
 			for(int i = 0; i < list_size(lista_archivos); i++){
 				char* lectura = (char*)list_get((t_list*)lista_archivos, i);
 				agregar_registros_en_particion(particiones, lectura);
-				loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
+//				loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
 			}
 			puts("ya agregue_registros_en_particion\n\n");
 
-			sleep(5);
+			sleep(3);
 
 			sem_wait(mutex_tabla);
 
 			list_iterate((t_list*)lista_archivos, &liberar_bloques);
 			puts("Ya libere los bloques\n\n ENTRO AL FOR DE FINALIZAR COMPACTACION\n");
 
-			sleep(5);
-			//Hasta aca estoy segura que funciona.
+			sleep(2);
 
 			for(int j = 0; j< cantidad_particiones;j++){
-				finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
 				loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
+				finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
 			}
 
 			borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
-
+			puts("Borre los tmpcs");
 
 			sem_post(mutex_tabla);
 
@@ -119,8 +117,8 @@ void compactador(char* tabla) {
 }
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
-	puts("Estoy en FINALIZAR COMPACTACION");
-	sleep(3);
+	printf("Estoy en FINALIZAR COMPACTACION \nDe la Particion: %d en tabla %s\n\n", num , tabla);
+	sleep(1);
 	char* nom = string_from_format("Part%d", num);
 	FILE* f = crear_archivo(tabla, nom, ".bin"); //Lo crea como nuevo.
 
@@ -140,7 +138,7 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 		registro_t* registro = reg;
 		nro_bloque = obtener_ultimo_bloque(ruta_archivo);
 		ruta_bloque = obtener_ruta_bloque(nro_bloque);
-		loggear_trace(string_from_format("Num bloque del archivo de la ruta %s es %d\n\n", ruta_archivo, nro_bloque));
+		loggear_trace(string_from_format("Num bloque del archivo escrito es: %d\n\n", nro_bloque));
 		sleep(2);
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
 		printf("ya termine de bajar el reg de key %s\n",key );
@@ -153,7 +151,7 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 //	config_destroy(archivo);
 	fclose(f);
 	free(nom);
-	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s \n\n", tabla);
+	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s particion %d \n\n", tabla, num);
 }
 
 void inhabilitar_compactacion() {
@@ -198,10 +196,13 @@ void eliminar_archivo(char* ruta_archivo){
 
 void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	puts("\n\n--------------estoy en agregar_registros_en_particion------------");
-	printf("Agregando reg de la ruta: %s \n", ruta_archivo);
+	printf("Agregando registros al diccionario de particiones de la ruta:\n %s \n", ruta_archivo);
 
 	if(!obtener_tam_archivo(ruta_archivo))
+	{
+		loggear_trace(string_from_format("No hay registros\n"));
 		return;
+	}
 
 	int cant_particiones = list_size(particiones);
 	int index;
@@ -210,7 +211,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-	loggear_trace(string_from_format("El archivo es: %s\n", ruta_bloque));
+//	loggear_trace(string_from_format("El archivo es: %s\n", ruta_bloque));
 	//int cant_letras_ts = strlen(mseg_a_string(obtener_ts()));
 	//char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 + config_FS.tamanio_value + 10)); //   +4 por: \n ; ; \0 //Le mando 10 de cabeza. es para que sobre.
 	//strcpy(buffer, "");
@@ -238,9 +239,11 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 				//strcat(buffer, "\n");
 				string_append(&buffer, "\n");
 				registro_t* registro = obtener_registro(buffer);
+				imprimirRegistro(registro);
 				free(buffer);
 				buffer = string_new();
 				index = registro->key % cant_particiones;
+				loggear_trace(string_from_format("Pertenece al Diccionario-Particion nro: %d\n", index));
 				t_dictionary* dic = list_get(particiones, index);
 				agregar_por_ts(dic, registro);
 				borrar_registro(registro);
@@ -259,7 +262,7 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
 
 	char* key_nueva = string_itoa(reg_nuevo->key);
 
-	loggear_trace(string_from_format("\nla key a agregar es %s\n", key_nueva));
+	loggear_trace(string_from_format("\nla key leida a agregar en el diccionario que corresponda es %s\n", key_nueva));
 
 	registro_t* reg_viejo = (registro_t*)dictionary_get( (t_dictionary*)dic,key_nueva);
 
@@ -336,7 +339,7 @@ int pasar_a_tmpc(char* tabla) {
 		}
 	}
 
-	loggear_trace(string_from_format("Se pasaron a tmpc los archivos de la tabla %s\n", tabla));
+//	loggear_trace(string_from_format("Se pasaron a tmpc los archivos de la tabla %s\n", tabla));
 	resetear_numero_dump(tabla);   //Importante esto!
 	//loggear_trace(string_from_format("Se reseteo el numero de dump\n"));
 
