@@ -357,9 +357,6 @@ void inicializar_FS(int argc, char* argv[]) {
 	inicializar_bitarray();
 	inicializar_bloques_disp();
 
-	//iniciar_compactacion();
-	//TODO  Crea hilos para las tablas que ya existan, y luego en cada CREATE Agregar un hilo mas
-
 	loggear_info(string_from_format("-----------Fin inicialización LFS-----------"));
 
 }
@@ -368,11 +365,7 @@ void finalizar_FS(instr_t* instruccion) {
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
 
-	dumpear_memtable();  //Esto limpia lo ultimo de la mem antes de cerrar el FS.
 	finalizar_memtable();
-	compactation_locker = 1;
-	compactar_todas_las_tablas(); //Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
-	puts("Pase compactacion");
 	finalizar_bitarray();
 	config_destroy(g_config);
 	log_destroy(g_logger);
@@ -451,7 +444,7 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		loggear_debug(string_from_format("Directorio leido: %s\n", directorio_leido->d_name));
 		char* nombre_archivo = directorio_leido->d_name;
-		if(string_ends_with(nombre_archivo, "tmp")) {
+		if(string_ends_with(nombre_archivo, "tmp") || string_ends_with(nombre_archivo, "tmpc")) {
 			char* ruta_tmp = string_from_format("%s%s", ruta_tabla, nombre_archivo);
 			loggear_info(string_from_format("RUTA:%s\n", ruta_tmp));
 //			imprimirContenidoArchivo(ruta_tmp, loggear_trace);
@@ -472,9 +465,15 @@ char* obtener_registro_mas_reciente(t_list* registros_de_key) {
 }
 
 t_list* obtener_registros_key(char* tabla, uint16_t key) {
+	sem_wait(&mutex_dic_semaforos);
+	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
+	sem_post(&mutex_dic_semaforos);
+
+	sem_wait(mutex_tabla);
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
 	t_list* registro_bin = leer_binario(tabla, key);
+	sem_post(mutex_tabla);
 
 	t_list* registros_totales = crear_lista_registros(); //free
 	list_add_all(registros_totales, registros_mem);
@@ -581,6 +580,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 	switch (quien_pidio(instruccion)) {
 	case CONSOLA_KERNEL:
+		puts("La instrucicon la pidio la consola del Kernel");
 		if (ultimoParametro != NULL){
 				list_add(listaParam, (char*)ultimoParametro);
 		}
@@ -594,12 +594,14 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		break;
 
 	case CONSOLA_MEMORIA:
+		puts("La instrucicon la pidio la consola de Memoria");
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_MEMORIA, listaParam);
 		int conexionReceptor2 = obtener_fd_out(remitente);
 		enviar_liberando_request(miInstruccion, conexionReceptor2);
 		break;
 
 	default: //Consola file system
+		puts("La instrucicon la pidio la consola del FS");
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion, listaParam);
 
 		if (codigoOperacion == DEVOLUCION_SELECT) //Se pidio desde la consola de FS
@@ -610,6 +612,9 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 		if (codigoOperacion > BASE_COD_ERROR)
 			loggear_error_proceso(miInstruccion);
+
+		list_destroy_and_destroy_elements(miInstruccion->parametros, free);
+		free(miInstruccion);
 
 		break;
 	}

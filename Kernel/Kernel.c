@@ -173,6 +173,27 @@ instr_t* kernel_metrics(instr_t * i){
 
 	return respuesta;
 }
+instr_t* kernel_journal(instr_t* i){
+	loggear_info(string_from_format("Ejecutando Journal"));
+
+	void pedir_journal(char* nombreMemoria, identificador* ids){
+		loggear_debug(string_from_format("Enviando Journal a %s", nombreMemoria));
+		int conexion = obtener_fd_out_sin_diccionario(nombreMemoria);
+		enviar_request_simple(i, conexion);
+	}
+	sem_wait(&mutex_diccionario_conexiones);
+	dictionary_iterator(conexionesActuales, (void*)pedir_journal);
+	sem_post(&mutex_diccionario_conexiones);
+
+	instr_t * respuesta=malloc(sizeof(instr_t));
+	respuesta->timestamp=i->timestamp;
+	t_list * params=list_create();
+	respuesta->parametros=params;
+	char* mensaje=string_from_format("Journal ejecutado!");
+	list_add(params,mensaje);
+	respuesta->codigo_operacion=0;
+	return respuesta;
+}
 instr_t* kernel_run(instr_t *i){
 	loggear_info(string_from_format("Ejecutando run. Proceso en estado NUEVO"));
 	char* nombre_archivo=obtener_parametroN(i,0);
@@ -441,6 +462,9 @@ instr_t* ejecutar_instruccion(instr_t* i){
 
 		exit(0);
 	}
+	if(i->codigo_operacion==CODIGO_JOURNAL){
+			return kernel_journal(i);
+	}
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
 	}
@@ -492,7 +516,7 @@ instr_t *validar(instr_t * i){
 	instr_t* mensaje_error=malloc(sizeof(instr_t));
 	mensaje_error->codigo_operacion=codigo_error;
 	mensaje_error->timestamp=i->timestamp;
-	free(mensaje_error->parametros);
+	//free(mensaje_error->parametros);
 	mensaje_error->parametros=list_create();
 	list_add(mensaje_error->parametros,mensaje);
 	return mensaje_error;
@@ -981,20 +1005,19 @@ void *ejecutar_gossiping()
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){
-	loggear_info(string_from_format("Devolviendo el gossip"));
-	loggear_trace(string_from_format("Enviando datos a %s", remitente));
+	loggear_info(string_from_format("Devolviendo el gossip a %s", remitente));
+//	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
-	loggear_trace(string_from_format("Datos enviados"));
+//	loggear_trace(string_from_format("Datos enviados"));
 	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
 	sem_post(&mutex_diccionario_conexiones);
-
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
 
 	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
-	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
+//	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
 
 
 	actualizar_tabla_gossiping(instruccion);
@@ -1033,12 +1056,12 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 			}
 				else if(i % 3 == 1){
 					ip = strdup(parametro);
-					loggear_trace(string_from_format("Su ip es %s", ip));
+//					loggear_trace(string_from_format("Su ip es %s", ip));
 					i++;
 				}
 					else if(i % 3 == 2){
 						puerto = strdup(parametro);
-						loggear_trace(string_from_format("Su puerto es %s", puerto));
+//						loggear_trace(string_from_format("Su puerto es %s", puerto));
 						identificador identificadores = {
 								.fd_out = 0,
 								.fd_in = 0
@@ -1059,6 +1082,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						i++;
 					}
 		}
+		free(parametro);
 	}
 
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
@@ -1130,24 +1154,23 @@ void gossipear_con_procesos_desconectados(){
 
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
-		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
-		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+//		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
+//		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
 		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0){
 			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPKernel, 0);
 			if(conexion != -1){
-				puts("Conexion creada");
+//				puts("Conexion creada");
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
-
 			}
 		}
 		if(nombreProceso!=NULL){
-			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+//			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			free(nombreProceso);
 		}
 		i++;
@@ -1165,10 +1188,10 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 	char* nombreEncontrado = NULL;
 	void su_nombre(char* nombre, identificador* ids){
-		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
+//		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
-			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
+//			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
 		}
 	}
 	sem_wait(&mutex_diccionario_conexiones);

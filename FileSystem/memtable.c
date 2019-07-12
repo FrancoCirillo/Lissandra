@@ -11,9 +11,16 @@ void inicializar_memtable() {
 	}
 }
 
-void finalizar_memtable() { //Borra y libera todos los registros y tablas.
-	//IMPORTANTE: la variable global no se puede usar a menos que hagan otro diccionary_create
-	dictionary_destroy_and_destroy_elements(memtable, &borrar_registros);
+void finalizar_memtable() {
+	dumpear_memtable(); //Esto limpia lo ultimo de la mem antes de cerrar el FS.
+
+	dictionary_clean_and_destroy_elements(memtable, &borrar_registros); //Borra y libera todos los registros y tablas.
+	//No se destruye el diccionario por la comprobacion de la compactacion.
+
+	compactar_todas_las_tablas(); //NO FUNCIONA?
+	//Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
+
+	dictionary_destroy(memtable); //Se libera el diccionario
 }
 
 void levantar_tablas_directorio(DIR* directorio) {
@@ -26,13 +33,14 @@ void levantar_tablas_directorio(DIR* directorio) {
 			dictionary_put(memtable, tabla, registros);
 			inicializar_semaforo_tabla(tabla);
 			agregar_a_contador_dumpeo(tabla);
+			//crear_hilo_compactador(tabla);
 		}
 	}
 	closedir(directorio);
 }
 
-int existe_tabla_en_mem(char* tabla) {
-	return dictionary_has_key(memtable, tabla);
+_Bool existe_tabla_en_mem(char* tabla) {
+		return dictionary_has_key(memtable, tabla);
 }
 
 char* obtener_ruta_tabla(char* tabla) {
@@ -56,7 +64,7 @@ void borrar_registros(void* registros) {
 }
 
 void borrar_registro(void* registro){
-	free(((registro_t*)registro)->value);
+	//free(((registro_t*)registro)->value);
 	free((registro_t*)registro);
 }
 
@@ -79,6 +87,7 @@ void agregar_registro(char* tabla, registro_t* registro) {
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	list_add(registros_tabla, registro);
 	loggear_debug(string_from_format("Se inserto el registro en la memtable."));
+	loggear_trace(string_from_format(registro_a_string(registro)));
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {
@@ -128,6 +137,13 @@ registro_t* pasar_a_registro(instr_t* instr) {
 	return registro;
 }
 
+char* registro_a_string(registro_t* registro) {
+	char* ts = mseg_a_string(registro->timestamp);
+	char* key = string_itoa(registro->key);
+	char* value = registro->value;
+	return string_from_format("%s;%s;%s\n", ts, key, value);
+}
+
 //DUMPEO
 void iniciar_dumpeo() {
 	pthread_t hilo_dumpeo;
@@ -157,6 +173,7 @@ void* dumpeo() {
 		tiempo_dump = obtener_tiempo_dump_config();
 		sem_post(&mutex_tiempo_dump_config);
 	}
+
 }
 
 void dumpear_memtable() {

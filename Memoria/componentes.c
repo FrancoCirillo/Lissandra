@@ -27,7 +27,6 @@ void inicializar_sectores_memoria()
 	if((cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro) == 0){	//Se trunca automaticamente al entero (por ser todos int)
 		loggear_error(string_from_format("La Memoria es muy pequenia. No puede almacenar un value tan grande."));
 	}
-	loggear_trace(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
 	sem_post(&mutex_config);
 	loggear_info(string_from_format("La Memoria Principal quedo dividida en %d paginas", cantidadDeSectores));
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
@@ -73,9 +72,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		{ //Algoritmo de reemplazo:
 			loggear_debug(string_from_format("Ejecutando el algoritmo de reemplazo"));
 			int *numeroDeSector = pagina_lru();
-
 			int indiceEnTabla = 0;
-
 			//Buscando la fila correspondiente a la pagina menos usada
 			char *segmentoConFilaABorrar;
 			fila_correspondiente_a_esa_pagina((*numeroDeSector), &indiceEnTabla, &segmentoConFilaABorrar);
@@ -199,7 +196,6 @@ registro *obtener_registro_de_pagina(void *pagina)
 	miRegistro->key = key;
 	miRegistro->value = calloc(1, tamanioValue + 1);
 	memcpy(miRegistro->value, pagina + sizeof(mseg_t) + sizeof(uint16_t), tamanioValue + 1);
-
 	return miRegistro;
 }
 
@@ -301,7 +297,21 @@ bool memoria_esta_full()
 
 int *pagina_lru()
 {
-	return (int *)list_get(paginasSegunUso, 0);
+	filaTabPags* filaPosible;
+	int* paginaEncontrada;
+	do{
+		paginaEncontrada = (int *)list_get(paginasSegunUso, 0);
+		int indiceEnTabla = 0;
+		char* segmentoQueLaTiene;
+		filaPosible = fila_correspondiente_a_esa_pagina((*paginaEncontrada), &indiceEnTabla, &segmentoQueLaTiene);
+		if(filaPosible->flagModificado !=0 ){
+			loggear_trace(string_from_format("Se encontro una pagina que tenia el flag modificado"));
+			free(segmentoQueLaTiene); //malloc en fila_correspondiente_a_esa_pagina
+			list_remove(paginasSegunUso, 0);
+		}
+	}while(filaPosible->flagModificado != 0);
+
+	return paginaEncontrada;
 }
 
 filaTabPags *fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, int *indiceEnTabla)
@@ -411,6 +421,7 @@ void ejecutar_instruccion_journal(instr_t *instruccion, int liberar)
 				loggear_debug(string_from_format("Insertando '%s' en FileSystem", tablaAInsertar));
 				instr_t *instruccionAEnviar = fila_a_instr(tablaAInsertar, fila, codOp);
 				loggear_trace(string_from_format("Se genero la instruccion a enviar"));
+				imprimir_instruccion(instruccionAEnviar, loggear_trace);
 				t_list* listaABorrar = list_duplicate(instruccionAEnviar->parametros);
 				enviar_request(instruccionAEnviar, conexionConFS);
 				liberar_value(listaABorrar);
@@ -462,7 +473,7 @@ void liberar_value(t_list* listaParam){
 instr_t *fila_a_instr(char *tablaAInsertar, filaTabPags *fila, cod_op codOp)
 {
 	registro *suRegistro = obtener_registro_de_pagina(fila->ptrPagina);
-	loggear_trace(string_from_format("Se tienen los datos de la pagina"));
+//	loggear_trace(string_from_format("Se tienen los datos de la pagina"));
 	return registro_a_instr(tablaAInsertar, suRegistro, codOp);
 }
 
@@ -475,8 +486,8 @@ instr_t *registro_a_instr(char *tablaAInsertar, registro *unRegistro, cod_op cod
 	list_add(listaParam, tablaAInsertar);
 
 	loggear_trace(string_from_format("Nombre de la tabla a insertar agregado\n"));
-	char keyChar[6];
-	sprintf(keyChar,"%d", unRegistro->key);
+	char* keyChar = string_from_format("%d", unRegistro->key);
+	loggear_trace(string_from_format("Se agrego la key %s", keyChar));
 	list_add(listaParam, keyChar);
 
 	char* valueAAgregar = strdup(unRegistro->value);
