@@ -289,11 +289,6 @@ void ejecutar_instruccion_gossip(){
 
 	loggear_info(string_from_format("Ejecutando instruccion Gossip"));
 
-	loggear_debug(string_from_format("Tabla enviada:"));
-	sem_wait(&mutex_diccionario_conexiones);
-	imprimir_conexiones(conexionesActuales, loggear_debug);
-	sem_post(&mutex_diccionario_conexiones);
-
 	gossipear_con_conexiones_actuales();
 
 	gossipear_con_procesos_desconectados();
@@ -351,6 +346,10 @@ void gossipear_con_procesos_desconectados(){
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
 			}
+		}
+		if(nombreProceso!=NULL){
+			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+			free(nombreProceso);
 		}
 		i++;
 	}

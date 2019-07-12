@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 
 	inicializar_criterios();
 
-	iniciar_metricas();
+//	iniciar_metricas();
 
 	iniciar_ejecutador();
 
@@ -987,7 +987,6 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
 	sem_post(&mutex_diccionario_conexiones);
-
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
 
@@ -1058,6 +1057,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						i++;
 					}
 		}
+		free(parametro);
 	}
 
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
@@ -1142,7 +1142,6 @@ void gossipear_con_procesos_desconectados(){
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
-
 			}
 		}
 		if(nombreProceso!=NULL){
