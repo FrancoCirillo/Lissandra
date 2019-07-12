@@ -108,7 +108,7 @@ void iniciar_metricas(){
 }
 void *metricar(){
 	while(1){
-		//actualizar_configuracion();
+		actualizar_configuracion();
 		sem_wait(&mutex_configuracion);
 		int tiempo=configuracion.tiempoMetricas;
 		sem_post(&mutex_configuracion);
@@ -173,7 +173,7 @@ instr_t* kernel_metrics(instr_t * i){
 	return respuesta;
 }
 instr_t* kernel_run(instr_t *i){
-	loggear_info(string_from_format("EJECUTANDO RUN!"));
+	loggear_info(string_from_format("Ejecutando run. Proceso en estado NUEVO"));
 	char* nombre_archivo=obtener_parametroN(i,0);
 	FILE *f=fopen(nombre_archivo,"r");
 	instr_t * respuesta=malloc(sizeof(instr_t));
@@ -320,6 +320,7 @@ int ejecutar(){
 
 	while(1){
 		//Espero a la senial para seguir
+		actualizar_configuracion();
 		loggear_debug(string_from_format("Esperando!"));
 		pthread_mutex_lock(&lock_ejecutar);
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
@@ -353,7 +354,7 @@ int ejecutar(){
 	return 1;
 }
 void* ejecutar_proceso(void* un_proceso){
-	loggear_info(string_from_format("Ejecutando proceso..."));
+	loggear_info(string_from_format("Ejecutando proceso. Proceso pasa a estado EXEC"));
 	proceso* p=(proceso*)un_proceso;
 	instr_t* instruccion_obtenida;
 	for(int i=0;i<configuracion.quantum;/*i++*/){
@@ -743,7 +744,7 @@ void liberar_instruccion(instr_t* instruccion){
 	free(instruccion);
 }
 void finalizar_proceso(proceso* p){
-	loggear_info(string_from_format("Se finalizo correctamente un proceso !!. Se libera su memoria"));
+	loggear_info(string_from_format("Proceso pasa a estado FINALIZADO. Se libera su memoria"));
 	for(int i=0;list_size(p->instrucciones)>0;i++){
 		instr_t* instruccion=list_get(p->instrucciones,0);
 		loggear_info(string_from_format("Se elimina la memoria para la instruccion %d",i));
@@ -762,8 +763,9 @@ void finalizar_proceso(proceso* p){
 	continuar_ejecucion();
 }
 void encolar_proceso(proceso *p){
+
 	sem_wait(&semaforo_procesos_ready);
-	loggear_debug(string_from_format("Encolando proceso!"));
+	loggear_info(string_from_format("Encolando proceso. Proceso pasa a estado READY"));
 	proceso *aux=cola_ready;
 	if(aux==NULL){
 		cola_ready=p;
