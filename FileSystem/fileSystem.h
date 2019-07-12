@@ -80,8 +80,7 @@ typedef struct metadata_FS_t {
 
 
 /*SEMAFOROS*/
-sem_t mutex_tiempo_dump_config;
-sem_t mutex_tiempo_retardo_config;
+sem_t mutex_config;
 sem_t mutex_memtable;
 sem_t mutex_log;
 

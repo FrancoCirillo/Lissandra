@@ -218,6 +218,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						sem_wait(&mutex_diccionario_conexiones);
 						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
 						sem_post(&mutex_diccionario_conexiones);
+//						free(nombre) probablemente. Solo se hace el malloc con un proceso nuevo so...
 						list_add(configuracion.IP_SEEDS, ip);
 						list_add(configuracion.PUERTO_SEEDS, puerto);
 						i++;

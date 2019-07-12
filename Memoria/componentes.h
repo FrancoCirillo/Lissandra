@@ -72,7 +72,7 @@ void limpiar_memoria();
 void limpiar_memoria_principal();
 void limpiar_segmentos();
 void liberar_value(t_list* instruccion);
-
+void liberar_key(t_list* listaParam);
 /* SHOW */
 void mostrar_paginas(instr_t* instruccion);
 void imprimir_segmento(char* nombreSegmento, t_list* suTablaDePaginas);
