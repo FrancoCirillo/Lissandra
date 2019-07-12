@@ -151,7 +151,7 @@ void iniciar_dumpeo() {
 	pthread_attr_init(&attr);
 	pthread_create(&hilo_dumpeo, &attr, &dumpeo, NULL);
 	pthread_detach(hilo_dumpeo);
-	loggear_trace(string_from_format("Dumpeo iniciado"));
+	loggear_info(string_from_format("Dumpeo iniciado."));
 }
 
 void* dumpeo() {
@@ -189,6 +189,7 @@ void dumpear_tabla(char* tabla, void* registros) {
 	sem_wait(mutex_tabla);
 
 	if(!list_is_empty((t_list*)registros)) { //Si se hicieron inserts
+		loggear_info(string_from_format("Estoy dumpeando la tabla %s", tabla));
 		int nro_dump = siguiente_nro_dump(tabla);
 		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
 		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
