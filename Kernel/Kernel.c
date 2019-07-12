@@ -108,7 +108,7 @@ void iniciar_metricas(){
 }
 void *metricar(){
 	while(1){
-		//actualizar_configuracion();
+		actualizar_configuracion();
 		sem_wait(&mutex_configuracion);
 		int tiempo=configuracion.tiempoMetricas;
 		sem_post(&mutex_configuracion);
@@ -173,7 +173,7 @@ instr_t* kernel_metrics(instr_t * i){
 	return respuesta;
 }
 instr_t* kernel_run(instr_t *i){
-	loggear_info(string_from_format("EJECUTANDO RUN!"));
+	loggear_info(string_from_format("Ejecutando run. Proceso en estado NUEVO"));
 	char* nombre_archivo=obtener_parametroN(i,0);
 	FILE *f=fopen(nombre_archivo,"r");
 	instr_t * respuesta=malloc(sizeof(instr_t));
@@ -308,10 +308,10 @@ int hay_procesos(){
 	int hay=cola_ready!=NULL;
 	sem_post(&semaforo_procesos_ready);
 	if(hay){
-		printf("\n HAY PRCOESOS");
+		//printf("\n HAY PRCOESOS");
 	}
 	else{
-		printf("\n NO HAY PROCESOS");
+		//printf("\n NO HAY PROCESOS");
 	}
 	return hay;
 }
@@ -320,6 +320,7 @@ int ejecutar(){
 
 	while(1){
 		//Espero a la senial para seguir
+		actualizar_configuracion();
 		loggear_debug(string_from_format("Esperando!"));
 		pthread_mutex_lock(&lock_ejecutar);
 		pthread_cond_wait(&cond_ejecutar,&lock_ejecutar);
@@ -338,7 +339,7 @@ int ejecutar(){
 
 			pthread_attr_init(&attr);
 			pthread_create(&un_hilo,&attr,ejecutar_proceso,p);
-			loggear_debug(string_from_format("Se creo un hilo para atender la solicitud!"));
+			loggear_info(string_from_format("Se creo un hilo para atender la solicitud!"));
 
 			subir_cantidad_hilos();
 
@@ -353,7 +354,7 @@ int ejecutar(){
 	return 1;
 }
 void* ejecutar_proceso(void* un_proceso){
-	loggear_info(string_from_format("Ejecutando proceso..."));
+	loggear_info(string_from_format("Ejecutando proceso. Proceso pasa a estado EXEC"));
 	proceso* p=(proceso*)un_proceso;
 	instr_t* instruccion_obtenida;
 	for(int i=0;i<configuracion.quantum;/*i++*/){
@@ -381,6 +382,7 @@ void* ejecutar_proceso(void* un_proceso){
 				}else{
 					//NO es insert ni select
 				}
+				liberar_instruccion(respuesta);
 
 			}else{
 
@@ -388,11 +390,10 @@ void* ejecutar_proceso(void* un_proceso){
 				//printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
 				//bajar_cantidad_hilos();
 				imprimir_instruccion(respuesta, loggear_warning);
-
+				liberar_instruccion(respuesta);
 				finalizar_proceso(un_proceso);
 				return NULL;
 			}
-			liberar_instruccion(respuesta);
 
 		}else{
 
@@ -463,11 +464,8 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	return respuesta;
 }
 instr_t *validar(instr_t * i){
-	instr_t* mensaje_error=malloc(sizeof(instr_t));
-	mensaje_error->timestamp=i->timestamp;
-	char* mensaje=string_from_format("ERROR!");
+	int codigo_error;
 	if(i->codigo_operacion!=2&&i->codigo_operacion!=3 && i->codigo_operacion!=1){
-		free(mensaje_error);
 		return NULL;
 	}
 	if(i->codigo_operacion==2 || i->codigo_operacion==1){
@@ -475,7 +473,7 @@ instr_t *validar(instr_t * i){
 			loggear_debug(string_from_format("Existe la tabla para el insert o select "));
 			return NULL;
 		}else{
-			mensaje_error->codigo_operacion=ERROR_INSERT;
+			codigo_error=ERROR_INSERT;
 			loggear_warning(string_from_format("La tabla %s no existe!",obtener_parametroN(i,0)));
 			//mensaje="LA TABLA NO EXISTE!";
 		}
@@ -486,13 +484,16 @@ instr_t *validar(instr_t * i){
 			return NULL;
 		}else{
 			//mensaje="LA TABLA YA EXISTE";
-			mensaje_error->codigo_operacion=ERROR_CREATE;
+			codigo_error=ERROR_CREATE;
 		}
 	}
+	char* mensaje=string_from_format("ERROR!");
+	instr_t* mensaje_error=malloc(sizeof(instr_t));
+	mensaje_error->codigo_operacion=codigo_error;
+	mensaje_error->timestamp=i->timestamp;
 	free(mensaje_error->parametros);
 	mensaje_error->parametros=list_create();
 	list_add(mensaje_error->parametros,mensaje);
-
 	return mensaje_error;
 }
 
@@ -541,8 +542,10 @@ instr_t* enviar_i(instr_t* i){
 
 	loggear_debug(string_from_format("Hilo despierto!"));
 	instr_t * rta=h->respuesta;
-	free(h);
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
+	free(h);
+
+
 	return rta;
 }
 
@@ -609,9 +612,12 @@ void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit){
 	for(int i=0;i<list_size(crit->lista_memorias);i++){
 		char* mem =list_get(crit->lista_memorias,i);
 		if(!strcmp(mem,numero_memoria)){
+			loggear_info(string_from_format("Memorio encontrada y removida en posicion %d",i));
 			list_remove(crit->lista_memorias,i);
+			free(mem);
 		}
 	}
+
 	sem_post(&(crit->mutex_criterio));
 }
 void memoria_desconectada(char* nombre_memoria){
@@ -705,7 +711,7 @@ void recibi_respuesta(instr_t* respuesta, char* remitente){
 		else loggear_warning(string_from_format("El hilo no existe"));
 		sem_post(&mutex_diccionario_enviados);
 
-		loggear_info(string_from_format("Asigno respuesta y revivo hilo"));
+		loggear_debug(string_from_format("Asigno respuesta y revivo hilo"));
 		h->respuesta=respuesta;
 
 		pthread_mutex_lock(h->mutex_t);
@@ -741,7 +747,7 @@ void liberar_instruccion(instr_t* instruccion){
 	free(instruccion);
 }
 void finalizar_proceso(proceso* p){
-	loggear_info(string_from_format("Se finalizo correctamente un proceso !!. Se libera su memoria"));
+	loggear_info(string_from_format("Proceso pasa a estado FINALIZADO. Se libera su memoria"));
 	for(int i=0;list_size(p->instrucciones)>0;i++){
 		instr_t* instruccion=list_get(p->instrucciones,0);
 		loggear_info(string_from_format("Se elimina la memoria para la instruccion %d",i));
@@ -760,8 +766,9 @@ void finalizar_proceso(proceso* p){
 	continuar_ejecucion();
 }
 void encolar_proceso(proceso *p){
+
 	sem_wait(&semaforo_procesos_ready);
-	loggear_debug(string_from_format("Encolando proceso!"));
+	loggear_info(string_from_format("Encolando proceso. Proceso pasa a estado READY"));
 	proceso *aux=cola_ready;
 	if(aux==NULL){
 		cola_ready=p;
@@ -818,7 +825,10 @@ void inicializarConfiguracion() {
 	char** ip_seeds = config_get_array_value(g_config, "IP_SEEDS");
 	configuracion.IP_SEEDS = string_array_to_list(ip_seeds);
 	free(ip_seeds);
-	configuracion.PUERTO_SEEDS = string_array_to_list(config_get_array_value(g_config, "PUERTO_SEEDS"));
+
+	char** PUERTO_SEEDS=config_get_array_value(g_config, "PUERTO_SEEDS");
+	configuracion.PUERTO_SEEDS = string_array_to_list(PUERTO_SEEDS);
+	free(PUERTO_SEEDS);
 	imprimir_config_actual();
 
 	configuracion.RETARDO_GOSSIPING = atoi(obtener_por_clave("RETARDO_GOSSIPING"));
