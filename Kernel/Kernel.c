@@ -234,7 +234,7 @@ instr_t* kernel_run(instr_t *i){
 		int cod=obtener_codigo_request();
 		char*  codigo=malloc(sizeof(char)*(cod/10+1)+1);
 		sprintf(codigo,"%d",cod);
-		printf("\n\n EL codigo es %d, el tamanio es %d y contenido es %s",cod,sizeof(codigo),codigo);
+		//printf("\n\n EL codigo es %d, el tamanio es %d y contenido es %s",cod,sizeof(codigo),codigo);
 
 		list_add(nueva_instruccion->parametros,codigo);
 
