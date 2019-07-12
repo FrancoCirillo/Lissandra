@@ -441,7 +441,9 @@ void ejecutar_instruccion_journal(instr_t *instruccion, int liberar)
 	char *cadena = string_from_format("Journal realizado.");
 	list_add(listaParam, cadena);
 	cod_op codOp = CODIGO_EXITO;
-	imprimir_donde_corresponda(codOp, instruccion, listaParam);
+	if(quien_pidio(instruccion)!=CONSOLA_KERNEL){
+		imprimir_donde_corresponda(codOp, instruccion, listaParam);
+	}
 	if(liberar){
 		loggear_trace(string_from_format("Se van a borrar los parametros de la instruccion"));
 		list_destroy_and_destroy_elements(instruccion->parametros, free);
