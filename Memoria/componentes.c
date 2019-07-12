@@ -27,8 +27,6 @@ void inicializar_sectores_memoria()
 	if((cantidadDeSectores = configuracion.TAMANIO_MEMORIA / tamanioRegistro) == 0){	//Se trunca automaticamente al entero (por ser todos int)
 		loggear_error(string_from_format("La Memoria es muy pequenia. No puede almacenar un value tan grande."));
 	}
-	loggear_error(string_from_format("Tamanio timestamp: %d, tamanio key: %d, tamanio value: %d",sizeof(mseg_t), sizeof(uint16_t), tamanioValue ));
-	loggear_error(string_from_format("cantidadDeSectores = TAMANIO_MEMORIA / tamanioRegistro\n%d = %d / %d", cantidadDeSectores, configuracion.TAMANIO_MEMORIA, tamanioRegistro));
 	sem_post(&mutex_config);
 	loggear_info(string_from_format("La Memoria Principal quedo dividida en %d paginas", cantidadDeSectores));
 	sectorOcupado = malloc(cantidadDeSectores * sizeof(bool));
