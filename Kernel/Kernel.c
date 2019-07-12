@@ -612,6 +612,7 @@ void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit){
 	for(int i=0;i<list_size(crit->lista_memorias);i++){
 		char* mem =list_get(crit->lista_memorias,i);
 		if(!strcmp(mem,numero_memoria)){
+			loggear_info(string_from_format("Memorio encontrada y removida en posicion %d",i));
 			list_remove(crit->lista_memorias,i);
 			free(mem);
 		}
