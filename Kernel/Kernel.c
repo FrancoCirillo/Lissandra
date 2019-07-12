@@ -750,7 +750,7 @@ void finalizar_proceso(proceso* p){
 	loggear_info(string_from_format("Proceso pasa a estado FINALIZADO. Se libera su memoria"));
 	for(int i=0;list_size(p->instrucciones)>0;i++){
 		instr_t* instruccion=list_get(p->instrucciones,0);
-		loggear_info(string_from_format("Se elimina la memoria para la instruccion %d",i));
+		loggear_debug(string_from_format("Se libera la memoria para la instruccion %d",i));
 		imprimir_instruccion(instruccion, loggear_debug);
 		liberar_instruccion(instruccion);
 		list_remove(p->instrucciones,0);
