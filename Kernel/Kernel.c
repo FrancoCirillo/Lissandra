@@ -402,7 +402,9 @@ void* ejecutar_proceso(void* un_proceso){
 					a_metricar->codigo_operacion=instruccion_obtenida->codigo_operacion;
 					agregar_a_metricas(a_metricar);
 				}else{
-					//NO es insert ni select
+					if(instruccion_obtenida->codigo_operacion==CODIGO_DESCRIBE){
+						actualizar_metadata_tablas(respuesta);
+					}
 				}
 				liberar_instruccion(respuesta);
 
@@ -516,7 +518,6 @@ instr_t *validar(instr_t * i){
 	instr_t* mensaje_error=malloc(sizeof(instr_t));
 	mensaje_error->codigo_operacion=codigo_error;
 	mensaje_error->timestamp=i->timestamp;
-	//free(mensaje_error->parametros);
 	mensaje_error->parametros=list_create();
 	list_add(mensaje_error->parametros,mensaje);
 	return mensaje_error;
@@ -1256,4 +1257,35 @@ void actualizar_config(){
 void actualizar_log_level(){
 	log_destroy(g_logger);
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
+}
+
+
+void actualizar_metadata_tablas(instr_t* respuesta){
+
+	int i = 0;
+	int ultimo = list_size(respuesta->parametros) - 2;
+
+
+	void agregar_metadata_tablas(char* valor){
+
+		if(i%4 ==0 && i < ultimo){
+			char* tabla = string_from_format(valor); //Así se le puede hacer free a respuesta->parametros
+			agregar_tabla(tabla);
+			char* criterio = string_from_format("%s", list_get(respuesta->parametros, i+1));
+			agregar_tabla_a_su_criterio(valor, criterio);
+			printf("\n\nSe agrego la tabla %s con el criterio %s", valor, criterio);
+			free(criterio);
+		}
+		i++;
+	}
+
+	list_iterate(respuesta->parametros, (void*) agregar_metadata_tablas);
+}
+
+void agregar_tabla_a_su_criterio(char* tabla, char* criterio){
+	int* codigo_criterio=malloc(sizeof(int));
+	*codigo_criterio=obtener_codigo_criterio(criterio);
+	sem_wait(&mutex_diccionario_criterios);
+	dictionary_put(diccionario_criterios,tabla ,codigo_criterio);
+	sem_post(&mutex_diccionario_criterios);
 }
