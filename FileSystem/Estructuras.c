@@ -268,7 +268,9 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 					list_add(registros, registro); //lo agrego solo si tiene la key que busco
 					status = tipo_archivo; //si es binario, se pone en 0 y corta el while
 				}
-				strcpy(buffer, "");
+				free(buffer);   //Dejo esto.
+				buffer = string_new();  //Dejo esto.
+				//strcpy(buffer, "");  (DAI: saco esto)
 				break;
 
 			case EOF: //se me acabo el archivo

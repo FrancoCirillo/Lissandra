@@ -38,6 +38,7 @@ void compactador(char* tabla) {
 	sem_post(&mutex_dic_semaforos);
 
 	int i=0;
+	int j;
 
 	mseg_t ts_inicial;
 	mseg_t ts_final;
@@ -82,7 +83,7 @@ void compactador(char* tabla) {
 
 			sleep(2);
 
-			for(int j = 0; j< cantidad_particiones;j++){
+			for(j = 0; j< cantidad_particiones;j++){
 				loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
 				finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
 			}
@@ -115,6 +116,12 @@ void compactador(char* tabla) {
 	//free(de todo lo que use);
 
 }
+
+
+//void vaciar_listas_registros(particiones){
+
+
+//}
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	printf("Estoy en FINALIZAR COMPACTACION \nDe la Particion: %d en tabla %s\n\n", num , tabla);
