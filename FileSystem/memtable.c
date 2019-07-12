@@ -9,6 +9,7 @@ void inicializar_memtable() {
 		levantar_tablas_directorio(directorio);
 		loggear_info(string_from_format("Se inicializó la memtable."));
 	}
+	closedir(directorio);
 	//No se cierra el directorio porque rompe con los hilos de compactacion
 }
 
