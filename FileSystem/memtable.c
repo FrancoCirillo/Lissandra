@@ -9,7 +9,7 @@ void inicializar_memtable() {
 		levantar_tablas_directorio(directorio);
 		loggear_info(string_from_format("Se inicializó la memtable."));
 	}
-	//closedir(directorio);
+	closedir(directorio);
 	//No se cierra el directorio porque rompe con los hilos de compactacion
 }
 
@@ -28,8 +28,9 @@ void finalizar_memtable() {
 void levantar_tablas_directorio(DIR* directorio) {
 	loggear_debug(string_from_format("Levantando tablas del directorio"));
 	struct dirent* directorio_leido;
+	char* tabla ;
 	while((directorio_leido = readdir(directorio)) != NULL) {
-		char* tabla = directorio_leido->d_name;
+		tabla = strdup(directorio_leido->d_name);
 		if(!string_contains(tabla, ".")) {
 			t_list* registros = crear_lista_registros();
 			dictionary_put(memtable, tabla, registros);
