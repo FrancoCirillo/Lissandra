@@ -669,13 +669,17 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 int archivo_inicializar(FILE* f) {
 //	loggear_trace(string_from_format("-------------------Entre a archivo_inicializar-------------------"));
 	int bloque_num = siguiente_bloque_disponible();
+	puts("\n pepe");
 	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
 	txt_write_in_file(f, contenido);
+
 	//fwrite(contenido, sizeof(char), sizeof(char)*strlen(contenido), f);
 	ocupar_bloque(bloque_num);
+	puts("\n pepa");
 	restar_bloques_disponibles(1);
+	puts("\n pepo\n");
 	//AGREGO FREE()
-	free(contenido);
+//	free(contenido);
 //	printf("Numero de bloque: %d\n", bloque_num);
 	return bloque_num;
 }
