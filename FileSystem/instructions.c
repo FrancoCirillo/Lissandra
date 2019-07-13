@@ -18,7 +18,10 @@ void evaluar_instruccion(instr_t* instr, char* remitente){
 void evaluar_instruccion2(instr_remitente* in) {
 	char* remitente=in->remitente;
 	instr_t* instr=in->instruccion;
-
+	sem_wait(&mutex_config);
+	int tiempo=config_FS.retardo;
+	sem_post(&mutex_config);
+	usleep(tiempo);
 	loggear_trace(string_from_format("Evaluando instruccion recibida"));
 
 	int codigoNeto = instr->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
