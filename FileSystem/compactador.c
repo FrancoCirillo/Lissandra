@@ -75,7 +75,7 @@ void* compactador(void* tab) {
 			if(!cant_tmpc) {
 				if(compactation_locker){
 					sem_post(mutex_tabla);
-					return;
+					break;
 				}
 				else continue;
 			}
@@ -110,7 +110,7 @@ void* compactador(void* tab) {
 			sem_post(mutex_tabla);
 
 			if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
-				return;
+				break;
 
 			ts_final = obtener_ts();
 			duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
@@ -121,7 +121,7 @@ void* compactador(void* tab) {
 			puts("FIN de 1 while de la compactacion.");
 		}
 		else
-			return;
+			break;
 	}
 	//liberar_recursos(particiones);
 	//free(de todo lo que use);
