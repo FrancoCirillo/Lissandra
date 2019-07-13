@@ -48,6 +48,8 @@ typedef struct config{
 	int RETARDO_GOSSIPING;
 	int tiempoMetricas;
 	t_log_level LOG_LEVEL;
+	int metadata_refresh;
+	int sleep_ejecucion;
 }config_t;
 
 
@@ -118,7 +120,7 @@ instr_t *validar(instr_t * i);
 void *metricar();
 void metrics();
 instr_t* kernel_metrics(instr_t * i);
-
+void auto_describe();
 //Inits
 void inicializar_kernel();
 void recibi_respuesta(instr_t* respuesta, char* remitente);

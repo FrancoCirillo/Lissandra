@@ -25,6 +25,8 @@ int main(int argc, char* argv[]) {
 
 	iniciar_ejecutador_gossiping();
 
+	iniciar_auto_describe();
+
 	inicializar_kernel();
 	//iniciar_consola();
 
@@ -32,6 +34,16 @@ int main(int argc, char* argv[]) {
 //	sleep(2);
 //	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
 	return 0;
+}
+void iniciar_auto_describe(){
+	loggear_info(string_from_format("Se inicia autodescribe"));
+	pthread_t hilo_ejecutador;
+	pthread_attr_t attr;
+
+	pthread_attr_init(&attr);
+	pthread_create(&hilo_ejecutador,&attr,auto_describe,NULL);
+	pthread_detach(hilo_ejecutador);
+	loggear_trace(string_from_format("Autodescribe iniciado"));
 }
 void inicializar_kernel(){
 
@@ -1005,7 +1017,20 @@ void *ejecutar_gossiping()
 		usleep(retardoGossiping * 1000);
 	}
 }
-
+void auto_describe(){
+	while(1){
+		sem_wait(&mutex_configuracion);
+		int tiempo=configuracion.metadata_refresh;
+		sem_post(&mutex_configuracion);
+		usleep(configuracion.metadata_refresh);
+		loggear_info(string_from_format("Realizando autodescribe"));
+		instr_t* req=leer_a_instruccion("DESCRIBE",CONSOLA_KERNEL);
+		instr_t* rta= enviar_i(req);
+		actualizar_metadata_tablas(rta);
+		liberar_instruccion(req);
+		liberar_instruccion(rta);
+	}
+}
 void devolver_gossip(instr_t *instruccion, char *remitente){
 	loggear_info(string_from_format("Devolviendo el gossip a %s", remitente));
 //	loggear_trace(string_from_format("Enviando datos a %s", remitente));
@@ -1255,6 +1280,8 @@ void actualizar_config(){
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
 	configuracion.tiempoMetricas = config_get_int_value(auxConfig, "tiempoMetricas");
 	configuracion.LOG_LEVEL =  log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
+	configuracion.sleep_ejecucion = config_get_int_value(auxConfig, "SLEEP_EJECUCION");
+	configuracion.metadata_refresh = config_get_int_value(auxConfig, "METADATA_REFRESH");
 	sem_wait(&mutex_log);
 	actualizar_log_level();
 	sem_post(&mutex_log);
