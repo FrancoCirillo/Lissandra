@@ -96,7 +96,7 @@ int eliminar_directorio(char* tabla) {
 	if(!eliminado)
 		eliminado = rmdir(ruta_tabla);
 
-	//free(ruta_tabla);
+	free(ruta_tabla);
 	return eliminado;
 }
 
@@ -180,12 +180,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	txt_close_file(archivo_bloque);
 	free(string_registro);
 }
-void liberar_char_doble(char** cadena){
-	for(int i=0;*(cadena+i);i++){
-		free(cadena[i]);
-	}
-	free(cadena);
-}
+
 int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 //	loggear_trace(string_from_format("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
 //	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
@@ -216,11 +211,9 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
 					config_destroy(archivo);
 					free(mi_bloque);
-					liberar_char_doble(lista_bloques);
 					return bloque_siguiente;
 				}
 			}
-			liberar_char_doble(lista_bloques);
 			free(mi_bloque);
 		}
 	}
@@ -230,8 +223,6 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 
 	return -1;
 }
-
-
 
 t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=0, .tmp=1
 	loggear_trace(string_from_format("Entre a buscar_key_en_bloques"));
