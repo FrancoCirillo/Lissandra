@@ -883,6 +883,8 @@ void inicializarConfiguracion() {
 	configuracion.ip = obtener_por_clave("IP");
 	configuracion.puerto = obtener_por_clave("PUERTO");
 	configuracion.rutaLog = obtener_por_clave("rutaLog");
+	configuracion.sleep_ejecucion = config_get_int_value(g_config, "SLEEP_EJECUCION");
+	configuracion.metadata_refresh = config_get_int_value(g_config, "METADATA_REFRESH");
 
 	char** ip_seeds = config_get_array_value(g_config, "IP_SEEDS");
 	configuracion.IP_SEEDS = string_array_to_list(ip_seeds);
