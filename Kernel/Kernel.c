@@ -295,15 +295,20 @@ instr_t* kernel_add(instr_t* i){
 
 	case SHC:
 		loggear_info(string_from_format("Agregando memoria a criterio SHC. Primero se envia journal a existentes"));
-		instr_t* i=leer_a_instruccion("JOURNAL",CONSOLA_KERNEL);
+		instr_t* instruccion=leer_a_instruccion("JOURNAL",CONSOLA_KERNEL);
+		instruccion->parametros=list_create();
+		int cod=obtener_codigo_request();
+		char*  codigo=malloc(sizeof(char)*(cod/10+1)+1);
+		sprintf(codigo,"%d",cod);
+		list_add(instruccion->parametros,codigo);
 		for(int i=0;i<list_size(criterio_strong_hash_consistency->lista_memorias);i++){
 			char* alias_memoria=list_get(criterio_strong_hash_consistency->lista_memorias,i);
 			char* nombre_memoria=krn_concat("Memoria_",alias_memoria);
 			int conexionMemoria=obtener_fd_out(nombre_memoria);
-			enviar_request_simple(i, conexionMemoria);
+			enviar_request_simple(instruccion, conexionMemoria);
 			//free(nombre_memoria);
 		}
-		liberar_instruccion(i);
+		liberar_instruccion(instruccion);
 		loggear_info(string_from_format("Se enviaron los JOURNAL!. Agregando"));
 		sem_wait(&criterio_strong_hash_consistency->mutex_criterio);
 		list_add(criterio_strong_hash_consistency->lista_memorias,numero_memoria);
