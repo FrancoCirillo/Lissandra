@@ -32,7 +32,7 @@ void* compactador(void* tab) {
 	t_list* particiones = list_create();
 
 	char* tiempo = obtener_dato_metadata(tabla, "COMPACTATION_TIME");
-	int tiempo_compactacion = atoi(tiempo); //en segundos
+	int tiempo_compactacion = atoi(tiempo);
 	free(tiempo);
 
 	char* cant = obtener_dato_metadata(tabla, "PARTITIONS");
@@ -79,6 +79,10 @@ void* compactador(void* tab) {
 					continue;
 				}
 			}
+			else if(cant_tmpc == -1){
+				sem_post(mutex_tabla);
+				break;
+			}
 
 			loggear_info(string_from_format("Estoy compactando la tabla %s", tabla));
 			t_list* lista_archivos = listar_archivos(tabla);
@@ -105,6 +109,10 @@ void* compactador(void* tab) {
 				loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n"));
 
 				list_iterate(particiones, &vaciar_diccionario);
+			}
+			else{
+				sem_post(mutex_tabla);
+				break;
 			}
 
 			sem_post(mutex_tabla);
@@ -245,7 +253,6 @@ t_list* listar_archivos(char* tabla){
 
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
-		loggear_error(string_from_format("Error: No se pudo abrir el directorio"));
 		closedir(directorio);
 		free(ruta_tabla);
 		return NULL;
@@ -277,10 +284,9 @@ int pasar_a_tmpc(char* tabla) {
 	//loggear_trace(string_from_format("RUTA TABLA: %s\n", ruta_tabla));
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
-		loggear_error(string_from_format("Error: No se pudo abrir el directorio"));
 		closedir(directorio);
 		free(ruta_tabla);
-		return 0;
+		return -1;
 	}
 	struct dirent* directorio_leido;
 	int contador = 0;
