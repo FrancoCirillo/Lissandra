@@ -58,8 +58,6 @@ void* compactador(void* tab) {
 	mseg_t ts_final;
 	mseg_t duracion_compactacion;
 
-	//struct que apunte a los dos mutex;
-
 	while(existe_tabla_en_mem(tabla) || compactation_locker) {
 		if(existe_tabla_en_mem(tabla))
 			usleep(tiempo_compactacion);
