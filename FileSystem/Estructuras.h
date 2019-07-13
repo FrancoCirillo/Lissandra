@@ -62,6 +62,7 @@ void 		liberar_bloque(int);
 //DIRECTORIOS Y ARCHIVOS
 void  inicializar_directorios(void);
 void  crear_directorio(char*, char*);
+void  crear_directorio_simple(char* ruta_dir);
 int   eliminar_directorio(char*);
 int   carpeta_esta_vacia(char*);
 FILE* crear_archivo(char*, char*, char*);
