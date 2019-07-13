@@ -41,6 +41,15 @@ void levantar_tablas_directorio(DIR* directorio) {
 	}
 }
 
+_Bool existe_tabla_en_FS(char* tabla){
+	char* ruta_tabla = obtener_ruta_tabla(tabla);
+	DIR* directorio = opendir(ruta_tabla);
+	_Bool existe = directorio != NULL;
+	closedir(directorio);
+	free(ruta_tabla);
+	return existe;
+}
+
 _Bool existe_tabla_en_mem(char* tabla) {
 		return dictionary_has_key(memtable, tabla);
 }

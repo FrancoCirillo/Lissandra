@@ -61,10 +61,9 @@ void* compactador(void* tab) {
 		if(existe_tabla_en_mem(tabla))
 			usleep(tiempo_compactacion);
 
-		if(existe_mutex(tabla)) {
+		if(existe_tabla_en_FS(tabla)) {
 
 			sem_wait(mutex_tabla);
-
 
 			ts_inicial = obtener_ts();
 
@@ -75,7 +74,10 @@ void* compactador(void* tab) {
 					sem_post(mutex_tabla);
 					break;
 				}
-				else continue;
+				else{
+					sem_post(mutex_tabla);
+					continue;
+				}
 			}
 
 			loggear_info(string_from_format("Estoy compactando la tabla %s", tabla));
@@ -117,12 +119,15 @@ void* compactador(void* tab) {
 
 			puts("FIN de 1 while de la compactacion.");
 		}
-		else
+		else {
+			sem_wait(&mutex_dic_semaforos);
+			eliminar_mutex_de_tabla(tabla);
+			sem_post(&mutex_dic_semaforos);
 			break;
-
+		}
 	}
 
-	list_destroy_and_destroy_elements(particiones,dictionary_destroy);
+	list_destroy_and_destroy_elements(particiones, dictionary_destroy);
 	//liberar_recursos(particiones);
 	//free(de todo lo que use);
 }

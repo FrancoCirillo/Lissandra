@@ -68,16 +68,17 @@ void evaluar_instruccion2(instr_remitente* in) {
 //	free(in->remitente);
 	free(in);
 }
+
 void liberar_instruccion(instr_t* instruccion){
 
-	if(instruccion->codigo_operacion == CODIGO_DESCRIBE){
+	if(instruccion->codigo_operacion == CODIGO_DESCRIBE)
 		list_destroy(instruccion->parametros);
-	}
-	else{
-		list_destroy_and_destroy_elements(instruccion->parametros,free);
-	}
+	else
+		list_destroy_and_destroy_elements(instruccion->parametros, free);
+
 	free(instruccion);
 }
+
 void execute_create(instr_t* instruccion, char* remitente) {
 	char* tabla = obtener_nombre_tabla(instruccion);
 	t_list* listaParam = list_create();
@@ -206,10 +207,6 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 	eliminar_tabla_de_mem(tabla);
 	int resultadoDrop = eliminar_directorio(tabla);
 	sem_post(mutex_tabla);
-
-	sem_wait(&mutex_dic_semaforos);
-	eliminar_mutex_de_tabla(tabla);
-	sem_post(&mutex_dic_semaforos);
 	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
 	if(resultadoDrop == 0){
