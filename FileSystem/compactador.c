@@ -328,6 +328,11 @@ int pasar_a_tmpc(char* tabla) {
 void borrar_tmpcs(char* tabla){
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
 	DIR* directorio = opendir(ruta_tabla);
+	if (directorio == NULL) {
+		closedir(directorio);
+		free(ruta_tabla);
+		return;
+	}
 	struct dirent* directorio_leido;
 
 	char* archivo;
