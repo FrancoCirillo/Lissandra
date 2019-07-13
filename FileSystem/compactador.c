@@ -66,8 +66,6 @@ void* compactador(void* tab) {
 			sem_wait(mutex_tabla);
 
 			ts_inicial = obtener_ts();
-			//i++;
-			//printf("Compactacion nro %d de la tabla %s\n", i, tabla);
 
 			cant_tmpc = pasar_a_tmpc(tabla);
 

@@ -394,7 +394,7 @@ void* ejecutar_proceso(void* un_proceso){
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
 
 				loggear_debug(string_from_format("Se ejecuto correctamente la instruccion!, respuesta:"));
-				//imprimir_instruccion(respuesta, loggear_debug);
+				imprimir_instruccion(respuesta, loggear_debug);
 				loggear_trace(string_from_format("Fin de instruccion"));
 				//METRICS
 				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){

@@ -240,7 +240,6 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 		while((directorio_leido = readdir(directorio)) != NULL) {
 			char* tabla = string_from_format("%s", directorio_leido->d_name);
 			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
-				loggear_trace(string_from_format("La ruta de la tabla es %s\n", tabla));
 				imprimirMetadata(tabla);
 				char* consistencia = obtener_dato_metadata(tabla, "CONSISTENCY");
 				char* particiones = obtener_dato_metadata(tabla, "PARTITIONS");
@@ -252,15 +251,19 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 				list_add(listaParam, tiempo_comp);
 			}
 		}
+
 		loggear_trace(string_from_format("Tablas leidas, enviando"));
-		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 		free(ruta);
 		closedir(directorio);
+		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 
 	}
 	else { //DESCRIBE <NOMBRE_TABLA>
 		char* tabla = obtener_nombre_tabla(instruccion);
 		if(!existe_tabla_en_mem(tabla)) {
+			char* cadena = string_from_format("La tabla %s no existe en el File System.", tabla);
+			loggear_error(string_from_format(cadena));
+			list_add(listaParam, cadena);
 			imprimir_donde_corresponda(ERROR_DESCRIBE, instruccion, listaParam, remitente);
 			return;
 		}
