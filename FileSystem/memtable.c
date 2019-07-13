@@ -122,17 +122,20 @@ registro_t* obtener_registro(char* buffer) {
 	char* valor;
 
 	char* actual = strtok(bufferCopy, ";");
+	printf("\n\nActual es: %s", actual);
 	valor = strdup(actual);
 	registro->timestamp = string_a_mseg(valor);
 	free(valor);   //IMPORTANTE agrego este free
 
 	actual = strtok(NULL, ";");
+	printf("\n\nActual es: %s", actual);
 	valor = strdup(actual);
 	registro->key = (uint16_t)atoi(valor);
 	free(valor);	//IMPORTANTE agrego este free
 
 
 	actual = strtok(NULL, "\n");
+	printf("\n\nActual es: %s", actual);
 	valor = strdup(actual);
 	registro->value = valor;
 
@@ -143,15 +146,15 @@ registro_t* obtener_registro(char* buffer) {
 registro_t* pasar_a_registro(instr_t* instr) {
 	registro_t* registro = malloc(sizeof(registro_t));
 	registro->key = (uint16_t) atoi(obtener_parametro(instr, 1));
-	registro->value = obtener_parametro(instr, 2); //tengo que hacer algun malloc?
+	registro->value = string_from_format("%s", obtener_parametro(instr, 2)); //tengo que hacer algun malloc? <---!!!!!1111!!!!! ESTABA ACAAAA CLARAMENTE DECIA HACER MALLOC!!!!!
 	registro->timestamp = instr->timestamp;
 	return registro;
 }
 
 char* registro_a_string(registro_t* registro) {
 	char* ts = mseg_a_string(registro->timestamp);
-	char* key = string_itoa(registro->key);
-	char* value = registro->value;
+	char* key = string_from_format("%d",registro->key);
+	char* value = string_from_format("%s", registro->value);
 	return string_from_format("%s;%s;%s\n", ts, key, value);
 }
 
