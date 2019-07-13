@@ -340,17 +340,12 @@ void gossipear_con_procesos_desconectados(){
 			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPMemoria, 0);
 			if(conexion != -1){
-				puts("Conexion creada");
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
 			}
-		}
-		if(nombreProceso!=NULL){
-			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
-			free(nombreProceso);
 		}
 		i++;
 	}
