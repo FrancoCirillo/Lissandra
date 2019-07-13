@@ -1039,7 +1039,7 @@ void auto_describe(){
 		sem_post(&mutex_configuracion);
 		usleep(tiempo*1000);
 		loggear_info(string_from_format("Realizando autodescribe"));
-		instr_t* req=leer_a_instruccion("DESCRIBE","CONSOLA_KERNEL");
+		instr_t* req=leer_a_instruccion("DESCRIBE",CONSOLA_KERNEL);
 		int cod=obtener_codigo_request();
 		char*  codigo=malloc(sizeof(char)*(cod/10+1)+1);
 		sprintf(codigo,"%d",cod);
