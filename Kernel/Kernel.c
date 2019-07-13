@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
 
 	iniciar_ejecutador();
 
+	conexionesActuales = dictionary_create();
+
 	iniciar_ejecutador_gossiping();
 
 	inicializar_kernel();
@@ -32,7 +34,7 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 void inicializar_kernel(){
-	conexionesActuales = dictionary_create();
+
 	callback = ejecutar_requestRecibido;
 	auxiliarConexiones = dictionary_create();
 

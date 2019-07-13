@@ -30,6 +30,7 @@ char* 		registro_a_string(registro_t*);
 t_list* 	obtener_registros_mem(char*, uint16_t);
 
 // --------FUNCIONES DE TABLAS--------
+_Bool existe_tabla_en_FS(char*);
 _Bool existe_tabla_en_mem(char*);
 void  agregar_tabla_a_mem(char*);
 void  eliminar_tabla_de_mem(char*);

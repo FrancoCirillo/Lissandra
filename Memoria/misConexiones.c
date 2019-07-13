@@ -95,7 +95,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 
 void enviar_datos(char* remitente){
 	loggear_trace(string_from_format("Enviando datos a %s", remitente));
-	obtener_fd_out(remitente);
+	obtener_fd_out_sin_semaforo(remitente);
 	loggear_trace(string_from_format("Datos enviados"));
 }
 
@@ -147,11 +147,9 @@ void actualizar_tamanio_value(instr_t* instruccion){
 void devolver_gossip(instr_t *instruccion, char *remitente){
 //	loggear_info(string_from_format("Devolviendo el gossip"));
 	loggear_trace(string_from_format("Enviando datos a %s", remitente));
-	int conexionRemitente = obtener_fd_out(remitente);
+	int conexionRemitente = obtener_fd_out_sin_semaforo(remitente);
 	loggear_trace(string_from_format("Datos enviados"));
-	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
-	sem_post(&mutex_diccionario_conexiones);
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
 
@@ -180,16 +178,13 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 //		loggear_trace(string_from_format("Saltear Proximos = %d\n", saltearProximos));
 		if(saltearProximos <= 0){
 			if(i % 3 == 0){
-				sem_wait(&mutex_diccionario_conexiones);
 				if(strcmp(nombreDeMemoria, parametro)!=0 && !dictionary_has_key(conexionesActuales, parametro)){
-					sem_post(&mutex_diccionario_conexiones);
 					nombre = strdup(parametro);
 					loggear_info(string_from_format("No conocia al proceso %s", parametro));
 					i++;
 					saltearProximos = 0;
 				}
 				else{
-					sem_post(&mutex_diccionario_conexiones);
 					loggear_trace(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
 					i+=3;
 					saltearProximos = 3;
@@ -312,9 +307,7 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
 		}
 	}
-	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)su_nombre);
-	sem_post(&mutex_diccionario_conexiones);
 	return nombreEncontrado;
 }
 
@@ -324,9 +317,7 @@ void gossipear_con_conexiones_actuales(){
 	void su_nombre(char* nombre, identificador* ids){
 		enviar_lista_gossiping(nombre);
 	}
-	sem_wait(&mutex_diccionario_conexiones);
 	dictionary_iterator(conexionesActuales, (void *)su_nombre);
-	sem_post(&mutex_diccionario_conexiones);
 }
 
 void gossipear_con_procesos_desconectados(){
