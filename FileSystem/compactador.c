@@ -123,6 +123,7 @@ void* compactador(void* tab) {
 			break;
 
 	}
+
 	//liberar_recursos(particiones);
 	//free(de todo lo que use);
 }
