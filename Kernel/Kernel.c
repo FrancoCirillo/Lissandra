@@ -294,7 +294,17 @@ instr_t* kernel_add(instr_t* i){
 		break;
 
 	case SHC:
-		loggear_info(string_from_format("Agregando memoria a criterio SHC"));
+		loggear_info(string_from_format("Agregando memoria a criterio SHC. Primero se envia journal a existentes"));
+		instr_t* i=leer_a_instruccion("JOURNAL",CONSOLA_KERNEL);
+		for(int i=0;i<list_size(criterio_strong_hash_consistency->lista_memorias);i++){
+			char* alias_memoria=list_get(criterio_strong_hash_consistency->lista_memorias,i);
+			char* nombre_memoria=krn_concat("Memoria_",alias_memoria);
+			int conexionMemoria=obtener_fd_out(nombre_memoria);
+			enviar_request_simple(i, conexionMemoria);
+			//free(nombre_memoria);
+		}
+		liberar_instruccion(i);
+		loggear_info(string_from_format("Se enviaron los JOURNAL!. Agregando"));
 		sem_wait(&criterio_strong_hash_consistency->mutex_criterio);
 		list_add(criterio_strong_hash_consistency->lista_memorias,numero_memoria);
 		sem_post(&criterio_strong_hash_consistency->mutex_criterio);
@@ -445,7 +455,10 @@ void* ejecutar_proceso(void* un_proceso){
 		}
 		i++;
 		loggear_info(string_from_format("\n Fin de instruccion. Quantum restante: %d, Nro de instr: %d, Quantum: %d\n",configuracion.quantum-i,i,configuracion.quantum));
-
+		sem_wait(&mutex_configuracion);
+		int sleep_exec=configuracion.sleep_ejecucion;
+		sem_post(&mutex_configuracion);
+		usleep(sleep_exec);
 	}
 	loggear_trace(string_from_format("Fin de quantum, encolando o finalizando"));
 
@@ -1022,7 +1035,7 @@ void auto_describe(){
 		sem_wait(&mutex_configuracion);
 		int tiempo=configuracion.metadata_refresh;
 		sem_post(&mutex_configuracion);
-		usleep(configuracion.metadata_refresh);
+		usleep(tiempo*1000);
 		loggear_info(string_from_format("Realizando autodescribe"));
 		instr_t* req=leer_a_instruccion("DESCRIBE",CONSOLA_KERNEL);
 		instr_t* rta= enviar_i(req);
