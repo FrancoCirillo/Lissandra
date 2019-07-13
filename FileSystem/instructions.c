@@ -65,7 +65,7 @@ void evaluar_instruccion2(instr_remitente* in) {
 	}
 
 	liberar_instruccion(instr);
-	free(in->remitente);
+//	free(in->remitente);
 	free(in);
 }
 void liberar_instruccion(instr_t* instruccion){

@@ -66,9 +66,11 @@ int eliminar_directorio(char* tabla) {
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
 
 	DIR* directorio = opendir(ruta_tabla);
-	if(directorio == NULL)
+	if(directorio == NULL){
+		closedir(directorio);
+		free(ruta_tabla);
 		return -1;
-
+	}
 	struct dirent* dir_a_eliminar;
 	size_t path_len = strlen(ruta_tabla);
 	int eliminado = 0;
@@ -101,6 +103,7 @@ int eliminar_directorio(char* tabla) {
 	if(!eliminado)
 		eliminado = rmdir(ruta_tabla);
 
+	free(ruta_tabla);
 	return eliminado;
 }
 
@@ -184,7 +187,12 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	txt_close_file(archivo_bloque);
 	free(string_registro);
 }
-
+void liberar_char_doble(char** cadena){
+	for(int i=0;*(cadena+i);i++){
+		free(cadena[i]);
+	}
+	free(cadena);
+}
 int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 //	loggear_trace(string_from_format("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
 //	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
@@ -215,16 +223,18 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
 					config_destroy(archivo);
 					free(mi_bloque);
-					free(lista_bloques);
+					liberar_char_doble(lista_bloques);
 					return bloque_siguiente;
 				}
 			}
+			liberar_char_doble(lista_bloques);
 			free(mi_bloque);
 		}
 	}
 	else loggear_warning(string_from_format("No se pudo crear el config para el archivo %s", ruta_archivo));
 
 	config_destroy(archivo);
+
 	return -1;
 }
 
@@ -395,6 +405,7 @@ void ocupar_bloque(int nro_bloque) {
 	char* num = string_itoa(nro_bloque);
 	crear_bloque(num);
 	actualizar_bitmap();
+	free(num);
 }
 
 void liberar_bloque(int nro_bloque) {
@@ -649,6 +660,7 @@ void crear_particiones(instr_t* instr) {
 
 	char* mensaje = string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
 	loggear_info(mensaje);
+	free(tabla);
 }
 
 void crear_metadata(instr_t* instr) {
@@ -658,6 +670,7 @@ void crear_metadata(instr_t* instr) {
 	fclose(archivo_metadata);
 	char* mensaje = string_from_format("Se creó el metadata en la tabla \"%s\".", tabla);
 	loggear_info(mensaje);
+	free(tabla);
 }
 
 void metadata_inicializar(FILE* f, instr_t* instr) {

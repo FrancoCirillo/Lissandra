@@ -566,7 +566,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 		break;
 	}
-	free(instruccion);
+	//free(instruccion);
 }
 
 void actualizar_config(){
