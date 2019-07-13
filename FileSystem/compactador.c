@@ -31,7 +31,9 @@ void* compactador(void* tab) {
 
 	t_list* particiones =list_create();
 
-	int tiempo_compactacion = atoi(obtener_dato_metadata(tabla, "COMPACTATION_TIME"))/1000; //en segundos
+	char* tiempo=obtener_dato_metadata(tabla, "COMPACTATION_TIME");
+	int tiempo_compactacion = atoi(tiempo)/1000; //en segundos
+	free(tiempo);
 
 	int cantidad_particiones = atoi(obtener_dato_metadata(tabla, "PARTITIONS"));
 
