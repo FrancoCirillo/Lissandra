@@ -548,7 +548,7 @@ int cantidad_bloques_usados(char* ruta_archivo) {
 		cant_bloques++;
 //    printf("Cantidad de Bloques usados: %d\n",cant_bloques);
 	config_destroy(archivo);
-	liberar_char_doble(lista_bloques);
+//	liberar_char_doble(lista_bloques);
 //	free(lista_bloques);
 	return cant_bloques;
 }
