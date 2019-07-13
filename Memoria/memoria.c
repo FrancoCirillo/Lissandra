@@ -222,13 +222,11 @@ void actualizar_config(){
 	configuracion.RETARDO_JOURNAL = config_get_int_value(auxConfig, "RETARDO_JOURNAL");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
 	configuracion.LOG_LEVEL = log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
-	sem_post(&mutex_config);
 
 	sem_wait(&mutex_log);
 	actualizar_log_level();
 	sem_post(&mutex_log);
 	config_destroy(auxConfig);
-	sem_wait(&mutex_config);
 	loggear_info(string_from_format("Config actualizado!\n"
 			"Retardo de accseso a Memoria Principal: %d\n"
 			"Retardo de accseso a File System: %d\n"

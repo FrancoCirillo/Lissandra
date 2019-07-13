@@ -582,7 +582,6 @@ void actualizar_config(){
 	sem_wait(&mutex_config);
 	config_FS.retardo = (mseg_t)config_get_int_value(auxConfig, "RETARDO");
 	config_FS.tiempo_dump = (mseg_t)config_get_int_value(auxConfig, "TIEMPO_DUMP");
-	sem_post(&mutex_config);
 
 	config_FS.LOG_LEVEL = log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
 	sem_wait(&mutex_log);
@@ -595,6 +594,7 @@ void actualizar_config(){
 									"Tiempo de Dump: %" PRIu64
 									"\nLog level: %s",
 									config_FS.retardo, config_FS.tiempo_dump, log_level_as_string(config_FS.LOG_LEVEL)));
+	sem_post(&mutex_config);
 
 	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 	fflush(stdout);

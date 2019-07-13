@@ -1238,24 +1238,26 @@ instr_t* mis_datos(cod_op codigoOperacion){
 
 void actualizar_config(){
 	t_config *auxConfig;
+	puts("llego aca");
 	while((auxConfig = config_create(rutaConfiguracion)) == NULL||
 			!config_has_property(auxConfig, "quantum") 			||
 			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
 			!config_has_property(auxConfig, "tiempoMetricas")	||
 			!config_has_property(auxConfig, "LOG_LEVEL")){
 		config_destroy(auxConfig);
+		puts("Reintentandooooo");
 	}
 
+	puts("Va a tomar el semaforo");
 	sem_wait(&mutex_configuracion);
+	puts("Tomo el semaforo");
 	configuracion.quantum = config_get_int_value(auxConfig, "quantum");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
 	configuracion.tiempoMetricas = config_get_int_value(auxConfig, "tiempoMetricas");
 	configuracion.LOG_LEVEL =  log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
-	sem_post(&mutex_configuracion);
 	sem_wait(&mutex_log);
 	actualizar_log_level();
 	sem_post(&mutex_log);
-	sem_wait(&mutex_configuracion);
 	loggear_info(string_from_format(
 			"Config actualizado!\n"
 			"Quantum: %d\n"
@@ -1271,9 +1273,7 @@ void actualizar_config(){
 
 void actualizar_log_level(){
 	log_destroy(g_logger);
-	sem_wait(&mutex_configuracion);
 	g_logger = log_create(configuracion.rutaLog,"kernel", 1, configuracion.LOG_LEVEL);
-	sem_wait(&mutex_configuracion);
 }
 
 
