@@ -29,12 +29,13 @@ void compactar_todas_las_tablas() {
 void* compactador(void* tab) {
 	char* tabla = tab;
 
-	t_list* particiones =list_create();
+	t_list* particiones = list_create();
 
-	char* tiempo=obtener_dato_metadata(tabla, "COMPACTATION_TIME");
-	int tiempo_compactacion = atoi(tiempo)/1000; //en segundos
+	char* tiempo = obtener_dato_metadata(tabla, "COMPACTATION_TIME");
+	int tiempo_compactacion = atoi(tiempo); //en segundos
 	free(tiempo);
-	char* cant=obtener_dato_metadata(tabla, "PARTITIONS");
+
+	char* cant = obtener_dato_metadata(tabla, "PARTITIONS");
 	int cantidad_particiones = atoi(cant);
 	free(cant);
 
@@ -57,72 +58,75 @@ void* compactador(void* tab) {
 	mseg_t ts_final;
 	mseg_t duracion_compactacion;
 
+	//struct que apunte a los dos mutex;
+
 	while(existe_tabla_en_mem(tabla) || compactation_locker) {
 		if(existe_tabla_en_mem(tabla))
-			sleep(tiempo_compactacion);
+			usleep(tiempo_compactacion);
 
-		ts_inicial = obtener_ts();
-	//	i++;
-
-//		printf("Compactacion nro: %d\n", i);
-
-		sem_wait(mutex_tabla);
-		cant_tmpc = pasar_a_tmpc(tabla);
-		sem_post(mutex_tabla);
-
-		if(!cant_tmpc) {
-			if(compactation_locker) break;
-			else continue;
-		}
-
-		loggear_info(string_from_format("Estoy compactando la tabla %s", tabla));
-		t_list* lista_archivos = listar_archivos(tabla);
-
-		if(lista_archivos){
-
-			for(int i = 0; i < list_size(lista_archivos); i++){
-				char* lectura = (char*)list_get((t_list*)lista_archivos, i);
-				agregar_registros_en_particion(particiones, lectura);
-//				loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
-			}
-
-			puts("Ya agregue_registros_en_particion\n\n");
+		if(existe_mutex(tabla)) {
 
 			sem_wait(mutex_tabla);
 
-			list_iterate((t_list*)lista_archivos, &liberar_bloques);
-			puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+			ts_inicial = obtener_ts();
+			//i++;
+			//printf("Compactacion nro %d de la tabla %s\n", i, tabla);
 
-			for(j = 0; j< cantidad_particiones;j++){
+			cant_tmpc = pasar_a_tmpc(tabla);
 
-				loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
-				finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
+			if(!cant_tmpc) {
+				if(compactation_locker){
+					sem_post(mutex_tabla);
+					return;
+				}
+				else continue;
 			}
 
-			borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
+			loggear_info(string_from_format("Estoy compactando la tabla %s", tabla));
+			t_list* lista_archivos = listar_archivos(tabla);
+
+			if(lista_archivos){
+
+				for(int i = 0; i < list_size(lista_archivos); i++){
+					char* lectura = (char*)list_get((t_list*)lista_archivos, i);
+					agregar_registros_en_particion(particiones, lectura);
+					//loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
+				}
+				puts("Ya agregue_registros_en_particion\n\n");
+
+				list_iterate((t_list*)lista_archivos, &liberar_bloques);
+				puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+
+				for(j = 0; j< cantidad_particiones; j++){
+					loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
+					finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
+				}
+
+				borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
+
+				loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n"));
+
+				list_iterate(particiones, &vaciar_diccionario);
+			}
 
 			sem_post(mutex_tabla);
 
-			loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n"));
+			if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
+				return;
 
-			list_iterate(particiones, &vaciar_diccionario);
+			ts_final = obtener_ts();
+			duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
+
+			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
+
+			//i++;
+			puts("FIN de 1 while de la compactacion.");
 		}
-
-		if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
-			break;
-
-		ts_final = obtener_ts();
-		duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
-
-		loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
-
-		//i++;
-		puts("FIN de 1 while de la compactacion.");
+		else
+			return;
 	}
-
 	//liberar_recursos(particiones);
 	//free(de todo lo que use);
-
 }
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
