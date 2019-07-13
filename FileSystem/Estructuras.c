@@ -188,6 +188,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	free(string_registro);
 }
 void liberar_char_doble(char** cadena){
+
 	for(int i=0;*(cadena+i);i++){
 		free(cadena[i]);
 	}
@@ -563,7 +564,8 @@ int cantidad_bloques_usados(char* ruta_archivo) {
 		cant_bloques++;
 //    printf("Cantidad de Bloques usados: %d\n",cant_bloques);
 	config_destroy(archivo);
-	free(lista_bloques);
+	liberar_char_doble(lista_bloques);
+//	free(lista_bloques);
 	return cant_bloques;
 }
 

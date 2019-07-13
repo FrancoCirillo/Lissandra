@@ -67,8 +67,6 @@ void* compactador(void* tab) {
 
 
 			ts_inicial = obtener_ts();
-			//i++;
-			//printf("Compactacion nro %d de la tabla %s\n", i, tabla);
 
 			cant_tmpc = pasar_a_tmpc(tabla);
 
