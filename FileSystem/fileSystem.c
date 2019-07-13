@@ -17,24 +17,30 @@ int main(int argc, char* argv[]) {
 //	compactation_locker = 1;
 //
 
-//	compactador("T2");
+	//compactador("T2");
+
+//	registro_t* reg = obtener_registro("1112223332;5;Reg1\n");
+//	imprimirRegistro(reg);
+
+//	pasar_a_tmpc("T2");
 
 //	compactador("T1");
 
 	inicializar_conexiones();
 
-//	char* ruta0bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part0.bin";
-//	imprimirContenidoArchivo(ruta0bin, loggear_trace);
-//	char* ruta1bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part1.bin";
-//	imprimirContenidoArchivo(ruta1bin, loggear_trace);
-//	char* ruta2bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part2.bin";
-//	imprimirContenidoArchivo(ruta2bin, loggear_trace);
-//	char* ruta3bin = "/home/utnso/lissandra-checkpoint/Tablas/TABLA3/Part3.bin";
-//	imprimirContenidoArchivo(ruta3bin, loggear_trace);
+//	///FIN
+//	finalizar_memtable();
+//	finalizar_bitarray();
+//	config_destroy(g_config);
+//	log_destroy(g_logger);
+//
+//	finalizar_rutas();
+//	finalizar_tablas_nro_dump();
+//	finalizar_dic_semaforos_tablas();
+//	finalizar_diccionarios_conexiones();
+//	///
 
-//	pruebaGeneral();
-//	char* rutaDump1 = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
-//	imprimirContenidoArchivo(rutaDump1, loggear_trace);
+
 
 	return 0;
 }

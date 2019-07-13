@@ -285,7 +285,7 @@ int pasar_a_tmpc(char* tabla) {
 	struct dirent* directorio_leido;
 	int contador = 0;
 	while((directorio_leido = readdir(directorio)) != NULL) {
-		char* nombre_archivo = directorio_leido->d_name;
+		char* nombre_archivo = strdup(directorio_leido->d_name);
 		//loggear_trace(string_from_format("Nombre archivo: %s\n", nombre_archivo));
 		if(string_ends_with(nombre_archivo, ".tmp")) {
 			//loggear_trace(string_from_format("Es un tmp"));
@@ -299,10 +299,17 @@ int pasar_a_tmpc(char* tabla) {
 			loggear_trace(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
 			rename(nombre_viejo, nuevo_nombre);
 
+			free(nombre_viejo);
+			free(nombre_sin_ext);
+			free(nuevo_nombre);
+
 			contador++;
 			//loggear_trace(string_from_format("Status: %d\n", status));
 		}
+		free(nombre_archivo);
 	}
+	free(ruta_tabla);
+
 	closedir(directorio);
 //	loggear_trace(string_from_format("Se pasaron a tmpc los archivos de la tabla %s\n", tabla));
 	resetear_numero_dump(tabla);   //Importante esto!
