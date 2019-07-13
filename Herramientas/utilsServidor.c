@@ -127,8 +127,8 @@ int vigilar_conexiones_entrantes(
 							{ //Ya lo conocia, no tenia su fd_in
 								loggear_debug(string_from_format("Ya conocia a %s, no tenia su fd_in\n", quienEs));
 								identificador *miIdentificador = (identificador *)dictionary_get(conexionesActuales, quienEs);
-								miIdentificador->fd_in = newfd;
-								dictionary_put(conexionesActuales, quienEs, miIdentificador); //TODO: Hace falta? O al cambiar lo apuntado por el puntero ya esta?
+									miIdentificador->fd_in = newfd;
+									dictionary_put(conexionesActuales, quienEs, miIdentificador); //TODO: Hace falta? O al cambiar lo apuntado por el puntero ya esta?
 								sem_post(&mutex_diccionario_conexiones);
 							}
 							else

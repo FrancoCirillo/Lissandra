@@ -1156,28 +1156,26 @@ void gossipear_con_procesos_desconectados(){
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
 		sem_post(&mutex_configuracion);
-//		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
-//		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
+		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 		sem_wait(&mutex_configuracion);
 		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
 		sem_post(&mutex_configuracion);
 		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0)
-			sem_wait(&mutex_configuracion);{
-			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+		{
+			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas. Creando conexion", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+			sem_wait(&mutex_configuracion);
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPKernel, 0);
 			sem_post(&mutex_configuracion);
 			if(conexion != -1){
 //				puts("Conexion creada");
+				loggear_trace(string_from_format("conexion creada"));
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
 			}
-		}
-		if(nombreProceso!=NULL){
-//			loggear_trace(string_from_format("El IP %s y Puerto %s estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
-			free(nombreProceso);
 		}
 		i++;
 		sem_wait(&mutex_configuracion);
