@@ -715,6 +715,16 @@ void crear_directorio(char* ruta, char* nombre) {
 	}
 }
 
+void crear_directorio_simple(char* ruta_dir){
+	if (!mkdir(ruta_dir, S_IRWXU)) {
+		char* mensaje = string_from_format("Se creó correctamente el directorio %s", ruta_dir);
+		loggear_info(mensaje);
+	} else {
+		char* mensaje = string_from_format("No se creó el directorio %s. Ya existe.", ruta_dir);
+		loggear_warning(mensaje);
+	}
+}
+
 void crear_bloques() {  //Los bloques van a partir del numero 0 al n-1
 
 	if(carpeta_esta_vacia(g_ruta.bloques)) {
@@ -807,6 +817,7 @@ void iniciar_logger(){
 
 void inicializar_directorios() {
 
+	crear_directorio_simple(config_FS.punto_montaje);
 	crear_directorio(config_FS.punto_montaje, "Metadata");
 	crear_directorio(config_FS.punto_montaje, "Tablas");
 	crear_directorio(config_FS.punto_montaje, "Bloques");
