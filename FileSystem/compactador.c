@@ -124,6 +124,7 @@ void* compactador(void* tab) {
 
 	}
 
+	list_destroy_and_destroy_elements(particiones,dictionary_destroy);
 	//liberar_recursos(particiones);
 	//free(de todo lo que use);
 }
