@@ -206,7 +206,10 @@ void execute_drop(instr_t* instruccion, char* remitente) {
 	eliminar_tabla_de_mem(tabla);
 	int resultadoDrop = eliminar_directorio(tabla);
 	sem_post(mutex_tabla);
+
+	sem_wait(&mutex_dic_semaforos);
 	eliminar_mutex_de_tabla(tabla);
+	sem_post(&mutex_dic_semaforos);
 	//loggear_trace(string_from_format("Semaforos funcionando correctamente"));
 
 	if(resultadoDrop == 0){

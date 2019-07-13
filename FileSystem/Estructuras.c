@@ -41,13 +41,6 @@ sem_t* obtener_mutex_tabla(char* tabla){
 	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 }
 
-int aux_obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
-	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
-	int sem_val;
-	sem_getvalue(mutex_tabla, &sem_val);
-	return sem_val;
-}
-
 int existe_mutex(char* tabla){
 	return dictionary_has_key(dic_semaforos_tablas, tabla);
 }
@@ -56,7 +49,7 @@ void eliminar_mutex_de_tabla(char* tabla){
 	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
 }
 
-void   finalizar_dic_semaforos_tablas(){
+void finalizar_dic_semaforos_tablas(){
 	dictionary_destroy_and_destroy_elements(dic_semaforos_tablas, free);
 }
 
@@ -717,6 +710,16 @@ void crear_directorio(char* ruta, char* nombre) {
 	}
 }
 
+void crear_directorio_simple(char* ruta_dir){
+	if (!mkdir(ruta_dir, S_IRWXU)) {
+		char* mensaje = string_from_format("Se creó correctamente el directorio %s", ruta_dir);
+		loggear_info(mensaje);
+	} else {
+		char* mensaje = string_from_format("No se creó el directorio %s. Ya existe.", ruta_dir);
+		loggear_warning(mensaje);
+	}
+}
+
 void crear_bloques() {  //Los bloques van a partir del numero 0 al n-1
 
 	if(carpeta_esta_vacia(g_ruta.bloques)) {
@@ -809,6 +812,7 @@ void iniciar_logger(){
 
 void inicializar_directorios() {
 
+	crear_directorio_simple(config_FS.punto_montaje);
 	crear_directorio(config_FS.punto_montaje, "Metadata");
 	crear_directorio(config_FS.punto_montaje, "Tablas");
 	crear_directorio(config_FS.punto_montaje, "Bloques");
