@@ -56,7 +56,7 @@ void eliminar_mutex_de_tabla(char* tabla){
 	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
 }
 
-void   finalizar_dic_semaforos_tablas(){
+void finalizar_dic_semaforos_tablas(){
 	dictionary_destroy_and_destroy_elements(dic_semaforos_tablas, free);
 }
 
