@@ -41,13 +41,6 @@ sem_t* obtener_mutex_tabla(char* tabla){
 	return (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
 }
 
-int aux_obtener_mutex_tabla(char* tabla, sem_t* mutex_tabla){
-	mutex_tabla = (sem_t*) dictionary_get(dic_semaforos_tablas, tabla);
-	int sem_val;
-	sem_getvalue(mutex_tabla, &sem_val);
-	return sem_val;
-}
-
 int existe_mutex(char* tabla){
 	return dictionary_has_key(dic_semaforos_tablas, tabla);
 }
@@ -56,7 +49,7 @@ void eliminar_mutex_de_tabla(char* tabla){
 	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
 }
 
-void   finalizar_dic_semaforos_tablas(){
+void finalizar_dic_semaforos_tablas(){
 	dictionary_destroy_and_destroy_elements(dic_semaforos_tablas, free);
 }
 
