@@ -68,7 +68,7 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 	list_add(listaDuplicada, keyEncontrada);
 	list_add(listaDuplicada, valueEncontrado);
 	if(quien_pidio(instruccion)==CONSOLA_KERNEL){
-		list_add(listaDuplicada, obtener_ultimo_parametro(instruccion));
+		list_add(listaDuplicada, string_from_format(obtener_ultimo_parametro(instruccion)));
 	}
 	instr_t* miInstruccion = crear_instruccion(timestamp, codOp, listaDuplicada);
 
