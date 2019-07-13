@@ -1040,7 +1040,7 @@ void auto_describe(){
 		usleep(tiempo*1000);
 		loggear_info(string_from_format("Realizando autodescribe"));
 		instr_t* req=leer_a_instruccion("DESCRIBE",CONSOLA_KERNEL);
-		req->parametros=create_list();
+		req->parametros=list_create();
 		int cod=obtener_codigo_request();
 		char*  codigo=malloc(sizeof(char)*(cod/10+1)+1);
 		sprintf(codigo,"%d",cod);
