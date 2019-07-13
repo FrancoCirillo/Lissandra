@@ -34,8 +34,9 @@ void* compactador(void* tab) {
 	char* tiempo=obtener_dato_metadata(tabla, "COMPACTATION_TIME");
 	int tiempo_compactacion = atoi(tiempo)/1000; //en segundos
 	free(tiempo);
-
-	int cantidad_particiones = atoi(obtener_dato_metadata(tabla, "PARTITIONS"));
+	char* cant=obtener_dato_metadata(tabla, "PARTITIONS");
+	int cantidad_particiones = atoi(cant);
+	free(cant);
 
 	int cant_tmpc;
 
