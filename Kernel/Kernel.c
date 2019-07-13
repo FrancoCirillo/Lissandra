@@ -478,11 +478,12 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	}
 	if(i->codigo_operacion==CODIGO_ADD){
 		return kernel_add(i);
-	}if(i->codigo_operacion==CODIGO_CREATE){
-		agregar_tabla_a_criterio(i);
 	}
 	if((respuesta=validar(i))!=NULL){
 		return respuesta;
+	}
+	if(i->codigo_operacion==CODIGO_CREATE){
+		agregar_tabla_a_criterio(i);
 	}
 	if(i->codigo_operacion==CODIGO_CREATE){
 		if(!existe_tabla(obtener_parametroN(i,0))){
@@ -560,7 +561,7 @@ instr_t* enviar_i(instr_t* i){
 	//printf("EL VALOR DEL CODIGO ES DE %s \n",(char *)obtener_ultimo_parametro(i));
 	dictionary_put(diccionario_enviados, obtener_ultimo_parametro(i), h);
 	sem_post(&mutex_diccionario_enviados);
-	loggear_trace(string_from_format("ENVIANDO INSTRUCCION:  "));
+	loggear_trace(string_from_format("ENVIANDO INSTRUCCION.  "));
 	enviar_request_simple(i, conexionMemoria);
 
 	loggear_trace(string_from_format("\n##### Instruccion enviada, esperando respuesta###\n"));
