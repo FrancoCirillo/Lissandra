@@ -103,7 +103,6 @@ int eliminar_directorio(char* tabla) {
 	if(!eliminado)
 		eliminado = rmdir(ruta_tabla);
 
-	//frees
 	free(ruta_tabla);
 	return eliminado;
 }

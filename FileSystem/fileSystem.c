@@ -10,8 +10,6 @@ int main(int argc, char* argv[]) {
 	
 	inicializar_FS(argc, argv);
 
-
-
 	//ejemplo_aplanar();
 
 //	pruebaDump();

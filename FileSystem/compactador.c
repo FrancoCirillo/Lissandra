@@ -51,7 +51,6 @@ void* compactador(void* tab) {
 	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
 	sem_post(&mutex_dic_semaforos);
 
-	//int i=0;
 	int j;
 
 	mseg_t ts_inicial;
@@ -65,6 +64,7 @@ void* compactador(void* tab) {
 		if(existe_mutex(tabla)) {
 
 			sem_wait(mutex_tabla);
+
 
 			ts_inicial = obtener_ts();
 			//i++;
@@ -117,11 +117,11 @@ void* compactador(void* tab) {
 
 			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
 
-			//i++;
 			puts("FIN de 1 while de la compactacion.");
 		}
 		else
 			break;
+
 	}
 
 	list_destroy_and_destroy_elements(particiones,dictionary_destroy);
@@ -131,7 +131,6 @@ void* compactador(void* tab) {
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	printf("Estoy en FINALIZAR COMPACTACION \nDe la Particion: %d en tabla %s\n\n", num , tabla);
-	sleep(1);
 	char* nom = string_from_format("Part%d", num);
 	FILE* f = crear_archivo(tabla, nom, ".bin"); //Lo crea como nuevo.
 
@@ -143,8 +142,6 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num);
 	printf("LA RUTA ES: %s\n\n", ruta_archivo);
 
-
-
 	void bajar_registro(char* key, void* reg){
 		printf("Estoy bajando_registro de key %s\n", key);
 		registro_t* registro = reg;
@@ -153,11 +150,10 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 		loggear_trace(string_from_format("Num bloque del archivo escrito es: %d\n\n", nro_bloque));
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
 		printf("Ya termine de bajar el reg de key %s\n",key );
-		sleep(2);
 		free(ruta_bloque);
 	}
+
 	loggear_trace(string_from_format("Empiezo con bajar_registros de la tabla %s\n", tabla));
-	sleep(2);
 	dictionary_iterator((t_dictionary*)particion, &bajar_registro);
 //	config_destroy(archivo);
 	fclose(f);
@@ -165,13 +161,6 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s particion %d \n\n", tabla, num);
 }
 
-//int ultimo_bloque(t_config* archivo){
-//	char* lista_bloques = config_get_string_value(archivo, "BLOCKS");
-//	char* s_ult_bloque = string_substring(lista_bloques, strlen(lista_bloques)-2, 1);
-//	int ult_bloque = atoi(s_ult_bloque);
-//	free(lista_bloques);
-//	return ult_bloque;
-//}
 
 void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	puts("\n\n--------------estoy en agregar_registros_en_particion------------");
@@ -189,10 +178,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-//	loggear_trace(string_from_format("El archivo es: %s\n", ruta_bloque));
-	//int cant_letras_ts = strlen(mseg_a_string(obtener_ts()));
-	//char* buffer = malloc(sizeof(char*)*(cant_letras_ts + 4 + config_FS.tamanio_value + 10)); //   +4 por: \n ; ; \0 //Le mando 10 de cabeza. es para que sobre.
-	//strcpy(buffer, "");
+
 	char* buffer = string_new();
 	char caracter_leido;
 	int status = 1;
@@ -232,7 +218,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 				break;
 			}
 
-	}    //ESTO FUNCA!
+	}
 }
 
 void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
