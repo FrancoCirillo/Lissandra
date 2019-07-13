@@ -528,7 +528,7 @@ int obtener_fd_out(char *proceso) {
 }
 
 void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_list* listaParam, char* remitente) {
-	void *ultimoParametro = obtener_ultimo_parametro(instruccion);
+	void *ultimoParametro = string_from_format(obtener_ultimo_parametro(instruccion));
 
 	instr_t *miInstruccion;
 
