@@ -253,7 +253,7 @@ instr_t* kernel_run(instr_t *i){
 
 		list_add(p->instrucciones,nueva_instruccion);
 		p->size++;
-		loggear_trace(string_from_format("Se agrego una instruccion!"));
+		//loggear_trace(string_from_format("Se agrego una instruccion!"));
 		//		imprimir_instruccion(nueva_instruccion);
 	}
 	loggear_debug(string_from_format("\n\nSize %d\n\n",p->size));
@@ -463,7 +463,7 @@ void* ejecutar_proceso(void* un_proceso){
 		sem_wait(&mutex_configuracion);
 		int sleep_exec=configuracion.sleep_ejecucion;
 		sem_post(&mutex_configuracion);
-		usleep(sleep_exec);
+		usleep(sleep_exec*1000);
 	}
 	loggear_trace(string_from_format("Fin de quantum, encolando o finalizando"));
 
@@ -564,7 +564,7 @@ instr_t* enviar_i(instr_t* i){
 	loggear_info(string_from_format(" ENVIANDO INSTRUCCION CODIGO %s",(char*)obtener_ultimo_parametro(i)));
 	//imprimir_instruccion(i);
 
-
+	i->timestamp=obtener_ts();
 
 	loggear_debug(string_from_format("Determinando memoria para request"));
 	int conexionMemoria = obtener_fd_memoria(i);
@@ -596,13 +596,14 @@ instr_t* enviar_i(instr_t* i){
 	loggear_trace(string_from_format("ENVIANDO INSTRUCCION.  "));
 	enviar_request_simple(i, conexionMemoria);
 
-	loggear_trace(string_from_format("\n##### Instruccion enviada, esperando respuesta###\n"));
+	loggear_info(string_from_format("### Instruccion enviada, esperando respuesta###\n"));
 	loggear_debug(string_from_format("Bloqueando hilo hasta recibir respuesta!"));
 	pthread_mutex_lock(h->mutex_t);
 	pthread_cond_wait(h->cond_t,h->mutex_t);
 	pthread_mutex_unlock(h->mutex_t);
 
 	loggear_debug(string_from_format("Hilo despierto!"));
+	logger_info(string_from_format("###Respuesta recibida!###"));
 	instr_t * rta=h->respuesta;
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
 	free(h);
@@ -626,7 +627,7 @@ int obtener_fd_memoria(instr_t *i){
 
 	//Obtengo la memoria segun el criterio
 	loggear_trace(string_from_format("Codigo de criterio es : %d",codigo_criterio));
-	loggear_info(string_from_format("Determinando criterio de tabla"));
+	//loggear_info(string_from_format("Determinando criterio de tabla"));
 	switch(codigo_criterio){
 	case SC:
 		sem_wait(&criterio_strong_consistency->mutex_criterio);
@@ -665,6 +666,9 @@ int obtener_fd_memoria(instr_t *i){
 
 	if(alias_memoria==NULL){
 		loggear_warning(string_from_format("NO se pudo obtener la memoria para dicha instruccion"));
+		if(i->codigo_operacion==CODIGO_CREATE){
+
+		}
 		return -100;
 	}
 
@@ -699,7 +703,7 @@ char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
 	strcpy(rdo,s1);
 	strcat(rdo,s2);
-	loggear_debug(string_from_format(rdo));
+	//loggear_debug(string_from_format(rdo));
 	return rdo;
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
@@ -802,7 +806,7 @@ void encolar_o_finalizar_proceso(proceso* p){
 }
 void liberar_instruccion(instr_t* instruccion){
 
-	if(instruccion->codigo_operacion == CODIGO_DESCRIBE){
+	if(instruccion->codigo_operacion == CODIGO_DESCRIBE|| PETICION_GOSSIP){
 		list_destroy(instruccion->parametros);
 	}
 	else{
@@ -814,7 +818,7 @@ void finalizar_proceso(proceso* p){
 	loggear_info(string_from_format("Proceso pasa a estado FINALIZADO. Se libera su memoria"));
 	for(int i=0;list_size(p->instrucciones)>0;i++){
 		instr_t* instruccion=list_get(p->instrucciones,0);
-		loggear_trace(string_from_format("Se libera la memoria para la instruccion %d",i));
+		//loggear_trace(string_from_format("Se libera la memoria para la instruccion %d",i));
 		//imprimir_instruccion(instruccion, loggear_debug);
 		liberar_instruccion(instruccion);
 		list_remove(p->instrucciones,0);
@@ -1020,7 +1024,8 @@ void* consola(void* c){
 }
 
 void iniciar_ejecutador_gossiping(){
-	loggear_debug(string_from_format("Iniciando ejecutador gossiping"));
+
+	loggear_debug(string_from_format("Iniciando ejecutador gossiping."));
 	pthread_t hilo_ejecutador_gossiping;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
@@ -1295,19 +1300,15 @@ instr_t* mis_datos(cod_op codigoOperacion){
 
 void actualizar_config(){
 	t_config *auxConfig;
-	puts("llego aca");
 	while((auxConfig = config_create(rutaConfiguracion)) == NULL||
 			!config_has_property(auxConfig, "quantum") 			||
 			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
 			!config_has_property(auxConfig, "tiempoMetricas")	||
 			!config_has_property(auxConfig, "LOG_LEVEL")){
 		config_destroy(auxConfig);
-		puts("Reintentandooooo");
 	}
 
-	puts("Va a tomar el semaforo");
 	sem_wait(&mutex_configuracion);
-	puts("Tomo el semaforo");
 	configuracion.quantum = config_get_int_value(auxConfig, "quantum");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
 	configuracion.tiempoMetricas = config_get_int_value(auxConfig, "tiempoMetricas");
@@ -1349,7 +1350,7 @@ void actualizar_metadata_tablas(instr_t* respuesta){
 			agregar_tabla(tabla);
 			char* criterio = string_from_format("%s", list_get(respuesta->parametros, i+1));
 			agregar_tabla_a_su_criterio(valor, criterio);
-			printf("\n\nSe agrego la tabla %s con el criterio %s", valor, criterio);
+			printf("\n\nSe agrego la tabla %s con el criterio %s\n", valor, criterio);
 			free(criterio);
 		}
 		i++;

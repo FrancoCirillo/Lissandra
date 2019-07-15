@@ -152,7 +152,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
 
-//	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
+	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
 //	loggear_trace(string_from_format("Envio mi tabla de datos"));
 
@@ -164,7 +164,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 void actualizar_tabla_gossiping(instr_t* instruccion){
 
 
-//	loggear_debug(string_from_format("Recibi una tabla de Gossiping"));
+	loggear_debug(string_from_format("Recibi una tabla de Gossiping"));
 
 	int saltearProximos = 0;
 	int i = 0;
@@ -184,7 +184,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 					saltearProximos = 0;
 				}
 				else{
-//					loggear_trace(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
+					loggear_trace(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
 					i+=3;
 					saltearProximos = 3;
 				}
@@ -224,9 +224,9 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
 
 //	loggear_info(string_from_format("Tabla actualizada:"));
-//	sem_wait(&mutex_diccionario_conexiones);
-//	imprimir_conexiones(conexionesActuales, loggear_info);
-//	sem_post(&mutex_diccionario_conexiones);
+	sem_wait(&mutex_diccionario_conexiones);
+	imprimir_conexiones(conexionesActuales, loggear_info);
+	sem_post(&mutex_diccionario_conexiones);
 
 	list_destroy(instruccion->parametros);
 	free(instruccion);
@@ -312,7 +312,7 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 void gossipear_con_conexiones_actuales(){
 
-//	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
+	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
 	void su_nombre(char* nombre, identificador* ids){
 		enviar_lista_gossiping(nombre);
 	}
@@ -323,9 +323,10 @@ void gossipear_con_procesos_desconectados(){
 
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
-//		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
-//		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+		loggear_trace(string_from_format("IP seed: %s", unaIP));
+		loggear_trace(string_from_format("Puerto seed: %s", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
+		//Chequeando si nunca nos habiamos conectado:
 		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0){
 			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPMemoria, 0);
