@@ -105,7 +105,7 @@ void		pruebaGeneral();
 
 /*INICIALIZACION Y FINALIZACION*/
 void inicializar_FS();
-void finalizar_FS(instr_t* instruccion);
+void finalizar_FS();
 void iniciar_semaforos();
 void iniciar_rutas();
 void finalizar_rutas();
@@ -117,7 +117,6 @@ void actualizar_log_level();
 t_list* leer_binario(char*, uint16_t);
 t_list* leer_archivos_temporales(char*, uint16_t);
 void 	escribir_bloque(registro_t*);
-void 	eliminar_archivos(char*); //TODO hacer
 
 char* 	obtener_registro_mas_reciente(t_list*);
 t_list* obtener_registros_key(char*, uint16_t);

@@ -28,11 +28,11 @@ void finalizar_memtable() {
 void levantar_tablas_directorio(DIR* directorio) {
 	loggear_debug(string_from_format("Levantando tablas del directorio"));
 	struct dirent* directorio_leido;
-	char* tabla ;
+	char* tabla;
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		tabla = strdup(directorio_leido->d_name);
 		if(!string_contains(tabla, ".")) {
-			t_list* registros = crear_lista_registros();
+			t_list* registros = list_create();
 			dictionary_put(memtable, tabla, registros);
 			inicializar_semaforo_tabla(tabla);
 			agregar_a_contador_dumpeo(tabla);
@@ -51,15 +51,11 @@ _Bool existe_tabla_en_FS(char* tabla){
 }
 
 _Bool existe_tabla_en_mem(char* tabla) {
-		return dictionary_has_key(memtable, tabla);
+	return dictionary_has_key(memtable, tabla);
 }
 
 char* obtener_ruta_tabla(char* tabla) {
 	return string_from_format("%s%s", g_ruta.tablas, tabla);
-}
-
-t_list* crear_lista_registros() {
-	return list_create();
 }
 
 void borrar_lista_registros(void* lista_registros) {
@@ -89,7 +85,7 @@ void limpiar_registros(char* tabla, void* registros) {
 }
 
 void agregar_tabla_a_mem(char* tabla) {
-	t_list* registros = crear_lista_registros();
+	t_list* registros = list_create();
 	dictionary_put(memtable, tabla, registros);
 	//loggear_info(string_from_format("Se agrego la tabla en la memtable."));
 }
@@ -122,21 +118,21 @@ registro_t* obtener_registro(char* buffer) {
 	char* valor;
 
 	char* actual = strtok(bufferCopy, ";");
-	printf("\n\nActual es: %s", actual);
+	printf("Actual (ts) es: %s\n", actual);
 	valor = strdup(actual);
 	registro->timestamp = string_a_mseg(valor);
 	free(valor);   //IMPORTANTE agrego este free
 
 	actual = strtok(NULL, ";");
-	printf("\n\nActual es: %s", actual);
+	printf("Actual (key) es: %s\n", actual);
 	valor = strdup(actual);
 	registro->key = (uint16_t)atoi(valor);
 	free(valor);	//IMPORTANTE agrego este free
 
 
 	actual = strtok(NULL, "\n");
-	printf("\n\nActual es: %s", actual);
-	valor = strdup(actual);
+	printf("Actual (val) es: %s\n", actual);
+	valor = strdup(actual);	//Value sin el '\n', se agrega en escribir_registro_bloque
 	registro->value = valor;
 
 	free(bufferCopy);
@@ -153,7 +149,7 @@ registro_t* pasar_a_registro(instr_t* instr) {
 
 char* registro_a_string(registro_t* registro) {
 	char* ts = mseg_a_string(registro->timestamp);
-	char* key = string_from_format("%d",registro->key);
+	char* key = string_from_format("%"PRIu16,registro->key);
 	char* value = string_from_format("%s", registro->value);
 	return string_from_format("%s;%s;%s\n", ts, key, value);
 }
@@ -206,13 +202,10 @@ void dumpear_tabla(char* tabla, void* registros) {
 	if(!list_is_empty((t_list*)registros)) { //Si se hicieron inserts
 		loggear_info(string_from_format("Estoy dumpeando la tabla %s", tabla));
 		int nro_dump = siguiente_nro_dump(tabla);
-		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
-		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
-		FILE* temporal = crear_archivo(tabla, nombre_tmp, ".tmp");
+		char* ruta_tmp = string_from_format("%s%s/Dump%d.tmp", g_ruta.tablas, tabla, nro_dump);
 
-		loggear_trace(string_from_format("Creando temporal"));
-		int nro_bloque = archivo_inicializar(temporal);
-		loggear_trace(string_from_format("Inicializando temporal"));
+		int nro_bloque = inicializar_archivo(ruta_tmp);
+		loggear_trace(string_from_format("Temporal inicializado"));
 
 		char* ruta_bloque;
 
@@ -226,8 +219,6 @@ void dumpear_tabla(char* tabla, void* registros) {
 		list_iterate((t_list*)registros, &escribir_reg_en_tmp);
 
 		free(ruta_tmp);
-		free(nombre_tmp);
-		fclose(temporal);
 	}
 
 	sem_post(mutex_tabla);

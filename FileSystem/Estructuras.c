@@ -113,10 +113,8 @@ t_config* obtener_metadata(char* tabla) {
 }
 
 char* obtener_dato_metadata(char* tabla, char* dato_buscado) {
-	sem_wait(&mutex_config);
 	t_config* metadata = obtener_metadata(tabla);
 	char* valor = string_from_format(config_get_string_value(metadata, dato_buscado));
-	sem_post(&mutex_config);
 	config_destroy(metadata);
 	return valor;
 }
@@ -135,48 +133,64 @@ char* obtener_ruta_bloque(int nro_bloque) {
 }
 
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
-//	loggear_trace(string_from_format("-----------Entre a escribir_registro_bloque-------------------"));
+	//loggear_trace(string_from_format("-----------Entre a escribir_registro_bloque-------------------"));
 	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
 	char* string_registro = registro_a_string(registro);
-//	loggear_trace(string_from_format("Ruta bloque: %s\n", ruta_bloque));
-//	printf("Formateo registro: %s\n", string_registro);
-//	int tam = strlen(string_registro);
-//	printf("Tam registro: %d\n", tam);
-//	int espBloque = espacio_restante_bloque(ruta_archivo);
-//	printf("Espacio restante Bloque: %d\n", espBloque);
 
-	if(strlen(string_registro) <= espacio_restante_bloque(ruta_archivo)) {
+	//loggear_trace(string_from_format("Ruta bloque: %s\n", ruta_bloque));
+	//printf("Formateo registro: %s\n", string_registro);
+	//printf("Tam registro: %d\n", tam);
+	//int espBloque = espacio_restante_bloque(ruta_archivo);
+	//printf("Espacio restante Bloque: %d\n", espBloque);
+
+	int tam_restante = espacio_restante_bloque(ruta_archivo);
+	loggear_trace(string_from_format("Tamanio string: %d\n", strlen(string_registro)));
+	loggear_trace(string_from_format("Tam restante bloque: %d\n", tam_restante));
+
+
+	if(strlen(string_registro) <= tam_restante) {
 		txt_write_in_file(archivo_bloque, string_registro);
-//		loggear_trace(string_from_format("Escribo el registro completo"));
+		loggear_trace(string_from_format("Escribo el registro completo\n"));
+		imprimirContenidoArchivo(ruta_bloque, &loggear_trace);
 	} else {
+
+		loggear_trace(string_from_format("Escribo el registro en partes\n"));
 
 		if(cant_bloques_disponibles() == 0){
 			loggear_error(string_from_format("No hay bloques disponibles."));
 			return;
 		}
 
-		int tam_restante = espacio_restante_bloque(ruta_archivo);
-		char* primera_mitad_registro = string_substring_until(string_registro, tam_restante);
-		txt_write_in_file(archivo_bloque, primera_mitad_registro);
+		loggear_trace(string_from_format("String original: %s", string_registro));
+		char* primera_parte_registro = string_substring_until(string_registro, tam_restante);
+		loggear_trace(string_from_format("Primera parte registro: %s", primera_parte_registro));
+		txt_write_in_file(archivo_bloque, primera_parte_registro);
 
-		int nro_bloque = siguiente_bloque_disponible();
-		agregar_bloque_archivo(ruta_archivo, nro_bloque);
-		ocupar_bloque(nro_bloque);
+		loggear_trace(string_from_format("Contenido del primer archivo:"));
+		imprimirContenidoArchivo(ruta_bloque, &loggear_trace);
 
-		char* nuevo_bloque = obtener_ruta_bloque(nro_bloque);
-		FILE* archivo_nuevo_bloque = txt_open_for_append(nuevo_bloque);
-		char* mitad_restante_registro = string_substring_from(string_registro, tam_restante);
-		txt_write_in_file(archivo_nuevo_bloque, mitad_restante_registro);
-//		loggear_debug(string_from_format("Ruta bloque: %s\n", nuevo_bloque));
+		int nuevo_bloque = siguiente_bloque_disponible();
+		agregar_bloque_archivo(ruta_archivo, nuevo_bloque);
+		ocupar_bloque(nuevo_bloque);
+
+		char* ruta_nuevo_bloque = obtener_ruta_bloque(nuevo_bloque);
+		//loggear_trace(string_from_format("\nRuta nuevo bloque: %s\n", ruta_nuevo_bloque));
+
+		FILE* archivo_nuevo_bloque = fopen(ruta_nuevo_bloque, "w+");
+		char* parte_restante_registro = string_substring_from(string_registro, tam_restante);
+		loggear_trace(string_from_format("Segunda parte registro: %s", parte_restante_registro));
+		txt_write_in_file(archivo_nuevo_bloque, parte_restante_registro);
+		loggear_trace(string_from_format("Contenido del segundo archivo:\n"));
+		imprimirContenidoArchivo(ruta_nuevo_bloque, &loggear_trace);
 
 		txt_close_file(archivo_nuevo_bloque);
-		free(primera_mitad_registro);
-		free(nuevo_bloque);
-		free(mitad_restante_registro);
+		free(primera_parte_registro);
+		free(ruta_nuevo_bloque);
+		free(parte_restante_registro);
 	}
 
 	aumentar_tam_archivo(ruta_archivo, registro);
-//	loggear_trace(string_from_format("Aumente tam archivo"));
+	//loggear_trace(string_from_format("Aumente tam archivo"));
 	txt_close_file(archivo_bloque);
 	free(string_registro);
 }
@@ -232,7 +246,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 		imprimirContenidoArchivo(ruta_bloque, loggear_debug);
 		FILE* archivo_bloque = fopen(ruta_bloque, "r");
-		t_list* registros = crear_lista_registros();
+		t_list* registros = list_create();
 		int status = 1;
 		char* buffer = string_new();
 		char caracter_leido;
@@ -382,7 +396,7 @@ int siguiente_bloque_disponible() {
 }
 
 void ocupar_bloque(int nro_bloque) {
-//	printf("\nBitmap levantado, seteando valor para bloque %d\n",nro_bloque);
+//	printf("\nBitmap levantado, seteando valor para bloque %d\n", nro_bloque);
 	bitarray_set_bit(bitarray, nro_bloque);
 //	loggear_trace(string_from_format("Actualizando bitmap");
 
@@ -446,7 +460,7 @@ char* aplanar(char** lista) {  //Listo.
         buf[count-1]=']';
         buf[count]='\0';
     }
-    printf("%s",buf);
+    //loggear_trace(string_from_format("%s\n", buf));
     return buf;
 }
 
@@ -476,9 +490,9 @@ char* agregar_bloque_bloques(char** lista_s_bloques, int bloque) {
 	char* bloques_viejos = aplanar(lista_s_bloques);
 	int longitud = strlen(bloques_viejos);
 	char* mis_bloques_viejos = string_substring_until(bloques_viejos, longitud-1);
-	int longitud_final =strlen(mis_bloques_viejos)+strlen(s_bloque)+1;
+	int longitud_final = strlen(mis_bloques_viejos) + strlen(s_bloque)+1;
 	char* mis_bloques = malloc(sizeof(char)* longitud_final);
-	strcpy(mis_bloques,mis_bloques_viejos);
+	strcpy(mis_bloques, mis_bloques_viejos);
 
 	strcat(mis_bloques, s_bloque);
 
@@ -487,7 +501,6 @@ char* agregar_bloque_bloques(char** lista_s_bloques, int bloque) {
 	free(s_bloque);
 
 	return mis_bloques;
-
 }
 
 int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
@@ -503,21 +516,21 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 }
 
 int obtener_ultimo_bloque(char* ruta_archivo){
+	//loggear_trace(string_from_format("Obteniendo ultimo bloque"));
 	t_config* archivo = config_create(ruta_archivo);
 	char** bloques = config_get_array_value(archivo, "BLOCKS");
+	//loggear_trace(string_from_format("** bloques: %s", *bloques));
 	int tam = cantidad_bloques_usados(ruta_archivo);
-//	loggear_trace(string_from_format("tam bloques: %d\n", tam));
+	//loggear_trace(string_from_format("Tam bloques: %d", tam));
 	int ultimo = tam;
 	ultimo--;
-//	loggear_trace(string_from_format("ultimo: %d\n", ultimo));
 	char* ultimo_bloque = bloques[ultimo];
-//	loggear_debug(string_from_format("char bloque: %s\n", ultimo_bloque));
+	//loggear_trace(string_from_format("Char bloque: %s", ultimo_bloque));
 	int rdo = atoi(ultimo_bloque);
 	return rdo;
 }
 
 int obtener_tam_archivo(char* ruta_archivo) {
-
 	t_config* archivo = config_create(ruta_archivo);
 	int tam_archivo = config_get_int_value(archivo, "SIZE");
 	config_destroy(archivo);
@@ -556,13 +569,13 @@ int cantidad_bloques_usados(char* ruta_archivo) {
 int espacio_restante_bloque(char* ruta_archivo) {
 //	loggear_trace(string_from_format("-------------------Entre a espacio_restante_bloque-------------------");
 	int tamBloque = Metadata_FS.block_size;
-	loggear_trace(string_from_format("Tam maximo bloque: %d\n", tamBloque));
+	loggear_trace(string_from_format("Tam maximo bloque: %d", tamBloque));
 	int tamArchivo = obtener_tam_archivo(ruta_archivo);
-	loggear_trace(string_from_format("Tam archivo: %d\n", tamArchivo));
+	loggear_trace(string_from_format("Tam archivo: %d", tamArchivo));
 	int bloquesUsados = cantidad_bloques_usados(ruta_archivo);
 	int espacio_disponible = tamBloque*bloquesUsados - tamArchivo;
 //	int espacio_disponible = cantidad_bloques_usados(ruta_archivo) * Metadata_FS.block_size - obtener_tam_archivo(ruta_archivo);
-	loggear_debug(string_from_format("Espacio Disponible: %d\n", espacio_disponible));
+	loggear_debug(string_from_format("Espacio Disponible: %d", espacio_disponible));
 	return espacio_disponible;
 }
 
@@ -634,28 +647,29 @@ int puede_crear_particiones(instr_t* instr) {
 void crear_particiones(instr_t* instr) {
 	int cantidad = atoi(obtener_parametro(instr, 2));
 	char* tabla = obtener_nombre_tabla(instr);
-	char* nomb_part ;
+	char* ruta_binario;
 
 	for(int num = 0; num < cantidad; num++) {
-		nomb_part = string_from_format("Part%d", num);
-		FILE* archivo_binario = crear_archivo(tabla, nomb_part, ".bin");
-		archivo_inicializar(archivo_binario);
-		free(nomb_part);
-		fclose(archivo_binario);
+		ruta_binario = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num);
+		inicializar_archivo(ruta_binario);
+		free(ruta_binario);
 	}
 
-	char* mensaje = string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla );
-	loggear_info(mensaje);
+	loggear_info(string_from_format("Se crearon las particiones de la tabla \"%s\" correctamente.", tabla));
 	free(tabla);
 }
 
 void crear_metadata(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
-	FILE* archivo_metadata = crear_archivo(tabla, "Metadata", "");
+	char* ruta_metadata = string_from_format("%s%s/Metadata", g_ruta.tablas, tabla);
+
+	FILE* archivo_metadata = fopen(ruta_metadata, "w+");
 	metadata_inicializar(archivo_metadata, instr);
+
 	fclose(archivo_metadata);
-	char* mensaje = string_from_format("Se creó el metadata en la tabla \"%s\".", tabla);
-	loggear_info(mensaje);
+	free(ruta_metadata);
+
+	loggear_info(string_from_format("Se creó el metadata en la tabla \"%s\".", tabla));
 	free(tabla);
 }
 
@@ -666,29 +680,69 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 	fprintf(f, "%s%s%s%s%s%s%s", "CONSISTENCY=", consist, "\nPARTITIONS=", part, "\nCOMPACTATION_TIME=", time, "\n");
 }
 
-int archivo_inicializar(FILE* f) {
-//	loggear_trace(string_from_format("-------------------Entre a archivo_inicializar-------------------"));
-	int bloque_num = siguiente_bloque_disponible();
-	puts("\n pepe");
-	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
-	txt_write_in_file(f, contenido);
+//int archivo_inicializar(FILE* f) {
+//	loggear_trace(string_from_format("a_i: Inicializando archivo"));
+//	int bloque_num = siguiente_bloque_disponible();
+//	loggear_trace(string_from_format("a_i: Encontrado sig_bloque"));
+//	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
+//	loggear_trace(string_from_format("a_i: contenido"));
+//	txt_write_in_file(f, contenido);
+//	loggear_trace(string_from_format("a_i: File written"));
+//
+//	//fwrite(contenido, sizeof(char), sizeof(char)*strlen(contenido), f);
+//	ocupar_bloque(bloque_num);
+//	puts("ocupado");
+//	restar_bloques_disponibles(1);
+//	puts("restado\n");
+//	//AGREGO FREE()
+////	free(contenido);
+////	printf("Numero de bloque: %d\n", bloque_num);
+//	return bloque_num;
+//}
+//
+//FILE* crear_archivo(char* tabla, char* nombre, char* ext) {
+//	char* ruta = string_from_format("%s%s/%s%s", g_ruta.tablas, tabla, nombre, ext);
+//	FILE* archivo = fopen(ruta, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
+//	free(ruta);
+//	return archivo;
+//}
 
-	//fwrite(contenido, sizeof(char), sizeof(char)*strlen(contenido), f);
+int inicializar_archivo(char* ruta_archivo) {
+	//loggear_trace(string_from_format("i_a: Ruta: %s", ruta_archivo));
+
+	//loggear_trace(string_from_format("i_a: Abriendo archivo"));
+	FILE* archivo = fopen(ruta_archivo, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
+	if(!archivo){
+		loggear_error(string_from_format("No pudo crearse el archivo %s.", ruta_archivo));
+		return -1;
+	}
+	//loggear_trace(string_from_format("i_a: Abierto archivo"));
+
+	int bloque_num = siguiente_bloque_disponible();
+	//loggear_trace(string_from_format("i_a: Encontrado sig bloque: %d", bloque_num));
+
+	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
+	//loggear_trace(string_from_format("i_a: Asignado contenido:\n%s", contenido));
+
+	txt_write_in_file(archivo, contenido);
+	//fwrite(contenido, sizeof(char), sizeof(char)*strlen(contenido), archivo);
+	//loggear_trace(string_from_format("i_a: File written"));
+	//imprimirContenidoArchivo(ruta_archivo, &loggear_debug);
+
 	ocupar_bloque(bloque_num);
-	puts("\n pepa");
 	restar_bloques_disponibles(1);
-	puts("\n pepo\n");
-	//AGREGO FREE()
-//	free(contenido);
-//	printf("Numero de bloque: %d\n", bloque_num);
+
+	fclose(archivo);
+	free(contenido);
+	//printf("Numero de bloque: %d\n", bloque_num);
 	return bloque_num;
 }
 
-FILE* crear_archivo(char* tabla, char* nombre, char* ext) {
-	char* ruta = string_from_format("%s%s/%s%s", g_ruta.tablas, tabla, nombre, ext);
-	FILE* archivo = fopen(ruta, "w"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
-	free(ruta);
-	return archivo;
+void crear_punto_montaje(char* ruta_dir){
+	if (!mkdir(ruta_dir, S_IRWXU))
+		loggear_info(string_from_format("Se creó correctamente el punto de montaje en el directorio %s", ruta_dir));
+	else
+		loggear_warning(string_from_format("No se creó el punto de montaje. Ya existe.", ruta_dir));
 }
 
 void crear_directorio(char* ruta, char* nombre) {
@@ -702,16 +756,6 @@ void crear_directorio(char* ruta, char* nombre) {
 		char* mensaje = string_from_format("No se creó la carpeta \"%s\". Ya existe.", nombre);
 		loggear_warning(mensaje);
 		free(ruta_dir);
-	}
-}
-
-void crear_directorio_simple(char* ruta_dir){
-	if (!mkdir(ruta_dir, S_IRWXU)) {
-		char* mensaje = string_from_format("Se creó correctamente el directorio %s", ruta_dir);
-		loggear_info(mensaje);
-	} else {
-		char* mensaje = string_from_format("No se creó el directorio %s. Ya existe.", ruta_dir);
-		loggear_warning(mensaje);
 	}
 }
 
@@ -807,7 +851,7 @@ void iniciar_logger(){
 
 void inicializar_directorios() {
 
-	crear_directorio_simple(config_FS.punto_montaje);
+	crear_punto_montaje(config_FS.punto_montaje);
 	crear_directorio(config_FS.punto_montaje, "Metadata");
 	crear_directorio(config_FS.punto_montaje, "Tablas");
 	crear_directorio(config_FS.punto_montaje, "Bloques");

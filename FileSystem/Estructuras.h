@@ -54,18 +54,18 @@ int 		cant_bloques_disp();
 void 		inicializar_bitarray();
 void 		finalizar_bitarray();
 int			bloque_esta_ocupado(int);
-int 		siguiente_bloque_disponible(); //NO VALIDA SI HAY BLOQUES DISPONIBLES
+int 		siguiente_bloque_disponible();
 void 		ocupar_bloque(int);
 void 		liberar_bloque(int);
 
 
 //DIRECTORIOS Y ARCHIVOS
 void  inicializar_directorios(void);
+void  crear_punto_montaje(char*);
 void  crear_directorio(char*, char*);
-void  crear_directorio_simple(char* ruta_dir);
 int   eliminar_directorio(char*);
 int   carpeta_esta_vacia(char*);
-FILE* crear_archivo(char*, char*, char*);
+int   inicializar_archivo(char*);
 
 
 //BLOQUES
@@ -108,10 +108,7 @@ void   eliminar_mutex_de_tabla(char*);
 void   finalizar_dic_semaforos_tablas();
 
 
-
-void borrar_lista_parametros_impresion(t_list*);
-int archivo_inicializar(FILE*);
-
+//void borrar_lista_parametros_impresion(t_list*);
 
 
 //test

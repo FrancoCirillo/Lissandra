@@ -10,6 +10,14 @@ int main(int argc, char* argv[]) {
 	
 	inicializar_FS(argc, argv);
 
+	inicializar_conexiones();
+
+
+
+
+
+	//pruebaGeneral();
+
 	//ejemplo_aplanar();
 
 //	pruebaDump();
@@ -26,7 +34,6 @@ int main(int argc, char* argv[]) {
 
 //	compactador("T1");
 
-	inicializar_conexiones();
 
 //	///FIN
 //	finalizar_memtable();
@@ -39,7 +46,6 @@ int main(int argc, char* argv[]) {
 //	finalizar_dic_semaforos_tablas();
 //	finalizar_diccionarios_conexiones();
 //	///
-
 
 
 	return 0;
@@ -63,7 +69,7 @@ registro_t* crearRegistro(mseg_t timestampNuevo, uint16_t keyNueva, char *valueN
 
 //en el segundo parametro se le puede pasar loggear_loquesea (loggear_debug, loggear_info, etc) segun lo que se quiera loggear cuando se llama a la funcion
 void imprimirContenidoArchivo(char* ruta, void (*funcion_log)(char *texto)) {
-	loggear_trace(string_from_format("---LEO ARCHIVO COMPLETO---"));
+	//loggear_trace(string_from_format("---LEO ARCHIVO COMPLETO---"));
 	FILE* f = fopen(ruta, "r");
 	if(f != NULL){
 		char caracter_leido = fgetc(f);
@@ -76,7 +82,7 @@ void imprimirContenidoArchivo(char* ruta, void (*funcion_log)(char *texto)) {
 			leidos++;
 		}
 		funcion_log(texto);
-		funcion_log(string_from_format("Leidos: %d\n", leidos));
+		//funcion_log(string_from_format("Leidos: %d\n", leidos));
 	}
 	else loggear_warning(string_from_format("No se pudo abrir el archivo %s", ruta));
 }
@@ -107,7 +113,7 @@ void imprimirMetadata(char* tabla){
 }
 
 t_list* listaRegistros() {
-	t_list* registros = crear_lista_registros();
+	t_list* registros = list_create();
 
 	registro_t* registro1 = obtener_registro("43242345;253;registro1\n");
 	registro_t* registro2 = obtener_registro("43242345;43;registro2\n");
@@ -136,7 +142,7 @@ t_list* listaRegistros() {
 }
 
 t_list* listaRegistros2() {
-	t_list* registros = crear_lista_registros();
+	t_list* registros = list_create();
 
 	registro_t* registro1 = obtener_registro("55242345;253;registro1-2\n");
 	registro_t* registro2 = obtener_registro("11242345;43;registro2-2\n");
@@ -172,12 +178,10 @@ void pruebaDump() {
 		loggear_trace(string_from_format("-------------------Entre a dump-------------------"));
 		int nro_dump = 2;
 		loggear_trace(string_from_format("Numero de Dump: %d\n", nro_dump));
-		char* nombre_tmp = string_from_format("Dump%d", nro_dump);
-		char* ruta_tmp = string_from_format("%s%s/%s.tmp", g_ruta.tablas, tabla, nombre_tmp);
+		char* ruta_tmp = string_from_format("%s%s/Dump%d.tmp", g_ruta.tablas, tabla, nro_dump);
 		loggear_debug(string_from_format("Ruta Temporal: %s\n", ruta_tmp));
-		FILE* temporal = crear_archivo(tabla, nombre_tmp, ".tmp");
-		int nro_bloque = archivo_inicializar(temporal); //TODO
-		loggear_debug(string_from_format("Al temporal %s se le asigno el bloque %d\n", nombre_tmp, nro_bloque));
+		int nro_bloque = inicializar_archivo(ruta_tmp);
+		loggear_debug(string_from_format("Al temporal Dump%d.tmp se le asigno el bloque %d\n", nro_dump, nro_bloque));
 
 		void escribir_reg_en_tmp(void* registro) {
 			loggear_trace(string_from_format("-------------------Entro a escribir_reg_en_tmp-------------------"));
@@ -187,16 +191,12 @@ void pruebaDump() {
 			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
 
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
-
-		//	loggear_trace(string_from_format("Escribi el registro en bloque"));
+			loggear_trace(string_from_format("Escribi el registro en bloque\n\n"));
 		}
 
 		list_iterate((t_list*)registros, &escribir_reg_en_tmp);
 
 		free(ruta_tmp);
-		free(nombre_tmp);
-		fclose(temporal);
-		loggear_trace(string_from_format("Cierro el temporal"));
 	}
 
 	t_dictionary* mockMem = dictionary_create();
@@ -208,19 +208,15 @@ void pruebaDump() {
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
 
 	//--agrego otra tabla--
-	t_list* registros = crear_lista_registros();
+	t_list* registros = list_create();
 	dictionary_put(mockMem, "T2", registros);
 
 	loggear_info(string_from_format("Se agrego la tabla en la memtable."));
 
 	//--creo registros--
 	registro_t* registro2 = crearRegistro(4324234, 10, "ChauVoyEnT2");
-//	loggear_info(string_from_format("Cree un registro:"));
-	imprimirRegistro(registro2);
 
-	registro_t* registro = crearRegistro(4324234, 3, "ChauTmbVoyEnT2");
-//	loggear_info(string_from_format("Cree un registro:"));
-	imprimirRegistro(registro);
+	registro_t* registro = crearRegistro(432423412, 3, "ChauTmbVoyEnT2");
 
 	//--agrego registros--
 	t_list* registros_tabla = dictionary_get(mockMem, "T2");
@@ -265,27 +261,27 @@ void pruebaTmp() {
 void pruebaGeneral() {
 	pruebaDump();
 
-	puts("Ya termino el dumpeo");
+	loggear_info(string_from_format("Ya termino el dumpeo"));
 
 //	char* bloque0 = obtener_ruta_bloque(0);
 //	printf("\n\nRuta bloque 0: %s\n", bloque0);
-//	imprimirContenidoArchivo(bloque0);
+//	imprimirContenidoArchivo(bloque0, &loggear_debug);
 //
 //	char* bloque1 = obtener_ruta_bloque(1);
 //	printf("\n\nRuta bloque 1: %s\n", bloque1);
-//	imprimirContenidoArchivo(bloque1);
+//	imprimirContenidoArchivo(bloque1, &loggear_debug);
 //
 //	char* bloque2 = obtener_ruta_bloque(2);
 //	printf("\n\nRuta bloque 2: %s\n", bloque2);
-//	imprimirContenidoArchivo(bloque2);
+//	imprimirContenidoArchivo(bloque2, &loggear_debug);
 
-	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
-
-	t_list* registros = buscar_key_en_bloques(ruta, 34, 1);
-	loggear_debug(string_from_format("Estos son los registros que encontre:"));
-	list_iterate(registros, &imprimirRegistro);
-	char* value = obtener_registro_mas_reciente(registros);
-	loggear_debug(string_from_format("\nVALUE DEL REGISTRO MAS RECIENTE: %s\n", value));
+//	char* ruta = "/home/utnso/lissandra-checkpoint/Tablas/TABLA1/Dump1.tmp";
+//
+//	t_list* registros = buscar_key_en_bloques(ruta, 34, 1);
+//	loggear_debug(string_from_format("Estos son los registros que encontre:"));
+//	list_iterate(registros, &imprimirRegistro);
+//	char* value = obtener_registro_mas_reciente(registros);
+//	loggear_debug(string_from_format("\nVALUE DEL REGISTRO MAS RECIENTE: %s\n", value));
 }
 
 //------------INICIALIZACION Y FINALIZACION-----------------
@@ -319,9 +315,7 @@ void inicializar_FS(int argc, char* argv[]) {
 
 }
 
-void finalizar_FS(instr_t* instruccion) {
-	list_destroy_and_destroy_elements(instruccion->parametros, free);
-	free(instruccion);
+void finalizar_FS() {
 
 	finalizar_memtable();
 	finalizar_bitarray();
@@ -387,7 +381,7 @@ t_list* leer_binario(char* tabla, uint16_t key) {
 
 t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 	loggear_trace(string_from_format("---Buscando en los temporales---"));
-	t_list* registros = crear_lista_registros();
+	t_list* registros = list_create();
 	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
 	DIR* directorio = opendir(ruta_tabla);
 	if (directorio == NULL) {
@@ -432,17 +426,14 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	t_list* registro_bin = leer_binario(tabla, key);
 	sem_post(mutex_tabla);
 
-	t_list* registros_totales = crear_lista_registros(); //free
+	t_list* registros_totales = list_create();
 	list_add_all(registros_totales, registros_mem);
 	list_add_all(registros_totales, registros_temp);
 	if(registro_bin != NULL)
-	{
 		list_add_all(registros_totales, registro_bin);
-	}
-	else {
-		//TODO FREES?
+	else //TODO FREES?
 		return NULL;
-	}
+
 //	borrar_lista_registros(registros_mem);
 //	borrar_lista_registros(registros_temp);
 //	borrar_lista_registros(registro_bin);
@@ -567,8 +558,8 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 		if (codigoOperacion > BASE_COD_ERROR)
 			loggear_error_proceso(miInstruccion);
 
-		list_destroy_and_destroy_elements(miInstruccion->parametros, free);
-		free(miInstruccion);
+		//list_destroy_and_destroy_elements(miInstruccion->parametros, free);
+		//free(miInstruccion); GENERAN INVALID READ
 
 		break;
 	}
@@ -588,8 +579,8 @@ void actualizar_config(){
 	sem_wait(&mutex_config);
 	config_FS.retardo = (mseg_t)config_get_int_value(auxConfig, "RETARDO");
 	config_FS.tiempo_dump = (mseg_t)config_get_int_value(auxConfig, "TIEMPO_DUMP");
-
 	config_FS.LOG_LEVEL = log_level_from_string(config_get_string_value(auxConfig, "LOG_LEVEL"));
+
 	sem_wait(&mutex_log);
 	actualizar_log_level();
 	sem_post(&mutex_log);

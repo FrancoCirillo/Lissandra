@@ -84,7 +84,7 @@ void* compactador(void* tab) {
 				break;
 			}
 
-			loggear_info(string_from_format("Estoy compactando la tabla %s", tabla));
+			loggear_info(string_from_format("Estoy compactando la tabla '%s'", tabla));
 			t_list* lista_archivos = listar_archivos(tabla);
 
 			if(lista_archivos){
@@ -108,7 +108,8 @@ void* compactador(void* tab) {
 
 				loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n"));
 
-				list_iterate(particiones, &vaciar_diccionario);
+				vaciar_listas_registros(particiones); //Deja los diccionarios como nuevos.
+
 			}
 			else{
 				sem_post(mutex_tabla);
@@ -135,23 +136,25 @@ void* compactador(void* tab) {
 		}
 	}
 
-	list_destroy_and_destroy_elements(particiones, dictionary_destroy);
-	//liberar_recursos(particiones);
+	liberar_listas_registros(particiones);	//Libera los diccionarios y su contenido.
 	//free(de todo lo que use);
 }
 
-void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
-	printf("Estoy en FINALIZAR COMPACTACION \nDe la Particion: %d en tabla %s\n\n", num , tabla);
-	char* nom = string_from_format("Part%d", num);
-	FILE* f = crear_archivo(tabla, nom, ".bin"); //Lo crea como nuevo.
+void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) {
+	printf("Estoy en FINALIZAR COMPACTACION \nDe la Particion: %d en tabla %s\n\n", num_part , tabla);
 
-	int nro_bloque = archivo_inicializar(f);
-	printf("BLOQUE nuevo de la Particion: %d es %d\n\n", num ,nro_bloque);
+	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num_part);
+	printf("RUTA: %s\n\n", ruta_archivo);
 
-	char* ruta_bloque ;
+	int nro_bloque = inicializar_archivo(ruta_archivo);
+	printf("BLOQUE nuevo de la Particion: %d es %d\n\n", num_part, nro_bloque);
 
-	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num);
-	printf("LA RUTA ES: %s\n\n", ruta_archivo);
+//	char* nom = string_from_format("Part%d", num);
+//	FILE* f = crear_archivo(tabla, nom, ".bin"); //Lo crea como nuevo.
+//	int nro_bloque = archivo_inicializar(f);
+//	printf("BLOQUE nuevo de la Particion: %d es %d\n\n", num ,nro_bloque);
+
+	char* ruta_bloque;
 
 	void bajar_registro(char* key, void* reg){
 		printf("Estoy bajando_registro de key %s\n", key);
@@ -167,9 +170,7 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num) {
 	loggear_trace(string_from_format("Empiezo con bajar_registros de la tabla %s\n", tabla));
 	dictionary_iterator((t_dictionary*)particion, &bajar_registro);
 //	config_destroy(archivo);
-	fclose(f);
-	free(nom);
-	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s particion %d \n\n", tabla, num);
+	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s particion %d \n\n", tabla, num_part);
 }
 
 
@@ -236,13 +237,13 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
 	loggear_trace(string_from_format("Estoy en agregar_por_ts"));
 
 	char* key_nueva = string_itoa(reg_nuevo->key);
-
 	loggear_trace(string_from_format("\nLa key leida a agregar en el diccionario que corresponda es %s\n", key_nueva));
 
-	registro_t* reg_viejo = (registro_t*)dictionary_get( (t_dictionary*)dic, key_nueva);
+	registro_t* reg_viejo = (registro_t*)dictionary_get((t_dictionary*)dic, key_nueva);
 
 	if( (!reg_viejo) || ((reg_viejo != NULL) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
+
 	//TODO: Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.
 }
 
@@ -340,7 +341,7 @@ void borrar_tmpcs(char* tabla){
 		archivo = directorio_leido->d_name;
 		if(string_contains(archivo, ".tmpc")) {
 			char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
-			eliminar_archivo(ruta_archivo);
+			remove(ruta_archivo);
 			//loggear_trace(string_from_format("El archivo leido es: %s \n Y fue ELIMINADO :(\n\n", archivo));
 		}
 	}
@@ -352,10 +353,19 @@ void borrar_tmpcs(char* tabla){
 	//FUNCA
 }
 
-void eliminar_archivo(char* ruta_archivo){
-	remove(ruta_archivo);
-}   //FUNCA
+void vaciar_listas_registros(t_list* particiones){
 
-void vaciar_diccionario(void* dic){
-	dictionary_clean((t_dictionary*)dic);
+	void vaciar_diccionario(void* dic){
+		dictionary_clean((t_dictionary*)dic);
+	}
+	list_iterate(particiones, &vaciar_diccionario);
 }
+
+void liberar_listas_registros(t_list* particiones){
+
+	void liberar_diccionario(void* dic){
+		dictionary_destroy_and_destroy_elements((t_dictionary*)dic, free);
+	}
+	list_iterate(particiones, &liberar_diccionario);
+}
+

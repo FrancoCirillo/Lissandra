@@ -3,25 +3,25 @@
 #include "instructions.h"
 
 void evaluar_instruccion(instr_t* instr, char* remitente){
-	loggear_info(string_from_format("Se inicia ejecutador"));
+	loggear_debug(string_from_format("Se inicia ejecutador"));
 	pthread_t hilo_ejecutador;
 	pthread_attr_t attr;
-	instr_remitente* in=malloc(sizeof(instr_remitente));
-	in->instruccion=instr;
-	in->remitente=remitente;
+	instr_remitente* in = malloc(sizeof(instr_remitente));
+	in->instruccion = instr;
+	in->remitente = remitente;
 	pthread_attr_init(&attr);
-	pthread_create(&hilo_ejecutador,&attr,evaluar_instruccion2,in);
+	pthread_create(&hilo_ejecutador, &attr, ejecutar_instruccion, in);
 	pthread_detach(hilo_ejecutador);
 	loggear_trace(string_from_format("Ejecutador iniciado"));
 }
 
-void evaluar_instruccion2(instr_remitente* in) {
-	char* remitente=in->remitente;
-	instr_t* instr=in->instruccion;
+void ejecutar_instruccion(instr_remitente* in) {
+	char* remitente = in->remitente;
+	instr_t* instr = in->instruccion;
 	sem_wait(&mutex_config);
-	int tiempo=config_FS.retardo;
+	int tiempo_retardo = config_FS.retardo;
 	sem_post(&mutex_config);
-	usleep(tiempo);
+	usleep(tiempo_retardo);
 	loggear_trace(string_from_format("Evaluando instruccion recibida"));
 
 	int codigoNeto = instr->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
@@ -54,8 +54,12 @@ void evaluar_instruccion2(instr_remitente* in) {
 		break;
 
 	case CODIGO_CERRAR:
+		loggear_debug(string_from_format("Me llego la instruccion CERRAR."));
 		loggear_info(string_from_format("Se cerrara el File System."));
-		finalizar_FS(instr);
+		//liberar_instruccion(instr);
+		//free(in->remitente);
+		//free(in);
+		finalizar_FS();
 		break;
 
 	case CODIGO_VALUE:
@@ -67,9 +71,9 @@ void evaluar_instruccion2(instr_remitente* in) {
 		loggear_warning(string_from_format("Me llego una instruccion invalida dentro del File System."));
 	}
 
-	liberar_instruccion(instr);
-//	free(in->remitente);
-	free(in);
+	//liberar_instruccion(instr);
+	//free(in->remitente);
+	//free(in);
 }
 
 void liberar_instruccion(instr_t* instruccion){

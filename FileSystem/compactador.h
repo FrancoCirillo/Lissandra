@@ -20,7 +20,6 @@ _Bool compactation_locker;
 void 	crear_hilo_compactador(char* tabla);
 void    compactar_todas_las_tablas();
 void* 	compactador(void* tabla);
-//void 	compactador(char* tabla);
 t_list* listar_archivos(char* tabla);
 int 	hay_tmp(char* tabla);
 void 	agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo);
@@ -32,7 +31,8 @@ int  	ultimo_bloque(t_config* archivo);
 void    eliminar_archivo(char* ruta_archivo);
 int 	pasar_a_tmpc(char* tabla);
 void    borrar_tmpcs(char* tabla);
-void 	vaciar_diccionario(void* dic);
+void 	vaciar_listas_registros(t_list* particiones);
+void 	liberar_listas_registros(t_list* particiones);
 
 
 #endif /* COMPACTADOR_H_ */
