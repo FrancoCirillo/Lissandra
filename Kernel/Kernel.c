@@ -596,13 +596,14 @@ instr_t* enviar_i(instr_t* i){
 	loggear_trace(string_from_format("ENVIANDO INSTRUCCION.  "));
 	enviar_request_simple(i, conexionMemoria);
 
-	loggear_trace(string_from_format("\n### Instruccion enviada, esperando respuesta###\n"));
+	loggear_info(string_from_format("### Instruccion enviada, esperando respuesta###\n"));
 	loggear_debug(string_from_format("Bloqueando hilo hasta recibir respuesta!"));
 	pthread_mutex_lock(h->mutex_t);
 	pthread_cond_wait(h->cond_t,h->mutex_t);
 	pthread_mutex_unlock(h->mutex_t);
 
 	loggear_debug(string_from_format("Hilo despierto!"));
+	logger_info(string_from_format("###Respuesta recibida!###"));
 	instr_t * rta=h->respuesta;
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
 	free(h);
@@ -626,7 +627,7 @@ int obtener_fd_memoria(instr_t *i){
 
 	//Obtengo la memoria segun el criterio
 	loggear_trace(string_from_format("Codigo de criterio es : %d",codigo_criterio));
-	loggear_info(string_from_format("Determinando criterio de tabla"));
+	//loggear_info(string_from_format("Determinando criterio de tabla"));
 	switch(codigo_criterio){
 	case SC:
 		sem_wait(&criterio_strong_consistency->mutex_criterio);
@@ -702,7 +703,7 @@ char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
 	strcpy(rdo,s1);
 	strcat(rdo,s2);
-	loggear_debug(string_from_format(rdo));
+	//loggear_debug(string_from_format(rdo));
 	return rdo;
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
