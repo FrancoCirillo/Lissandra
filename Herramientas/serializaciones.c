@@ -80,7 +80,7 @@ int enviar_request(instr_t *instruccionAEnviar, int socket_cliente)
 //	loggear_trace(string_from_format("Se va a hacer free(a_enviar)"));
 	free(a_enviar);
 
-	loggear_trace(string_from_format("Request enviado. Instruccion y parametros libreados"));
+//	loggear_trace(string_from_format("Request enviado. Instruccion y parametros libreados"));
 	return s;
 }
 

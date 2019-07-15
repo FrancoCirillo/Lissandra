@@ -502,6 +502,7 @@ void limpiar_memoria()
 	loggear_info(string_from_format("Limpiando Memoria"));
 	limpiar_memoria_principal();
 	limpiar_segmentos();
+	list_clean_and_destroy_elements(paginasSegunUso, free);
 }
 
 void limpiar_memoria_principal()
@@ -560,10 +561,19 @@ void eliminar_tabla(instr_t *instruccion)
 	t_list *segmentoABorrar = segmento_de_esa_tabla(tablaABorrar);
 	if (segmentoABorrar != NULL)
 	{
+		sacar_segmento_de_lru(segmentoABorrar);
 		dictionary_remove(tablaDeSegmentos, tablaABorrar);
 		list_destroy_and_destroy_elements(segmentoABorrar, free);
 	}
 	loggear_info(string_from_format("Tabla %s%s borrada de Memoria", puntoMontaje, tablaABorrar));
+}
+
+void sacar_segmento_de_lru(t_list* segmentoABorrar){
+	void eliminar_su_pagina(filaTabPags* fila){
+		sacar_de_lista_lru(fila->numeroDePagina);
+	}
+
+	list_iterate(segmentoABorrar, (void*)eliminar_su_pagina);
 }
 
 void imprimir_segmento(char *nombreSegmento, t_list *suTablaDePaginas)

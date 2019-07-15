@@ -32,8 +32,8 @@ int obtener_fd_out(char *proceso)
 		return idsProceso->fd_out;
 	}
 	//	La conexion en el fd_out %d ya existia
-	loggear_trace(string_from_format("Ya existia la conexion con el proceso %s", proceso));
-	loggear_trace(string_from_format("Tiene el fd_out %d", idsProceso->fd_out));
+//	loggear_trace(string_from_format("Ya existia la conexion con el proceso %s", proceso));
+//	loggear_trace(string_from_format("Tiene el fd_out %d", idsProceso->fd_out));
 	return idsProceso->fd_out;
 }
 
@@ -54,7 +54,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		enviar_request(miInstruccion, conexionKernel);
 		list_remove(listaABorrar, list_size(listaABorrar)-1);
 		list_destroy_and_destroy_elements(listaABorrar, free);
-		loggear_trace(string_from_format("Parametros freed"));
+//		loggear_trace(string_from_format("Parametros freed"));
 
 		break;
 	default:
@@ -67,7 +67,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		}
 
 		list_destroy_and_destroy_elements(miInstruccion->parametros, free);
-		loggear_trace(string_from_format("Parametros freed"));
+//		loggear_trace(string_from_format("Parametros freed"));
 
 		free(miInstruccion);
 		loggear_trace(string_from_format("miInstruccion freed"));
@@ -132,7 +132,7 @@ void pedir_tamanio_value(){
 	t_list* listaParam = list_create();
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), CODIGO_VALUE, listaParam);
 	enviar_request(miInstruccion, conexionFS);
-	loggear_trace(string_from_format("Tamanio del value pedido"));
+//	loggear_trace(string_from_format("Tamanio del value pedido"));
 }
 
 void actualizar_tamanio_value(instr_t* instruccion){
@@ -140,8 +140,7 @@ void actualizar_tamanio_value(instr_t* instruccion){
 	puntoMontaje = strdup((char*) list_get(instruccion->parametros, 1));
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
-	loggear_info(string_from_format("Tamanio del value recibido: %d\n", tamanioValue));
-	loggear_debug(string_from_format("Punto de montaje recibido: %s\n", puntoMontaje));
+	loggear_info(string_from_format("Tamanio del value '%d' y punto de montaje '%s' recibidos. %d\n", tamanioValue, puntoMontaje));
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){
@@ -155,7 +154,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 
 //	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
-	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
+//	loggear_trace(string_from_format("Envio mi tabla de datos"));
 
 
 	actualizar_tabla_gossiping(instruccion);
@@ -185,19 +184,19 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 					saltearProximos = 0;
 				}
 				else{
-					loggear_trace(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
+//					loggear_trace(string_from_format("Ya tenia el proceso %s en la tabla", parametro));
 					i+=3;
 					saltearProximos = 3;
 				}
 			}
 				else if(i % 3 == 1){
 					ip = strdup(parametro);
-					loggear_trace(string_from_format("Su ip es %s", ip));
+//					loggear_trace(string_from_format("Su ip es %s", ip));
 					i++;
 				}
 					else if(i % 3 == 2){
 						puerto = strdup(parametro);
-						loggear_trace(string_from_format("Su puerto es %s", puerto));
+//						loggear_trace(string_from_format("Su puerto es %s", puerto));
 						identificador identificadores = {
 								.fd_out = 0,
 								.fd_in = 0
@@ -209,7 +208,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 						identificador* idsConexionesActuales = malloc(sizeof(identificadores));
 						memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
 
-						loggear_trace(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
+//						loggear_trace(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
 						sem_wait(&mutex_diccionario_conexiones);
 						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
 						sem_post(&mutex_diccionario_conexiones);
@@ -224,10 +223,10 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
 
-	loggear_info(string_from_format("Tabla actualizada:"));
-	sem_wait(&mutex_diccionario_conexiones);
-	imprimir_conexiones(conexionesActuales, loggear_info);
-	sem_post(&mutex_diccionario_conexiones);
+//	loggear_info(string_from_format("Tabla actualizada:"));
+//	sem_wait(&mutex_diccionario_conexiones);
+//	imprimir_conexiones(conexionesActuales, loggear_info);
+//	sem_post(&mutex_diccionario_conexiones);
 
 	list_destroy(instruccion->parametros);
 	free(instruccion);
@@ -257,11 +256,11 @@ t_list *conexiones_para_gossiping(){
 
 	void juntar_ip_y_puerto(char* nombre, identificador* ids){
 		if(strcmp(nombre, "FileSystem")!=0 && strcmp(nombre, nombreDeMemoria)!=0){
-			loggear_trace(string_from_format("Agregando nombre %s", nombre));
+//			loggear_trace(string_from_format("Agregando nombre %s", nombre));
 			list_add(tablaGossiping, nombre);
-			loggear_trace(string_from_format("Agregando IP %s", ids->ip_proceso));
+//			loggear_trace(string_from_format("Agregando IP %s", ids->ip_proceso));
 			list_add(tablaGossiping, ids->ip_proceso);
-			loggear_trace(string_from_format("Agregando puerto %s", ids->puerto));
+//			loggear_trace(string_from_format("Agregando puerto %s", ids->puerto));
 			list_add(tablaGossiping, ids->puerto);
 
 		}
@@ -301,9 +300,9 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 	void su_nombre(char* nombre, identificador* ids){
 
-		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
+//		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
-			nombreEncontrado = strdup(nombre);
+//			nombreEncontrado = strdup(nombre);
 			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
 		}
 	}
@@ -313,7 +312,7 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 void gossipear_con_conexiones_actuales(){
 
-	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
+//	loggear_trace(string_from_format("Gossipeando conexiones actuales"));
 	void su_nombre(char* nombre, identificador* ids){
 		enviar_lista_gossiping(nombre);
 	}
@@ -324,8 +323,8 @@ void gossipear_con_procesos_desconectados(){
 
 	int i = 0;
 	void enviar_tabla_gossiping(char* unaIP){
-		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
-		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
+//		loggear_trace(string_from_format("IP seed: %s\n", unaIP));
+//		loggear_trace(string_from_format("Puerto seed: %s\n", (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
 		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0){
 			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
