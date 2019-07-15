@@ -463,7 +463,7 @@ void* ejecutar_proceso(void* un_proceso){
 		sem_wait(&mutex_configuracion);
 		int sleep_exec=configuracion.sleep_ejecucion;
 		sem_post(&mutex_configuracion);
-		usleep(sleep_exec);
+		usleep(sleep_exec*1000);
 	}
 	loggear_trace(string_from_format("Fin de quantum, encolando o finalizando"));
 
