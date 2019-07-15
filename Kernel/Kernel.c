@@ -805,7 +805,7 @@ void encolar_o_finalizar_proceso(proceso* p){
 }
 void liberar_instruccion(instr_t* instruccion){
 
-	if(instruccion->codigo_operacion == CODIGO_DESCRIBE){
+	if(instruccion->codigo_operacion == CODIGO_DESCRIBE|| PETICION_GOSSIP){
 		list_destroy(instruccion->parametros);
 	}
 	else{
@@ -1299,19 +1299,15 @@ instr_t* mis_datos(cod_op codigoOperacion){
 
 void actualizar_config(){
 	t_config *auxConfig;
-	puts("llego aca");
 	while((auxConfig = config_create(rutaConfiguracion)) == NULL||
 			!config_has_property(auxConfig, "quantum") 			||
 			!config_has_property(auxConfig, "RETARDO_GOSSIPING")||
 			!config_has_property(auxConfig, "tiempoMetricas")	||
 			!config_has_property(auxConfig, "LOG_LEVEL")){
 		config_destroy(auxConfig);
-		puts("Reintentandooooo");
 	}
 
-	puts("Va a tomar el semaforo");
 	sem_wait(&mutex_configuracion);
-	puts("Tomo el semaforo");
 	configuracion.quantum = config_get_int_value(auxConfig, "quantum");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
 	configuracion.tiempoMetricas = config_get_int_value(auxConfig, "tiempoMetricas");
@@ -1353,7 +1349,7 @@ void actualizar_metadata_tablas(instr_t* respuesta){
 			agregar_tabla(tabla);
 			char* criterio = string_from_format("%s", list_get(respuesta->parametros, i+1));
 			agregar_tabla_a_su_criterio(valor, criterio);
-			printf("\n\nSe agrego la tabla %s con el criterio %s", valor, criterio);
+			printf("\n\nSe agrego la tabla %s con el criterio %s\n", valor, criterio);
 			free(criterio);
 		}
 		i++;
