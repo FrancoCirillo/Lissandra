@@ -806,7 +806,7 @@ void encolar_o_finalizar_proceso(proceso* p){
 }
 void liberar_instruccion(instr_t* instruccion){
 
-	if(instruccion->codigo_operacion == CODIGO_DESCRIBE|| PETICION_GOSSIP){
+	if(instruccion->codigo_operacion == CODIGO_DESCRIBE||instruccion->codigo_operacion == PETICION_GOSSIP){
 		list_destroy(instruccion->parametros);
 	}
 	else{
