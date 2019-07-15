@@ -1023,7 +1023,8 @@ void* consola(void* c){
 }
 
 void iniciar_ejecutador_gossiping(){
-	loggear_debug(string_from_format("Iniciando ejecutador gossiping"));
+
+	loggear_debug(string_from_format("Iniciando ejecutador gossiping."));
 	pthread_t hilo_ejecutador_gossiping;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
