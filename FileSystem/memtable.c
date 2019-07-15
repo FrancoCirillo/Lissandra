@@ -151,7 +151,10 @@ char* registro_a_string(registro_t* registro) {
 	char* ts = mseg_a_string(registro->timestamp);
 	char* key = string_from_format("%"PRIu16,registro->key);
 	char* value = string_from_format("%s", registro->value);
-	return string_from_format("%s;%s;%s\n", ts, key, value);
+	char* reg_string = string_from_format("%s;%s;%s\n", ts, key, value);
+	free(key);
+	free(value);
+	return reg_string;
 }
 
 //DUMPEO
