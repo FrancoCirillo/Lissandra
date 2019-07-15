@@ -241,21 +241,9 @@ void se_uso(int paginaUtilizada)
 	int *paginaUsada = malloc(sizeof(int));
 	*paginaUsada = paginaUtilizada;
 
-	bool esPaginaRequerida(int *numeroDePagina)
-	{
-		if (*paginaUsada == *numeroDePagina)
-		{
-			return true;
-		}
-		else
-			return false;
-	}
-
-	if ((list_find(paginasSegunUso, (void *)esPaginaRequerida)) != NULL)
-	{
-		list_remove_and_destroy_by_condition(paginasSegunUso, (void *)esPaginaRequerida, free);
+	sacar_de_lista_lru(paginaUtilizada);
 		//En list[0] queda el que menos se usa
-	}
+
 	list_add(paginasSegunUso, paginaUsada); //Lo agrega en el último lugar, si ya existia se duplica
 }
 
@@ -297,21 +285,14 @@ bool memoria_esta_full()
 
 int *pagina_lru()
 {
-	filaTabPags* filaPosible;
-	int* paginaEncontrada;
-	do{
-		paginaEncontrada = (int *)list_get(paginasSegunUso, 0);
-		int indiceEnTabla = 0;
-		char* segmentoQueLaTiene;
-		filaPosible = fila_correspondiente_a_esa_pagina((*paginaEncontrada), &indiceEnTabla, &segmentoQueLaTiene);
-		if(filaPosible->flagModificado !=0 ){
-			loggear_trace(string_from_format("Se encontro una pagina que tenia el flag modificado"));
-			free(segmentoQueLaTiene); //malloc en fila_correspondiente_a_esa_pagina
-			list_remove(paginasSegunUso, 0);
-		}
-	}while(filaPosible->flagModificado != 0);
+	return (int *)list_get(paginasSegunUso, 0);
+}
 
-	return paginaEncontrada;
+void sacar_de_lista_lru(int pagina){
+	bool es_pagina_buscada(int* valor){
+		return *valor == pagina;
+	}
+	list_remove_and_destroy_by_condition(paginasSegunUso, (void*)es_pagina_buscada, free);
 }
 
 filaTabPags *fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, int *indiceEnTabla)

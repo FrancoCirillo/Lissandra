@@ -185,6 +185,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 		}
 
+		sacar_de_lista_lru(numeroDePaginaInsertada);
 		list_destroy_and_destroy_elements(instruccion->parametros, free);
 		free(instruccion);
 		return numeroDePaginaInsertada;

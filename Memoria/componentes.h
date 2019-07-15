@@ -56,6 +56,7 @@ t_list* paginasSegunUso;
 void se_utilizo(filaTabPags* filaUsada);
 void se_uso(int paginaUsada);
 int* pagina_lru();
+void sacar_de_lista_lru(int pagina);
 
 filaTabPags* fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla, char** segmentoQueLaTiene);
 filaTabPags* fila_con_el_numero(t_list *suTablaDePaginas, int numeroDePagina, int* indiceEnTabla);
