@@ -527,6 +527,7 @@ int obtener_ultimo_bloque(char* ruta_archivo){
 	char* ultimo_bloque = bloques[ultimo];
 	//loggear_trace(string_from_format("Char bloque: %s", ultimo_bloque));
 	int rdo = atoi(ultimo_bloque);
+	config_destroy(archivo);
 	return rdo;
 }
 
