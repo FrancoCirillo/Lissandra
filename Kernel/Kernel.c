@@ -253,7 +253,7 @@ instr_t* kernel_run(instr_t *i){
 
 		list_add(p->instrucciones,nueva_instruccion);
 		p->size++;
-		loggear_trace(string_from_format("Se agrego una instruccion!"));
+		//loggear_trace(string_from_format("Se agrego una instruccion!"));
 		//		imprimir_instruccion(nueva_instruccion);
 	}
 	loggear_debug(string_from_format("\n\nSize %d\n\n",p->size));
@@ -564,7 +564,7 @@ instr_t* enviar_i(instr_t* i){
 	loggear_info(string_from_format(" ENVIANDO INSTRUCCION CODIGO %s",(char*)obtener_ultimo_parametro(i)));
 	//imprimir_instruccion(i);
 
-
+	i->timestamp=obtener_ts();
 
 	loggear_debug(string_from_format("Determinando memoria para request"));
 	int conexionMemoria = obtener_fd_memoria(i);
@@ -596,7 +596,7 @@ instr_t* enviar_i(instr_t* i){
 	loggear_trace(string_from_format("ENVIANDO INSTRUCCION.  "));
 	enviar_request_simple(i, conexionMemoria);
 
-	loggear_trace(string_from_format("\n##### Instruccion enviada, esperando respuesta###\n"));
+	loggear_trace(string_from_format("\n### Instruccion enviada, esperando respuesta###\n"));
 	loggear_debug(string_from_format("Bloqueando hilo hasta recibir respuesta!"));
 	pthread_mutex_lock(h->mutex_t);
 	pthread_cond_wait(h->cond_t,h->mutex_t);
@@ -665,6 +665,9 @@ int obtener_fd_memoria(instr_t *i){
 
 	if(alias_memoria==NULL){
 		loggear_warning(string_from_format("NO se pudo obtener la memoria para dicha instruccion"));
+		if(i->codigo_operacion==CODIGO_CREATE){
+
+		}
 		return -100;
 	}
 
@@ -814,7 +817,7 @@ void finalizar_proceso(proceso* p){
 	loggear_info(string_from_format("Proceso pasa a estado FINALIZADO. Se libera su memoria"));
 	for(int i=0;list_size(p->instrucciones)>0;i++){
 		instr_t* instruccion=list_get(p->instrucciones,0);
-		loggear_trace(string_from_format("Se libera la memoria para la instruccion %d",i));
+		//loggear_trace(string_from_format("Se libera la memoria para la instruccion %d",i));
 		//imprimir_instruccion(instruccion, loggear_debug);
 		liberar_instruccion(instruccion);
 		list_remove(p->instrucciones,0);
