@@ -103,6 +103,7 @@ sem_t mutex_lista_tablas;
 sem_t mutex_configuracion;
 sem_t mutex_lista_instrucciones_ejecutadas;
 sem_t mutex_diccionario_conexiones;
+char* rutaConfiguracion;
 //Proceso principal
 int ejecutar();
 void* ejecutar_proceso(void* un_proceso);
@@ -128,7 +129,8 @@ void inicializar_criterios();
 void inicializarConfiguracion();
 void inicializar_semaforos();
 void iniciar_metricas();
-char* rutaConfiguracion;
+void iniciar_auto_describe();
+
 
 //Conexiones Franquito
 config_t configuracion;

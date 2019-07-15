@@ -30,9 +30,9 @@ int main(int argc, char* argv[]) {
 	inicializar_kernel();
 	//iniciar_consola();
 
-//	loggear_debug(string_from_format("### FINALIZANDO KERNEL ###"));
-//	sleep(2);
-//	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
+	//	loggear_debug(string_from_format("### FINALIZANDO KERNEL ###"));
+	//	sleep(2);
+	//	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
 	return 0;
 }
 void iniciar_auto_describe(){
@@ -73,9 +73,9 @@ void ejecutar_requestRecibido(instr_t * instruccion,char* remitente){
 		loggear_info(string_from_format("Tamanio de request %d tamaio maloqueado %d",sizeof(codigo),(sizeof(char)*(codigo_req/10+1)+1)));
 
 		list_add(instruccion->parametros,codigo);
+		loggear_info(string_from_format("Instruccion generada, encolando proceso..."));
 
 		p->size++;
-		loggear_info(string_from_format("Instruccion generada, encolando proceso..."));
 		encolar_proceso(p);
 	}else{//Es una respuesta
 		recibi_respuesta(instruccion, remitente);
@@ -326,7 +326,7 @@ instr_t* kernel_add(instr_t* i){
 	instr_t * respuesta=malloc(sizeof(instr_t));
 	respuesta->codigo_operacion=0;
 	char* mensaje=string_from_format("ADD EJECUTADO CORRECTAMENTE!");
-//	list_destroy(respuesta->parametros);
+	//	list_destroy(respuesta->parametros);
 	t_list * params=list_create();
 	list_add(params,mensaje);
 	respuesta->parametros=params;
@@ -500,7 +500,7 @@ instr_t* ejecutar_instruccion(instr_t* i){
 		exit(0);
 	}
 	if(i->codigo_operacion==CODIGO_JOURNAL){
-			return kernel_journal(i);
+		return kernel_journal(i);
 	}
 	if(i->codigo_operacion==CODIGO_RUN){
 		return kernel_run(i);
@@ -561,7 +561,7 @@ instr_t *validar(instr_t * i){
 
 instr_t* enviar_i(instr_t* i){
 
-	loggear_info(string_from_format(" ENVIANDO INSTRUCCION CODIGO %s\n",(char*)obtener_ultimo_parametro(i)));
+	loggear_info(string_from_format(" ENVIANDO INSTRUCCION CODIGO %s",(char*)obtener_ultimo_parametro(i)));
 	//imprimir_instruccion(i);
 
 
@@ -613,7 +613,7 @@ instr_t* enviar_i(instr_t* i){
 
 int obtener_fd_memoria(instr_t *i){
 	char* memoria="Memoria_";
-	char* alias_memoria="";
+	char* alias_memoria=NULL;
 	int codigo_criterio;
 	//SIEMPRE el primer parametro es el nombre de la tabla que uso como key para determinar criterio
 
@@ -625,31 +625,36 @@ int obtener_fd_memoria(instr_t *i){
 	}sem_post(&mutex_diccionario_criterios);
 
 	//Obtengo la memoria segun el criterio
-	loggear_trace(string_from_format("Codigo de criterio es : %d \n",codigo_criterio));
+	loggear_trace(string_from_format("Codigo de criterio es : %d",codigo_criterio));
 	loggear_info(string_from_format("Determinando criterio de tabla"));
 	switch(codigo_criterio){
 	case SC:
 		sem_wait(&criterio_strong_consistency->mutex_criterio);
-		alias_memoria=list_get(criterio_strong_consistency->lista_memorias,0);
+		if(list_size(criterio_strong_consistency->lista_memorias)>0){
+			alias_memoria=list_get(criterio_strong_consistency->lista_memorias,0);
+		}
 		sem_post(&criterio_strong_consistency->mutex_criterio);
 		break;
 	case SHC:
 		sem_wait(&criterio_strong_hash_consistency->mutex_criterio);
-		if(i->codigo_operacion==CODIGO_SELECT || i->codigo_operacion==CODIGO_INSERT){//EL criterio requiere que para insert y selects depende de la key
-			int key=atoi(obtener_parametroN(i,1));
-			alias_memoria=list_get(criterio_strong_hash_consistency->lista_memorias,key % list_size(criterio_strong_hash_consistency->lista_memorias));
+		if(list_size(criterio_strong_consistency->lista_memorias)>0){
+			if(i->codigo_operacion==CODIGO_SELECT || i->codigo_operacion==CODIGO_INSERT){//EL criterio requiere que para insert y selects depende de la key
+				int key=atoi(obtener_parametroN(i,1));
+				alias_memoria=list_get(criterio_strong_hash_consistency->lista_memorias,key % list_size(criterio_strong_hash_consistency->lista_memorias));
+			}
+			else{
+				alias_memoria=list_get(criterio_strong_hash_consistency->lista_memorias,0);
+			}
 		}
-		else{
-			alias_memoria=list_get(criterio_strong_hash_consistency->lista_memorias,0);
-		}
-
 		sem_post(&criterio_strong_hash_consistency->mutex_criterio);
 		break;
 	case EC:
 		sem_wait(&criterio_eventual_consistency->mutex_criterio);
 		sem_wait(&mutex_contador_ec);
-		alias_memoria=list_get(criterio_eventual_consistency->lista_memorias,contador_ec % list_size(criterio_eventual_consistency->lista_memorias));
-		contador_ec++;
+		if(list_size(criterio_eventual_consistency->lista_memorias)>0){
+			alias_memoria=list_get(criterio_eventual_consistency->lista_memorias,contador_ec % list_size(criterio_eventual_consistency->lista_memorias));
+			contador_ec++;
+		}
 		sem_post(&mutex_contador_ec);
 		sem_post(&criterio_eventual_consistency->mutex_criterio);
 		break;
@@ -913,7 +918,7 @@ void iniciar_log(){
 char* obtener_por_clave(char* key) {
 	char* valor;
 	valor = config_get_string_value(g_config, key);
-//	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------\n",key,valor);
+	//	printf("-----------\nGenerando config, valor obtenido para %s, es:   %s \n ---------\n",key,valor);
 	return valor;
 }
 
@@ -1060,9 +1065,9 @@ void auto_describe(){
 }
 void devolver_gossip(instr_t *instruccion, char *remitente){
 	loggear_info(string_from_format("Devolviendo el gossip a %s", remitente));
-//	loggear_trace(string_from_format("Enviando datos a %s", remitente));
+	//	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
-//	loggear_trace(string_from_format("Datos enviados"));
+	//	loggear_trace(string_from_format("Datos enviados"));
 	sem_wait(&mutex_diccionario_conexiones);
 	t_list* tablaGossiping = conexiones_para_gossiping();
 	sem_post(&mutex_diccionario_conexiones);
@@ -1071,7 +1076,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 
 	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
-//	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
+	//	loggear_trace(string_from_format("Envio mi tabla de datos enviada"));
 
 
 	actualizar_tabla_gossiping(instruccion);
@@ -1108,35 +1113,35 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 					saltearProximos = 3;
 				}
 			}
-				else if(i % 3 == 1){
-					ip = strdup(parametro);
-//					loggear_trace(string_from_format("Su ip es %s", ip));
-					i++;
-				}
-					else if(i % 3 == 2){
-						puerto = strdup(parametro);
-//						loggear_trace(string_from_format("Su puerto es %s", puerto));
-						identificador identificadores = {
-								.fd_out = 0,
-								.fd_in = 0
-						};
+			else if(i % 3 == 1){
+				ip = strdup(parametro);
+				//					loggear_trace(string_from_format("Su ip es %s", ip));
+				i++;
+			}
+			else if(i % 3 == 2){
+				puerto = strdup(parametro);
+				//						loggear_trace(string_from_format("Su puerto es %s", puerto));
+				identificador identificadores = {
+						.fd_out = 0,
+						.fd_in = 0
+				};
 
-						strcpy(identificadores.ip_proceso, ip);
-						strcpy(identificadores.puerto, puerto);
+				strcpy(identificadores.ip_proceso, ip);
+				strcpy(identificadores.puerto, puerto);
 
-						identificador* idsConexionesActuales = malloc(sizeof(identificadores));
-						memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
+				identificador* idsConexionesActuales = malloc(sizeof(identificadores));
+				memcpy(idsConexionesActuales, &identificadores, sizeof(identificadores));
 
-						loggear_trace(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
-						sem_wait(&mutex_diccionario_conexiones);
-						dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
-						sem_post(&mutex_diccionario_conexiones);
-						sem_wait(&mutex_configuracion);
-						list_add(configuracion.IP_SEEDS, ip);
-						list_add(configuracion.PUERTO_SEEDS, puerto);
-						sem_post(&mutex_configuracion);
-						i++;
-					}
+				loggear_trace(string_from_format("Se agrego al proceso %s al diccionario de conexiones conocidas", nombre));
+				sem_wait(&mutex_diccionario_conexiones);
+				dictionary_put(conexionesActuales,nombre, idsConexionesActuales);
+				sem_post(&mutex_diccionario_conexiones);
+				sem_wait(&mutex_configuracion);
+				list_add(configuracion.IP_SEEDS, ip);
+				list_add(configuracion.PUERTO_SEEDS, puerto);
+				sem_post(&mutex_configuracion);
+				i++;
+			}
 		}
 		free(parametro);
 	}
@@ -1150,7 +1155,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 	list_destroy(instruccion->parametros);
 	free(instruccion);
-//	imprimir_config_actual();
+	//	imprimir_config_actual();
 }
 
 t_list *conexiones_para_gossiping(){
@@ -1223,7 +1228,7 @@ void gossipear_con_procesos_desconectados(){
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPKernel, 0);
 			sem_post(&mutex_configuracion);
 			if(conexion != -1){
-//				puts("Conexion creada");
+				//				puts("Conexion creada");
 				loggear_trace(string_from_format("conexion creada"));
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
@@ -1250,10 +1255,10 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 	char* nombreEncontrado = NULL;
 	void su_nombre(char* nombre, identificador* ids){
-//		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
+		//		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
-//			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
+			//			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
 		}
 	}
 	sem_wait(&mutex_diccionario_conexiones);
@@ -1266,7 +1271,7 @@ void imprimir_config_actual(){
 
 	char *texto = string_new();
 	string_append_with_format(&texto, "Config actual:\n");
-	
+
 	int i=0;
 	void imprimir(char* valor){
 		string_append_with_format(&texto,"IP: %s\n", valor);
