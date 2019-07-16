@@ -298,6 +298,7 @@ instr_t* kernel_run(instr_t *i){
 	char* mensaje=string_from_format("RUN EJECUTADO CORRECTAMENTE!");
 	list_add(params,mensaje);
 	loggear_trace(string_from_format("FIN RUN!"));
+	respuesta->timestamp=obtener_ts()-respuesta->timestamp;
 	return respuesta;
 
 }
@@ -445,28 +446,27 @@ void* ejecutar_proceso(void* un_proceso){
 	for(int i=0;i<quantum;/*i++*/){
 		loggear_debug(string_from_format("Hay quantum!"));
 		instruccion_obtenida=obtener_instruccion(p);
-		//no se pudo obtener
+
 		if(instruccion_obtenida!=NULL){
 
 			instr_t* respuesta=ejecutar_instruccion(instruccion_obtenida);
 
 			if(!respuesta->codigo_operacion){//Codigo 0-> OK, Codigo !=0 Error
+				mseg_t tiempo_exec=respuesta->timestamp;
+				loggear_info(string_from_format("Se ejecuto correctamente la instruccion.\n El tiempo que tardo en ejecutarse fue= %"PRIu64"milisegundos  respuesta:",tiempo_exec));
+				imprimir_instruccion(respuesta, loggear_info);
 
-				loggear_debug(string_from_format("Se ejecuto correctamente la instruccion!, respuesta:"));
-				imprimir_instruccion(respuesta, loggear_debug);
-				loggear_trace(string_from_format("Fin de instruccion"));
 				//METRICS
 				if(instruccion_obtenida->codigo_operacion==CODIGO_INSERT|| instruccion_obtenida->codigo_operacion==CODIGO_SELECT){
 					instr_t* a_metricar=malloc(sizeof(instr_t));
 					loggear_trace(string_from_format("Se agrega a metricas"));
-					mseg_t tiempo_exec=respuesta->timestamp;
-					loggear_trace(string_from_format("\n El tiempo que tardo en ejecutarse fue= %"PRIu64" milisegundos \n",tiempo_exec));
 					a_metricar->timestamp=respuesta->timestamp;
 					a_metricar->codigo_operacion=instruccion_obtenida->codigo_operacion;
 					a_metricar->parametros=list_create();
 					agregar_a_metricas(a_metricar);
 				}else{
 					if(instruccion_obtenida->codigo_operacion==CODIGO_DESCRIBE){
+						//loggear_trace(string_from_format("Fin de instruccion"));
 						actualizar_metadata_tablas(respuesta);
 					}
 				}
@@ -474,9 +474,7 @@ void* ejecutar_proceso(void* un_proceso){
 
 			}else{
 
-				loggear_debug(string_from_format("ERROR al ejecutar la instruccion, finalizando proceso"));
-				//printf("\n\n %d MENSAJE=%s",respuesta->codigo_operacion,obtener_parametroN(respuesta,0));
-				//bajar_cantidad_hilos();
+				loggear_warning(string_from_format("ERROR al ejecutar la instruccion, finalizando proceso"));
 				imprimir_instruccion(respuesta, loggear_warning);
 				liberar_instruccion(respuesta);
 				finalizar_proceso(un_proceso);
@@ -491,7 +489,7 @@ void* ejecutar_proceso(void* un_proceso){
 			return NULL;
 		}
 		i++;
-		loggear_info(string_from_format("\n Fin de instruccion. Quantum restante: %d, Nro de instr: %d, Quantum: %d\n",configuracion.quantum-i,i,configuracion.quantum));
+		loggear_info(string_from_format("Fin de instruccion. Quantum restante: %d, Nro de instr: %d, Quantum: %d\n",configuracion.quantum-i,i,configuracion.quantum));
 		sem_wait(&mutex_configuracion);
 		int sleep_exec=configuracion.sleep_ejecucion;
 		sem_post(&mutex_configuracion);
@@ -520,8 +518,8 @@ char* obtener_parametroN(instr_t* i,int index){
 
 instr_t* ejecutar_instruccion(instr_t* i){
 	instr_t* respuesta;
-	loggear_debug(string_from_format("#### Se ejecuta una instruccion"));
-	imprimir_instruccion(i, loggear_trace);
+	loggear_debug(string_from_format("#### Se ejecuta una instruccion ####"));
+	imprimir_instruccion(i, loggear_debug);
 	if(i->codigo_operacion==22){
 
 		loggear_debug(string_from_format("#### FINALIZANDO KERNEL ####"));
@@ -628,7 +626,7 @@ instr_t* enviar_i(instr_t* i){
 	loggear_trace(string_from_format("ENVIANDO INSTRUCCION.  "));
 	enviar_request_simple(i, conexionMemoria);
 
-	loggear_info(string_from_format("### Instruccion enviada, esperando respuesta###\n"));
+	loggear_info(string_from_format("### Instruccion enviada, esperando respuesta###"));
 	loggear_debug(string_from_format("Bloqueando hilo hasta recibir respuesta!"));
 	pthread_mutex_lock(h->mutex_t);
 	pthread_cond_wait(h->cond_t,h->mutex_t);
@@ -800,7 +798,7 @@ void responderHandshake(identificador *idsConexionEntrante)
 }
 void recibi_respuesta(instr_t* respuesta, char* remitente){
 	loggear_debug(string_from_format("Recibi una respuesta con el Codigo %d de %s", respuesta->codigo_operacion, remitente));
-	imprimir_instruccion(respuesta, loggear_trace);
+	imprimir_instruccion(respuesta, loggear_debug);
 
 	if(respuesta->codigo_operacion==PETICION_GOSSIP)
 		devolver_gossip(respuesta, remitente);
@@ -809,8 +807,9 @@ void recibi_respuesta(instr_t* respuesta, char* remitente){
 	else{
 		//	list_add(respuesta->parametros,"1");
 		sem_wait(&mutex_diccionario_enviados);
-		loggear_trace(string_from_format("El ultimo parametro de la instruccion es %s\n", (char*)obtener_ultimo_parametro(respuesta)));
+		//loggear_trace(string_from_format("El ultimo parametro de la instruccion es %s", (char*)obtener_ultimo_parametro(respuesta)));
 		hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
+		//agregar espera activa?
 		if(h!=NULL) loggear_trace(string_from_format("Hilo obtenido y removido del diccionario!"));
 		else loggear_warning(string_from_format("El hilo no existe"));
 		sem_post(&mutex_diccionario_enviados);
@@ -1049,7 +1048,7 @@ void* consola(void* c){
 	while(1){
 		instruccion=readline("\n>>");
 		if(strcmp(instruccion,"close")==0){
-			loggear_debug(string_from_format("##### FINALIZANDO KERNEL.... ###### \n"));
+			loggear_debug(string_from_format("##### FINALIZANDO KERNEL.... ###### "));
 			return NULL;
 		}
 		printf("Procesando instruccion:: %s \n",instruccion);
