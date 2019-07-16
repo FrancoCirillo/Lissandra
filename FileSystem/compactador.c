@@ -59,7 +59,7 @@ void* compactador(void* tab) {
 
 	while(existe_tabla_en_mem(tabla) || compactation_locker) {
 		if(existe_tabla_en_mem(tabla))
-			usleep(tiempo_compactacion);
+			usleep(tiempo_compactacion * 1000);
 
 		if(existe_tabla_en_FS(tabla)) {
 
@@ -91,6 +91,7 @@ void* compactador(void* tab) {
 
 				for(int i = 0; i < list_size(lista_archivos); i++){
 					char* lectura = (char*)list_get((t_list*)lista_archivos, i);
+					loggear_error(string_from_format("La 'lectura' es %s", lectura));
 					agregar_registros_en_particion(particiones, lectura);
 					//loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
 				}
@@ -136,7 +137,25 @@ void* compactador(void* tab) {
 		}
 	}
 
-	liberar_listas_registros(particiones);	//Libera los diccionarios y su contenido.
+/*
+ *
+ *
+ *
+ *
+ * volver a PONER
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ * liberar_listas_registros(particiones);	//Libera los diccionarios y su contenido.
+ *
+ *
+ */
 	//free(de todo lo que use);
 }
 
@@ -157,18 +176,19 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) 
 	char* ruta_bloque;
 
 	void bajar_registro(char* key, void* reg){
-		printf("Estoy bajando_registro de key %s\n", key);
+//		printf("Estoy bajando_registro de key %s\n", key);
 		registro_t* registro = reg;
 		nro_bloque = obtener_ultimo_bloque(ruta_archivo);
 		ruta_bloque = obtener_ruta_bloque(nro_bloque);
 		loggear_trace(string_from_format("Num bloque del archivo escrito es: %d\n\n", nro_bloque));
+		loggear_error(string_from_format("ESTOY FINALIZANDO COMPACTACION Y EN ESTE MOMENTO EL REGISRO ES %s", registro_a_string(registro)));
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
 		printf("Ya termine de bajar el reg de key %s\n",key );
 		free(ruta_bloque);
 	}
 
 	loggear_trace(string_from_format("Empiezo con bajar_registros de la tabla %s\n", tabla));
-	dictionary_iterator((t_dictionary*)particion, &bajar_registro);
+	dictionary_iterator(particion, (void*) bajar_registro);
 //	config_destroy(archivo);
 	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s particion %d \n\n", tabla, num_part);
 }
@@ -179,57 +199,56 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 	printf("Agregando registros al diccionario de particiones de la ruta:\n %s \n", ruta_archivo);
 
 	if(!obtener_tam_archivo(ruta_archivo)) {
-		loggear_trace(string_from_format("No hay registros\n"));
+		loggear_error(string_from_format("No hay registros\n"));
 		return;
 	}
-
-	int cant_particiones = list_size(particiones);
-	int index;
 
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
 
-	char* buffer = string_new();
-	char caracter_leido;
-	int status = 1;
+	int tamMax = 300; //Cantidad de caracteres maximos que va a leer
+	char* lineaDeBloque = malloc(tamMax);
+	char* bloqueCompleto = string_new();
 
-	while(status) {
-		caracter_leido = fgetc(archivo_bloque);
-		switch(caracter_leido){
-
-			case EOF: //se me acabo el archivo
-				fclose(archivo_bloque);
-				free(ruta_bloque);
-				int bloque_anterior = nro_bloque;
-				nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
-				if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
-					ruta_bloque = obtener_ruta_bloque(nro_bloque);
-					archivo_bloque = fopen(ruta_bloque, "r");
-				} else
-					status = 0; //corta el while
-				break;
-
-			case '\n': //registro completo.
-				;//NO BORRAR ESTE PUNTO Y COMA!!!!!!!
-				registro_t* registro = obtener_registro(buffer);
-				imprimirRegistro(registro);
-				free(buffer);
-				buffer = string_new();
-				index = registro->key % cant_particiones;
-				loggear_trace(string_from_format("Pertenece al Diccionario-Particion nro: %d\n", index));
-				t_dictionary* dic = list_get(particiones, index);
-				agregar_por_ts(dic, registro);
-				//borrar_registro(registro); //NO, genera invalid read
-				break;
-
-			default:
-				string_append_with_format(&buffer, "%c", caracter_leido);
-				break;
-			}
-
+	while (1) {
+		while (fgets(lineaDeBloque, tamMax, archivo_bloque) != NULL) {
+			string_append_with_format(&bloqueCompleto, "%s", lineaDeBloque);
+			free(lineaDeBloque);
+			lineaDeBloque = malloc(tamMax);
+		}
+		fclose(archivo_bloque);
+		free(ruta_bloque);
+		int bloque_anterior = nro_bloque;
+		nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
+		if (nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
+			ruta_bloque = obtener_ruta_bloque(nro_bloque);
+			archivo_bloque = fopen(ruta_bloque, "r");
+		} else
+			break;
 	}
+	agregar_bloque_por_ts(bloqueCompleto, particiones);
+}
+
+void agregar_bloque_por_ts(char* bloqueCompleto, t_list* particiones){
+	int cantParticiones = list_size(particiones);
+
+	loggear_error(string_from_format("El bloque completo es:\n%s", bloqueCompleto));
+	char** registros = string_split(bloqueCompleto, "\n");
+
+	void agregar_registro_por_ts(char* registroString){
+		loggear_error(string_from_format("El registroString es:\n%s", registroString));
+		registro_t* registro = obtener_registro(registroString);
+		imprimirRegistro(registro);
+		int indice = registro->key % cantParticiones;
+		loggear_trace(string_from_format("Pertenece al Diccionario-Particion nro: %d\n",index));
+		t_dictionary* dic = list_get(particiones, indice);
+		agregar_por_ts(dic, registro);
+	}
+
+	string_iterate_lines(registros, (void*)agregar_registro_por_ts);
+
 }
 
 void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){

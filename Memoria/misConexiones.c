@@ -140,7 +140,7 @@ void actualizar_tamanio_value(instr_t* instruccion){
 	puntoMontaje = strdup((char*) list_get(instruccion->parametros, 1));
 	list_destroy_and_destroy_elements(instruccion->parametros, free);
 	free(instruccion);
-	loggear_info(string_from_format("Tamanio del value '%d' y punto de montaje '%s' recibidos. %d\n", tamanioValue, puntoMontaje));
+	loggear_info(string_from_format("Tamanio del value '%d' y punto de montaje '%s' recibidos.\n", tamanioValue, puntoMontaje));
 }
 
 void devolver_gossip(instr_t *instruccion, char *remitente){

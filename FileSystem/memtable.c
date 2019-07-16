@@ -80,7 +80,7 @@ void limpiar_memtable() {
 }
 
 void limpiar_registros(char* tabla, void* registros) {
-	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
+	//list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
 	agregar_tabla_a_mem(tabla);
 }
 
@@ -93,8 +93,8 @@ void agregar_tabla_a_mem(char* tabla) {
 void agregar_registro(char* tabla, registro_t* registro) {
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	list_add(registros_tabla, registro);
-	loggear_debug(string_from_format("Se inserto el registro en la memtable."));
-	loggear_trace(string_from_format(registro_a_string(registro)));
+//	loggear_warning(string_from_format("Se inserto el registro en la memtable."));
+//	loggear_error(string_from_format(registro_a_string(registro)));
 }
 
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {
@@ -114,15 +114,18 @@ t_list* obtener_registros_mem(char* tabla, uint16_t key) {
 registro_t* obtener_registro(char* buffer) {
 
 	registro_t* registro = malloc(sizeof(registro_t));
-
-	printf("El buffer es %s\n", buffer);
-	char** registroSeparado = string_split(buffer,";");
-	printf("El registro separado es %s, %s, %s", registroSeparado[0], registroSeparado[1], registroSeparado[2]);
-
-	registro->timestamp = atoi(registroSeparado[0]);
+	char* copiaBuffer = string_duplicate(buffer);
+	string_trim(&copiaBuffer);//Para sacarle el \n, si tiene
+	loggear_error(string_from_format("El buffer es %s", copiaBuffer));
+	char** registroSeparado = string_split(copiaBuffer,";");
+	printf("El registro separado es %s, ", registroSeparado[0]);
+	printf("%s,", registroSeparado[1]);
+	printf("%s,", registroSeparado[2]);
+	sscanf(registroSeparado[0], "%" SCNu64, &(registro->timestamp));
 	registro->key = (uint16_t)atoi(registroSeparado[1]);
 	registro->value = registroSeparado[2];
 
+	free(copiaBuffer);
 	return registro;
 }
 
@@ -136,11 +139,12 @@ registro_t* pasar_a_registro(instr_t* instr) {
 
 char* registro_a_string(registro_t* registro) {
 	char* ts = mseg_a_string(registro->timestamp);
-	char* key = string_from_format("%"PRIu16,registro->key);
+	char* key = string_from_format("%d",registro->key);
 	char* value = string_from_format("%s", registro->value);
 	char* reg_string = string_from_format("%s;%s;%s\n", ts, key, value);
 	free(key);
 	free(value);
+//	loggear_warning(string_from_format("El registro que se va a escribir es %s", reg_string));
 	return reg_string;
 }
 
@@ -202,6 +206,7 @@ void dumpear_tabla(char* tabla, void* registros) {
 		void escribir_reg_en_tmp(void* registro) {
 			nro_bloque = obtener_ultimo_bloque(ruta_tmp);
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
+			loggear_error(string_from_format("ESTOY DUMPLEANDO Y EN ESTE MOMENTO EL REGISTRO ES %s", registro_a_string((registro_t*)registro)));
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 			free(ruta_bloque);
 		}

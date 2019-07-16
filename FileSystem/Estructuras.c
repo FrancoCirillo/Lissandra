@@ -143,6 +143,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	//int espBloque = espacio_restante_bloque(ruta_archivo);
 	//printf("Espacio restante Bloque: %d\n", espBloque);
 
+	loggear_error(string_from_format("El registro que se va a escribir en el bloque es %s", string_registro));
 	int tam_restante = espacio_restante_bloque(ruta_archivo);
 	loggear_trace(string_from_format("Tamanio string: %d\n", strlen(string_registro)));
 	loggear_trace(string_from_format("Tam restante bloque: %d\n", tam_restante));
@@ -150,24 +151,24 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 
 	if(strlen(string_registro) <= tam_restante) {
 		txt_write_in_file(archivo_bloque, string_registro);
-		loggear_trace(string_from_format("Escribo el registro completo\n"));
-		imprimirContenidoArchivo(ruta_bloque, &loggear_trace);
+		loggear_error(string_from_format("Escribi el registro completo. El archivo quedo asi:"));
+		imprimirContenidoArchivo(ruta_bloque, &loggear_error);
 	} else {
 
-		loggear_trace(string_from_format("Escribo el registro en partes\n"));
+		loggear_error(string_from_format("Escribo el registro en partes\n"));
 
 		if(cant_bloques_disponibles() == 0){
 			loggear_error(string_from_format("No hay bloques disponibles."));
 			return;
 		}
 
-		loggear_trace(string_from_format("String original: %s", string_registro));
+		loggear_error(string_from_format("String original: %s", string_registro));
 		char* primera_parte_registro = string_substring_until(string_registro, tam_restante);
-		loggear_trace(string_from_format("Primera parte registro: %s", primera_parte_registro));
+		loggear_error(string_from_format("Primera parte registro: %s", primera_parte_registro));
 		txt_write_in_file(archivo_bloque, primera_parte_registro);
 
-		loggear_trace(string_from_format("Contenido del primer archivo:"));
-		imprimirContenidoArchivo(ruta_bloque, &loggear_trace);
+		loggear_error(string_from_format("Contenido del primer archivo:"));
+		imprimirContenidoArchivo(ruta_bloque, &loggear_error);
 
 		int nuevo_bloque = siguiente_bloque_disponible();
 		agregar_bloque_archivo(ruta_archivo, nuevo_bloque);
@@ -178,10 +179,10 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 
 		FILE* archivo_nuevo_bloque = fopen(ruta_nuevo_bloque, "w+");
 		char* parte_restante_registro = string_substring_from(string_registro, tam_restante);
-		loggear_trace(string_from_format("Segunda parte registro: %s", parte_restante_registro));
+		loggear_error(string_from_format("Segunda parte registro: %s", parte_restante_registro));
 		txt_write_in_file(archivo_nuevo_bloque, parte_restante_registro);
-		loggear_trace(string_from_format("Contenido del segundo archivo:\n"));
-		imprimirContenidoArchivo(ruta_nuevo_bloque, &loggear_trace);
+		loggear_error(string_from_format("Contenido del segundo archivo:\n"));
+		imprimirContenidoArchivo(ruta_nuevo_bloque, &loggear_error);
 
 		txt_close_file(archivo_nuevo_bloque);
 		free(primera_parte_registro);
@@ -240,7 +241,7 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 }
 
 t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo) { //Tipo archivo: si es .bin=0, .tmp=1
-	loggear_trace(string_from_format("Entre a buscar_key_en_bloques"));
+	loggear_error(string_from_format("Entre a buscar_key_en_bloques"));
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	if(nro_bloque != -1){
 		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
@@ -256,7 +257,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 
 			switch(caracter_leido) {
 			case '\n': //tengo un registro completo
-				string_append(&buffer, "\n");
+				;
 				registro_t* registro = obtener_registro(buffer);
 
 				if(registro->key == key) {

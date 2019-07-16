@@ -393,7 +393,7 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 
 	struct dirent* directorio_leido;
 	while((directorio_leido = readdir(directorio)) != NULL) {
-		loggear_debug(string_from_format("Directorio leido: %s\n", directorio_leido->d_name));
+//		loggear_debug(string_from_format("Directorio leido: %s\n", directorio_leido->d_name));
 		char* nombre_archivo = directorio_leido->d_name;
 		if(string_ends_with(nombre_archivo, "tmp") || string_ends_with(nombre_archivo, "tmpc")) {
 			char* ruta_tmp = string_from_format("%s%s", ruta_tabla, nombre_archivo);
@@ -405,7 +405,7 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 	}
 	free(ruta_tabla);
 	closedir(directorio);
-	loggear_debug(string_from_format("Tam de lista temporales: %d\n", list_size(registros)));
+//	loggear_debug(string_from_format("Tam de lista temporales: %d\n", list_size(registros)));
 	return registros;
 }
 
@@ -459,6 +459,8 @@ int obtener_particion_key(char* tabla, int key) {
 _Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
 	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
 	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
+	if(ts_otro_registro>0) puts("ABC");
+	if(ts_un_registro>0) puts("DEF");
 	return (_Bool)(ts_un_registro > ts_otro_registro);
 }
 
