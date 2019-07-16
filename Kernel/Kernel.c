@@ -178,11 +178,11 @@ void metrics(){//TODO Porcentaje de uso por memoria
 		if(i->codigo_operacion==CODIGO_INSERT){
 			cantidad_inserts++;
 			tiempo_inserts+=(double)i->timestamp/(double)1000;
-			loggear_debug(string_from_format("El promedio del insert fue de %lf\n",tiempo_selects));
+			//loggear_debug(string_from_format("El total de tiempo del insert fue de %lf",tiempo_selects));
 		}else if(i->codigo_operacion==CODIGO_SELECT){
 			cantidad_selects++;
 			tiempo_selects+=(double)i->timestamp/(double)1000;
-			loggear_debug(string_from_format("El promedio del select fue de %lf\n",tiempo_selects));
+			//loggear_debug(string_from_format("El total de tiempo del select fue de %lf",tiempo_selects));
 		}
 		liberar_instruccion(i);
 	}
