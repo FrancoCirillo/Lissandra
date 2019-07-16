@@ -139,6 +139,7 @@ void vaciar_diccionario_exec_memoria(){
 
 }
 void mostrar_execs_memorias(){
+	printf(" Mostrando execs totales por memoria :\n");
 	void imprimir_cuenta(char* key, void* reg){
 		int* cant=(int*)reg;
 		if(*cant)
