@@ -113,29 +113,15 @@ t_list* obtener_registros_mem(char* tabla, uint16_t key) {
 
 registro_t* obtener_registro(char* buffer) {
 
-	char* bufferCopy = strdup(buffer);
 	registro_t* registro = malloc(sizeof(registro_t));
-	char* valor;
 
-	char* actual = strtok(bufferCopy, ";");
-	printf("Actual (ts) es: %s\n", actual);
-	valor = strdup(actual);
-	registro->timestamp = string_a_mseg(valor);
-	free(valor);   //IMPORTANTE agrego este free
+	char** registroSeparado = string_split(buffer,";");
+	printf("El registro separado es %s, %s, %s", registroSeparado[0], registroSeparado[1], registroSeparado[2]);
 
-	actual = strtok(NULL, ";");
-	printf("Actual (key) es: %s\n", actual);
-	valor = strdup(actual);
-	registro->key = (uint16_t)atoi(valor);
-	free(valor);	//IMPORTANTE agrego este free
+	registro->timestamp = atoi(registroSeparado[0]);
+	registro->key = (uint16_t)atoi(registroSeparado[1]);
+	registro->value = registroSeparado[2];
 
-
-	actual = strtok(NULL, "\n");
-	printf("Actual (val) es: %s\n", actual);
-	valor = strdup(actual);	//Value sin el '\n', se agrega en escribir_registro_bloque
-	registro->value = valor;
-
-	free(bufferCopy);
 	return registro;
 }
 

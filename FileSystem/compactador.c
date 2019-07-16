@@ -212,8 +212,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 				break;
 
 			case '\n': //registro completo.
-				//strcat(buffer, "\n");
-				string_append(&buffer, "\n");
+				;//NO BORRAR ESTE PUNTO Y COMA!!!!!!!
 				registro_t* registro = obtener_registro(buffer);
 				imprimirRegistro(registro);
 				free(buffer);
