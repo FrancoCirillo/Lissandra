@@ -91,7 +91,6 @@ void* compactador(void* tab) {
 
 				for(int i = 0; i < list_size(lista_archivos); i++){
 					char* lectura = (char*)list_get((t_list*)lista_archivos, i);
-					loggear_error(string_from_format("La 'lectura' es %s", lectura));
 					agregar_registros_en_particion(particiones, lectura);
 					//loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
 				}
@@ -181,7 +180,7 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) 
 		nro_bloque = obtener_ultimo_bloque(ruta_archivo);
 		ruta_bloque = obtener_ruta_bloque(nro_bloque);
 		loggear_trace(string_from_format("Num bloque del archivo escrito es: %d\n\n", nro_bloque));
-		loggear_error(string_from_format("ESTOY FINALIZANDO COMPACTACION Y EN ESTE MOMENTO EL REGISRO ES %s", registro_a_string(registro)));
+//		loggear_error(string_from_format("ESTOY FINALIZANDO COMPACTACION Y EN ESTE MOMENTO EL REGISRO ES %s", registro_a_string(registro)));
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
 		printf("Ya termine de bajar el reg de key %s\n",key );
 		free(ruta_bloque);
@@ -214,6 +213,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 
 	while (1) {
 		while (fgets(lineaDeBloque, tamMax, archivo_bloque) != NULL) {
+			loggear_error(string_from_format("Lei la linea %s del bloque %s", lineaDeBloque, ruta_bloque));
 			string_append_with_format(&bloqueCompleto, "%s", lineaDeBloque);
 			free(lineaDeBloque);
 			lineaDeBloque = malloc(tamMax);
@@ -238,7 +238,7 @@ void agregar_bloque_por_ts(char* bloqueCompleto, t_list* particiones){
 	char** registros = string_split(bloqueCompleto, "\n");
 
 	void agregar_registro_por_ts(char* registroString){
-		loggear_error(string_from_format("El registroString es:\n%s", registroString));
+//		loggear_error(string_from_format("El registroString es:\n%s", registroString));
 		registro_t* registro = obtener_registro(registroString);
 		imprimirRegistro(registro);
 		int indice = registro->key % cantParticiones;
