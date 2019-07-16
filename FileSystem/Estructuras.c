@@ -412,7 +412,9 @@ void ocupar_bloque(int nro_bloque) {
 
 void liberar_bloque(int nro_bloque) {
 //	printf("Liberando bloque %d\n",nro_bloque);
+	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_clean_bit(bitarray, nro_bloque);
+	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	actualizar_bitmap();
 	//limpiar_bloque(nro_bloque); //deja vacio el archivo
 }

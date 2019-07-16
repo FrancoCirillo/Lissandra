@@ -422,6 +422,7 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 
 	sem_wait(mutex_tabla);
 	t_list* registros_mem = obtener_registros_mem(tabla, key);
+
 	t_list* registros_temp = leer_archivos_temporales(tabla, key);
 	t_list* registro_bin = leer_binario(tabla, key);
 	sem_post(mutex_tabla);
