@@ -412,7 +412,7 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 char* obtener_registro_mas_reciente(t_list* registros_de_key) {
 	list_sort(registros_de_key, &es_registro_mas_reciente);
 	registro_t* registro = list_get(registros_de_key, 0);
-	return registro->value;
+	return string_from_format("%s", registro->value);
 }
 
 t_list* obtener_registros_key(char* tabla, uint16_t key) {

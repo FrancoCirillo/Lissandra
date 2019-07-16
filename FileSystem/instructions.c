@@ -117,8 +117,8 @@ void execute_create(instr_t* instruccion, char* remitente) {
 }
 
 t_list* execute_insert(instr_t* instruccion, cod_op* codOp) {
-	printf("Se va a insertar la instruccion:\n");
-	imprimir_instruccion(instruccion, loggear_warning);
+//	printf("Se va a insertar la instruccion:\n");
+//	imprimir_instruccion(instruccion, loggear_warning);
 	t_list *listaParam = list_create();
 	char* tabla = obtener_nombre_tabla(instruccion);
 	registro_t* registro = pasar_a_registro(instruccion);
