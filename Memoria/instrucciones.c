@@ -26,6 +26,7 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 					registroEncontrado->timestamp);
 			list_add(listaParam, cadena);
 			se_uso(filaEncontrada->numeroDePagina);
+			printf("LO QUE SE ENCONTRO FUEEE: %s\n", cadena);
 			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 			free(registroEncontrado->value);
 			free(registroEncontrado);
@@ -83,6 +84,7 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 			valueEncontrado, //Value
 			(mseg_t)timestamp); //Timestamp
 	list_add(listaParam, cadena);
+	printf("LO QUE ME LLEGO FUEEE: %s\n", cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, miInstruccion, listaParam);
 
 	list_destroy_and_destroy_elements(miInstruccion->parametros, free);
