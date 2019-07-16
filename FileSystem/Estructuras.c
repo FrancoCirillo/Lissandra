@@ -398,7 +398,9 @@ int siguiente_bloque_disponible() {
 
 void ocupar_bloque(int nro_bloque) {
 //	printf("\nBitmap levantado, seteando valor para bloque %d\n", nro_bloque);
+	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_set_bit(bitarray, nro_bloque);
+	sem_post(&mutex_bitarray);
 //	loggear_trace(string_from_format("Actualizando bitmap");
 
 	//(DAI) Agrego que vacie el bloque porque me escribia sobre lo anterior.
