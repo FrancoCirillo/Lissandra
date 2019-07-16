@@ -73,7 +73,7 @@ void ejecutar_instruccion(instr_remitente* in) {
 
 	//liberar_instruccion(instr);
 	//free(in->remitente);
-	//free(in);
+	free(in);
 }
 
 void liberar_instruccion(instr_t* instruccion){

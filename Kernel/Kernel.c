@@ -3,9 +3,9 @@
 #include "Kernel.h"
 char * codigo_envio;
 
+
+
 int main(int argc, char* argv[]) {
-
-
 
 	inicializar_semaforos();
 
@@ -28,11 +28,7 @@ int main(int argc, char* argv[]) {
 	iniciar_auto_describe();
 
 	inicializar_kernel();
-	//iniciar_consola();
 
-	//	loggear_debug(string_from_format("### FINALIZANDO KERNEL ###"));
-	//	sleep(2);
-	//	loggear_info(string_from_format("### KERNEL FINALIZADO ###"));
 	return 0;
 }
 void iniciar_auto_describe(){
@@ -120,6 +116,40 @@ void iniciar_metricas(){
 	loggear_trace(string_from_format("Metricas iniciadas"));
 
 }
+void agregar_exec_memoria(char* memoria){
+	sem_wait(&mutex_diccionario_envios_memorias);
+	int * cant=(int*)dictionary_get(diccionario_envios_memorias,memoria);
+	if(cant==NULL){
+		cant=malloc(sizeof(int));
+		*cant=1;
+		dictionary_put(diccionario_envios_memorias,memoria,cant);
+	}else{
+		(*cant)++;
+	}
+	sem_post(&mutex_diccionario_envios_memorias);
+	loggear_debug(string_from_format("Se agrega exec a memoria %s",memoria));
+}
+void vaciar_diccionario_exec_memoria(){
+
+	sem_wait(&mutex_diccionario_envios_memorias);
+	dictionary_destroy_and_destroy_elements(diccionario_envios_memorias,free);
+	diccionario_envios_memorias=dictionary_create();
+	sem_post(&mutex_diccionario_envios_memorias);
+	//loggear_debug(string_from_format("Fue reiniciado diccionairo exec memoria"));
+
+}
+void mostrar_execs_memorias(){
+	printf(" Mostrando execs totales por memoria :\n");
+	void imprimir_cuenta(char* key, void* reg){
+		int* cant=(int*)reg;
+		if(*cant)
+			printf(" La cantidad de ejecuciones para la memoria: %s es: %d\n",key,*cant);
+	}
+	sem_wait(&mutex_diccionario_envios_memorias);
+	dictionary_iterator(diccionario_envios_memorias,imprimir_cuenta);
+	sem_post(&mutex_diccionario_envios_memorias);
+	//loggear_debug(string_from_format("Cuenta impresa!"));
+}
 void *metricar(){
 	while(1){
 		sem_wait(&mutex_configuracion);
@@ -148,11 +178,11 @@ void metrics(){//TODO Porcentaje de uso por memoria
 		if(i->codigo_operacion==CODIGO_INSERT){
 			cantidad_inserts++;
 			tiempo_inserts+=(double)i->timestamp/(double)1000;
-			loggear_debug(string_from_format("El promedio del insert fue de %lf\n",tiempo_selects));
+			//loggear_debug(string_from_format("El total de tiempo del insert fue de %lf",tiempo_selects));
 		}else if(i->codigo_operacion==CODIGO_SELECT){
 			cantidad_selects++;
 			tiempo_selects+=(double)i->timestamp/(double)1000;
-			loggear_debug(string_from_format("El promedio del select fue de %lf\n",tiempo_selects));
+			//loggear_debug(string_from_format("El total de tiempo del select fue de %lf",tiempo_selects));
 		}
 		liberar_instruccion(i);
 	}
@@ -165,7 +195,9 @@ void metrics(){//TODO Porcentaje de uso por memoria
 	if(cantidad_selects)
 		promedio_selects=(double)tiempo_selects/(double)cantidad_selects;
 	loggear_info(string_from_format("METRICS RESULTADO: \n \t Writes=%d Write Latency=%lf \n\t Reads=%d Reads Latency=%lf\n",cantidad_inserts,promedio_insert,cantidad_selects, promedio_selects));
-	//TODO memload
+	mostrar_execs_memorias();
+	vaciar_diccionario_exec_memoria();
+
 }
 void agregar_a_metricas(instr_t* i){
 	sem_wait(&mutex_lista_instrucciones_ejecutadas);
@@ -596,13 +628,14 @@ instr_t* enviar_i(instr_t* i){
 	loggear_trace(string_from_format("ENVIANDO INSTRUCCION.  "));
 	enviar_request_simple(i, conexionMemoria);
 
-	loggear_trace(string_from_format("\n### Instruccion enviada, esperando respuesta###\n"));
+	loggear_info(string_from_format("### Instruccion enviada, esperando respuesta###\n"));
 	loggear_debug(string_from_format("Bloqueando hilo hasta recibir respuesta!"));
 	pthread_mutex_lock(h->mutex_t);
 	pthread_cond_wait(h->cond_t,h->mutex_t);
 	pthread_mutex_unlock(h->mutex_t);
 
 	loggear_debug(string_from_format("Hilo despierto!"));
+	loggear_info(string_from_format("###Respuesta recibida!###"));
 	instr_t * rta=h->respuesta;
 	h->respuesta->timestamp=obtener_ts()-i->timestamp;
 	free(h);
@@ -626,7 +659,7 @@ int obtener_fd_memoria(instr_t *i){
 
 	//Obtengo la memoria segun el criterio
 	loggear_trace(string_from_format("Codigo de criterio es : %d",codigo_criterio));
-	loggear_info(string_from_format("Determinando criterio de tabla"));
+	//loggear_info(string_from_format("Determinando criterio de tabla"));
 	switch(codigo_criterio){
 	case SC:
 		sem_wait(&criterio_strong_consistency->mutex_criterio);
@@ -673,6 +706,7 @@ int obtener_fd_memoria(instr_t *i){
 
 	char* nombre_memoria=krn_concat(memoria,alias_memoria);
 	loggear_info(string_from_format("Memoria obtenida: %s", nombre_memoria));
+	agregar_exec_memoria(string_from_format(nombre_memoria));
 	int fd=obtener_fd_out(nombre_memoria);
 	free(nombre_memoria);
 	return fd;
@@ -702,7 +736,7 @@ char* krn_concat(char* s1,char* s2){
 	char* rdo=(char*)malloc(1+strlen(s1)+strlen(s2));
 	strcpy(rdo,s1);
 	strcat(rdo,s2);
-	loggear_debug(string_from_format(rdo));
+	//loggear_debug(string_from_format(rdo));
 	return rdo;
 }
 void agregar_tabla_a_criterio(instr_t* i){//EN create
@@ -805,7 +839,7 @@ void encolar_o_finalizar_proceso(proceso* p){
 }
 void liberar_instruccion(instr_t* instruccion){
 
-	if(instruccion->codigo_operacion == CODIGO_DESCRIBE|| PETICION_GOSSIP){
+	if(instruccion->codigo_operacion == CODIGO_DESCRIBE||instruccion->codigo_operacion == PETICION_GOSSIP){
 		list_destroy(instruccion->parametros);
 	}
 	else{
@@ -938,7 +972,9 @@ void inicializar_semaforos(){
 	sem_init(&mutex_configuracion,0,1);
 	sem_init(&mutex_lista_instrucciones_ejecutadas,0,1);
 	sem_init(&mutex_diccionario_conexiones,0,1);
+	sem_init(&mutex_diccionario_envios_memorias,0,1);
 	diccionario_enviados=dictionary_create();
+	diccionario_envios_memorias=dictionary_create();
 	lista_tablas=list_create();
 	lista_instrucciones_ejecutadas=list_create();
 	puts("Semaforos inicializados");
@@ -1364,4 +1400,21 @@ void agregar_tabla_a_su_criterio(char* tabla, char* criterio){
 	sem_wait(&mutex_diccionario_criterios);
 	dictionary_put(diccionario_criterios,tabla ,codigo_criterio);
 	sem_post(&mutex_diccionario_criterios);
+}
+void test_execs_memorias(){
+	agregar_exec_memoria("Mem1");
+	agregar_exec_memoria("Mem1");
+	agregar_exec_memoria("Mem1");
+	agregar_exec_memoria("Mem1");
+	mostrar_execs_memorias();
+	vaciar_diccionario_exec_memoria();
+	agregar_exec_memoria("Mem1");
+	agregar_exec_memoria("Mem2");
+	agregar_exec_memoria("Mem3");
+	mostrar_execs_memorias();
+	vaciar_diccionario_exec_memoria();
+	agregar_exec_memoria("Mem1");
+	agregar_exec_memoria("Mem2");
+	mostrar_execs_memorias();
+	vaciar_diccionario_exec_memoria();
 }

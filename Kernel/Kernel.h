@@ -77,11 +77,13 @@ proceso* cola_ready=NULL;
 config_t configuracion;
 t_dictionary * diccionario_enviados;
 t_dictionary * diccionario_criterios;
+t_dictionary* diccionario_envios_memorias;
 criterio* criterio_strong_hash_consistency;
 criterio* criterio_strong_consistency;
 criterio* criterio_eventual_consistency;
 t_list* lista_tablas;
 t_list* lista_instrucciones_ejecutadas;
+
 
 int total_hilos=0;
 int codigo_request=0;
@@ -90,7 +92,7 @@ int contador_ec=0;
 //Semaforos mutex y lock
 pthread_cond_t cond_ejecutar = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t lock_ejecutar = PTHREAD_MUTEX_INITIALIZER;
-
+sem_t mutex_diccionario_envios_memorias;
 sem_t mutex_cantidad_hilos;
 sem_t mutex_log;
 sem_t semaforo_procesos_ready;
@@ -179,6 +181,9 @@ void actualizar_log_level();
 void liberar_instruccion(instr_t* instruccion);
 void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit);
 void memoria_desconectada(char* nombre_memoria);
+void mostrar_execs_memorias();
+void vaciar_diccionario_exec_memoria();
+void agregar_exec_memoria(char* memoria);
 //Gossiping
 int fd_out_inicial;
 void iniciar_ejecutador_gossiping();
