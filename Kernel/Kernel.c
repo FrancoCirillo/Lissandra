@@ -122,7 +122,7 @@ void agregar_exec_memoria(char* memoria){
 	if(cant==NULL){
 		cant=malloc(sizeof(int));
 		*cant=1;
-		dictionary_put(diccionario_envios_memorias,memoria,cant);
+		dictionary_put(diccionario_envios_memorias,string_from_format(memoria),cant);
 	}else{
 		(*cant)++;
 	}
@@ -133,6 +133,7 @@ void vaciar_diccionario_exec_memoria(){
 
 	sem_wait(&mutex_diccionario_envios_memorias);
 	dictionary_destroy_and_destroy_elements(diccionario_envios_memorias,free);
+	free(diccionario_envios_memorias);
 	diccionario_envios_memorias=dictionary_create();
 	sem_post(&mutex_diccionario_envios_memorias);
 	//loggear_debug(string_from_format("Fue reiniciado diccionairo exec memoria"));
@@ -701,7 +702,7 @@ int obtener_fd_memoria(instr_t *i){
 
 	char* nombre_memoria=krn_concat(memoria,alias_memoria);
 	loggear_info(string_from_format("Memoria obtenida: %s", nombre_memoria));
-	agregar_exec_memoria(string_from_format(nombre_memoria));
+	agregar_exec_memoria(nombre_memoria);
 	int fd=obtener_fd_out(nombre_memoria);
 	free(nombre_memoria);
 	return fd;
