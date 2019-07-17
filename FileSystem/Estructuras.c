@@ -437,6 +437,7 @@ void liberar_bloque(int nro_bloque) {
 	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_clean_bit(bitarray, nro_bloque);
 	actualizar_bitmap();
+	truncate(obtener_ruta_bloque(nro_bloque), 0); //TODO free
 	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 }
 
