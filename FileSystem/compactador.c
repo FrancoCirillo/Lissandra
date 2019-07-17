@@ -129,9 +129,9 @@ void* compactador(void* tab) {
 			puts("FIN de 1 while de la compactacion.");
 		}
 		else {
-			sem_wait(&mutex_dic_semaforos);
-			eliminar_mutex_de_tabla(tabla);
-			sem_post(&mutex_dic_semaforos);
+//			sem_wait(&mutex_dic_semaforos);
+//			eliminar_mutex_de_tabla(tabla); ESTO DA SEG
+//			sem_post(&mutex_dic_semaforos);
 			break;
 		}
 	}

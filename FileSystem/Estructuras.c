@@ -46,7 +46,8 @@ int existe_mutex(char* tabla){
 }
 
 void eliminar_mutex_de_tabla(char* tabla){
-	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
+	dictionary_remove(dic_semaforos_tablas, tabla); //TODO: VOLVER A PONER COMO ESTABA CUANDO FUNCIONE TODO
+//	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
 }
 
 void finalizar_dic_semaforos_tablas(){
@@ -173,6 +174,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 		sem_wait(&mutex_bitarray);
 		int nuevo_bloque = obtener_y_ocupar_siguiente_bloque_disponible();
 		sem_post(&mutex_bitarray);
+		loggear_error(string_from_format("El nuevo bloque %d se lo agrego a %s ",nuevo_bloque, ruta_archivo));
 		agregar_bloque_archivo(ruta_archivo, nuevo_bloque);
 
 		char* ruta_nuevo_bloque = obtener_ruta_bloque(nuevo_bloque);
@@ -559,7 +561,9 @@ int obtener_ultimo_bloque(char* ruta_archivo){
 }
 
 int obtener_tam_archivo(char* ruta_archivo) {
-	t_config* archivo = config_create(ruta_archivo);
+	t_config* archivo;
+	while((archivo = config_create(ruta_archivo)) == NULL ||
+			!config_has_property(archivo, "SIZE"));
 	int tam_archivo = config_get_int_value(archivo, "SIZE");
 	config_destroy(archivo);
 	return tam_archivo;
