@@ -2,6 +2,16 @@
 
 #include "Estructuras.h"
 
+FILE* abrir_archivo(char* ruta_archivo, char* modo){
+	FILE* f;
+	while((f = fopen(ruta_archivo, modo)) == NULL){
+		loggear_error(string_from_format("No se pudo abrir el archivo %s, reintentando."));
+		perror("Lo que paso fue:");
+		sleep(1); //TODO borrar
+	}
+	return f;
+}
+
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump*1000;
 }
@@ -176,7 +186,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 		char* ruta_nuevo_bloque = obtener_ruta_bloque(nuevo_bloque);
 		//loggear_trace(string_from_format("\nRuta nuevo bloque: %s\n", ruta_nuevo_bloque));
 
-		FILE* archivo_nuevo_bloque = fopen(ruta_nuevo_bloque, "w+");
+		FILE* archivo_nuevo_bloque = abrir_archivo(ruta_nuevo_bloque, "w+");
 		char* parte_restante_registro = string_substring_from(string_registro, tam_restante);
 //		loggear_error(string_from_format("Segunda parte registro: %s", parte_restante_registro));
 		txt_write_in_file(archivo_nuevo_bloque, parte_restante_registro);
@@ -247,7 +257,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 		loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscar_key_bloques y el contenido del archivo que voy a leer es: %s"COLOR_ANSI_RESET,ruta_archivo));
 		imprimirContenidoArchivo(ruta_bloque, loggear_error);
-		FILE* archivo_bloque = fopen(ruta_bloque, "r");
+		FILE* archivo_bloque = abrir_archivo(ruta_bloque, "r");
 		t_list* registros = list_create();
 
 		int status = 1;
@@ -282,7 +292,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 					ruta_bloque = obtener_ruta_bloque(nro_bloque);
 //					loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscat_key_bloques y el contenido del archivo que voy a leer es:"COLOR_ANSI_RESET));
 //					imprimirContenidoArchivo(ruta_bloque, loggear_error);
-					archivo_bloque = fopen(ruta_bloque, "r");
+					archivo_bloque = abrir_archivo(ruta_bloque, "r");
 				} else
 					status = 0; //corta el while
 				break;
@@ -308,7 +318,7 @@ int cant_bytes() {
 void inicializar_bitmap() {
 
 	if(carpeta_esta_vacia(g_ruta.carpeta_metadata)) {
-		FILE* archivo_bitmap = fopen(g_ruta.bitmap, "w+");
+		FILE* archivo_bitmap = abrir_archivo(g_ruta.bitmap, "w+");
 		loggear_info(string_from_format("Iniciando bitmap con %d bloques, bytes %d\n", Metadata_FS.blocks,cant_bytes()));
 		fclose(archivo_bitmap);
 		truncate(g_ruta.bitmap, cant_bytes()); //te deja el archivo completo en cero.
@@ -319,7 +329,7 @@ void inicializar_bitmap() {
 
 void inicializar_bitarray() {
 	//loggear_trace(string_from_format("Inicializando bitarray"));
-	FILE* archivo_bitmap = fopen(g_ruta.bitmap, "r");
+	FILE* archivo_bitmap = abrir_archivo(g_ruta.bitmap, "r");
 	if(archivo_bitmap){
 		char* bitmap = malloc(cant_bytes() + 1);
 		int resultado_read = 0;
@@ -355,7 +365,7 @@ void chequear_bitmap() {
 }
 
 void actualizar_bitmap() {
-	FILE* bitmap = fopen(g_ruta.bitmap, "w+");
+	FILE* bitmap = abrir_archivo(g_ruta.bitmap, "w+");
 	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
 	fclose(bitmap);
 }
@@ -436,7 +446,7 @@ void liberar_bloque(int nro_bloque) {
 	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_clean_bit(bitarray, nro_bloque);
 	actualizar_bitmap();
-	FILE* f = fopen(obtener_ruta_bloque(nro_bloque), "w");
+	FILE* f = abrir_archivo(obtener_ruta_bloque(nro_bloque), "w");
 	fclose(f);
 //	truncate(obtener_ruta_bloque(nro_bloque), 0); //TODO free
 	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
@@ -701,7 +711,7 @@ void crear_metadata(instr_t* instr) {
 	char* tabla = obtener_nombre_tabla(instr);
 	char* ruta_metadata = string_from_format("%s%s/Metadata", g_ruta.tablas, tabla);
 
-	FILE* archivo_metadata = fopen(ruta_metadata, "w+");
+	FILE* archivo_metadata = abrir_archivo(ruta_metadata, "w+");
 	metadata_inicializar(archivo_metadata, instr);
 
 	fclose(archivo_metadata);
@@ -740,7 +750,7 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 //
 //FILE* crear_archivo(char* tabla, char* nombre, char* ext) {
 //	char* ruta = string_from_format("%s%s/%s%s", g_ruta.tablas, tabla, nombre, ext);
-//	FILE* archivo = fopen(ruta, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
+//	FILE* archivo = abrir_archivo(ruta, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
 //	free(ruta);
 //	return archivo;
 //}
@@ -749,7 +759,7 @@ int inicializar_archivo(char* ruta_archivo) {
 	//loggear_trace(string_from_format("i_a: Ruta: %s", ruta_archivo));
 
 	//loggear_trace(string_from_format("i_a: Abriendo archivo"));
-	FILE* archivo = fopen(ruta_archivo, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
+	FILE* archivo = abrir_archivo(ruta_archivo, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
 	if(!archivo){
 		loggear_error(string_from_format("No pudo crearse el archivo %s.", ruta_archivo));
 		return -1;
@@ -814,7 +824,7 @@ void crear_bloques() {  //Los bloques van a partir del numero 0 al n-1
 
 void crear_bloque(char* nombre) {
 	char* ruta = string_from_format("%s%s.bin", g_ruta.bloques, nombre);
-	FILE* f = fopen(ruta, "w+");
+	FILE* f = abrir_archivo(ruta, "w+");
 	free(ruta);
 	fclose(f);
 }
@@ -902,7 +912,7 @@ void inicializar_directorios() {
 void leer_metadata_FS() {
 
 	loggear_trace(string_from_format("Leyendo metadata FS"));
-	FILE* archivo = fopen(g_ruta.metadata, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
+	FILE* archivo = abrir_archivo(g_ruta.metadata, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
 	Metadata_FS.block_size = config_get_int_value(g_config, "BLOCK_SIZE");
 	Metadata_FS.blocks = config_get_int_value(g_config, "BLOCKS");
 	Metadata_FS.magic_number = config_get_string_value(g_config, "MAGIC_NUMBER");  //Leo del archivo de configuracion.

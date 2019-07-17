@@ -205,7 +205,7 @@ void agregar_registros_de_particion(t_list* particiones, char* ruta_archivo){
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
-	FILE* archivo_bloque = fopen(ruta_bloque, "r");
+	FILE* archivo_bloque = abrir_archivo(ruta_bloque, "r");
 	int tamMax = 300; //Cantidad de caracteres maximos que va a leer
 	char* lineaDeBloque = malloc(tamMax);
 	char* bloqueCompleto = string_new();
@@ -224,7 +224,7 @@ void agregar_registros_de_particion(t_list* particiones, char* ruta_archivo){
 //		loggear_error(string_from_format("\tBloque anterior: %d, Bloque siguiente %d",bloque_anterior, nro_bloque));
 		if (nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
-			archivo_bloque = fopen(ruta_bloque, "r");
+			archivo_bloque = abrir_archivo(ruta_bloque, "r");
 		} else
 			break;
 	}

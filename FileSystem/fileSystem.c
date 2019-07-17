@@ -70,7 +70,7 @@ registro_t* crearRegistro(mseg_t timestampNuevo, uint16_t keyNueva, char *valueN
 //en el segundo parametro se le puede pasar loggear_loquesea (loggear_debug, loggear_info, etc) segun lo que se quiera loggear cuando se llama a la funcion
 void imprimirContenidoArchivo(char* ruta, void (*funcion_log)(char *texto)) {
 	//loggear_trace(string_from_format("---LEO ARCHIVO COMPLETO---"));
-	FILE* f = fopen(ruta, "r");
+	FILE* f = abrir_archivo(ruta, "r");
 	if(f != NULL){
 		char caracter_leido = fgetc(f);
 		int leidos = 0;
