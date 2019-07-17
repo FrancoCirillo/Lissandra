@@ -222,6 +222,7 @@ void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
 		free(ruta_bloque);
 		int bloque_anterior = nro_bloque;
 		nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
+		printf("\nNro de bloque obtenido %d\n",nro_bloque);
 		if (nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
 			archivo_bloque = fopen(ruta_bloque, "r");

@@ -245,7 +245,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	if(nro_bloque != -1){
 		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-		loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscat_key_bloques y el contenido del archivo que voy a leer es:"COLOR_ANSI_RESET));
+		loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscar_key_bloques y el contenido del archivo que voy a leer es: %s"COLOR_ANSI_RESET,ruta_archivo));
 		imprimirContenidoArchivo(ruta_bloque, loggear_error);
 		FILE* archivo_bloque = fopen(ruta_bloque, "r");
 		t_list* registros = list_create();
@@ -356,9 +356,7 @@ void chequear_bitmap() {
 
 void actualizar_bitmap() {
 	FILE* bitmap = fopen(g_ruta.bitmap, "w+");
-	sem_wait(&mutex_bitarray);
 	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
-	sem_post(&mutex_bitarray);
 	fclose(bitmap);
 }
 
@@ -378,15 +376,16 @@ void inicializar_bloques_disp() {
 }
 
 int bloque_esta_ocupado(int nro_bloque) {
-	sem_wait(&mutex_bitarray);
+	//sem_wait(&mutex_bitarray);
 	int test = bitarray_test_bit(bitarray, nro_bloque);
 	//printf("El valor del bloque %d es %d\n", nro_bloque, test);
-	sem_post(&mutex_bitarray);
+	//sem_post(&mutex_bitarray);
 
 	return test;
 }
 
 int siguiente_bloque_disponible() {
+	sem_wait(&mutex_bitarray);
 //	loggear_debug(string_from_format("Buscando siguiente bloque disponible"));
 	int nro_bloque = 0;
 
@@ -395,7 +394,7 @@ int siguiente_bloque_disponible() {
 
 	if(nro_bloque == Metadata_FS.blocks)
 		return -1;
-
+	sem_post(&mutex_bitarray);
 	return nro_bloque;
 }
 
@@ -403,7 +402,6 @@ void ocupar_bloque(int nro_bloque) {
 //	printf("\nBitmap levantado, seteando valor para bloque %d\n", nro_bloque);
 	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_set_bit(bitarray, nro_bloque);
-	sem_post(&mutex_bitarray);
 //	loggear_trace(string_from_format("Actualizando bitmap");
 
 	//(DAI) Agrego que vacie el bloque porque me escribia sobre lo anterior.
@@ -411,15 +409,15 @@ void ocupar_bloque(int nro_bloque) {
 	crear_bloque(num);
 	actualizar_bitmap();
 	free(num);
+	sem_post(&mutex_bitarray);
 }
 
 void liberar_bloque(int nro_bloque) {
 //	printf("Liberando bloque %d\n",nro_bloque);
 	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_clean_bit(bitarray, nro_bloque);
-	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	actualizar_bitmap();
-	//limpiar_bloque(nro_bloque); //deja vacio el archivo
+	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 }
 
 void ejemplo_bitarray(){
