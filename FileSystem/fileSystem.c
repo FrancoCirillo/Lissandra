@@ -83,6 +83,7 @@ void imprimirContenidoArchivo(char* ruta, void (*funcion_log)(char *texto)) {
 		}
 		funcion_log(texto);
 		//funcion_log(string_from_format("Leidos: %d\n", leidos));
+		fclose(f);
 	}
 	else loggear_warning(string_from_format("No se pudo abrir el archivo %s", ruta));
 }
@@ -175,7 +176,7 @@ t_list* listaRegistros2() {
 //Lo adapto para usar en compactacion. Genera tmps que uso para testear.
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
-		loggear_trace(string_from_format("-------------------Entre a dump-------------------"));
+		loggear_error(string_from_format("-------------------Entre a dump-------------------"));
 		int nro_dump = 2;
 		loggear_trace(string_from_format("Numero de Dump: %d\n", nro_dump));
 		char* ruta_tmp = string_from_format("%s%s/Dump%d.tmp", g_ruta.tablas, tabla, nro_dump);
@@ -460,8 +461,6 @@ int obtener_particion_key(char* tabla, int key) {
 _Bool es_registro_mas_reciente(void* un_registro, void* otro_registro){
 	mseg_t ts_un_registro = ((registro_t*)un_registro)->timestamp;
 	mseg_t ts_otro_registro = ((registro_t*)otro_registro)->timestamp;
-	if(ts_otro_registro>0) puts("ABC");
-	if(ts_un_registro>0) puts("DEF");
 	return (_Bool)(ts_un_registro > ts_otro_registro);
 }
 

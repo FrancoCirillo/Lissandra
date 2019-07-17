@@ -91,8 +91,10 @@ void agregar_tabla_a_mem(char* tabla) {
 }
 
 void agregar_registro(char* tabla, registro_t* registro) {
+	sem_wait(&mutex_memtable);
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	list_add(registros_tabla, registro);
+	sem_post(&mutex_memtable);
 //	loggear_warning(string_from_format("Se inserto el registro en la memtable."));
 //	loggear_error(string_from_format(registro_a_string(registro)));
 }
@@ -100,7 +102,10 @@ void agregar_registro(char* tabla, registro_t* registro) {
 t_list* obtener_registros_mem(char* tabla, uint16_t key) {
 
 	loggear_trace(string_from_format("---Buscando en la memtable---"));
+
+	sem_wait(&mutex_memtable);
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
+	sem_post(&mutex_memtable);
 
 	_Bool es_key_registro(void* registro){
 		uint16_t key_registro = ((registro_t*)registro)->key;
@@ -120,7 +125,7 @@ registro_t* obtener_registro(char* buffer) {
 	char** registroSeparado = string_split(copiaBuffer,";");
 	printf("El registro separado es %s, ", registroSeparado[0]);
 	printf("%s,", registroSeparado[1]);
-	printf("%s,", registroSeparado[2]);
+	printf("%s", registroSeparado[2]);
 	sscanf(registroSeparado[0], "%" SCNu64, &(registro->timestamp));
 	registro->key = (uint16_t)atoi(registroSeparado[1]);
 	registro->value = registroSeparado[2];
@@ -206,7 +211,7 @@ void dumpear_tabla(char* tabla, void* registros) {
 		void escribir_reg_en_tmp(void* registro) {
 			nro_bloque = obtener_ultimo_bloque(ruta_tmp);
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
-			loggear_error(string_from_format("ESTOY DUMPLEANDO Y EN ESTE MOMENTO EL REGISTRO ES %s", registro_a_string((registro_t*)registro)));
+//			loggear_error(string_from_format("ESTOY DUMPLEANDO Y EN ESTE MOMENTO EL REGISTRO ES %s", registro_a_string((registro_t*)registro)));
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 			free(ruta_bloque);
 		}
