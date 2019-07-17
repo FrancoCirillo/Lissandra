@@ -286,6 +286,10 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 				if(registro->key == key) {
 					list_add(registros, registro); //lo agrego solo si tiene la key que busco
 					status = tipo_archivo; //si es binario, se pone en 0 y corta el while
+					if(!tipo_archivo){
+						loggear_error(string_from_format("Encontro la key en un archivo binario"));
+						cerrar_archivo(archivo_bloque);
+					}
 				}
 				free(buffer);   //Dejo esto.
 				buffer = string_new();  //Dejo esto.
