@@ -2,8 +2,6 @@
 
 #include "Estructuras.h"
 
-
-
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump*1000;
 }
@@ -12,10 +10,7 @@ int obtener_tiempo_dump_config() {
 //	list_destroy_and_destroy_elements(listaParam, free);
 //}
 
-
-
 //---------------------------SEMAFOROS---------------------------
-
 void crear_dic_semaforos_FS(){
 	dic_semaforos_tablas = dictionary_create();
 	sem_init(&mutex_dic_semaforos, 0, 1);
@@ -54,8 +49,7 @@ void finalizar_dic_semaforos_tablas(){
 	dictionary_destroy_and_destroy_elements(dic_semaforos_tablas, free);
 }
 
-//---------------------------+DIRECTORIO---------------------------
-
+//---------------------------DIRECTORIO---------------------------
 int eliminar_directorio(char* tabla) {
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
 
@@ -199,7 +193,6 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	free(string_registro);
 }
 
-
 int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 //	loggear_trace(string_from_format("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
 //	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
@@ -303,7 +296,6 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 }
 
 //---------------------------BITARRAY---------------------------
-
 int cant_bytes() {
 	return (Metadata_FS.blocks + 7) / 8;
 }
@@ -439,7 +431,9 @@ void liberar_bloque(int nro_bloque) {
 	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_clean_bit(bitarray, nro_bloque);
 	actualizar_bitmap();
-	truncate(obtener_ruta_bloque(nro_bloque), 0); //TODO free
+	FILE* f = fopen(obtener_ruta_bloque(nro_bloque), "w");
+	fclose(f);
+//	truncate(obtener_ruta_bloque(nro_bloque), 0); //TODO free
 	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 }
 
@@ -461,7 +455,6 @@ void liberar_bloque(int nro_bloque) {
 //}
 
 //--------------------------APLANAR LISTAS-----------------------
-
 char* aplanar(char** lista) {  //Listo.
 
 	int tam = 0;
@@ -624,7 +617,7 @@ void liberar_bloques(void* ruta) {
 //		printf("Nro siguiente: %d\n", bloque);
 
 	}
-	while (bloque > 0);
+	while (bloque >= 0);
 //	loggear_trace(string_from_format("sali del while");
 }
 
@@ -908,4 +901,3 @@ void leer_metadata_FS() {
 	fclose(archivo);
 	loggear_info(mensaje);
 }
-
