@@ -184,6 +184,7 @@ void memoria_desconectada(char* nombre_memoria);
 void mostrar_execs_memorias();
 void vaciar_diccionario_exec_memoria();
 void agregar_exec_memoria(char* memoria);
+void remover_tabla_metadata(char* nombre_tabla);
 //Gossiping
 int fd_out_inicial;
 void iniciar_ejecutador_gossiping();

@@ -288,7 +288,7 @@ instr_t* kernel_run(instr_t *i){
 		//loggear_trace(string_from_format("Se agrego una instruccion!"));
 		//		imprimir_instruccion(nueva_instruccion);
 	}
-	loggear_debug(string_from_format("\n\nSize %d\n\n",p->size));
+	loggear_debug(string_from_format("\n\nSize %d\n",p->size));
 	fclose(f);
 
 	encolar_proceso(p);
@@ -541,14 +541,12 @@ instr_t* ejecutar_instruccion(instr_t* i){
 	if(i->codigo_operacion==CODIGO_ADD){
 		return kernel_add(i);
 	}
-	if((respuesta=validar(i))!=NULL){
+	if((respuesta=validar(i))!=NULL){//Valido existencia o no de tabla segun create insert select
 		return respuesta;
 	}
 	if(i->codigo_operacion==CODIGO_CREATE){
-		agregar_tabla_a_criterio(i);
-	}
-	if(i->codigo_operacion==CODIGO_CREATE){
 		if(!existe_tabla(obtener_parametroN(i,0))){
+			agregar_tabla_a_criterio(i);
 			loggear_debug(string_from_format("Agregando tabla %s a lista de tablas creadas", obtener_parametroN(i,0)));
 			agregar_tabla(obtener_parametroN(i,0));
 		}
@@ -558,29 +556,28 @@ instr_t* ejecutar_instruccion(instr_t* i){
 }
 instr_t *validar(instr_t * i){
 	int codigo_error;
-	if(i->codigo_operacion!=2&&i->codigo_operacion!=3 && i->codigo_operacion!=1){
+	if(i->codigo_operacion!=CODIGO_SELECT&&i->codigo_operacion!=CODIGO_CREATE && i->codigo_operacion!=CODIGO_INSERT){
 		return NULL;
 	}
-	if(i->codigo_operacion==2 || i->codigo_operacion==1){
+	if(i->codigo_operacion==CODIGO_SELECT || i->codigo_operacion==CODIGO_INSERT){
 		if(existe_tabla(obtener_parametroN(i,0))){
-			loggear_debug(string_from_format("Existe la tabla para el insert o select "));
+			loggear_debug(string_from_format("Existe la tabla para el insert o select. Validacion Ok. "));
 			return NULL;
 		}else{
 			codigo_error=ERROR_INSERT;
 			loggear_warning(string_from_format("La tabla %s no existe!",obtener_parametroN(i,0)));
 			//mensaje="LA TABLA NO EXISTE!";
 		}
-	}
-	if(i->codigo_operacion==3){
+	}else if(i->codigo_operacion==CODIGO_CREATE){
 		if(!existe_tabla(obtener_parametroN(i,0))){
-			loggear_debug(string_from_format("No existe tabla para el create"));
+			loggear_debug(string_from_format("No existe tabla para el create. Validacion Ok."));
 			return NULL;
 		}else{
 			//mensaje="LA TABLA YA EXISTE";
 			codigo_error=ERROR_CREATE;
 		}
 	}
-	char* mensaje=string_from_format("ERROR!");
+	char* mensaje=string_from_format("ERROR en validacion sobre existencia de tabla!");
 	instr_t* mensaje_error=malloc(sizeof(instr_t));
 	mensaje_error->codigo_operacion=codigo_error;
 	mensaje_error->timestamp=i->timestamp;
@@ -697,7 +694,7 @@ int obtener_fd_memoria(instr_t *i){
 	if(alias_memoria==NULL){
 		loggear_warning(string_from_format("NO se pudo obtener la memoria para dicha instruccion"));
 		if(i->codigo_operacion==CODIGO_CREATE){
-
+			remover_tabla_metadata(obtener_parametroN(i,0));
 		}
 		return -100;
 	}
@@ -708,6 +705,24 @@ int obtener_fd_memoria(instr_t *i){
 	int fd=obtener_fd_out(nombre_memoria);
 	free(nombre_memoria);
 	return fd;
+}
+void remover_tabla_metadata(char* nombre_tabla){
+	char* tabla_removida;
+	loggear_info(string_from_format("Se remueve tabla de metadata"));
+	sem_wait(&mutex_lista_tablas);
+	for(int i=0;i<list_size(lista_tablas);i++){
+		if(!strcmp(list_get(lista_tablas,i),nombre_tabla)){
+			tabla_removida=list_remove(lista_tablas,i);
+			break;
+		}
+	}
+	sem_post(&mutex_lista_tablas);
+	loggear_info(string_from_format("Se removio la tabla %s",tabla_removida));
+	free(tabla_removida);
+	sem_wait(&mutex_diccionario_criterios);
+	tabla_removida=dictionary_remove(diccionario_criterios,nombre_tabla);
+	sem_post(&mutex_diccionario_criterios);
+	free(tabla_removida);
 }
 void borrar_memoria_de_criterio(char* numero_memoria, criterio* crit){
 	sem_wait(&(crit->mutex_criterio));
@@ -742,9 +757,9 @@ void agregar_tabla_a_criterio(instr_t* i){//EN create
 	int* codigo_criterio=malloc(sizeof(int));
 	*codigo_criterio=obtener_codigo_criterio(obtener_parametroN(i,1));
 	sem_wait(&mutex_diccionario_criterios);
-	dictionary_put(diccionario_criterios,obtener_parametroN(i,0),codigo_criterio);
+	dictionary_put(diccionario_criterios,string_from_format(obtener_parametroN(i,0)),codigo_criterio);
 	sem_post(&mutex_diccionario_criterios);
-	loggear_info(string_from_format("Se agrega la tabla %s al criterio codigo: %d\n\n",(char*)obtener_parametroN(i,0),*codigo_criterio));
+	loggear_info(string_from_format("Se agrega la tabla %s al criterio codigo: %d",(char*)obtener_parametroN(i,0),*codigo_criterio));
 }
 int obtener_codigo_criterio(char* criterio){
 	if(!strcmp(criterio,"SC")){
@@ -1018,7 +1033,7 @@ void check_inicial(int argc, char* argv[])
 void agregar_tabla(char* tabla){
 
 	sem_wait(&mutex_lista_tablas);
-	list_add(lista_tablas,tabla);
+	list_add(lista_tablas,string_from_format(tabla));
 	sem_post(&mutex_lista_tablas);
 	loggear_debug(string_from_format("Tabla agregada"));
 }
@@ -1383,7 +1398,7 @@ void actualizar_metadata_tablas(instr_t* respuesta){
 			char* tabla = string_from_format(valor); //Así se le puede hacer free a respuesta->parametros
 			agregar_tabla(tabla);
 			char* criterio = string_from_format("%s", list_get(respuesta->parametros, i+1));
-			agregar_tabla_a_su_criterio(valor, criterio);
+			agregar_tabla_a_su_criterio(string_from_format(valor), criterio);
 			printf("\n\nSe agrego la tabla %s con el criterio %s\n", valor, criterio);
 			free(criterio);
 		}
@@ -1397,7 +1412,7 @@ void agregar_tabla_a_su_criterio(char* tabla, char* criterio){
 	int* codigo_criterio=malloc(sizeof(int));
 	*codigo_criterio=obtener_codigo_criterio(criterio);
 	sem_wait(&mutex_diccionario_criterios);
-	dictionary_put(diccionario_criterios,tabla ,codigo_criterio);
+	dictionary_put(diccionario_criterios,string_from_format(tabla) ,codigo_criterio);
 	sem_post(&mutex_diccionario_criterios);
 }
 void test_execs_memorias(){
