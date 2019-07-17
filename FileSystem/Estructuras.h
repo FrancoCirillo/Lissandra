@@ -34,7 +34,7 @@ void  inicializar_configuracion(void);
 void  actualizar_tiempo_retardo_config(mseg_t);
 void  actualizar_tiempo_dump_config(mseg_t);
 int   obtener_tiempo_dump_config();
-
+FILE* abrir_archivo(char* ruta_archivo, char* modo);
 
 //METADATA TABLAS
 void	  metadata_inicializar(FILE*, instr_t*);
