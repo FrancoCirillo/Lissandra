@@ -24,7 +24,7 @@ t_list* listar_archivos(char* tabla);
 int 	hay_tmp(char* tabla);
 void 	agregar_bloque_por_ts(char* bloqueCompleto, t_list* particiones);
 void 	agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo);
-void 	agregar_registros_en_particion(t_list* particiones, char* ruta_archivo);
+void 	agregar_registros_de_particion(t_list* particiones, char* ruta_archivo);
 t_list* levantar_registros(char* ruta_archivo);
 void 	liberar_todos_los_bloques(char* tabla);
 void 	finalizar_compactacion(t_dictionary*, char* tabla, int num);

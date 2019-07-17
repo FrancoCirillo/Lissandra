@@ -91,7 +91,7 @@ void* compactador(void* tab) {
 
 				for(int i = 0; i < list_size(lista_archivos); i++){
 					char* lectura = (char*)list_get((t_list*)lista_archivos, i);
-					agregar_registros_en_particion(particiones, lectura);
+					agregar_registros_de_particion(particiones, lectura);
 					//loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
 				}
 				puts("Ya agregue_registros_en_particion\n\n");
@@ -193,7 +193,7 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) 
 }
 
 
-void agregar_registros_en_particion(t_list* particiones, char* ruta_archivo){
+void agregar_registros_de_particion(t_list* particiones, char* ruta_archivo){
 	puts("\n\n--------------estoy en agregar_registros_en_particion------------");
 	printf("Agregando registros al diccionario de particiones de la ruta:\n %s \n", ruta_archivo);
 
