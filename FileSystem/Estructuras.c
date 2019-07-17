@@ -152,7 +152,7 @@ char* obtener_ruta_bloque(int nro_bloque) {
 
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
 //	loggear_error(string_from_format("-----------Entre a escribir_registro_bloque-------------------"));
-	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
+	FILE* archivo_bloque = abrir_archivo(ruta_bloque, "a");
 	char* string_registro = registro_a_string(registro);
 
 	//loggear_trace(string_from_format("Ruta bloque: %s\n", ruta_bloque));
