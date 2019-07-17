@@ -54,8 +54,9 @@ int 		cant_bloques_disp();
 void 		inicializar_bitarray();
 void 		finalizar_bitarray();
 int			bloque_esta_ocupado(int);
-int 		siguiente_bloque_disponible();
-void 		ocupar_bloque(int);
+//int 		siguiente_bloque_disponible();
+//void 		ocupar_bloque(int);
+int 		obtener_y_ocupar_siguiente_bloque_disponible();
 void 		liberar_bloque(int);
 
 

@@ -170,9 +170,10 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 //		loggear_error(string_from_format("Contenido del primer archivo:"));
 		imprimirContenidoArchivo(ruta_bloque, &loggear_error);
 
-		int nuevo_bloque = siguiente_bloque_disponible();
+		sem_wait(&mutex_bitarray);
+		int nuevo_bloque = obtener_y_ocupar_siguiente_bloque_disponible();
+		sem_post(&mutex_bitarray);
 		agregar_bloque_archivo(ruta_archivo, nuevo_bloque);
-		ocupar_bloque(nuevo_bloque);
 
 		char* ruta_nuevo_bloque = obtener_ruta_bloque(nuevo_bloque);
 		//loggear_trace(string_from_format("\nRuta nuevo bloque: %s\n", ruta_nuevo_bloque));
@@ -384,9 +385,7 @@ int bloque_esta_ocupado(int nro_bloque) {
 	return test;
 }
 
-int siguiente_bloque_disponible() {
-	sem_wait(&mutex_bitarray);
-//	loggear_debug(string_from_format("Buscando siguiente bloque disponible"));
+int obtener_y_ocupar_siguiente_bloque_disponible(){
 	int nro_bloque = 0;
 
 	while(nro_bloque < Metadata_FS.blocks && bloque_esta_ocupado(nro_bloque))
@@ -395,12 +394,6 @@ int siguiente_bloque_disponible() {
 	if(nro_bloque == Metadata_FS.blocks)
 		return -1;
 	sem_post(&mutex_bitarray);
-	return nro_bloque;
-}
-
-void ocupar_bloque(int nro_bloque) {
-//	printf("\nBitmap levantado, seteando valor para bloque %d\n", nro_bloque);
-	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_set_bit(bitarray, nro_bloque);
 //	loggear_trace(string_from_format("Actualizando bitmap");
 
@@ -409,8 +402,35 @@ void ocupar_bloque(int nro_bloque) {
 	crear_bloque(num);
 	actualizar_bitmap();
 	free(num);
-	sem_post(&mutex_bitarray);
+	return nro_bloque;
 }
+//int siguiente_bloque_disponible() {
+//	sem_wait(&mutex_bitarray);
+////	loggear_debug(string_from_format("Buscando siguiente bloque disponible"));
+//	int nro_bloque = 0;
+//
+//	while(nro_bloque < Metadata_FS.blocks && bloque_esta_ocupado(nro_bloque))
+//		nro_bloque++;
+//
+//	if(nro_bloque == Metadata_FS.blocks)
+//		return -1;
+//	sem_post(&mutex_bitarray);
+//	return nro_bloque;
+//}
+//
+//void ocupar_bloque(int nro_bloque) {
+////	printf("\nBitmap levantado, seteando valor para bloque %d\n", nro_bloque);
+//	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
+//	bitarray_set_bit(bitarray, nro_bloque);
+////	loggear_trace(string_from_format("Actualizando bitmap");
+//
+//	//(DAI) Agrego que vacie el bloque porque me escribia sobre lo anterior.
+//	char* num = string_itoa(nro_bloque);
+//	crear_bloque(num);
+//	actualizar_bitmap();
+//	free(num);
+//	sem_post(&mutex_bitarray);
+//}
 
 void liberar_bloque(int nro_bloque) {
 //	printf("Liberando bloque %d\n",nro_bloque);
@@ -420,22 +440,22 @@ void liberar_bloque(int nro_bloque) {
 	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 }
 
-void ejemplo_bitarray(){
-	inicializar_bitmap();
-	loggear_debug(string_from_format("Iniciado!\n"));
-	printf("Cantidad de bloques disponibles %d", cant_bloques_disponibles());
-	ocupar_bloque(0);
-//	printf("\nPost ocupar 0 , disp: %d\n",cant_bloques_disp());
-	ocupar_bloque(1);
-	ocupar_bloque(3);
-	ocupar_bloque(4);
-	ocupar_bloque(54);
-	printf("\nPost ocupar cantidad de bloques disponibles %d", cant_bloques_disponibles());
-	printf("\nPrimer bloque disponible: %d\n",siguiente_bloque_disponible());
-	liberar_bloque(3);
-	printf("\nPost liberar cantidad de bloques disponibles %d\n", cant_bloques_disponibles());
-	sleep(2);
-}
+//void ejemplo_bitarray(){
+//	inicializar_bitmap();
+//	loggear_debug(string_from_format("Iniciado!\n"));
+//	printf("Cantidad de bloques disponibles %d", cant_bloques_disponibles());
+//	ocupar_bloque(0);
+////	printf("\nPost ocupar 0 , disp: %d\n",cant_bloques_disp());
+//	ocupar_bloque(1);
+//	ocupar_bloque(3);
+//	ocupar_bloque(4);
+//	ocupar_bloque(54);
+//	printf("\nPost ocupar cantidad de bloques disponibles %d", cant_bloques_disponibles());
+//	printf("\nPrimer bloque disponible: %d\n",siguiente_bloque_disponible());
+//	liberar_bloque(3);
+//	printf("\nPost liberar cantidad de bloques disponibles %d\n", cant_bloques_disponibles());
+//	sleep(2);
+//}
 
 //--------------------------APLANAR LISTAS-----------------------
 
@@ -725,7 +745,7 @@ int inicializar_archivo(char* ruta_archivo) {
 	}
 	//loggear_trace(string_from_format("i_a: Abierto archivo"));
 
-	int bloque_num = siguiente_bloque_disponible();
+	int bloque_num = obtener_y_ocupar_siguiente_bloque_disponible();
 	//loggear_trace(string_from_format("i_a: Encontrado sig bloque: %d", bloque_num));
 
 	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
@@ -736,7 +756,6 @@ int inicializar_archivo(char* ruta_archivo) {
 	//loggear_trace(string_from_format("i_a: File written"));
 	//imprimirContenidoArchivo(ruta_archivo, &loggear_debug);
 
-	ocupar_bloque(bloque_num);
 	restar_bloques_disponibles(1);
 
 	fclose(archivo);
