@@ -176,7 +176,7 @@ t_list* listaRegistros2() {
 //Lo adapto para usar en compactacion. Genera tmps que uso para testear.
 void pruebaDump() {
 	void dump(char* tabla, void* registros) {
-		loggear_error(string_from_format("-------------------Entre a dump-------------------"));
+//		loggear_error(string_from_format("-------------------Entre a dump-------------------"));
 		int nro_dump = 2;
 		loggear_trace(string_from_format("Numero de Dump: %d\n", nro_dump));
 		char* ruta_tmp = string_from_format("%s%s/Dump%d.tmp", g_ruta.tablas, tabla, nro_dump);
@@ -189,7 +189,7 @@ void pruebaDump() {
 			imprimirRegistro((registro_t*)registro);
 			int bloque = obtener_ultimo_bloque(ruta_tmp);
 			char* ruta_bloque = obtener_ruta_bloque(bloque);
-			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
+//			printf("Ruta Bloque: %s\nRuta TMP: %s\n", ruta_bloque, ruta_tmp);
 
 			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
 			loggear_trace(string_from_format("Escribi el registro en bloque\n\n"));
@@ -527,7 +527,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t* instruccion, t_
 
 	switch (quien_pidio(instruccion)) {
 	case CONSOLA_KERNEL:
-		puts("La instrucicon la pidio la consola del Kernel");
+//		puts("La instrucicon la pidio la consola del Kernel");
 		if (ultimoParametro != NULL){
 				list_add(listaParam, (char*)ultimoParametro);
 		}

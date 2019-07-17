@@ -108,7 +108,9 @@ t_config* obtener_metadata(char* tabla) {
 }
 
 char* obtener_dato_metadata(char* tabla, char* dato_buscado) {
-	t_config* metadata = obtener_metadata(tabla);
+	t_config* metadata;
+	while((metadata = obtener_metadata(tabla))==NULL	||
+			!config_has_property(metadata, dato_buscado));
 	char* valor = string_from_format(config_get_string_value(metadata, dato_buscado));
 	config_destroy(metadata);
 	return valor;
@@ -128,7 +130,7 @@ char* obtener_ruta_bloque(int nro_bloque) {
 }
 
 void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* ruta_archivo) {
-	loggear_error(string_from_format("-----------Entre a escribir_registro_bloque-------------------"));
+//	loggear_error(string_from_format("-----------Entre a escribir_registro_bloque-------------------"));
 	FILE* archivo_bloque = txt_open_for_append(ruta_bloque);
 	char* string_registro = registro_a_string(registro);
 
@@ -153,7 +155,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 //		loggear_error(string_from_format("Escribo el registro en partes\n"));
 
 		if(cant_bloques_disponibles() == 0){
-			loggear_error(string_from_format("No hay bloques disponibles."));
+//			loggear_error(string_from_format("No hay bloques disponibles."));
 			return;
 		}
 
@@ -163,12 +165,12 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 		txt_write_in_file(archivo_bloque, primera_parte_registro);
 
 //		loggear_error(string_from_format("Contenido del primer archivo:"));
-		imprimirContenidoArchivo(ruta_bloque, &loggear_error);
+//		imprimirContenidoArchivo(ruta_bloque, &loggear_error);
 
 		sem_wait(&mutex_bitarray);
 		int nuevo_bloque = obtener_y_ocupar_siguiente_bloque_disponible();
 		sem_post(&mutex_bitarray);
-		loggear_error(string_from_format("El nuevo bloque %d se lo agrego a %s ",nuevo_bloque, ruta_archivo));
+//		loggear_error(string_from_format("El nuevo bloque %d se lo agrego a %s ",nuevo_bloque, ruta_archivo));
 		agregar_bloque_archivo(ruta_archivo, nuevo_bloque);
 
 		char* ruta_nuevo_bloque = obtener_ruta_bloque(nuevo_bloque);
@@ -196,7 +198,9 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 //	loggear_trace(string_from_format("-----------Entre a obtener_siguiente_bloque_archivo-------------------");
 //	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
-	t_config* archivo = config_create(ruta_archivo);
+	t_config* archivo;
+	while((archivo = config_create(ruta_archivo))==NULL ||
+			!config_has_property(archivo, "BLOCKS"));
 	if(archivo != NULL){
 		char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
 
@@ -221,7 +225,7 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 					int bloque_siguiente = atoi(sig_bloque);
 					free(sig_bloque);
 	//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
-					config_destroy(archivo);
+//					config_destroy(archivo); // Cuando se destruye (aprox en la instrucccion 3500 del compactador_largo.lql, da invalid read.
 					free(mi_bloque);
 					return bloque_siguiente;
 				}
@@ -229,7 +233,7 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 			free(mi_bloque);
 		}
 	}
-	else loggear_warning(string_from_format("No se pudo crear el config para el archivo %s", ruta_archivo));
+	else loggear_error(string_from_format("No se pudo crear el config para el archivo %s", ruta_archivo)); //Literalmente nunca va a entrar aca
 
 	config_destroy(archivo);
 
@@ -272,11 +276,12 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 				free(ruta_bloque);
 				int bloque_anterior = nro_bloque;
 				nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
+//				loggear_error(string_from_format(COLOR_ANSI_CYAN"Estoy en buscar_key_bloques. "COLOR_ANSI_RESET"\tBloque anterior: %d\tBloque siguiente: %d", bloque_anterior, nro_bloque));
 
 				if(nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 					ruta_bloque = obtener_ruta_bloque(nro_bloque);
-					loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscat_key_bloques y el contenido del archivo que voy a leer es:"COLOR_ANSI_RESET));
-					imprimirContenidoArchivo(ruta_bloque, loggear_error);
+//					loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscat_key_bloques y el contenido del archivo que voy a leer es:"COLOR_ANSI_RESET));
+//					imprimirContenidoArchivo(ruta_bloque, loggear_error);
 					archivo_bloque = fopen(ruta_bloque, "r");
 				} else
 					status = 0; //corta el while
@@ -526,7 +531,9 @@ char* agregar_bloque_bloques(char** lista_s_bloques, int bloque) {
 }
 
 int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
-	t_config* archivo = config_create(ruta_archivo);
+	t_config* archivo ;
+	while((archivo = config_create(ruta_archivo))==NULL	||
+			!config_has_property(archivo, "BLOCKS"));
 	char** bloques_ant = config_get_array_value(archivo, "BLOCKS");
 	char* bloques_tot = agregar_bloque_bloques(bloques_ant, nro_bloque);
 	config_set_value(archivo, "BLOCKS", bloques_tot);
@@ -539,7 +546,9 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 
 int obtener_ultimo_bloque(char* ruta_archivo){
 	//loggear_trace(string_from_format("Obteniendo ultimo bloque"));
-	t_config* archivo = config_create(ruta_archivo);
+	t_config* archivo ;
+	while((archivo = config_create(ruta_archivo))==NULL	||
+			!config_has_property(archivo, "BLOCKS"));
 	char** bloques = config_get_array_value(archivo, "BLOCKS");
 	//loggear_trace(string_from_format("** bloques: %s", *bloques));
 	int tam = cantidad_bloques_usados(ruta_archivo);
@@ -564,7 +573,9 @@ int obtener_tam_archivo(char* ruta_archivo) {
 
 void aumentar_tam_archivo(char* ruta_archivo, registro_t* registro) {
 //	loggear_trace(string_from_format("-------------------Entre a aumentar_tam_archivo-------------------");
-	t_config* archivo = config_create(ruta_archivo);
+	t_config* archivo ;
+	while((archivo = config_create(ruta_archivo))==NULL	||
+			!config_has_property(archivo, "SIZE"));
 	int tam_viejo = config_get_int_value(archivo, "SIZE");
 	int tam_nuevo = tam_viejo + tam_registro(registro);
 	loggear_debug(string_from_format("Tam viejo: %d\tTam Registro: %d\tTam nuevo: %d\n", tam_viejo, tam_registro(registro), tam_nuevo));
@@ -577,7 +588,9 @@ void aumentar_tam_archivo(char* ruta_archivo, registro_t* registro) {
 
 int cantidad_bloques_usados(char* ruta_archivo) {
 //	loggear_trace(string_from_format("-------------------Entre a cantidad_bloques_usados-------------------");
-	t_config* archivo = config_create(ruta_archivo);
+	t_config* archivo;
+	while((archivo = config_create(ruta_archivo))==NULL	||
+			!config_has_property(archivo, "BLOCKS"));
 //	loggear_trace(string_from_format("config create");
 	char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
 //	loggear_trace(string_from_format("config get array value");

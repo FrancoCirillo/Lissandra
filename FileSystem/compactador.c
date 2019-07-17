@@ -94,10 +94,10 @@ void* compactador(void* tab) {
 					agregar_registros_de_particion(particiones, lectura);
 					//loggear_trace(string_from_format("Entre al for, en el ciclo %d\n", i));
 				}
-				puts("Ya agregue_registros_en_particion\n\n");
+//				puts("Ya agregue_registros_en_particion\n\n");
 
 				list_iterate((t_list*)lista_archivos, &liberar_bloques);
-				puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+//				puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
 
 				for(j = 0; j< cantidad_particiones; j++){
 					loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
@@ -126,7 +126,7 @@ void* compactador(void* tab) {
 
 			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
 
-			puts("FIN de 1 while de la compactacion.");
+//			puts("FIN de 1 while de la compactacion.");
 		}
 		else {
 //			sem_wait(&mutex_dic_semaforos);
@@ -159,13 +159,13 @@ void* compactador(void* tab) {
 }
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) {
-	printf("Estoy en FINALIZAR COMPACTACION \nDe la Particion: %d en tabla %s\n\n", num_part , tabla);
+//	printf("Estoy en FINALIZAR COMPACTACION \nDe la Particion: %d en tabla %s\n\n", num_part , tabla);
 
 	char* ruta_archivo = string_from_format("%s%s/Part%d.bin", g_ruta.tablas, tabla, num_part);
-	printf("RUTA: %s\n\n", ruta_archivo);
+//	printf("RUTA: %s\n\n", ruta_archivo);
 
 	int nro_bloque = inicializar_archivo(ruta_archivo);
-	printf("BLOQUE nuevo de la Particion: %d es %d\n\n", num_part, nro_bloque);
+//	printf("BLOQUE nuevo de la Particion: %d es %d\n\n", num_part, nro_bloque);
 
 //	char* nom = string_from_format("Part%d", num);
 //	FILE* f = crear_archivo(tabla, nom, ".bin"); //Lo crea como nuevo.
@@ -182,20 +182,20 @@ void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) 
 		loggear_trace(string_from_format("Num bloque del archivo escrito es: %d\n\n", nro_bloque));
 //		loggear_error(string_from_format("ESTOY FINALIZANDO COMPACTACION Y EN ESTE MOMENTO EL REGISRO ES %s", registro_a_string(registro)));
 		escribir_registro_bloque(registro, ruta_bloque, ruta_archivo);  //Esta funcion actualiza el nro de bloque si lo necesita.
-		printf("Ya termine de bajar el reg de key %s\n",key );
+//		printf("Ya termine de bajar el reg de key %s\n",key );
 		free(ruta_bloque);
 	}
 
 	loggear_trace(string_from_format("Empiezo con bajar_registros de la tabla %s\n", tabla));
 	dictionary_iterator(particion, (void*) bajar_registro);
 //	config_destroy(archivo);
-	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s particion %d \n\n", tabla, num_part);
+//	printf("\n\nFIN FINALIZAR_COMPACTACION de la tabla %s particion %d \n\n", tabla, num_part);
 }
 
 
 void agregar_registros_de_particion(t_list* particiones, char* ruta_archivo){
-	puts("\n\n--------------estoy en agregar_registros_en_particion------------");
-	printf("Agregando registros al diccionario de particiones de la ruta:\n %s \n", ruta_archivo);
+//	puts("\n\n--------------estoy en agregar_registros_en_particion------------");
+//	loggear_error(string_from_format("Agregando registros al diccionario de particiones de la ruta:\n %s \n", ruta_archivo));
 
 	if(!obtener_tam_archivo(ruta_archivo)) {
 		loggear_error(string_from_format("No hay registros\n"));
@@ -206,14 +206,13 @@ void agregar_registros_de_particion(t_list* particiones, char* ruta_archivo){
 	char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 
 	FILE* archivo_bloque = fopen(ruta_bloque, "r");
-
 	int tamMax = 300; //Cantidad de caracteres maximos que va a leer
 	char* lineaDeBloque = malloc(tamMax);
 	char* bloqueCompleto = string_new();
 
 	while (1) {
 		while (fgets(lineaDeBloque, tamMax, archivo_bloque) != NULL) {
-			loggear_error(string_from_format("Lei la linea %s del bloque %s", lineaDeBloque, ruta_bloque));
+//			loggear_error(string_from_format("Lei la linea %s del bloque %s", lineaDeBloque, ruta_bloque));
 			string_append_with_format(&bloqueCompleto, "%s", lineaDeBloque);
 			free(lineaDeBloque);
 			lineaDeBloque = malloc(tamMax);
@@ -222,7 +221,7 @@ void agregar_registros_de_particion(t_list* particiones, char* ruta_archivo){
 		free(ruta_bloque);
 		int bloque_anterior = nro_bloque;
 		nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
-		printf("\nNro de bloque obtenido %d\n",nro_bloque);
+//		loggear_error(string_from_format("\tBloque anterior: %d, Bloque siguiente %d",bloque_anterior, nro_bloque));
 		if (nro_bloque >= 0) { //si es menor a cero, no hay mas bloques por leer
 			ruta_bloque = obtener_ruta_bloque(nro_bloque);
 			archivo_bloque = fopen(ruta_bloque, "r");
@@ -235,7 +234,7 @@ void agregar_registros_de_particion(t_list* particiones, char* ruta_archivo){
 void agregar_bloque_por_ts(char* bloqueCompleto, t_list* particiones){
 	int cantParticiones = list_size(particiones);
 
-	loggear_error(string_from_format("El bloque completo es:\n%s", bloqueCompleto));
+//	loggear_error(string_from_format("La tabla completa que se va a convertir en registro es:\n%s", bloqueCompleto));
 	char** registros = string_split(bloqueCompleto, "\n");
 
 	void agregar_registro_por_ts(char* registroString){
@@ -308,6 +307,7 @@ int pasar_a_tmpc(char* tabla) {
 		free(ruta_tabla);
 		return -1;
 	}
+
 	struct dirent* directorio_leido;
 	int contador = 0;
 	while((directorio_leido = readdir(directorio)) != NULL) {
