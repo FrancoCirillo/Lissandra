@@ -217,7 +217,7 @@ void agregar_registros_de_particion(t_list* particiones, char* ruta_archivo){
 			free(lineaDeBloque);
 			lineaDeBloque = malloc(tamMax);
 		}
-		fclose(archivo_bloque);
+		cerrar_archivo(archivo_bloque);
 		free(ruta_bloque);
 		int bloque_anterior = nro_bloque;
 		nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);

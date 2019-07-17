@@ -4,12 +4,23 @@
 
 FILE* abrir_archivo(char* ruta_archivo, char* modo){
 	FILE* f;
+
 	while((f = fopen(ruta_archivo, modo)) == NULL){
 		loggear_error(string_from_format("No se pudo abrir el archivo %s, reintentando."));
 		perror("Lo que paso fue:");
 		sleep(1); //TODO borrar
 	}
+//	loggear_error(string_from_format("Se abrio el archivo %s con el FILE* %p.", ruta_archivo, f));
 	return f;
+}
+
+void cerrar_archivo(FILE* f){
+	if(fclose(f) == 0){
+//		loggear_error(string_from_format("Se cerro el archivo con el FILE* %p", f));
+	}
+	else{
+		loggear_error(string_from_format("No se pudo cerrar el archivo con el FILE* %p", f));
+	}
 }
 
 int obtener_tiempo_dump_config() {
@@ -255,7 +266,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 	int nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, -1);
 	if(nro_bloque != -1){
 		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
-		loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscar_key_bloques y el contenido del archivo que voy a leer es: %s"COLOR_ANSI_RESET,ruta_archivo));
+//		loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscar_key_bloques y el contenido del archivo que voy a leer es: %s"COLOR_ANSI_RESET,ruta_archivo));
 		imprimirContenidoArchivo(ruta_bloque, loggear_error);
 		FILE* archivo_bloque = abrir_archivo(ruta_bloque, "r");
 		t_list* registros = list_create();
@@ -282,7 +293,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 				break;
 
 			case EOF: //se me acabo el archivo
-				fclose(archivo_bloque);
+				cerrar_archivo(archivo_bloque);
 				free(ruta_bloque);
 				int bloque_anterior = nro_bloque;
 				nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
@@ -320,7 +331,7 @@ void inicializar_bitmap() {
 	if(carpeta_esta_vacia(g_ruta.carpeta_metadata)) {
 		FILE* archivo_bitmap = abrir_archivo(g_ruta.bitmap, "w+");
 		loggear_info(string_from_format("Iniciando bitmap con %d bloques, bytes %d\n", Metadata_FS.blocks,cant_bytes()));
-		fclose(archivo_bitmap);
+		cerrar_archivo(archivo_bitmap);
 		truncate(g_ruta.bitmap, cant_bytes()); //te deja el archivo completo en cero.
 	}
 	else
@@ -340,7 +351,7 @@ void inicializar_bitarray() {
 		sem_wait(&mutex_bitarray);
 		bitarray = bitarray_create_with_mode(bitmap, cant_bytes(), LSB_FIRST);
 		sem_post(&mutex_bitarray);
-		fclose(archivo_bitmap);
+		cerrar_archivo(archivo_bitmap);
 	}
 	else
 		loggear_error(string_from_format("Error: No se pudo abrir el bitmap"));
@@ -367,7 +378,7 @@ void chequear_bitmap() {
 void actualizar_bitmap() {
 	FILE* bitmap = abrir_archivo(g_ruta.bitmap, "w+");
 	fwrite(bitarray->bitarray, sizeof(char), sizeof(char)*cant_bytes(), bitmap);
-	fclose(bitmap);
+	cerrar_archivo(bitmap);
 }
 
 void inicializar_bloques_disp() {
@@ -447,7 +458,7 @@ void liberar_bloque(int nro_bloque) {
 	bitarray_clean_bit(bitarray, nro_bloque);
 	actualizar_bitmap();
 	FILE* f = abrir_archivo(obtener_ruta_bloque(nro_bloque), "w");
-	fclose(f);
+	cerrar_archivo(f);
 //	truncate(obtener_ruta_bloque(nro_bloque), 0); //TODO free
 	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 }
@@ -714,7 +725,7 @@ void crear_metadata(instr_t* instr) {
 	FILE* archivo_metadata = abrir_archivo(ruta_metadata, "w+");
 	metadata_inicializar(archivo_metadata, instr);
 
-	fclose(archivo_metadata);
+	cerrar_archivo(archivo_metadata);
 	free(ruta_metadata);
 
 	loggear_info(string_from_format("Se creó el metadata en la tabla \"%s\".", tabla));
@@ -779,7 +790,7 @@ int inicializar_archivo(char* ruta_archivo) {
 
 	restar_bloques_disponibles(1);
 
-	fclose(archivo);
+	cerrar_archivo(archivo);
 	free(contenido);
 	//printf("Numero de bloque: %d\n", bloque_num);
 	return bloque_num;
@@ -826,7 +837,7 @@ void crear_bloque(char* nombre) {
 	char* ruta = string_from_format("%s%s.bin", g_ruta.bloques, nombre);
 	FILE* f = abrir_archivo(ruta, "w+");
 	free(ruta);
-	fclose(f);
+	cerrar_archivo(f);
 }
 
 void loggear_info_error(char* valor, instr_t* instr) {
@@ -921,6 +932,6 @@ void leer_metadata_FS() {
 	sprintf(mensaje, "Metadata leído. Los datos son:\nBLOCK_SIZE = %d\nBLOCKS = %d\nMAGIC_NUMBER = %s",
 			Metadata_FS.block_size, Metadata_FS.blocks,	Metadata_FS.magic_number);
 	fprintf(archivo, "BLOCK_SIZE = %d\nBLOCKS = %d\nMAGIC_NUMBER = %s", Metadata_FS.block_size, Metadata_FS.blocks,	Metadata_FS.magic_number);
-	fclose(archivo);
+	cerrar_archivo(archivo);
 	loggear_info(mensaje);
 }

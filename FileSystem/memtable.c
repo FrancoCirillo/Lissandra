@@ -121,7 +121,7 @@ registro_t* obtener_registro(char* buffer) {
 	registro_t* registro = malloc(sizeof(registro_t));
 	char* copiaBuffer = string_duplicate(buffer);
 	string_trim(&copiaBuffer);//Para sacarle el \n, si tiene
-	loggear_error(string_from_format("El buffer es %s", copiaBuffer));
+//	loggear_error(string_from_format("El buffer es %s", copiaBuffer));
 	char** registroSeparado = string_split(copiaBuffer,";");
 //	printf("El registro separado es %s, ", registroSeparado[0]);
 //	printf("%s,", registroSeparado[1]);

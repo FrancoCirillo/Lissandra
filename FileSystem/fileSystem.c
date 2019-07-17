@@ -83,7 +83,7 @@ void imprimirContenidoArchivo(char* ruta, void (*funcion_log)(char *texto)) {
 		}
 		funcion_log(texto);
 		//funcion_log(string_from_format("Leidos: %d\n", leidos));
-		fclose(f);
+		cerrar_archivo(f);
 	}
 	else loggear_warning(string_from_format("No se pudo abrir el archivo %s", ruta));
 }
