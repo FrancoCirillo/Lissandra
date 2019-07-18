@@ -147,8 +147,8 @@ char* registro_a_string(registro_t* registro) {
 	char* ts = mseg_a_string(registro->timestamp);
 	char* key = string_from_format("%d",registro->key);
 	char* value = string_from_format("%s", registro->value);
-	free(ts);
 	char* reg_string = string_from_format("%s;%s;%s\n", ts, key, value);
+	free(ts);
 	free(key);
 	free(value);
 //	loggear_warning(string_from_format("El registro que se va a escribir es %s", reg_string));
