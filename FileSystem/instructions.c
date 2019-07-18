@@ -35,8 +35,18 @@ void ejecutar_instruccion(instr_remitente* in) {
 
 	case CODIGO_INSERT:
 		loggear_debug(string_from_format("Me llego una instruccion INSERT."));
-		printf("INSERT!");
-		imprimir_instruccion(instr, loggear_error);
+		//imprimir_instruccion(instr, loggear_error);
+
+		char *texto = string_new();
+		void iterator(char *value){
+			string_append_with_format(&texto, "\t%s", value);
+		}
+		string_append_with_format(&texto,"TS: %" PRIu64";CI: %d", instr->timestamp, instr->codigo_operacion);
+		string_append_with_format(&texto,";Par:");
+		list_iterate(instr->parametros, (void *)iterator);
+
+		loggear_info(string_from_format("INSERT!: %s\n", texto));
+
 		ejecutar_instruccion_insert(instr, remitente);
 		break;
 
