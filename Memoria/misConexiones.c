@@ -293,8 +293,6 @@ void ejecutar_instruccion_gossip(){
 
 bool contiene_IP_y_puerto(identificador *ids, char *ipBuscado, char *puertoBuscado){
 
-	loggear_error(string_from_format("ids->ip_proceso %s", ids->ip_proceso));
-	loggear_error(string_from_format("ids->puerto %s", ids->puerto));
 	return (strcmp(ids->ip_proceso, ipBuscado)==0) && (strcmp(ids->puerto, puertoBuscado)==0);
 }
 
@@ -304,7 +302,6 @@ char* nombre_para_ip_y_puerto(char *ipBuscado, char* puertoBuscado){
 
 	void su_nombre(char* nombre, identificador* ids){
 
-		loggear_trace(string_from_format("Buscando nombre para ip %s y puerto %s\n", ipBuscado, puertoBuscado));
 		if(contiene_IP_y_puerto(ids, ipBuscado, puertoBuscado)){
 			nombreEncontrado = strdup(nombre);
 			loggear_trace(string_from_format("Nombre encontrado! : %s\n", nombreEncontrado));
@@ -332,8 +329,6 @@ void gossipear_con_procesos_desconectados(){
 		char* nombreProceso = nombre_para_ip_y_puerto(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i));
 		//Chequeando si nunca nos habiamos conectado:
 		if(nombreProceso == NULL || ((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0){
-			if(nombreProceso == NULL) loggear_error(string_from_format("el nombre del proceso es null"));
-			else if (((identificador*)dictionary_get(conexionesActuales, nombreProceso))->fd_out==0) loggear_error(string_from_format("el fd_out_inicial es 0"));
 			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPMemoria, 0);
 			if(conexion != -1){

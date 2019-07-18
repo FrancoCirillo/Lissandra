@@ -74,11 +74,9 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 			int *numeroDeSector = pagina_lru();
 			int indiceEnTabla = 0;
 			//Buscando la fila correspondiente a la pagina menos usada
-			char *segmentoConFilaABorrar;
-			fila_correspondiente_a_esa_pagina((*numeroDeSector), &indiceEnTabla, &segmentoConFilaABorrar);
+			char *segmentoConFilaABorrar = NULL;
 
-			//El segmento (Tabla) al que corresponde esa pagina es segmentoConFilaABorrar
-			t_list *suTablaDePaginas = dictionary_get(tablaDeSegmentos, segmentoConFilaABorrar);
+			fila_correspondiente_a_esa_pagina((*numeroDeSector), &indiceEnTabla, segmentoConFilaABorrar);
 
 			//Modificando esa pagina (Esto tambien podría hacerse al principio del algoritmo, es lo mismo)
 			desplazamiento += ((*numeroDeSector) * tamanioRegistro);
@@ -89,14 +87,6 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 			memcpy(memoriaPrincipal + desplazamiento, reg->value, strlen(reg->value)+1);
 			*nroPag = (*numeroDeSector);
 
-			//Borrando la fila "indiceEnTabla" de la Tabla de paginas "segmentoConFilaABorrar"
-			list_remove_and_destroy_element(suTablaDePaginas, indiceEnTabla,free);
-			if (list_is_empty(suTablaDePaginas))
-			{
-				//La tabla de páginas quedó vacía, no tiene sentido guardar el puntero
-				dictionary_remove_and_destroy(tablaDeSegmentos, segmentoConFilaABorrar,free);
-			}
-			free(segmentoConFilaABorrar); //malloc en fila_correspondiente_a_esa_pagina
 			free(reg);					  //malloc en obtener_registro_de_instruccion
 			return memoriaPrincipal + ((*numeroDeSector) * tamanioRegistro);
 		}
@@ -334,7 +324,7 @@ filaTabPags *fila_con_la_key(t_list *suTablaDePaginas, uint16_t keyBuscada)
 	return list_find(suTablaDePaginas, (void *)tiene_la_key);
 }
 
-filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla, char **segmentoQueLaTiene)
+filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEnTabla, char * segmentoQueLaTiene)
 {
 	//Un dictionary_find casero
 
@@ -342,33 +332,43 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 	filaTabPags *filaPosible;
 	int seEncontro = 0;
 
+	char* tablaABorrar = string_new();
+	int suIndice = 0;
+
 	void tiene_esa_pagina_la_fila(char *segmento, t_list *suTablaDePaginas)
 	{
 		if (seEncontro == 0)
 		{
-			*indiceEnTabla = 0;
-			filaPosible = fila_con_el_numero(suTablaDePaginas, numeroDePagina, indiceEnTabla);
+			suIndice = 0;
+			filaPosible = fila_con_el_numero(suTablaDePaginas, numeroDePagina, &suIndice);
 			if (filaPosible != NULL)
 			{ //Se encontro la fila que tenia ese numero
 				seEncontro = 1;
 				filaEncontrada = filaPosible;
-				*segmentoQueLaTiene = malloc(sizeof(segmento));
-				*segmentoQueLaTiene = strcpy(*segmentoQueLaTiene, segmento);
+				tablaABorrar=string_duplicate(segmento);
 			}
 		}
 	}
 
 	dictionary_iterator(tablaDeSegmentos, (void *)tiene_esa_pagina_la_fila);
 
+
+	t_list* tablaQueContiene = dictionary_get(tablaDeSegmentos, tablaABorrar);
+
+	list_remove_and_destroy_element(tablaQueContiene, suIndice, free);
+
 	if (filaPosible == NULL)
 	{
 		loggear_error(string_from_format("No se encontro la fila con la pagina")); //Durante el algoritmo de reemplazo nunca se debería dar
-		*segmentoQueLaTiene = NULL;
+		segmentoQueLaTiene = NULL;
 		return NULL;
 	}
-	else
+	else{
 		return filaEncontrada;
+	}
 }
+
+
 
 void ejecutar_instruccion_journal(instr_t *instruccion, int liberar)
 {
