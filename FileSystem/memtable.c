@@ -75,7 +75,7 @@ void limpiar_memtable() {
 }
 
 void limpiar_registros(char* tabla, void* registros) {
-	list_destroy_and_destroy_elements((t_list*)registros, free);
+	//list_destroy_and_destroy_elements((t_list*)registros, free);
 	agregar_tabla_a_mem(tabla);
 }
 
