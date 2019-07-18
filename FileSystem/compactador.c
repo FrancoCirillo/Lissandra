@@ -120,13 +120,13 @@ void* compactador(void* tab) {
 
 			sem_post(mutex_tabla);
 
-			if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
-				break;
-
 			ts_final = obtener_ts();
-			duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
+			duracion_compactacion = ts_final - ts_inicial;
 
 			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
+
+			if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
+				break;
 
 //			puts("FIN de 1 while de la compactacion.");
 		}

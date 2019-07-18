@@ -20,7 +20,6 @@ void  limpiar_memtable();
 // --------FUNCIONES DE REGISTROS--------
 void 		borrar_lista_registros(void*);
 void 		agregar_registro(char*, registro_t*);
-void 		borrar_registro(void*);
 void 		borrar_registros(void*);
 void 		limpiar_registros(char*, void*);
 registro_t* obtener_registro(char*);

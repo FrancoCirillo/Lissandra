@@ -22,7 +22,7 @@ void finalizar_memtable() {
 	compactar_todas_las_tablas();
 	//Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
 
-	dictionary_destroy(memtable);
+	dictionary_destroy_and_destroy_elements(memtable, free);
 	sem_post(&mutex_memtable);
 }
 
@@ -33,12 +33,12 @@ void levantar_tablas_directorio(DIR* directorio) {
 	while((directorio_leido = readdir(directorio)) != NULL) {
 		tabla = strdup(directorio_leido->d_name);
 		if(!string_contains(tabla, ".")) {
-			t_list* registros = list_create();
-			dictionary_put(memtable, tabla, registros);
+			agregar_tabla_a_mem(tabla);
 			inicializar_semaforo_tabla(tabla);
 			agregar_a_contador_dumpeo(tabla);
 			crear_hilo_compactador(tabla);
 		}
+		free(tabla);
 	}
 }
 
@@ -68,12 +68,7 @@ void eliminar_tabla_de_mem(char* tabla){
 }
 
 void borrar_registros(void* registros) {
-	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
-}
-
-void borrar_registro(void* registro){
-	//free(((registro_t*)registro)->value);
-	free((registro_t*)registro);
+	list_destroy_and_destroy_elements((t_list*)registros, free);
 }
 
 void limpiar_memtable() {
@@ -81,7 +76,7 @@ void limpiar_memtable() {
 }
 
 void limpiar_registros(char* tabla, void* registros) {
-	//list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
+	list_destroy_and_destroy_elements((t_list*)registros, free);
 	agregar_tabla_a_mem(tabla);
 }
 
