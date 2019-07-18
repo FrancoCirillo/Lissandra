@@ -96,8 +96,11 @@ void* compactador(void* tab) {
 				}
 //				puts("Ya agregue_registros_en_particion\n\n");
 
+				sem_wait(&mutex_bitarray);
 				list_iterate((t_list*)lista_archivos, &liberar_bloques);
-//				puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+				sem_post(&mutex_bitarray);
+				//				puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+
 
 				for(j = 0; j< cantidad_particiones; j++){
 					loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
