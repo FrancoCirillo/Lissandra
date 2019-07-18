@@ -137,28 +137,10 @@ void* compactador(void* tab) {
 //			sem_post(&mutex_dic_semaforos);
 			break;
 		}
-	}
 
-/*
- *
- *
- *
- *
- * volver a PONER
- *
- *
- *
- *
- *
- *
- *
- *
- *
- * liberar_listas_registros(particiones);	//Libera los diccionarios y su contenido.
- *
- *
- */
-	//free(de todo lo que use);
+	}
+	liberar_listas_registros(particiones);
+	return NULL;
 }
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) {
@@ -262,7 +244,7 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
 
 	registro_t* reg_viejo = (registro_t*)dictionary_get((t_dictionary*)dic, key_nueva);
 
-	if( (!reg_viejo) || ((reg_viejo != NULL) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
+	if( (!reg_viejo) || ((reg_viejo) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
 
 	//TODO: Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.
@@ -386,8 +368,12 @@ void vaciar_listas_registros(t_list* particiones){
 void liberar_listas_registros(t_list* particiones){
 
 	void liberar_diccionario(void* dic){
+		loggear_info(string_from_format("Se libera un diccionario"));
 		dictionary_destroy_and_destroy_elements((t_dictionary*)dic, free);
 	}
 	list_iterate(particiones, &liberar_diccionario);
+	list_destroy(particiones);
+	//list_destroy_and_destroy_elements(particiones,liberar_diccionario);
+
 }
 
