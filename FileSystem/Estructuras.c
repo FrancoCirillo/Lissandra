@@ -6,7 +6,7 @@ FILE* abrir_archivo(char* ruta_archivo, char* modo){
 	FILE* f;
 
 	while((f = fopen(ruta_archivo, modo)) == NULL){
-		loggear_error(string_from_format("No se pudo abrir el archivo %s, reintentando."));
+		loggear_error(string_from_format("No se pudo abrir el archivo %s con el FILE* %p, reintentando ", ruta_archivo, f));
 		perror("Lo que paso fue:");
 		sleep(1); //TODO borrar
 	}
@@ -122,8 +122,11 @@ int eliminar_directorio(char* tabla) {
 		if(arch_a_eliminar){
 			snprintf(arch_a_eliminar, length, "%s/%s", ruta_tabla, dir_a_eliminar->d_name);
 
-           	if(!string_ends_with(arch_a_eliminar, "Metadata"))
+           	if(!string_ends_with(arch_a_eliminar, "Metadata")){
+           		sem_wait(&mutex_bitarray);
            		liberar_bloques(arch_a_eliminar);
+           		sem_post(&mutex_bitarray);
+           	}
 
         	removed = unlink(arch_a_eliminar);
 
@@ -271,7 +274,7 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 					int bloque_siguiente = atoi(sig_bloque);
 					free(sig_bloque);
 	//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
-//					config_destroy(archivo); // Cuando se destruye (aprox en la instrucccion 3500 del compactador_largo.lql, da invalid read.
+					config_destroy(archivo); // Cuando se destruye (aprox en la instrucccion 3500 del compactador_largo.lql, da invalid read.
 					free(mi_bloque);
 					return bloque_siguiente;
 				}
@@ -292,7 +295,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 	if(nro_bloque != -1){
 		char* ruta_bloque = obtener_ruta_bloque(nro_bloque);
 //		loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscar_key_bloques y el contenido del archivo que voy a leer es: %s"COLOR_ANSI_RESET,ruta_archivo));
-		imprimirContenidoArchivo(ruta_bloque, loggear_error);
+//		imprimirContenidoArchivo(ruta_bloque, loggear_error);
 		FILE* archivo_bloque = abrir_archivo(ruta_bloque, "r");
 		t_list* registros = list_create();
 
@@ -312,7 +315,6 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 					list_add(registros, registro); //lo agrego solo si tiene la key que busco
 					status = tipo_archivo; //si es binario, se pone en 0 y corta el while
 					if(!tipo_archivo){
-						loggear_error(string_from_format("Encontro la key en un archivo binario"));
 						cerrar_archivo(archivo_bloque);
 					}
 				}
@@ -377,9 +379,7 @@ void inicializar_bitarray() {
 			resultado_read = fread(bitmap, sizeof(char), sizeof(char)*cant_bytes()+1, archivo_bitmap);
 
 		bitmap[cant_bytes()] = 0;
-		sem_wait(&mutex_bitarray);
 		bitarray = bitarray_create_with_mode(bitmap, cant_bytes(), LSB_FIRST);
-		sem_post(&mutex_bitarray);
 		cerrar_archivo(archivo_bitmap);
 	}
 	else
@@ -442,7 +442,6 @@ int obtener_y_ocupar_siguiente_bloque_disponible(){
 
 	if(nro_bloque == Metadata_FS.blocks)
 		return -1;
-	sem_post(&mutex_bitarray);
 	bitarray_set_bit(bitarray, nro_bloque);
 //	loggear_trace(string_from_format("Actualizando bitmap");
 
@@ -483,13 +482,11 @@ int obtener_y_ocupar_siguiente_bloque_disponible(){
 
 void liberar_bloque(int nro_bloque) {
 //	printf("Liberando bloque %d\n",nro_bloque);
-	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 	bitarray_clean_bit(bitarray, nro_bloque);
 	actualizar_bitmap();
 	FILE* f = abrir_archivo(obtener_ruta_bloque(nro_bloque), "w");
 	cerrar_archivo(f);
 //	truncate(obtener_ruta_bloque(nro_bloque), 0); //TODO free
-	sem_post(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
 }
 
 //void ejemplo_bitarray(){
@@ -768,33 +765,6 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 	fprintf(f, "%s%s%s%s%s%s%s", "CONSISTENCY=", consist, "\nPARTITIONS=", part, "\nCOMPACTATION_TIME=", time, "\n");
 }
 
-//int archivo_inicializar(FILE* f) {
-//	loggear_trace(string_from_format("a_i: Inicializando archivo"));
-//	int bloque_num = siguiente_bloque_disponible();
-//	loggear_trace(string_from_format("a_i: Encontrado sig_bloque"));
-//	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
-//	loggear_trace(string_from_format("a_i: contenido"));
-//	txt_write_in_file(f, contenido);
-//	loggear_trace(string_from_format("a_i: File written"));
-//
-//	//fwrite(contenido, sizeof(char), sizeof(char)*strlen(contenido), f);
-//	ocupar_bloque(bloque_num);
-//	puts("ocupado");
-//	restar_bloques_disponibles(1);
-//	puts("restado\n");
-//	//AGREGO FREE()
-////	free(contenido);
-////	printf("Numero de bloque: %d\n", bloque_num);
-//	return bloque_num;
-//}
-//
-//FILE* crear_archivo(char* tabla, char* nombre, char* ext) {
-//	char* ruta = string_from_format("%s%s/%s%s", g_ruta.tablas, tabla, nombre, ext);
-//	FILE* archivo = abrir_archivo(ruta, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
-//	free(ruta);
-//	return archivo;
-//}
-
 int inicializar_archivo(char* ruta_archivo) {
 	//loggear_trace(string_from_format("i_a: Ruta: %s", ruta_archivo));
 
@@ -806,8 +776,10 @@ int inicializar_archivo(char* ruta_archivo) {
 	}
 	//loggear_trace(string_from_format("i_a: Abierto archivo"));
 
+	sem_wait(&mutex_bitarray);
 	int bloque_num = obtener_y_ocupar_siguiente_bloque_disponible();
 	//loggear_trace(string_from_format("i_a: Encontrado sig bloque: %d", bloque_num));
+	sem_post(&mutex_bitarray);
 
 	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
 	//loggear_trace(string_from_format("i_a: Asignado contenido:\n%s", contenido));

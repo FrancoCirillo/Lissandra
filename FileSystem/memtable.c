@@ -25,18 +25,21 @@ void inicializar_memtable() {
 	}
 	loggear_info(string_from_format("Se inicializó la memtable."));
 	cerrar_directorio(directorio);
+
 }
 
 void finalizar_memtable() {
+	sem_wait(&mutex_memtable);
 	dumpear_memtable(); //Esto limpia lo ultimo de la mem antes de cerrar el FS.
 
 	dictionary_clean_and_destroy_elements(memtable, &borrar_registros); //Borra y libera todos los registros y tablas.
 	//No se destruye el diccionario por la comprobacion de la compactacion.
 
-	compactar_todas_las_tablas(); //NO FUNCIONA?
+	compactar_todas_las_tablas();
 	//Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
 
 	dictionary_destroy(memtable);
+	sem_post(&mutex_memtable);
 }
 
 
@@ -136,7 +139,7 @@ registro_t* obtener_registro(char* buffer) {
 registro_t* pasar_a_registro(instr_t* instr) {
 	registro_t* registro = malloc(sizeof(registro_t));
 	registro->key = (uint16_t) atoi(obtener_parametro(instr, 1));
-	registro->value = string_from_format("%s", obtener_parametro(instr, 2)); //tengo que hacer algun malloc? <---!!!!!1111!!!!! ESTABA ACAAAA CLARAMENTE DECIA HACER MALLOC!!!!!
+	registro->value = string_from_format("%s", obtener_parametro(instr, 2));
 	registro->timestamp = instr->timestamp;
 	return registro;
 }
@@ -146,6 +149,7 @@ char* registro_a_string(registro_t* registro) {
 	char* key = string_from_format("%d",registro->key);
 	char* value = string_from_format("%s", registro->value);
 	char* reg_string = string_from_format("%s;%s;%s\n", ts, key, value);
+	free(ts);
 	free(key);
 	free(value);
 //	loggear_warning(string_from_format("El registro que se va a escribir es %s", reg_string));

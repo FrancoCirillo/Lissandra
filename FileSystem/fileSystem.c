@@ -308,7 +308,9 @@ void inicializar_FS(int argc, char* argv[]) {
 	inicializar_directorios();
 	crear_bloques();
 	inicializar_bitmap();
+	sem_wait(&mutex_bitarray);
 	inicializar_bitarray();
+	sem_post(&mutex_bitarray);
 	inicializar_bloques_disp();
 
 	loggear_info(string_from_format("-----------Fin inicialización LFS-----------"));

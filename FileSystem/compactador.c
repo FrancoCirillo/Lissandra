@@ -63,9 +63,8 @@ void* compactador(void* tab) {
 		if(existe_tabla_en_mem(tabla))
 			usleep(tiempo_compactacion * 1000);
 
+		sem_wait(mutex_tabla);
 		if(existe_tabla_en_FS(tabla)) {
-
-			sem_wait(mutex_tabla);
 
 			ts_inicial = obtener_ts();
 
@@ -98,8 +97,11 @@ void* compactador(void* tab) {
 				}
 //				puts("Ya agregue_registros_en_particion\n\n");
 
+				sem_wait(&mutex_bitarray);
 				list_iterate((t_list*)lista_archivos, &liberar_bloques);
-//				puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+				sem_post(&mutex_bitarray);
+				//				puts("Ya libere los bloques\n\nENTRO AL FOR DE FINALIZAR COMPACTACION\n");
+
 
 				for(j = 0; j< cantidad_particiones; j++){
 					loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
@@ -131,33 +133,16 @@ void* compactador(void* tab) {
 //			puts("FIN de 1 while de la compactacion.");
 		}
 		else {
+			sem_post(mutex_tabla);
 //			sem_wait(&mutex_dic_semaforos);
 //			eliminar_mutex_de_tabla(tabla); ESTO DA SEG
 //			sem_post(&mutex_dic_semaforos);
 			break;
 		}
-	}
 
-/*
- *
- *
- *
- *
- * volver a PONER
- *
- *
- *
- *
- *
- *
- *
- *
- *
- * liberar_listas_registros(particiones);	//Libera los diccionarios y su contenido.
- *
- *
- */
-	//free(de todo lo que use);
+	}
+	liberar_listas_registros(particiones);
+	return NULL;
 }
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) {
@@ -261,7 +246,7 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
 
 	registro_t* reg_viejo = (registro_t*)dictionary_get((t_dictionary*)dic, key_nueva);
 
-	if( (!reg_viejo) || ((reg_viejo != NULL) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
+	if( (!reg_viejo) || ((reg_viejo) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
 
 	//TODO: Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.
@@ -376,9 +361,13 @@ void vaciar_listas_registros(t_list* particiones){
 void liberar_listas_registros(t_list* particiones){
 
 	void liberar_diccionario(void* dic){
+		loggear_info(string_from_format("Se libera un diccionario"));
 		dictionary_destroy_and_destroy_elements((t_dictionary*)dic, free);
 	}
 	list_iterate(particiones, &liberar_diccionario);
+	list_destroy(particiones);
+	//list_destroy_and_destroy_elements(particiones,liberar_diccionario);
+
 }
 
 //Ejemplo de uso. agregar un struct tipo * y eso en el

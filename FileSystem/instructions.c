@@ -35,6 +35,8 @@ void ejecutar_instruccion(instr_remitente* in) {
 
 	case CODIGO_INSERT:
 		loggear_debug(string_from_format("Me llego una instruccion INSERT."));
+		printf("INSERT!");
+		imprimir_instruccion(instr, loggear_error);
 		ejecutar_instruccion_insert(instr, remitente);
 		break;
 
