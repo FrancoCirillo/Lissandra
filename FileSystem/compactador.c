@@ -61,9 +61,8 @@ void* compactador(void* tab) {
 		if(existe_tabla_en_mem(tabla))
 			usleep(tiempo_compactacion * 1000);
 
+		sem_wait(mutex_tabla);
 		if(existe_tabla_en_FS(tabla)) {
-
-			sem_wait(mutex_tabla);
 
 			ts_inicial = obtener_ts();
 
@@ -132,6 +131,7 @@ void* compactador(void* tab) {
 //			puts("FIN de 1 while de la compactacion.");
 		}
 		else {
+			sem_post(mutex_tabla);
 //			sem_wait(&mutex_dic_semaforos);
 //			eliminar_mutex_de_tabla(tabla); ESTO DA SEG
 //			sem_post(&mutex_dic_semaforos);
