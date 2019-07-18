@@ -189,35 +189,39 @@ void dumpear_memtable() {
 void dumpear_tabla(char* tabla, void* registros) {
 
 	sem_wait(&mutex_dic_semaforos);
-	sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
-	sem_post(&mutex_dic_semaforos);
+	if(existe_mutex(tabla)){
+		sem_t* mutex_tabla = obtener_mutex_tabla(tabla);
+		sem_post(&mutex_dic_semaforos);
 
-	sem_wait(mutex_tabla);
+		sem_wait(mutex_tabla);
 
-	if(!list_is_empty((t_list*)registros)) { //Si se hicieron inserts
-		loggear_info(string_from_format("Estoy dumpeando la tabla %s", tabla));
-		int nro_dump = siguiente_nro_dump(tabla);
-		char* ruta_tmp = string_from_format("%s%s/Dump%d.tmp", g_ruta.tablas, tabla, nro_dump);
+		if(!list_is_empty((t_list*)registros)) { //Si se hicieron inserts
+			loggear_info(string_from_format("Estoy dumpeando la tabla %s", tabla));
+			int nro_dump = siguiente_nro_dump(tabla);
+			char* ruta_tmp = string_from_format("%s%s/Dump%d.tmp", g_ruta.tablas, tabla, nro_dump);
 
-		int nro_bloque = inicializar_archivo(ruta_tmp);
-		loggear_trace(string_from_format("Temporal inicializado"));
+			int nro_bloque = inicializar_archivo(ruta_tmp);
+			loggear_trace(string_from_format("Temporal inicializado"));
 
-		char* ruta_bloque;
+			char* ruta_bloque;
 
-		void escribir_reg_en_tmp(void* registro) {
-			nro_bloque = obtener_ultimo_bloque(ruta_tmp);
-			ruta_bloque = obtener_ruta_bloque(nro_bloque);
-//			loggear_error(string_from_format("ESTOY DUMPLEANDO Y EN ESTE MOMENTO EL REGISTRO ES %s", registro_a_string((registro_t*)registro)));
-			escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
-			free(ruta_bloque);
+			void escribir_reg_en_tmp(void* registro) {
+				nro_bloque = obtener_ultimo_bloque(ruta_tmp);
+				ruta_bloque = obtener_ruta_bloque(nro_bloque);
+//				loggear_error(string_from_format("ESTOY DUMPEANDO Y EN ESTE MOMENTO EL REGISTRO ES %s", registro_a_string((registro_t*)registro)));
+				escribir_registro_bloque((registro_t*)registro, ruta_bloque, ruta_tmp);
+				free(ruta_bloque);
+			}
+
+			list_iterate((t_list*)registros, &escribir_reg_en_tmp);
+
+			free(ruta_tmp);
 		}
 
-		list_iterate((t_list*)registros, &escribir_reg_en_tmp);
-
-		free(ruta_tmp);
+		sem_post(mutex_tabla);
 	}
-
-	sem_post(mutex_tabla);
+	else
+		sem_post(&mutex_dic_semaforos);
 }
 
 void agregar_a_contador_dumpeo(char* nombre_tabla) {

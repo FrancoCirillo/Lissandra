@@ -341,6 +341,7 @@ void iniciar_semaforos() {
 	sem_init(&mutex_bitarray, 0, 1);
 	sem_init(&mutex_cant_bloques, 0, 1);
 	sem_init(&mutex_tablas_nro_dump, 0, 1);
+	sem_init(&mutex_comp_locker, 0, 1);
 	sem_init(&mutex_diccionario_conexiones, 0, 1);
 	tablas_nro_dump = dictionary_create();
 }
