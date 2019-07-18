@@ -5,12 +5,26 @@
 void inicializar_memtable() {
 	memtable = dictionary_create();
 	DIR* directorio = opendir(g_ruta.tablas);
-	if (directorio != NULL){
-		levantar_tablas_directorio(directorio);
-		loggear_info(string_from_format("Se inicializó la memtable."));
+	if(directorio ==NULL){
+		closedir(directorio);
+		loggear_info(string_from_format("No hay tablas en el File System."));
+		return;
 	}
-	closedir(directorio);
-	//No se cierra el directorio porque rompe con los hilos de compactacion
+	struct dirent directorio_leido, *directorio_leido_p;
+
+	char* tabla;
+	while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+		tabla = directorio_leido.d_name;
+		if(!string_contains(tabla, ".")) {
+			t_list* registros = list_create();
+			dictionary_put(memtable, tabla, registros);
+			inicializar_semaforo_tabla(tabla);
+			agregar_a_contador_dumpeo(tabla);
+			crear_hilo_compactador(tabla);
+		}
+	}
+	loggear_info(string_from_format("Se inicializó la memtable."));
+	cerrar_directorio(directorio);
 }
 
 void finalizar_memtable() {
@@ -25,21 +39,6 @@ void finalizar_memtable() {
 	dictionary_destroy(memtable);
 }
 
-void levantar_tablas_directorio(DIR* directorio) {
-	loggear_debug(string_from_format("Levantando tablas del directorio"));
-	struct dirent* directorio_leido;
-	char* tabla;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-		tabla = strdup(directorio_leido->d_name);
-		if(!string_contains(tabla, ".")) {
-			t_list* registros = list_create();
-			dictionary_put(memtable, tabla, registros);
-			inicializar_semaforo_tabla(tabla);
-			agregar_a_contador_dumpeo(tabla);
-			crear_hilo_compactador(tabla);
-		}
-	}
-}
 
 _Bool existe_tabla_en_FS(char* tabla){
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
