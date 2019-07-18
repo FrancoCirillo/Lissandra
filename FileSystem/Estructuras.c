@@ -23,6 +23,31 @@ void cerrar_archivo(FILE* f){
 	}
 }
 
+DIR* abrir_directorio(char* ruta_directorio){
+	DIR* directorio;
+	int i=0;
+	while((directorio = opendir(ruta_directorio)) == NULL && i < 3){
+		loggear_error(string_from_format("No se pudo abrir el directorio %s, reintentando.", ruta_directorio));
+		perror("Lo que paso fue");
+		i++;
+		sleep(1); //TODO borrar
+	}
+
+	if(directorio==NULL){
+		loggear_error(string_from_format("No se pudo abrir el directorio %s, se intento 3 veces.", ruta_directorio));
+	}
+	return directorio;
+}
+
+void cerrar_directorio(DIR* directorio){
+	if(closedir(directorio) == 0){
+//		loggear_error(string_from_format("Se cerro el archivo con el FILE* %p", f));
+	}
+	else{
+		loggear_error(string_from_format("No se pudo cerrar el directorio con el DIR* %p", directorio));
+	}
+}
+
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump*1000;
 }

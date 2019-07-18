@@ -239,17 +239,11 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 	if(parametros_instr == 0) { //DESCRIBE
 		char* ruta = string_from_format("%s", g_ruta.tablas);
 		loggear_debug(string_from_format("La ruta es %s\n", ruta));
-		DIR* directorio = opendir(ruta);
-		if (directorio == NULL) {
-			loggear_error(string_from_format("Error: No se puede abrir el directorio %s\n", ruta));
-			closedir(directorio);
-			free(ruta);
-			return;
-		}
+		DIR* directorio = abrir_directorio(ruta);
+		struct dirent directorio_leido, *directorio_leido_p;
 
-		struct dirent* directorio_leido;
-		while((directorio_leido = readdir(directorio)) != NULL) {
-			char* tabla = string_from_format("%s", directorio_leido->d_name);
+		while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+			char* tabla = string_from_format("%s", directorio_leido.d_name);
 			if(!string_contains(tabla, ".")) { //readdir devuelve las entradas . y ..
 				imprimirMetadata(tabla);
 				char* consistencia = obtener_dato_metadata(tabla, "CONSISTENCY");
@@ -265,7 +259,7 @@ void execute_describe(instr_t* instruccion, char* remitente) {
 
 		loggear_trace(string_from_format("Tablas leidas, enviando"));
 		free(ruta);
-		closedir(directorio);
+		cerrar_directorio(directorio);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
 
 	}

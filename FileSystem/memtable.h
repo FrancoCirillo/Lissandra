@@ -13,7 +13,6 @@ sem_t mutex_diccionario_conexiones;
 
 // --------FUNCIONES DE MEMTABLE--------
 void  inicializar_memtable();
-void  levantar_tablas_directorio();
 void  finalizar_memtable();
 void  limpiar_memtable();
 
