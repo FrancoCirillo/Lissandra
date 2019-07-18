@@ -380,21 +380,18 @@ t_list* leer_binario(char* tabla, uint16_t key) {
 }
 
 t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
+
 	loggear_trace(string_from_format("---Buscando en los temporales---"));
 	t_list* registros = list_create();
 	char* ruta_tabla = string_from_format("%s%s/", g_ruta.tablas, tabla);
-	DIR* directorio = opendir(ruta_tabla);
-	if (directorio == NULL) {
-		loggear_error(string_from_format("Error: No se puede abrir el directorio %s\n", ruta_tabla));
-		free(ruta_tabla);
-		closedir(directorio);
-		return NULL;
-	}
+	DIR* directorio = abrir_directorio(ruta_tabla);
 
-	struct dirent* directorio_leido;
-	while((directorio_leido = readdir(directorio)) != NULL) {
+	if(directorio!=NULL)
+	{
+	struct dirent directorio_leido, *directorio_leido_p;
+	while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
 //		loggear_debug(string_from_format("Directorio leido: %s\n", directorio_leido->d_name));
-		char* nombre_archivo = directorio_leido->d_name;
+		char* nombre_archivo = directorio_leido.d_name;
 		if(string_ends_with(nombre_archivo, "tmp") || string_ends_with(nombre_archivo, "tmpc")) {
 			char* ruta_tmp = string_from_format("%s%s", ruta_tabla, nombre_archivo);
 			loggear_info(string_from_format("RUTA:%s\n", ruta_tmp));
@@ -404,9 +401,14 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 		}
 	}
 	free(ruta_tabla);
-	closedir(directorio);
-//	loggear_debug(string_from_format("Tam de lista temporales: %d\n", list_size(registros)));
+	cerrar_directorio(directorio);
 	return registros;
+	}
+	else {
+		free(ruta_tabla);
+		cerrar_directorio(directorio);
+		return NULL;
+	}
 }
 
 char* obtener_registro_mas_reciente(t_list* registros_de_key) {
@@ -428,7 +430,10 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 	sem_post(mutex_tabla);
 
 	t_list* registros_totales = list_create();
+
 	list_add_all(registros_totales, registros_mem);
+
+	if(registros_temp != NULL)
 	list_add_all(registros_totales, registros_temp);
 	if(registro_bin != NULL)
 		list_add_all(registros_totales, registro_bin);

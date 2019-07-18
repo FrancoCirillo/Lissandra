@@ -25,11 +25,16 @@ void cerrar_archivo(FILE* f){
 
 DIR* abrir_directorio(char* ruta_directorio){
 	DIR* directorio;
-
-	while((directorio = opendir(ruta_directorio)) == NULL){
+	int i=0;
+	while((directorio = opendir(ruta_directorio)) == NULL && i < 3){
 		loggear_error(string_from_format("No se pudo abrir el directorio %s, reintentando.", ruta_directorio));
 		perror("Lo que paso fue");
+		i++;
 		sleep(1); //TODO borrar
+	}
+
+	if(directorio==NULL){
+		loggear_error(string_from_format("No se pudo abrir el directorio %s, se intento 3 veces.", ruta_directorio));
 	}
 	return directorio;
 }
