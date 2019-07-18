@@ -297,22 +297,19 @@ t_list* listar_archivos(char* tabla){
 	return archivos;
 }
 
-int pasar_a_tmpc(char* tabla) {
+int pasar_a_tmpc(char* tabla) {   //Listo sin leaks.
 
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
-	//loggear_trace(string_from_format("RUTA TABLA: %s\n", ruta_tabla));
-	DIR* directorio = opendir(ruta_tabla);
-	if (directorio == NULL) {
-		closedir(directorio);
-		free(ruta_tabla);
-		return -1;
-	}
+//	loggear_trace(string_from_format("RUTA TABLA: %s\n", ruta_tabla));
+	DIR* directorio = abrir_directorio(ruta_tabla);
 
-	struct dirent* directorio_leido;
+
+	struct dirent directorio_leido, *directorio_leido_p;
 	int contador = 0;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-		char* nombre_archivo = strdup(directorio_leido->d_name);
-		//loggear_trace(string_from_format("Nombre archivo: %s\n", nombre_archivo));
+		while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+
+		char* nombre_archivo = directorio_leido.d_name;
+	//	loggear_trace(string_from_format("Nombre archivo: %s\n", nombre_archivo));
 		if(string_ends_with(nombre_archivo, ".tmp")) {
 			//loggear_trace(string_from_format("Es un tmp"));
 			char* nombre_viejo = string_from_format("%s/%s", ruta_tabla, nombre_archivo);
@@ -322,7 +319,7 @@ int pasar_a_tmpc(char* tabla) {
 			char* nombre_sin_ext = string_substring_until(nombre_archivo, length-4);
 			//loggear_trace(string_from_format("Nombre sin extension: %s\n", nombre_sin_ext));
 			char* nuevo_nombre = string_from_format("%s/%s.tmpc", ruta_tabla, nombre_sin_ext);
-			loggear_trace(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
+			//loggear_trace(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
 			rename(nombre_viejo, nuevo_nombre);
 
 			free(nombre_viejo);
@@ -330,16 +327,14 @@ int pasar_a_tmpc(char* tabla) {
 			free(nuevo_nombre);
 
 			contador++;
-			//loggear_trace(string_from_format("Status: %d\n", status));
+
 		}
-		free(nombre_archivo);
 	}
 	free(ruta_tabla);
 
-	closedir(directorio);
+	cerrar_directorio(directorio);
 //	loggear_trace(string_from_format("Se pasaron a tmpc los archivos de la tabla %s\n", tabla));
 	resetear_numero_dump(tabla);   //Importante esto!
-	//loggear_trace(string_from_format("Se reseteo el numero de dump\n"));
 
 	return contador;
 
@@ -388,3 +383,22 @@ void liberar_listas_registros(t_list* particiones){
 	list_iterate(particiones, &liberar_diccionario);
 }
 
+//Ejemplo de uso. agregar un struct tipo * y eso en el
+void archivos_de_un_dir(char* ruta){
+
+	 DIR *d;
+	 struct dirent de, *dep;
+	 d = opendir(ruta);
+
+	 if (d == NULL) {
+
+	 }
+
+	 while (readdir_r(d, &de, &dep) == 0 && dep != NULL) {
+	    printf("directory entry is %s\n", de.d_name);
+	 }
+
+	 if (closedir(d) == -1) {
+	    perror("closedir");
+	  }
+}

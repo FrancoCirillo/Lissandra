@@ -8,12 +8,11 @@ int main(int argc, char* argv[]) {
 
 	printf(COLOR_ANSI_CYAN "\n\n************ PROCESO FILESYSTEM ************\n\n" COLOR_ANSI_RESET);
 	
+	//archivos_de_un_dir("/home/utnso/lissandra-checkpoint-post-d2/Tablas/T2");
+
 	inicializar_FS(argc, argv);
 
 	inicializar_conexiones();
-
-
-
 
 
 	//pruebaGeneral();
@@ -30,7 +29,7 @@ int main(int argc, char* argv[]) {
 //	registro_t* reg = obtener_registro("1112223332;5;Reg1\n");
 //	imprimirRegistro(reg);
 
-//	pasar_a_tmpc("T2");
+	//pasar_a_tmpc("T3");
 
 //	compactador("T1");
 

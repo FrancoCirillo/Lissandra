@@ -68,6 +68,9 @@ void  crear_directorio(char*, char*);
 int   eliminar_directorio(char*);
 int   carpeta_esta_vacia(char*);
 int   inicializar_archivo(char*);
+DIR* abrir_directorio(char* ruta);
+void cerrar_directorio(DIR* directorio);
+
 
 
 //BLOQUES
