@@ -12,19 +12,21 @@ void crear_hilo_compactador(char* tabla){
 }
 
 void compactar_todas_las_tablas() {
-	DIR* directorio = opendir(g_ruta.tablas);
-	if (directorio != NULL){
-		struct dirent* directorio_leido;
+
+		DIR* directorio = abrir_directorio(g_ruta.tablas);
+
+		struct dirent directorio_leido, *directorio_leido_p;
 		compactation_locker = 1; //Se habilita una ultima compactacion
-		while((directorio_leido = readdir(directorio)) != NULL) {
-			char* tabla = directorio_leido->d_name;
+
+		while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+			char* tabla = directorio_leido.d_name;
 			if(!string_contains(tabla, "."))
 				compactador(tabla);
-		}
+			}
 		compactation_locker = 0;
+		cerrar_directorio(directorio);
+
 	}
-	closedir(directorio);
-}
 
 void* compactador(void* tab) {
 	char* tabla = tab;
@@ -61,9 +63,8 @@ void* compactador(void* tab) {
 		if(existe_tabla_en_mem(tabla))
 			usleep(tiempo_compactacion * 1000);
 
+		sem_wait(mutex_tabla);
 		if(existe_tabla_en_FS(tabla)) {
-
-			sem_wait(mutex_tabla);
 
 			ts_inicial = obtener_ts();
 
@@ -121,44 +122,27 @@ void* compactador(void* tab) {
 
 			sem_post(mutex_tabla);
 
-			if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
-				break;
-
 			ts_final = obtener_ts();
-			duracion_compactacion = dif_timestamps(ts_inicial, ts_final);
+			duracion_compactacion = ts_final - ts_inicial;
 
 			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
+
+			if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
+				break;
 
 //			puts("FIN de 1 while de la compactacion.");
 		}
 		else {
+			sem_post(mutex_tabla);
 //			sem_wait(&mutex_dic_semaforos);
 //			eliminar_mutex_de_tabla(tabla); ESTO DA SEG
 //			sem_post(&mutex_dic_semaforos);
 			break;
 		}
-	}
 
-/*
- *
- *
- *
- *
- * volver a PONER
- *
- *
- *
- *
- *
- *
- *
- *
- *
- * liberar_listas_registros(particiones);	//Libera los diccionarios y su contenido.
- *
- *
- */
-	//free(de todo lo que use);
+	}
+	liberar_listas_registros(particiones);
+	return NULL;
 }
 
 void finalizar_compactacion(t_dictionary* particion, char* tabla, int num_part) {
@@ -262,7 +246,7 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
 
 	registro_t* reg_viejo = (registro_t*)dictionary_get((t_dictionary*)dic, key_nueva);
 
-	if( (!reg_viejo) || ((reg_viejo != NULL) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
+	if( (!reg_viejo) || ((reg_viejo) && (reg_viejo->timestamp < reg_nuevo->timestamp) ))
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
 
 	//TODO: Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.
@@ -272,20 +256,21 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
 t_list* listar_archivos(char* tabla){
 	loggear_trace(string_from_format("Listando archivos de la tabla '%s'\n", tabla));
 	char* ruta_tabla =  obtener_ruta_tabla(tabla);
-
 	DIR* directorio = opendir(ruta_tabla);
+
 	if (directorio == NULL) {
-		closedir(directorio);
-		free(ruta_tabla);
-		return NULL;
+			closedir(directorio);
+			free(ruta_tabla);
+			return NULL;
 	}
 
-	struct dirent* directorio_leido;
+	struct dirent directorio_leido, *directorio_leido_p;
+
 	t_list* archivos = list_create();
 
 	char* archivo;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-		archivo = directorio_leido->d_name;
+	while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+		archivo = directorio_leido.d_name;
 		if(string_contains(archivo, ".bin") || string_contains(archivo, ".tmpc")) {
 			char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
 			list_add(archivos, ruta_archivo);
@@ -294,28 +279,27 @@ t_list* listar_archivos(char* tabla){
 	}
 
 	loggear_trace(string_from_format("\n\n **** Ya lei los archivos de la tabla %s ****\n\n", tabla));
-	closedir(directorio);
+	cerrar_directorio(directorio);
 	free(ruta_tabla);
-	//free(ruta_archivo) No lo hago porque es el que se usa en la lista... ver que no rompa.
 	return archivos;
 }
 
-int pasar_a_tmpc(char* tabla) {
+int pasar_a_tmpc(char* tabla) {   //Listo sin leaks.
 
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
-	//loggear_trace(string_from_format("RUTA TABLA: %s\n", ruta_tabla));
 	DIR* directorio = opendir(ruta_tabla);
-	if (directorio == NULL) {
+
+	if(directorio == NULL) {
 		closedir(directorio);
 		free(ruta_tabla);
 		return -1;
 	}
 
-	struct dirent* directorio_leido;
+	struct dirent directorio_leido, *directorio_leido_p;
 	int contador = 0;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-		char* nombre_archivo = strdup(directorio_leido->d_name);
-		//loggear_trace(string_from_format("Nombre archivo: %s\n", nombre_archivo));
+		while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+
+		char* nombre_archivo = directorio_leido.d_name;
 		if(string_ends_with(nombre_archivo, ".tmp")) {
 			//loggear_trace(string_from_format("Es un tmp"));
 			char* nombre_viejo = string_from_format("%s/%s", ruta_tabla, nombre_archivo);
@@ -325,7 +309,7 @@ int pasar_a_tmpc(char* tabla) {
 			char* nombre_sin_ext = string_substring_until(nombre_archivo, length-4);
 			//loggear_trace(string_from_format("Nombre sin extension: %s\n", nombre_sin_ext));
 			char* nuevo_nombre = string_from_format("%s/%s.tmpc", ruta_tabla, nombre_sin_ext);
-			loggear_trace(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
+			//loggear_trace(string_from_format("Nuevo nombre: %s\n", nuevo_nombre));
 			rename(nombre_viejo, nuevo_nombre);
 
 			free(nombre_viejo);
@@ -333,46 +317,37 @@ int pasar_a_tmpc(char* tabla) {
 			free(nuevo_nombre);
 
 			contador++;
-			//loggear_trace(string_from_format("Status: %d\n", status));
+
 		}
-		free(nombre_archivo);
 	}
 	free(ruta_tabla);
-
-	closedir(directorio);
-//	loggear_trace(string_from_format("Se pasaron a tmpc los archivos de la tabla %s\n", tabla));
-	resetear_numero_dump(tabla);   //Importante esto!
-	//loggear_trace(string_from_format("Se reseteo el numero de dump\n"));
+	cerrar_directorio(directorio);
+	resetear_numero_dump(tabla);
 
 	return contador;
 
 }
 
 void borrar_tmpcs(char* tabla){
+
 	char* ruta_tabla = obtener_ruta_tabla(tabla);
-	DIR* directorio = opendir(ruta_tabla);
-	if (directorio == NULL) {
-		closedir(directorio);
-		free(ruta_tabla);
-		return;
-	}
-	struct dirent* directorio_leido;
+	DIR* directorio = abrir_directorio(ruta_tabla);
+
+	if(directorio!=NULL){
+	struct dirent directorio_leido, *directorio_leido_p;
 
 	char* archivo;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-		archivo = directorio_leido->d_name;
+	while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+		archivo = directorio_leido.d_name;
 		if(string_contains(archivo, ".tmpc")) {
 			char* ruta_archivo = string_from_format("%s/%s", ruta_tabla, archivo);
 			remove(ruta_archivo);
-			//loggear_trace(string_from_format("El archivo leido es: %s \n Y fue ELIMINADO :(\n\n", archivo));
 		}
 	}
+	}
 
-//	loggear_trace(string_from_format("\n\n **** Ya lei los archivos de la tabla %s ****\n\n", tabla));
-	closedir(directorio);
+	cerrar_directorio(directorio);
 	free(ruta_tabla);
-
-	//FUNCA
 }
 
 void vaciar_listas_registros(t_list* particiones){
@@ -386,8 +361,38 @@ void vaciar_listas_registros(t_list* particiones){
 void liberar_listas_registros(t_list* particiones){
 
 	void liberar_diccionario(void* dic){
+		loggear_info(string_from_format("Se libera un diccionario"));
 		dictionary_destroy_and_destroy_elements((t_dictionary*)dic, free);
 	}
 	list_iterate(particiones, &liberar_diccionario);
+	list_destroy(particiones);
+	//list_destroy_and_destroy_elements(particiones,liberar_diccionario);
+
 }
 
+//Ejemplo de uso. agregar un struct tipo * y eso en el
+void archivos_de_un_dir(char* ruta){
+
+	 DIR *d;
+	 struct dirent de, *dep;
+	 d = opendir(ruta);
+
+	 if (d == NULL) {
+
+	 }
+
+	 while (readdir_r(d, &de, &dep) == 0 && dep != NULL) {
+	    printf("La entrada del directorio es %s\n", de.d_name);
+	 }
+
+	 if (closedir(d) == -1) {
+	    perror("closedir");
+	  }
+}
+
+//Esto se debe implementar  en donde se usen directorios.
+//	DIR* directorio = abrir_directorio(ruta_tabla);
+//	struct dirent directorio_leido, *directorio_leido_p;
+//	while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+//	char* nombre_archivo = directorio_leido.d_name;
+//	cerrar_directorio(directorio);

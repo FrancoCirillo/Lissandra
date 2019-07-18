@@ -823,13 +823,12 @@ void recibi_respuesta(instr_t* respuesta, char* remitente){
 	else{
 		//	list_add(respuesta->parametros,"1");
 		sem_wait(&mutex_diccionario_enviados);
-		//loggear_trace(string_from_format("El ultimo parametro de la instruccion es %s", (char*)obtener_ultimo_parametro(respuesta)));
 		hilo_enviado* h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
-		//agregar espera activa?
-		if(h!=NULL) loggear_trace(string_from_format("Hilo obtenido y removido del diccionario!"));
-		else loggear_warning(string_from_format("El hilo no existe"));
+		while(!h){loggear_debug(string_from_format("Asigno respuesta y revivo hilo"));
+			h=dictionary_remove(diccionario_enviados,obtener_ultimo_parametro(respuesta));
+		}
 		sem_post(&mutex_diccionario_enviados);
-
+		loggear_trace(string_from_format("Hilo obtenido y removido del diccionario!"));
 		loggear_debug(string_from_format("Asigno respuesta y revivo hilo"));
 		h->respuesta=respuesta;
 

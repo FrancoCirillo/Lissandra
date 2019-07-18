@@ -23,6 +23,31 @@ void cerrar_archivo(FILE* f){
 	}
 }
 
+DIR* abrir_directorio(char* ruta_directorio){
+	DIR* directorio;
+	int i=0;
+	while((directorio = opendir(ruta_directorio)) == NULL && i < 3){
+		loggear_error(string_from_format("No se pudo abrir el directorio %s, reintentando.", ruta_directorio));
+		perror("Lo que paso fue");
+		i++;
+		sleep(1); //TODO borrar
+	}
+
+	if(directorio==NULL){
+		loggear_error(string_from_format("No se pudo abrir el directorio %s, se intento 3 veces.", ruta_directorio));
+	}
+	return directorio;
+}
+
+void cerrar_directorio(DIR* directorio){
+	if(closedir(directorio) == 0){
+//		loggear_error(string_from_format("Se cerro el archivo con el FILE* %p", f));
+	}
+	else{
+		loggear_error(string_from_format("No se pudo cerrar el directorio con el DIR* %p", directorio));
+	}
+}
+
 int obtener_tiempo_dump_config() {
 	return (int) config_FS.tiempo_dump*1000;
 }
@@ -739,33 +764,6 @@ void metadata_inicializar(FILE* f, instr_t* instr) {
 	char* time = obtener_parametro(instr, 3);
 	fprintf(f, "%s%s%s%s%s%s%s", "CONSISTENCY=", consist, "\nPARTITIONS=", part, "\nCOMPACTATION_TIME=", time, "\n");
 }
-
-//int archivo_inicializar(FILE* f) {
-//	loggear_trace(string_from_format("a_i: Inicializando archivo"));
-//	int bloque_num = siguiente_bloque_disponible();
-//	loggear_trace(string_from_format("a_i: Encontrado sig_bloque"));
-//	char* contenido = string_from_format("SIZE=%d\nBLOCKS=[%d]\n", 0, bloque_num);
-//	loggear_trace(string_from_format("a_i: contenido"));
-//	txt_write_in_file(f, contenido);
-//	loggear_trace(string_from_format("a_i: File written"));
-//
-//	//fwrite(contenido, sizeof(char), sizeof(char)*strlen(contenido), f);
-//	ocupar_bloque(bloque_num);
-//	puts("ocupado");
-//	restar_bloques_disponibles(1);
-//	puts("restado\n");
-//	//AGREGO FREE()
-////	free(contenido);
-////	printf("Numero de bloque: %d\n", bloque_num);
-//	return bloque_num;
-//}
-//
-//FILE* crear_archivo(char* tabla, char* nombre, char* ext) {
-//	char* ruta = string_from_format("%s%s/%s%s", g_ruta.tablas, tabla, nombre, ext);
-//	FILE* archivo = abrir_archivo(ruta, "w+"); //Modo: lo crea vacio para lectura y escritura. Si existe borra lo anterior.
-//	free(ruta);
-//	return archivo;
-//}
 
 int inicializar_archivo(char* ruta_archivo) {
 	//loggear_trace(string_from_format("i_a: Ruta: %s", ruta_archivo));

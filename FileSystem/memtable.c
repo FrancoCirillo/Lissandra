@@ -5,40 +5,40 @@
 void inicializar_memtable() {
 	memtable = dictionary_create();
 	DIR* directorio = opendir(g_ruta.tablas);
-	if (directorio != NULL){
-		levantar_tablas_directorio(directorio);
-		loggear_info(string_from_format("Se inicializó la memtable."));
+	if(directorio ==NULL){
+		closedir(directorio);
+		loggear_info(string_from_format("No hay tablas en el File System."));
+		return;
 	}
-	closedir(directorio);
-	//No se cierra el directorio porque rompe con los hilos de compactacion
-}
+	struct dirent directorio_leido, *directorio_leido_p;
 
-void finalizar_memtable() {
-	dumpear_memtable(); //Esto limpia lo ultimo de la mem antes de cerrar el FS.
-
-	dictionary_clean_and_destroy_elements(memtable, &borrar_registros); //Borra y libera todos los registros y tablas.
-	//No se destruye el diccionario por la comprobacion de la compactacion.
-
-	compactar_todas_las_tablas(); //NO FUNCIONA?
-	//Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
-
-	dictionary_destroy(memtable);
-}
-
-void levantar_tablas_directorio(DIR* directorio) {
-	loggear_debug(string_from_format("Levantando tablas del directorio"));
-	struct dirent* directorio_leido;
 	char* tabla;
-	while((directorio_leido = readdir(directorio)) != NULL) {
-		tabla = strdup(directorio_leido->d_name);
+	while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
+		tabla = directorio_leido.d_name;
 		if(!string_contains(tabla, ".")) {
-			t_list* registros = list_create();
-			dictionary_put(memtable, tabla, registros);
+			agregar_tabla_a_mem(tabla);
 			inicializar_semaforo_tabla(tabla);
 			agregar_a_contador_dumpeo(tabla);
 			crear_hilo_compactador(tabla);
 		}
 	}
+	loggear_info(string_from_format("Se inicializó la memtable."));
+	cerrar_directorio(directorio);
+
+}
+
+void finalizar_memtable() {
+	sem_wait(&mutex_memtable);
+	dumpear_memtable(); //Esto limpia lo ultimo de la mem antes de cerrar el FS.
+
+	dictionary_clean_and_destroy_elements(memtable, &borrar_registros); //Borra y libera todos los registros y tablas.
+	//No se destruye el diccionario por la comprobacion de la compactacion.
+
+	compactar_todas_las_tablas();
+	//Esto compacta todos los .tmpc que hayan antes de cerrar el FS.
+
+	dictionary_destroy_and_destroy_elements(memtable, free);
+	sem_post(&mutex_memtable);
 }
 
 _Bool existe_tabla_en_FS(char* tabla){
@@ -67,12 +67,7 @@ void eliminar_tabla_de_mem(char* tabla){
 }
 
 void borrar_registros(void* registros) {
-	list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
-}
-
-void borrar_registro(void* registro){
-	//free(((registro_t*)registro)->value);
-	free((registro_t*)registro);
+	list_destroy_and_destroy_elements((t_list*)registros, free);
 }
 
 void limpiar_memtable() {
@@ -80,7 +75,7 @@ void limpiar_memtable() {
 }
 
 void limpiar_registros(char* tabla, void* registros) {
-	//list_destroy_and_destroy_elements((t_list*)registros, &borrar_registro);
+	list_destroy_and_destroy_elements((t_list*)registros, free);
 	agregar_tabla_a_mem(tabla);
 }
 
@@ -137,7 +132,7 @@ registro_t* obtener_registro(char* buffer) {
 registro_t* pasar_a_registro(instr_t* instr) {
 	registro_t* registro = malloc(sizeof(registro_t));
 	registro->key = (uint16_t) atoi(obtener_parametro(instr, 1));
-	registro->value = string_from_format("%s", obtener_parametro(instr, 2)); //tengo que hacer algun malloc? <---!!!!!1111!!!!! ESTABA ACAAAA CLARAMENTE DECIA HACER MALLOC!!!!!
+	registro->value = string_from_format("%s", obtener_parametro(instr, 2));
 	registro->timestamp = instr->timestamp;
 	return registro;
 }
@@ -147,6 +142,7 @@ char* registro_a_string(registro_t* registro) {
 	char* key = string_from_format("%d",registro->key);
 	char* value = string_from_format("%s", registro->value);
 	char* reg_string = string_from_format("%s;%s;%s\n", ts, key, value);
+	free(ts);
 	free(key);
 	free(value);
 //	loggear_warning(string_from_format("El registro que se va a escribir es %s", reg_string));

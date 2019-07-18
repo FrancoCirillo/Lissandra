@@ -13,14 +13,12 @@ sem_t mutex_diccionario_conexiones;
 
 // --------FUNCIONES DE MEMTABLE--------
 void  inicializar_memtable();
-void  levantar_tablas_directorio();
 void  finalizar_memtable();
 void  limpiar_memtable();
 
 // --------FUNCIONES DE REGISTROS--------
 void 		borrar_lista_registros(void*);
 void 		agregar_registro(char*, registro_t*);
-void 		borrar_registro(void*);
 void 		borrar_registros(void*);
 void 		limpiar_registros(char*, void*);
 registro_t* obtener_registro(char*);
