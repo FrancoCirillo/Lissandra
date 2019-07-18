@@ -125,23 +125,30 @@ int vigilar_conexiones_entrantes(
 							sem_wait(&mutex_diccionario_conexiones);
 							if (dictionary_get(conexionesActuales, quienEs) != NULL)
 							{ //Ya lo conocia, no tenia su fd_in
-								loggear_debug(string_from_format("Ya conocia a %s, no tenia su fd_in\n", quienEs));
+								loggear_debug(string_from_format("Ya conocia a %s", quienEs));
 								identificador *miIdentificador = (identificador *)dictionary_get(conexionesActuales, quienEs);
+								if(miIdentificador->fd_in == 0){
+									loggear_trace(string_from_format("u fd_in era %d", miIdentificador->fd_in));
+									loggear_trace(string_from_format("Su fd_in era 0, su newfd es %d", newfd));
 									miIdentificador->fd_in = newfd;
-									dictionary_put(conexionesActuales, quienEs, miIdentificador); //TODO: Hace falta? O al cambiar lo apuntado por el puntero ya esta?
+									loggear_trace(string_from_format("No tenia su fd_in"));
+//									dictionary_put(conexionesActuales, quienEs, miIdentificador); //TODO: Hace falta? O al cambiar lo apuntado por el puntero ya esta?
+								}
+								else{
+									loggear_trace(string_from_format("Su fd_in era %d", miIdentificador->fd_in));
+								}
 								sem_post(&mutex_diccionario_conexiones);
 							}
 							else
 							{ //No lo conocia
-								loggear_debug(string_from_format("No conocia a %s\n", quienEs));
-								sem_post(&mutex_diccionario_conexiones);
+								loggear_warning(string_from_format("No conocia a %s\n", quienEs));
 								identificador *idsNuevaConexion = malloc(sizeof(identificador));
 								strcpy(idsNuevaConexion->puerto, (char *)list_get(instruccion_handshake->parametros, 2));
 								strcpy(idsNuevaConexion->ip_proceso, (char *)list_get(instruccion_handshake->parametros, 1));
 								idsNuevaConexion->fd_in = newfd;
 								idsNuevaConexion->fd_out = (fd_out_inicial)?fd_out_inicial:0;
+								loggear_error(string_from_format("El fd out de %s es %d", quienEs, idsNuevaConexion->fd_out));
 								fd_out_inicial = 0;
-								sem_wait(&mutex_diccionario_conexiones);
 								dictionary_put(conexionesActuales, quienEs, idsNuevaConexion);
 								sem_post(&mutex_diccionario_conexiones);
 							}
@@ -155,8 +162,8 @@ int vigilar_conexiones_entrantes(
 							loggear_trace(string_from_format("Instruccion handshake freed"));
 							dictionary_put(auxiliarConexiones, auxFd, quienEs);
 							free(auxFd);
-							loggear_trace(string_from_format("auxFd Freed"));
-							//							imprimirConexiones(conexionesActuales); //Debug
+//							loggear_trace(string_from_format("auxFd Freed"));
+//							imprimirConexiones(conexionesActuales); //Debug
 						}
 					}
 					else if (i == 0)

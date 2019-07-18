@@ -54,6 +54,7 @@ int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar)
 			return -1;
 		}
 	}
+	loggear_error(string_from_format("Cree una conexion con el socket %d", socket_cliente));
 	freeaddrinfo(server_info);
 
 	//	printf("Ya se pueden enviar instrucciones a %s\n", ip); //Debug
