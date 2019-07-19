@@ -21,7 +21,7 @@ void compactar_todas_las_tablas() {
 	while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
 		char* tabla = directorio_leido.d_name;
 		if(!string_contains(tabla, "."))
-			compactador(tabla);
+			compactador(string_from_format(tabla));
 	}
 	compactation_locker = 0;
 	cerrar_directorio(directorio);
@@ -30,7 +30,6 @@ void compactar_todas_las_tablas() {
 
 void* compactador(void* tab) {
 	char* tabla = tab;
-
 
 
 	char* tiempo = obtener_dato_metadata(tabla, "COMPACTATION_TIME");
@@ -42,7 +41,6 @@ void* compactador(void* tab) {
 	free(cant);
 
 	int cant_tmpc;
-
 
 
 	sem_wait(&mutex_dic_semaforos);
@@ -80,6 +78,7 @@ void* compactador(void* tab) {
 				sem_post(mutex_tabla);
 				break;
 			}
+
 			t_list* particiones = list_create();
 			for(int num = 0; num < cantidad_particiones; num++) {
 				//inicia tantos diccionarios vacios como particiones tenga la tabla.
@@ -87,6 +86,7 @@ void* compactador(void* tab) {
 				list_add(particiones, dic);
 			}
 			loggear_info(string_from_format("Estoy compactando la tabla '%s'", tabla));
+
 			t_list* lista_archivos = listar_archivos(tabla);
 
 			if(lista_archivos){
@@ -130,24 +130,22 @@ void* compactador(void* tab) {
 
 			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
 
-			if(compactation_locker){
-				//Si debe hacerse por ultima vez porque se cierra el FS
+			if(compactation_locker) //Si debe hacerse por ultima vez porque se cierra el FS
 				break;
-			}
-			//			puts("FIN de 1 while de la compactacion.");
+
 		}
 		else {
 			sem_post(mutex_tabla);
-			//			sem_wait(&mutex_dic_semaforos);
-			//			eliminar_mutex_de_tabla(tabla); ESTO DA SEG
-			//			sem_post(&mutex_dic_semaforos);
+			//sem_wait(&mutex_dic_semaforos);
+			//eliminar_mutex_de_tabla(tabla); ESTO DA SEG
+			//sem_post(&mutex_dic_semaforos);
 			break;
 		}
 
 //		liberar_listas_registros(particiones);
 
 	}
-
+	free(tabla);
 	return NULL;
 }
 
@@ -244,7 +242,6 @@ void agregar_bloque_por_ts(char* bloqueCompleto, t_list* particiones){
 	string_iterate_lines(registros, (void*)agregar_registro_por_ts);
 	free(registros);
 	free(bloqueCompleto);
-
 }
 
 void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
@@ -257,13 +254,14 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
 
 	if(!reg_viejo){
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
-	} else 	if((reg_viejo) && (reg_viejo->timestamp < reg_nuevo->timestamp)){
-		liberar_registro(reg_viejo);
+	} else if((reg_viejo) && (reg_viejo->timestamp < reg_nuevo->timestamp)){
+		liberar_registro2(reg_viejo);
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
-
-	}else {
+	} else {
+		dictionary_put((t_dictionary*)dic, key_nueva, reg_viejo);
 		liberar_registro2(reg_nuevo);
 	}
+
 	free(key_nueva);
 	//TODO: Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.
 }

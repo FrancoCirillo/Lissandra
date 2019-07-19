@@ -128,6 +128,7 @@ void execute_create(instr_t* instruccion, char* remitente) {
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_CREATE, instruccion, listaParam, remitente);
 	}
+	free(tabla);
 }
 
 t_list* execute_insert(instr_t* instruccion, cod_op* codOp) {
