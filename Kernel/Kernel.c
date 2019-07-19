@@ -1299,6 +1299,7 @@ void gossipear_con_procesos_desconectados(){
 			}
 		}
 		i++;
+		free(nombreProceso);
 		sem_wait(&mutex_configuracion);
 	}
 	sem_wait(&mutex_configuracion);

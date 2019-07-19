@@ -66,6 +66,8 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		{
 			loggear_info(string_from_format("La memoria esta full - Todas las paginas presentes estan modificadas"));
 			ejecutar_instruccion_journal(instruccion, 0);
+			free(reg->value);
+			free(reg);
 			return NULL;
 		}
 		else
@@ -87,6 +89,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 			memcpy(memoriaPrincipal + desplazamiento, reg->value, strlen(reg->value)+1);
 			*nroPag = (*numeroDeSector);
 
+			free(reg->value);
 			free(reg);					  //malloc en obtener_registro_de_instruccion
 			return memoriaPrincipal + ((*numeroDeSector) * tamanioRegistro);
 		}
@@ -343,6 +346,7 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 			filaPosible = fila_con_el_numero(suTablaDePaginas, numeroDePagina, &suIndice);
 			if (filaPosible != NULL)
 			{ //Se encontro la fila que tenia ese numero
+				free(tablaABorrar);
 				seEncontro = 1;
 				filaEncontrada = filaPosible;
 				tablaABorrar=string_duplicate(segmento);
@@ -354,7 +358,7 @@ filaTabPags *fila_correspondiente_a_esa_pagina(int numeroDePagina, int *indiceEn
 
 
 	t_list* tablaQueContiene = dictionary_get(tablaDeSegmentos, tablaABorrar);
-
+	free(tablaABorrar);
 	list_remove_and_destroy_element(tablaQueContiene, suIndice, free);
 
 	if (filaPosible == NULL)

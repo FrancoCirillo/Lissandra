@@ -341,6 +341,7 @@ void gossipear_con_procesos_desconectados(){
 			}
 		}
 		i++;
+		free(nombreProceso);
 	}
 	list_iterate(configuracion.IP_SEEDS, (void*)enviar_tabla_gossiping);
 }
