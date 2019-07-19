@@ -329,6 +329,9 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 						cerrar_archivo(archivo_bloque);
 					}
 				}
+				else{
+					liberar_registro2(registro);
+				}
 				free(buffer);   //Dejo esto.
 				buffer = string_new();  //Dejo esto.
 				//strcpy(buffer, "");  (DAI: saco esto)
@@ -336,7 +339,6 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 
 			case EOF: //se me acabo el archivo
 				cerrar_archivo(archivo_bloque);
-				free(ruta_bloque);
 				int bloque_anterior = nro_bloque;
 				nro_bloque = obtener_siguiente_bloque_archivo(ruta_archivo, bloque_anterior);
 //				loggear_error(string_from_format(COLOR_ANSI_CYAN"Estoy en buscar_key_bloques. "COLOR_ANSI_RESET"\tBloque anterior: %d\tBloque siguiente: %d", bloque_anterior, nro_bloque));
@@ -346,6 +348,7 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 //					loggear_error(string_from_format(COLOR_ANSI_CYAN"\t\tEstoy en buscat_key_bloques y el contenido del archivo que voy a leer es:"COLOR_ANSI_RESET));
 //					imprimirContenidoArchivo(ruta_bloque, loggear_error);
 					archivo_bloque = abrir_archivo(ruta_bloque, "r");
+					free(ruta_bloque);
 				} else
 					status = 0; //corta el while
 				break;
@@ -576,8 +579,9 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	config_save(archivo);
 	restar_bloques_disponibles(1);
 	config_destroy(archivo);
-	//free(bloques_tot);
 	string_iterate_lines(bloques_ant, (void*)free);
+	free(bloques_ant);
+	free(bloques_tot);
 	return 1;
 }
 
