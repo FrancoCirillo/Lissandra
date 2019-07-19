@@ -141,13 +141,13 @@ int vigilar_conexiones_entrantes(
 							}
 							else
 							{ //No lo conocia
-								loggear_warning(string_from_format("No conocia a %s\n", quienEs));
+								loggear_debug(string_from_format("No conocia a %s\n", quienEs));
 								identificador *idsNuevaConexion = malloc(sizeof(identificador));
 								strcpy(idsNuevaConexion->puerto, (char *)list_get(instruccion_handshake->parametros, 2));
 								strcpy(idsNuevaConexion->ip_proceso, (char *)list_get(instruccion_handshake->parametros, 1));
 								idsNuevaConexion->fd_in = newfd;
 								idsNuevaConexion->fd_out = (fd_out_inicial)?fd_out_inicial:0;
-								loggear_error(string_from_format("El fd out de %s es %d", quienEs, idsNuevaConexion->fd_out));
+								loggear_trace(string_from_format("El fd out de %s es %d", quienEs, idsNuevaConexion->fd_out));
 								fd_out_inicial = 0;
 								dictionary_put(conexionesActuales, quienEs, idsNuevaConexion);
 								sem_post(&mutex_diccionario_conexiones);

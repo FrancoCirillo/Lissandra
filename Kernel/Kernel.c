@@ -1096,7 +1096,7 @@ void *ejecutar_gossiping()
 	while(1)
 	{
 		ejecutar_instruccion_gossip();
-		loggear_debug(string_from_format("Fin gossiping programado"));
+		loggear_trace(string_from_format("Fin gossiping programado"));
 		sem_wait(&mutex_configuracion);
 		int retardoGossiping = configuracion.RETARDO_GOSSIPING;
 		sem_post(&mutex_configuracion);
@@ -1125,7 +1125,7 @@ void auto_describe(){
 	}
 }
 void devolver_gossip(instr_t *instruccion, char *remitente){
-	loggear_info(string_from_format("Devolviendo el gossip a %s", remitente));
+	loggear_trace(string_from_format("Devolviendo el gossip a %s", remitente));
 	//	loggear_trace(string_from_format("Enviando datos a %s", remitente));
 	int conexionRemitente = obtener_fd_out(remitente);
 	//	loggear_trace(string_from_format("Datos enviados"));
@@ -1209,9 +1209,9 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 	list_iterate(instruccion->parametros, (void*)acutalizar_tabla);
 
-	loggear_info(string_from_format("Tabla actualizada:"));
+	loggear_trace(string_from_format("Tabla actualizada:"));
 	sem_wait(&mutex_diccionario_conexiones);
-	imprimir_conexiones(conexionesActuales, loggear_info);
+	imprimir_conexiones(conexionesActuales, loggear_trace);
 	sem_post(&mutex_diccionario_conexiones);
 
 	list_destroy(instruccion->parametros);
@@ -1251,7 +1251,7 @@ void enviar_lista_gossiping(char* nombreProceso){
 
 void ejecutar_instruccion_gossip(){
 
-	loggear_info(string_from_format("Ejecutando instruccion Gossip"));
+	loggear_trace(string_from_format("Ejecutando instruccion Gossip"));
 
 	gossipear_con_conexiones_actuales();
 

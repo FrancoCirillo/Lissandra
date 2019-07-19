@@ -4,7 +4,7 @@
 
 void ejecutar_instruccion_select(instr_t *instruccion)
 {
-	loggear_info(string_from_format("Ejecutando instruccion Select"));
+	loggear_info(string_from_format("Ejecutando instruccion "COLOR_ANSI_CYAN"SELECT"COLOR_ANSI_RESET));
 	sleep_acceso_memoria();
 	char* tabla = (char *)list_get(instruccion->parametros, 0);
 	t_list *suTablaDePaginas = segmento_de_esa_tabla(tabla);
@@ -26,7 +26,6 @@ void ejecutar_instruccion_select(instr_t *instruccion)
 					registroEncontrado->timestamp);
 			list_add(listaParam, cadena);
 			se_uso(filaEncontrada->numeroDePagina);
-			printf("LO QUE SE ENCONTRO FUEEE: %s\n", cadena);
 			imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam);
 			free(registroEncontrado->value);
 			free(registroEncontrado);
@@ -84,7 +83,6 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 			valueEncontrado, //Value
 			(mseg_t)timestamp); //Timestamp
 	list_add(listaParam, cadena);
-	printf("LO QUE ME LLEGO FUEEE: %s\n", cadena);
 	imprimir_donde_corresponda(CODIGO_EXITO, miInstruccion, listaParam);
 
 	list_destroy_and_destroy_elements(miInstruccion->parametros, free);
@@ -93,7 +91,7 @@ void ejecutar_instruccion_devolucion_select(instr_t *instruccion)
 
 int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inserta desde FS no tiene el flagMod
 {
-	if(flagMod) loggear_info(string_from_format("Ejecutando instruccion Insert")); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
+	if(flagMod) loggear_info(string_from_format("Ejecutando instruccion "COLOR_ANSI_CYAN"INSERT"COLOR_ANSI_RESET)); //Si el flag es 0 es xq no se hizo un insert directamente, entonces que lo haga callado
 	sleep_acceso_memoria();
 	int numeroDePaginaInsertada;
 	if(strlen((char *)list_get(instruccion->parametros, 2))>tamanioValue)
@@ -116,7 +114,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 			paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
 			if(paginaAgregada !=NULL){
 				char* paginaShow = pagina_a_str(paginaAgregada);
-				loggear_debug(string_from_format("\nPagina agregada: \n%s\n", paginaShow));
+				loggear_info(string_from_format("\nPagina agregada: %s", paginaShow));
 				free(paginaShow);
 				suTablaDePaginas = nueva_tabla_de_paginas();
 				dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
@@ -160,7 +158,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
 				if(paginaAgregada != NULL){
 					char* paginaStr = pagina_a_str(paginaAgregada);
-					loggear_trace(string_from_format("\nPagina agregada: \n%s\n", paginaStr));
+					loggear_info(string_from_format("\nPagina agregada: %s", paginaStr));
 					free(paginaStr);
 					filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 					loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));
@@ -196,7 +194,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 
 void ejecutar_instruccion_create(instr_t *instruccion)
 {
-	loggear_info(string_from_format("Ejecutando instruccion Create"));
+	loggear_info(string_from_format("Ejecutando instruccion "COLOR_ANSI_CYAN"CREATE"COLOR_ANSI_RESET));
 	int conexionFS = obtener_fd_out("FileSystem");
 	sleep_acceso_fs();
 	if(enviar_liberando_request(instruccion, conexionFS)==-1)
@@ -206,7 +204,7 @@ void ejecutar_instruccion_create(instr_t *instruccion)
 
 void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente)
 {
-	loggear_info(string_from_format("Ejecutando instruccion Describe"));
+	loggear_info(string_from_format("Ejecutando instruccion "COLOR_ANSI_CYAN"DESCRIBE"COLOR_ANSI_RESET));
 	int conexionFS = obtener_fd_out("FileSystem");
 	sleep_acceso_fs();
 	if(enviar_liberando_request(instruccion, conexionFS)==-1)
@@ -217,7 +215,7 @@ void ejecutar_instruccion_describe(instr_t *instruccion, char* remitente)
 void ejecutar_instruccion_drop(instr_t *instruccion)
 {
 	sleep_acceso_memoria();
-	loggear_info(string_from_format("Ejecutando instruccion Drop"));
+	loggear_info(string_from_format("Ejecutando instruccion "COLOR_ANSI_CYAN"DROP"COLOR_ANSI_RESET));
 
 	eliminar_tabla(instruccion);
 	int conexionFS = obtener_fd_out("FileSystem");

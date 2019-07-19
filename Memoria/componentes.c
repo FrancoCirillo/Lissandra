@@ -64,7 +64,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 	{
 		if (memoria_esta_full())
 		{
-			loggear_info(string_from_format("La memoria esta full - Todas las paginas presentes estan modificadas"));
+			loggear_info(string_from_format("La memoria esta "COLOR_ANSI_CYAN"FULL"COLOR_ANSI_RESET"- Todas las paginas presentes estan modificadas"));
 			ejecutar_instruccion_journal(instruccion, 0);
 			free(reg->value);
 			free(reg);
@@ -72,7 +72,7 @@ void *insertar_instruccion_en_memoria(instr_t *instruccion, int *nroPag)
 		}
 		else
 		{ //Algoritmo de reemplazo:
-			loggear_debug(string_from_format("Ejecutando el algoritmo de reemplazo"));
+			loggear_debug(string_from_format("Ejecutando el algoritmo de reemplazo "COLOR_ANSI_CYAN"LRU"COLOR_ANSI_RESET));
 			int *numeroDeSector = pagina_lru();
 			int indiceEnTabla = 0;
 			//Buscando la fila correspondiente a la pagina menos usada
@@ -131,8 +131,6 @@ registro *obtener_registro_de_instruccion(instr_t *instruccion)
 {
 	char *keyChar = strdup((char *)list_get(instruccion->parametros, 1));
 	char *valueNuevo = (char *)list_get(instruccion->parametros, 2);
-	printf("EL value nuevo es: %s\n", valueNuevo);
-	printf("Y su tamanio sin contar el 0 es: %d\n", strlen(valueNuevo));
 	mseg_t timestampNuevo = instruccion->timestamp;
 	uint16_t keyNueva;
 	str_to_uint16(keyChar, &keyNueva);
@@ -195,7 +193,7 @@ registro *obtener_registro_de_pagina(void *pagina)
 char *registro_a_str(registro *registro)
 {
 	char *regString = NULL;
-	regString = string_from_format("	Timestamp:	%" PRIu64 "\n	Key:		%u\n	Value:		%s\n", registro->timestamp, registro->key, registro->value);
+	regString = string_from_format("%" PRIu64 ";%u;%s", registro->timestamp, registro->key, registro->value);
 	return regString;
 }
 
@@ -511,14 +509,14 @@ void limpiar_memoria()
 
 void limpiar_memoria_principal()
 {
-	loggear_debug(string_from_format("Limpiando mem ppal"));
+	loggear_trace(string_from_format("Limpiando mem ppal"));
 	memset(sectorOcupado, false, cantidadDeSectores * sizeof(bool)); //Ahora indica que todos los sectores de la memoria se pueden sobreescribir
 																	 //Supongo que no hace falta que hagamos un memset en 0 a la Memoria Principal en si
 }
 
 void limpiar_segmentos()
 {
-	loggear_debug(string_from_format("Limpiando segmentos"));
+	loggear_trace(string_from_format("Limpiando segmentos"));
 	void limpiar_tabla_de_paginas(char *segmento, t_list *suTablaDePaginas)
 	{
 		list_destroy_and_destroy_elements(suTablaDePaginas,free);
@@ -551,7 +549,7 @@ void *ejecutar_gossiping()
 	while (1)
 	{
 		ejecutar_instruccion_gossip();
-		loggear_debug(string_from_format("Fin gossip programado"));
+		loggear_trace(string_from_format("Fin gossip programado"));
 		sem_wait(&mutex_config);
 		int retardoGossiping = configuracion.RETARDO_GOSSIPING;
 		sem_post(&mutex_config);

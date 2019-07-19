@@ -103,9 +103,11 @@ void inicializar_estructuras_memoria()
 void ejecutar_instruccion(instr_t *instruccion, char *remitente)
 {
 	sem_wait(&mutex_journal);
-	loggear_debug(string_from_format("Me llego una instruccion con el codOp %d de %s", instruccion->codigo_operacion, remitente));
-	imprimir_instruccion(instruccion, loggear_trace);
+	loggear_trace(string_from_format("Me llego una instruccion con el codOp %d de %s", instruccion->codigo_operacion, remitente));
 	int codigoNeto = instruccion->codigo_operacion %100; //Los primeros dos digitos son los posibles codigos de operacion
+	if(codigoNeto != PETICION_GOSSIP && codigoNeto != RECEPCION_GOSSIP){
+		imprimir_instruccion(instruccion, loggear_trace);
+	}
 	if(instruccion->codigo_operacion > BASE_COD_ERROR){
 		loggear_trace(string_from_format("Me llego un codigo de error"));
 		ejecutar_instruccion_error(instruccion);

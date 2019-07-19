@@ -10,7 +10,7 @@ int obtener_fd_out_sin_semaforo(char* proceso){
 	}
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
-		loggear_warning(string_from_format("Es la primera vez que se quiere enviar algo al proceso %s", proceso));
+		loggear_trace(string_from_format("Es la primera vez que se quiere enviar algo al proceso %s", proceso));
 		responderHandshake(idsProceso);
 	}
 	return idsProceso->fd_out;
@@ -28,7 +28,7 @@ int obtener_fd_out(char *proceso)
 	if (idsProceso->fd_out == 0)
 	{ //Es la primera vez que se le quiere enviar algo a proceso
 
-		loggear_debug(string_from_format("Es la primera vez que se quiere enviar algo al proceso %s", proceso));
+		loggear_trace(string_from_format("Es la primera vez que se quiere enviar algo al proceso %s", proceso));
 		responderHandshake(idsProceso);
 		return idsProceso->fd_out;
 	}
@@ -48,7 +48,7 @@ void imprimir_donde_corresponda(cod_op codigoOperacion, instr_t *instruccion, t_
 		if (ultimoParametro != NULL){
 			list_add(listaParam, (char*)ultimoParametro);
 		}
-		loggear_info(string_from_format("Enviando instruccion al Kernel"));
+		loggear_trace(string_from_format("Enviando instruccion al Kernel"));
 		miInstruccion = crear_instruccion(obtener_ts(), codigoOperacion + BASE_CONSOLA_KERNEL, listaParam);
 		int conexionKernel = obtener_fd_out("Kernel");
 		t_list* listaABorrar = list_duplicate(miInstruccion->parametros);
@@ -153,7 +153,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 	instr_t* miInstruccion = crear_instruccion(obtener_ts(), RECEPCION_GOSSIP, tablaGossiping);
 
 
-	loggear_debug(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
+	loggear_trace(string_from_format("Envio mi tabla de datos al que me arranco el gossiping"));
 	enviar_request(miInstruccion, conexionRemitente);
 //	loggear_trace(string_from_format("Envio mi tabla de datos"));
 
@@ -165,7 +165,7 @@ void devolver_gossip(instr_t *instruccion, char *remitente){
 void actualizar_tabla_gossiping(instr_t* instruccion){
 
 
-	loggear_debug(string_from_format("Recibi una tabla de Gossiping"));
+	loggear_trace(string_from_format("Recibi una tabla de Gossiping"));
 
 	int saltearProximos = 0;
 	int i = 0;
@@ -226,7 +226,7 @@ void actualizar_tabla_gossiping(instr_t* instruccion){
 
 //	loggear_info(string_from_format("Tabla actualizada:"));
 	sem_wait(&mutex_diccionario_conexiones);
-	imprimir_conexiones(conexionesActuales, loggear_info);
+	imprimir_conexiones(conexionesActuales, loggear_trace);
 	sem_post(&mutex_diccionario_conexiones);
 
 	list_destroy(instruccion->parametros);
@@ -274,7 +274,7 @@ t_list *conexiones_para_gossiping(){
 void enviar_lista_gossiping(char* nombreProceso){
 	if(strcmp(nombreDeMemoria, nombreProceso)!=0 && strcmp(nombreProceso, "FileSystem")!=0){
 		int conexionVieja = obtener_fd_out_sin_semaforo(nombreProceso);
-		loggear_debug(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
+		loggear_trace(string_from_format("Enviando lista de Gossiping a %s", nombreProceso));
 		t_list* listaGossiping = conexiones_para_gossiping();
 		instr_t* miInstruccion = crear_instruccion(obtener_ts(), PETICION_GOSSIP, listaGossiping);
 		enviar_request(miInstruccion, conexionVieja);
@@ -283,7 +283,7 @@ void enviar_lista_gossiping(char* nombreProceso){
 
 void ejecutar_instruccion_gossip(){
 
-	loggear_info(string_from_format("Ejecutando instruccion Gossip"));
+	loggear_trace(string_from_format("Ejecutando instruccion Gossip"));
 
 	gossipear_con_conexiones_actuales();
 
@@ -332,7 +332,6 @@ void gossipear_con_procesos_desconectados(){
 			loggear_trace(string_from_format("El IP %s y Puerto %s no estaban en las conexiones conocidas", unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i)));
 			int conexion = crear_conexion(unaIP, (char*)list_get(configuracion.PUERTO_SEEDS,i), miIPMemoria, 0);
 			if(conexion != -1){
-				loggear_error(string_from_format("el fd_out_inicial es %d, el nuevo es %d", fd_out_inicial, conexion));
 				fd_out_inicial = conexion;
 				instr_t * miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 				enviar_request(miInstruccion, conexion);

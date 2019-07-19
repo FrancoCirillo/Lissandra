@@ -13,7 +13,7 @@ int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar)
 	//Relleno default de addrinfo (no tiene importancia):
 	hints.ai_family = AF_UNSPEC;	 //No importa si es ipv4 o ipv6
 	hints.ai_socktype = SOCK_STREAM; //Usamos TCP
-	hints.ai_flags = AI_PASSIVE;	 //Rellena la IP por nosotros TODO:Chequear si queremos esto. Creo que igual no importa xq llenamos el primer argumento de getaddrinfo con ip
+	hints.ai_flags = AI_PASSIVE;	 //Rellena la IP por nosotros
 
 	//Rellena la estructura server_info con la info del Servidor (En realidad es un addrinfo**)
 	int addr = getaddrinfo(ip, puerto, &hints, &server_info);
@@ -54,10 +54,7 @@ int crear_conexion(char *ip, char *puerto, char *miIP, int flagReintentar)
 			return -1;
 		}
 	}
-	loggear_error(string_from_format("Cree una conexion con el socket %d", socket_cliente));
 	freeaddrinfo(server_info);
-
-	//	printf("Ya se pueden enviar instrucciones a %s\n", ip); //Debug
 	//una vez conectado, se pueden enviar cosas a traves del socket_cliente
 	return socket_cliente;
 }
