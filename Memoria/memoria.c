@@ -4,6 +4,7 @@
 
 int main(int argc, char *argv[])
 {
+	signal(SIGPIPE, SIG_IGN);
 
 	inicializar_semaforos();
 	inicializar_configuracion();

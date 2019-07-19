@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
 
 	iniciar_ejecutador();
 
+	signal(SIGPIPE, SIG_IGN);
+
 	conexionesActuales = dictionary_create();
 
 	iniciar_ejecutador_gossiping();
