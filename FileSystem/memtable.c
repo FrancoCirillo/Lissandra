@@ -105,13 +105,24 @@ t_list* obtener_registros_mem(char* tabla, uint16_t key) {
 	t_list* registros_tabla = dictionary_get(memtable, tabla);
 	sem_post(&mutex_memtable);
 
+	t_list* nueva = list_create();
+
 	_Bool es_key_registro(void* registro){
 		uint16_t key_registro = ((registro_t*)registro)->key;
 		return key_registro == key;
 	}
 	t_list* registros = list_filter(registros_tabla, &es_key_registro);
+
+	void agregar_nueva(registro_t* r){
+		registro_t* r2=malloc(sizeof(registro_t));
+		r2->key=r->key;
+		r2->timestamp=r->timestamp;
+		r2->value=string_from_format(r->value);
+		list_add(nueva,r2);
+	}
+	list_iterate(registros, (void*)agregar_nueva);
 	loggear_trace(string_from_format("Tam de lista mem: %d\n", list_size(registros)));
-	return registros;
+	return nueva;
 }
 
 registro_t* obtener_registro(char* buffer) {
@@ -128,9 +139,11 @@ registro_t* obtener_registro(char* buffer) {
 	registro->key = (uint16_t)atoi(registroSeparado[1]);
 	registro->value = string_from_format(registroSeparado[2]);
 
-	free(registroSeparado[0]);
-	free(registroSeparado[1]);
-	free(registroSeparado[2]);
+
+	string_iterate_lines(registroSeparado, (void*)free);
+//	free(registroSeparado[0]);
+//	free(registroSeparado[1]);
+//	free(registroSeparado[2]);
 	free(registroSeparado);
 	free(copiaBuffer);
 	return registro;

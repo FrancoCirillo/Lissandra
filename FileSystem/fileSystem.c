@@ -401,7 +401,10 @@ t_list* leer_archivos_temporales(char* tabla, uint16_t key) {
 			loggear_info(string_from_format("RUTA:%s\n", ruta_tmp));
 //			imprimirContenidoArchivo(ruta_tmp, loggear_trace);
 			t_list* registros_tmp = buscar_key_en_bloques(ruta_tmp, key, 1);
+			free(ruta_tmp);
 			list_add_all(registros, registros_tmp);
+			//list_destroy_and_destroy_elements(registros_tmp,(void*)liberar_registro2);
+			list_destroy(registros_tmp);
 		}
 	}
 	free(ruta_tabla);
@@ -443,7 +446,9 @@ t_list* obtener_registros_key(char* tabla, uint16_t key) {
 		list_add_all(registros_totales, registro_bin);
 	else //TODO FREES?
 		return NULL;
-
+//	list_destroy(registros_mem);
+//	list_destroy(registros_temp);
+//	list_destroy(registros_bin);
 //	borrar_lista_registros(registros_mem);
 //	borrar_lista_registros(registros_temp);
 //	borrar_lista_registros(registro_bin);

@@ -16,7 +16,7 @@
 #include "registros.h"
 
 _Bool compactation_locker;
-
+void vaciar_listas_registros(t_list* particiones);
 void 	crear_hilo_compactador(char* tabla);
 void    compactar_todas_las_tablas();
 void* 	compactador(void* tabla);

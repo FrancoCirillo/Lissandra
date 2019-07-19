@@ -58,12 +58,7 @@ void* compactador(void* tab) {
 	while(existe_tabla_en_mem(tabla) || compactation_locker) {
 		if(existe_tabla_en_mem(tabla))
 			usleep(tiempo_compactacion * 1000);
-		t_list* particiones = list_create();
-		for(int num = 0; num < cantidad_particiones; num++) {
-			//inicia tantos diccionarios vacios como particiones tenga la tabla.
-			t_dictionary* dic = dictionary_create();
-			list_add(particiones, dic);
-		}
+
 		sem_wait(mutex_tabla);
 		if(existe_tabla_en_FS(tabla)) {
 
@@ -85,7 +80,12 @@ void* compactador(void* tab) {
 				sem_post(mutex_tabla);
 				break;
 			}
-
+			t_list* particiones = list_create();
+			for(int num = 0; num < cantidad_particiones; num++) {
+				//inicia tantos diccionarios vacios como particiones tenga la tabla.
+				t_dictionary* dic = dictionary_create();
+				list_add(particiones, dic);
+			}
 			loggear_info(string_from_format("Estoy compactando la tabla '%s'", tabla));
 			t_list* lista_archivos = listar_archivos(tabla);
 
@@ -141,7 +141,6 @@ void* compactador(void* tab) {
 			//			sem_wait(&mutex_dic_semaforos);
 			//			eliminar_mutex_de_tabla(tabla); ESTO DA SEG
 			//			sem_post(&mutex_dic_semaforos);
-			vaciar_listas_registros(particiones); //Deja los diccionarios como nuevos.
 			break;
 		}
 
@@ -256,14 +255,14 @@ void agregar_por_ts(t_dictionary* dic, registro_t* reg_nuevo){
 
 	registro_t* reg_viejo = (registro_t*)dictionary_remove((t_dictionary*)dic, key_nueva);
 
-	if(!reg_viejo)
+	if(!reg_viejo){
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
-
-	if((reg_viejo) && (reg_viejo->timestamp < reg_nuevo->timestamp)){
+	} else 	if((reg_viejo) && (reg_viejo->timestamp < reg_nuevo->timestamp)){
 		liberar_registro(reg_viejo);
 		dictionary_put((t_dictionary*)dic, key_nueva, reg_nuevo);
 
-
+	}else {
+		liberar_registro2(reg_nuevo);
 	}
 	free(key_nueva);
 	//TODO: Verificar si genera memory leaks al hacer el put !! No se si lo pisa o se pierde la referencia.

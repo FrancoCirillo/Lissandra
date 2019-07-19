@@ -53,6 +53,7 @@ void ejecutar_instruccion(instr_remitente* in) {
 	case CODIGO_SELECT:
 		loggear_debug(string_from_format("Me llego una instruccion SELECT."));
 		execute_select(instr, remitente);
+		//liberar_instruccion(instr);
 		break;
 
 	case CODIGO_DESCRIBE:
@@ -63,6 +64,7 @@ void ejecutar_instruccion(instr_remitente* in) {
 	case CODIGO_DROP:
 		loggear_debug(string_from_format("Me llego una instruccion DROP."));
 		execute_drop(instr, remitente);
+
 		break;
 
 	case CODIGO_CERRAR:
@@ -186,6 +188,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("No se pudo abrir el .bin correspondiente a la tabla %s con la key '%d'", tabla, key);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
+		list_destroy_and_destroy_elements(registros_key,(void*)liberar_registro2);
 		return;
 	}
 	if(list_is_empty(registros_key)) {
@@ -193,6 +196,7 @@ void execute_select(instr_t* instruccion, char* remitente) {
 		char* cadena = string_from_format("No se encontraron registros en la tabla %s con la key '%d'", tabla, key);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(CODIGO_EXITO, instruccion, listaParam, remitente);
+		list_destroy_and_destroy_elements(registros_key,(void*)liberar_registro2);
 		return;
 	}
 
@@ -205,7 +209,8 @@ void execute_select(instr_t* instruccion, char* remitente) {
 	list_add(listaParam, value_registro_reciente);
 	imprimir_donde_corresponda(DEVOLUCION_SELECT, instruccion, listaParam, remitente);
 
-	borrar_lista_registros(registros_key);
+	//borrar_lista_registros(registros_key);
+	list_destroy_and_destroy_elements(registros_key,(void*)liberar_registro2);
 }
 
 void execute_drop(instr_t* instruccion, char* remitente) {
@@ -307,7 +312,7 @@ void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 		char* cadena = string_from_format("El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)", tam_value, config_FS.tamanio_value);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
-		list_destroy_and_destroy_elements(resultadoInsert,free);
+
 	}
 
 	if(quien_pidio(instruccion) == CONSOLA_FS){

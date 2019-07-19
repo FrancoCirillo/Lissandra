@@ -278,11 +278,12 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	//				printf("Entre al if\t%s\t%s\n", bloque, mi_bloque);
 					char* sig_bloque = *(lista_bloques + tam +1);
 					int bloque_siguiente = atoi(sig_bloque);
-					free(sig_bloque);
+
 	//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
-					config_destroy(archivo); // Cuando se destruye (aprox en la instrucccion 3500 del compactador_largo.lql, da invalid read.
+
 					string_iterate_lines(lista_bloques, (void*)free);
 					free(lista_bloques);
+					free(mi_bloque);
 					config_destroy(archivo);
 					return bloque_siguiente;
 				}
@@ -358,8 +359,10 @@ t_list* buscar_key_en_bloques(char* ruta_archivo, uint16_t key, int tipo_archivo
 		free(buffer);
 		return registros; //En la funcion que lo llamo, tengo que validar que no este vacio y destruir la lista
 	}
-	else return NULL;
+	else {
 
+		return NULL;
+	}
 }
 
 //---------------------------BITARRAY---------------------------
@@ -573,7 +576,8 @@ int agregar_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 	config_save(archivo);
 	restar_bloques_disponibles(1);
 	config_destroy(archivo);
-	free(bloques_tot);
+	//free(bloques_tot);
+	string_iterate_lines(bloques_ant, (void*)free);
 	return 1;
 }
 
