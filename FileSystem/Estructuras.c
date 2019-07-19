@@ -87,7 +87,8 @@ int existe_mutex(char* tabla){
 }
 
 void eliminar_mutex_de_tabla(char* tabla){
-	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
+	dictionary_remove(dic_semaforos_tablas, tabla); //TODO: VOLVER A PONER COMO ESTABA CUANDO FUNCIONE TODO
+//	dictionary_remove_and_destroy(dic_semaforos_tablas, tabla, free);
 }
 
 void finalizar_dic_semaforos_tablas(){

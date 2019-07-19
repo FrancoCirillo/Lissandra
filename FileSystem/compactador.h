@@ -16,11 +16,9 @@
 #include "registros.h"
 
 _Bool compactation_locker;
-sem_t mutex_comp_locker;
 
 void 	crear_hilo_compactador(char* tabla);
 void    compactar_todas_las_tablas();
-_Bool   ultima_compactacion();
 void* 	compactador(void* tabla);
 t_list* listar_archivos(char* tabla);
 int 	hay_tmp(char* tabla);

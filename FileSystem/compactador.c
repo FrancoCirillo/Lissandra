@@ -12,31 +12,21 @@ void crear_hilo_compactador(char* tabla){
 }
 
 void compactar_todas_las_tablas() {
-		DIR* directorio = abrir_directorio(g_ruta.tablas);
-		struct dirent directorio_leido, *directorio_leido_p;
 
-		sem_wait(&mutex_comp_locker);
+		DIR* directorio = abrir_directorio(g_ruta.tablas);
+
+		struct dirent directorio_leido, *directorio_leido_p;
 		compactation_locker = 1; //Se habilita una ultima compactacion
-		sem_post(&mutex_comp_locker);
 
 		while(readdir_r(directorio, &directorio_leido, &directorio_leido_p) == 0 && directorio_leido_p != NULL){
 			char* tabla = directorio_leido.d_name;
 			if(!string_contains(tabla, "."))
 				compactador(tabla);
-		}
-		sem_wait(&mutex_comp_locker);
+			}
 		compactation_locker = 0;
-		sem_post(&mutex_comp_locker);
-
 		cerrar_directorio(directorio);
-}
 
-_Bool ultima_compactacion(){
-	sem_wait(&mutex_comp_locker);
-	_Bool valor_comp_locker = compactation_locker;
-	sem_post(&mutex_comp_locker);
-	return valor_comp_locker;
-}
+	}
 
 void* compactador(void* tab) {
 	char* tabla = tab;
@@ -69,7 +59,7 @@ void* compactador(void* tab) {
 	mseg_t ts_final;
 	mseg_t duracion_compactacion;
 
-	while(existe_tabla_en_mem(tabla) || ultima_compactacion()) {
+	while(existe_tabla_en_mem(tabla) || compactation_locker) {
 		if(existe_tabla_en_mem(tabla))
 			usleep(tiempo_compactacion * 1000);
 
@@ -81,7 +71,7 @@ void* compactador(void* tab) {
 			cant_tmpc = pasar_a_tmpc(tabla);
 
 			if(!cant_tmpc) {
-				if(ultima_compactacion()){
+				if(compactation_locker){
 					sem_post(mutex_tabla);
 					break;
 				}
@@ -114,13 +104,13 @@ void* compactador(void* tab) {
 
 
 				for(j = 0; j< cantidad_particiones; j++){
-					loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n", tabla, j));
+					loggear_trace(string_from_format("Entre a finalizar_compactacion de la tabla %s, particion de indice: %d\n\n", tabla, j));
 					finalizar_compactacion((t_dictionary*)list_get(particiones,j), tabla, j);
 				}
 
 				borrar_tmpcs(tabla); //Elimina los archivos tmpcs del directorio.
 
-				loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n"));
+				loggear_trace(string_from_format("Si se llego hasta aca, se realizo la compactacion Exitosamente.\n\n\n"));
 
 				vaciar_listas_registros(particiones); //Deja los diccionarios como nuevos.
 
@@ -137,16 +127,16 @@ void* compactador(void* tab) {
 
 			loggear_info(string_from_format("Duracion de compactacion: %" PRIu64 "\n", duracion_compactacion));
 
-			if(ultima_compactacion())	//Si debe hacerse por ultima vez porque se cierra el FS
+			if(compactation_locker)	//Si debe hacerse por ultima vez porque se cierra el FS
 				break;
 
 //			puts("FIN de 1 while de la compactacion.");
 		}
 		else {
 			sem_post(mutex_tabla);
-			sem_wait(&mutex_dic_semaforos);
-			eliminar_mutex_de_tabla(tabla);
-			sem_post(&mutex_dic_semaforos);
+//			sem_wait(&mutex_dic_semaforos);
+//			eliminar_mutex_de_tabla(tabla); ESTO DA SEG
+//			sem_post(&mutex_dic_semaforos);
 			break;
 		}
 
