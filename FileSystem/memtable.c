@@ -73,9 +73,12 @@ void borrar_registros(void* registros) {
 void limpiar_memtable() {
 	dictionary_iterator(memtable, &limpiar_registros);
 }
+void liberar_trucho(registro_t* t){
+	free(t);
+}
 
 void limpiar_registros(char* tabla, void* registros) {
-	//list_destroy_and_destroy_elements((t_list*)registros, free);
+	list_destroy_and_destroy_elements((t_list*)registros, (void*)liberar_trucho);
 	agregar_tabla_a_mem(tabla);
 }
 
@@ -123,8 +126,11 @@ registro_t* obtener_registro(char* buffer) {
 //	printf("%s", registroSeparado[2]);
 	sscanf(registroSeparado[0], "%" SCNu64, &(registro->timestamp));
 	registro->key = (uint16_t)atoi(registroSeparado[1]);
-	registro->value = registroSeparado[2];
+	registro->value = string_from_format(registroSeparado[2]);
 
+	free(registroSeparado[0]);
+	free(registroSeparado[1]);
+	free(registroSeparado);
 	free(copiaBuffer);
 	return registro;
 }

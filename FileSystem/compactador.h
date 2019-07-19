@@ -34,6 +34,6 @@ int 	pasar_a_tmpc(char* tabla);
 void    borrar_tmpcs(char* tabla);
 void 	vaciar_listas_registros(t_list* particiones);
 void 	liberar_listas_registros(t_list* particiones);
-
+void 	liberar_registro(registro_t* registro);
 
 #endif /* COMPACTADOR_H_ */

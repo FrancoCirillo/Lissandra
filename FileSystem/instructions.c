@@ -37,15 +37,15 @@ void ejecutar_instruccion(instr_remitente* in) {
 		loggear_debug(string_from_format("Me llego una instruccion INSERT."));
 		//imprimir_instruccion(instr, loggear_error);
 
-		char *texto = string_new();
-		void iterator(char *value){
-			string_append_with_format(&texto, "\t%s", value);
-		}
-		string_append_with_format(&texto,"TS: %" PRIu64";CI: %d", instr->timestamp, instr->codigo_operacion);
-		string_append_with_format(&texto,";Par:");
-		list_iterate(instr->parametros, (void *)iterator);
-
-		loggear_info(string_from_format("INSERT!: %s\n", texto));
+//		char *texto = string_new();
+//		void iterator(char *value){
+//			string_append_with_format(&texto, "\t%s", value);
+//		}
+//		string_append_with_format(&texto,"TS: %" PRIu64";CI: %d", instr->timestamp, instr->codigo_operacion);
+//		string_append_with_format(&texto,";Par:");
+//		list_iterate(instr->parametros, (void *)iterator);
+//
+//		loggear_info(string_from_format("INSERT!: %s\n", texto));
 
 		ejecutar_instruccion_insert(instr, remitente);
 		break;
@@ -307,11 +307,13 @@ void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 		char* cadena = string_from_format("El tamanio del value introducido (%d) es mayor al tamanio admitido (%d)", tam_value, config_FS.tamanio_value);
 		list_add(listaParam, cadena);
 		imprimir_donde_corresponda(ERROR_SELECT, instruccion, listaParam, remitente);
+		list_destroy_and_destroy_elements(resultadoInsert,free);
 	}
 
 	if(quien_pidio(instruccion) == CONSOLA_FS){
-		resultadoInsert = list_duplicate(execute_insert(instruccion, &codOp));
+		resultadoInsert = execute_insert(instruccion, &codOp);
 		imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
+		list_destroy_and_destroy_elements(resultadoInsert,free);
 		//return (int) codOp;
 	}
 	else{
@@ -319,7 +321,9 @@ void ejecutar_instruccion_insert(instr_t* instruccion, char* remitente){
 		if(codOp == ERROR_INSERT){
 			instruccion->codigo_operacion = CONSOLA_MEM_INSERT; //Para que el error se muestre en la memoria
 			imprimir_donde_corresponda(codOp, instruccion, resultadoInsert, remitente);
+
 		}
+		list_destroy_and_destroy_elements(resultadoInsert,free);
 		//return (int) codOp;
 	}
 }

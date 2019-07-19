@@ -249,13 +249,19 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 //	printf("RUTA ARCHIVO: %s\tNRO BLOQUE: %d\n", ruta_archivo, nro_bloque);
 	t_config* archivo;
 	while((archivo = config_create(ruta_archivo))==NULL ||
-			!config_has_property(archivo, "BLOCKS"));
+			!config_has_property(archivo, "BLOCKS")){
+		if(archivo != NULL && !config_has_property(archivo, "BLOCKS")){
+			config_destroy(archivo);
+		}
+	}
+
 	if(archivo != NULL){
 		char** lista_bloques = config_get_array_value(archivo, "BLOCKS");
-
 		if(nro_bloque == -1) {
 			char* bloque = lista_bloques[0];
 			int mi_bloque = atoi(bloque);
+			string_iterate_lines(lista_bloques, (void*)free);
+			free(lista_bloques);
 			config_destroy(archivo);
 			return mi_bloque;
 		} else {
@@ -275,12 +281,16 @@ int obtener_siguiente_bloque_archivo(char* ruta_archivo, int nro_bloque) {
 					free(sig_bloque);
 	//				printf("Siguiente Bloque como int: %d\n", bloque_siguiente);
 					config_destroy(archivo); // Cuando se destruye (aprox en la instrucccion 3500 del compactador_largo.lql, da invalid read.
-					free(mi_bloque);
+					string_iterate_lines(lista_bloques, (void*)free);
+					free(lista_bloques);
+					config_destroy(archivo);
 					return bloque_siguiente;
 				}
 			}
 			free(mi_bloque);
 		}
+		string_iterate_lines(lista_bloques, (void*)free);
+		free(lista_bloques);
 	}
 	else loggear_error(string_from_format("No se pudo crear el config para el archivo %s", ruta_archivo)); //Literalmente nunca va a entrar aca
 
@@ -452,40 +462,16 @@ int obtener_y_ocupar_siguiente_bloque_disponible(){
 	free(num);
 	return nro_bloque;
 }
-//int siguiente_bloque_disponible() {
-//	sem_wait(&mutex_bitarray);
-////	loggear_debug(string_from_format("Buscando siguiente bloque disponible"));
-//	int nro_bloque = 0;
-//
-//	while(nro_bloque < Metadata_FS.blocks && bloque_esta_ocupado(nro_bloque))
-//		nro_bloque++;
-//
-//	if(nro_bloque == Metadata_FS.blocks)
-//		return -1;
-//	sem_post(&mutex_bitarray);
-//	return nro_bloque;
-//}
-//
-//void ocupar_bloque(int nro_bloque) {
-////	printf("\nBitmap levantado, seteando valor para bloque %d\n", nro_bloque);
-//	sem_wait(&mutex_bitarray); //Sin esos semaforos hay una condicion de carrera
-//	bitarray_set_bit(bitarray, nro_bloque);
-////	loggear_trace(string_from_format("Actualizando bitmap");
-//
-//	//(DAI) Agrego que vacie el bloque porque me escribia sobre lo anterior.
-//	char* num = string_itoa(nro_bloque);
-//	crear_bloque(num);
-//	actualizar_bitmap();
-//	free(num);
-//	sem_post(&mutex_bitarray);
-//}
+
 
 void liberar_bloque(int nro_bloque) {
 //	printf("Liberando bloque %d\n",nro_bloque);
 	bitarray_clean_bit(bitarray, nro_bloque);
 	actualizar_bitmap();
-	FILE* f = abrir_archivo(obtener_ruta_bloque(nro_bloque), "w");
+	char* variable=obtener_ruta_bloque(nro_bloque);
+	FILE* f = abrir_archivo(variable, "w");
 	cerrar_archivo(f);
+	free(variable);
 //	truncate(obtener_ruta_bloque(nro_bloque), 0); //TODO free
 }
 
@@ -648,6 +634,9 @@ int cantidad_bloques_usados(char* ruta_archivo) {
 	config_destroy(archivo);
 //	liberar_char_doble(lista_bloques);
 //	free(lista_bloques);
+
+	string_iterate_lines(lista_bloques, (void*)free);
+	free(lista_bloques);
 	return cant_bloques;
 }
 
