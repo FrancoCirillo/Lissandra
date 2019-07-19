@@ -6,7 +6,7 @@ void crear_hilo_compactador(char* tabla){
 	pthread_t hilo_compactador_tabla;
 	pthread_attr_t attr_tabla;
 	pthread_attr_init(&attr_tabla);
-	pthread_create(&hilo_compactador_tabla, &attr_tabla, &compactador, tabla);
+	pthread_create(&hilo_compactador_tabla, &attr_tabla, &compactador, string_from_format(tabla));
 	pthread_detach(hilo_compactador_tabla);
 	loggear_trace(string_from_format("Se creo el hilo de compactacion de la tabla '%s'", tabla));
 }
@@ -375,7 +375,7 @@ void liberar_registro2(registro_t* registro){
 void vaciar_listas_registros(t_list* particiones){
 
 	void vaciar_diccionario(void* dic){
-		dictionary_destroy_and_destroy_elements((t_dictionary*)dic,(void*)liberar_registro2);
+		dictionary_destroy_and_destroy_elements((t_dictionary*)dic,(void*)liberar_registro);
 	}
 	list_iterate(particiones, &vaciar_diccionario);
 	list_destroy(particiones);
