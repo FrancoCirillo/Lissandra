@@ -133,7 +133,6 @@ void vaciar_diccionario_exec_memoria(){
 
 	sem_wait(&mutex_diccionario_envios_memorias);
 	dictionary_destroy_and_destroy_elements(diccionario_envios_memorias,free);
-	free(diccionario_envios_memorias);
 	diccionario_envios_memorias=dictionary_create();
 	sem_post(&mutex_diccionario_envios_memorias);
 	//loggear_debug(string_from_format("Fue reiniciado diccionairo exec memoria"));
@@ -809,10 +808,9 @@ int obtener_fd_out(char *proceso)
 }
 void responderHandshake(identificador *idsConexionEntrante)
 {
-
 	instr_t *miInstruccion = mis_datos(CODIGO_HANDSHAKE);
 
-	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, 1);
+	int fd_saliente = crear_conexion(idsConexionEntrante->ip_proceso, idsConexionEntrante->puerto, miIPKernel, 0); //TODO ver
 	enviar_request(miInstruccion, fd_saliente);
 	idsConexionEntrante->fd_out = fd_saliente;
 }
@@ -1296,6 +1294,11 @@ void gossipear_con_procesos_desconectados(){
 				enviar_request(miInstruccion, conexion);
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
+			}
+			else{
+				if(nombreProceso!=NULL){
+					dictionary_remove(conexionesActuales, nombreProceso);
+				}
 			}
 		}
 		i++;

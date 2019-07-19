@@ -339,6 +339,11 @@ void gossipear_con_procesos_desconectados(){
 				instr_t * peticionDeSuTabla = mis_datos(PETICION_GOSSIP);
 				enviar_request(peticionDeSuTabla, conexion);
 			}
+			else{
+				if(nombreProceso!=NULL){
+					dictionary_remove(conexionesActuales, nombreProceso);
+				}
+			}
 		}
 		i++;
 		free(nombreProceso);
