@@ -160,7 +160,7 @@ char* obtener_dato_metadata(char* tabla, char* dato_buscado) {
 	t_config* metadata;
 	while((metadata = obtener_metadata(tabla))==NULL	||
 			!config_has_property(metadata, dato_buscado));
-	char* valor = string_from_format(config_get_string_value(metadata, dato_buscado));
+	char* valor = config_get_string_value(metadata, dato_buscado);
 	config_destroy(metadata);
 	return valor;
 }
@@ -241,6 +241,7 @@ void escribir_registro_bloque(registro_t* registro, char* ruta_bloque, char* rut
 	aumentar_tam_archivo(ruta_archivo, registro);
 	//loggear_trace(string_from_format("Aumente tam archivo"));
 	txt_close_file(archivo_bloque);
+	liberar_registro2(registro);
 	free(string_registro);
 }
 
@@ -592,6 +593,8 @@ int obtener_ultimo_bloque(char* ruta_archivo){
 	//loggear_trace(string_from_format("Char bloque: %s", ultimo_bloque));
 	int rdo = atoi(ultimo_bloque);
 	config_destroy(archivo);
+	string_iterate_lines(bloques, (void*)free);
+	free(bloques);
 	return rdo;
 }
 

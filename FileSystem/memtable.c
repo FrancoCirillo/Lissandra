@@ -130,6 +130,7 @@ registro_t* obtener_registro(char* buffer) {
 
 	free(registroSeparado[0]);
 	free(registroSeparado[1]);
+	free(registroSeparado[2]);
 	free(registroSeparado);
 	free(copiaBuffer);
 	return registro;

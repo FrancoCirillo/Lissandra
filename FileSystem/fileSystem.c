@@ -102,11 +102,13 @@ void imprimirMetadata(char* tabla){
 	loggear_trace(string_from_format("-------------------Entro a imprimir metadata-------------------"));
 	char *texto = string_new();
 	string_append_with_format(&texto, "Metadata de la tabla %s\n", tabla);
-	int part = atoi(obtener_dato_metadata(tabla, "PARTITIONS"));
+	char* particiones = obtener_dato_metadata(tabla, "PARTITIONS");
+	int part = atoi(particiones);
 	string_append_with_format(&texto, "\tParticiones: %d\n", part);
 	char* consist = obtener_dato_metadata(tabla, "CONSISTENCY");
 	string_append_with_format(&texto, "\tConsistencia: %s\n", consist);
-	int tiempoComp = atoi(obtener_dato_metadata(tabla, "COMPACTATION_TIME"));
+	char* dato = obtener_dato_metadata(tabla, "COMPACTATION_TIME");
+	int tiempoComp = atoi(dato);
 	string_append_with_format(&texto, "\tTiempo de Compactacion: %d\n", tiempoComp);
 
 	loggear_info(texto);

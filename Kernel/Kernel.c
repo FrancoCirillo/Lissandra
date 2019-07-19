@@ -553,6 +553,10 @@ instr_t* ejecutar_instruccion(instr_t* i){
 		}
 	}
 	respuesta=enviar_i(i);
+	if(i->codigo_operacion==CODIGO_DROP){
+		remover_tabla_metadata(obtener_parametroN(i,0));
+		loggear_debug(string_from_format("Se removio la tabla de metadata"));
+	}
 	return respuesta;
 }
 instr_t *validar(instr_t * i){
