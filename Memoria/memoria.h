@@ -21,6 +21,7 @@
 #include "componentes.h"
 #include "misConexiones.h"
 #include "instrucciones.h"
+#define RETARDO_MINIMO 20
 
 	/* CONFIG Y LOG */
 char *rutaConfig;

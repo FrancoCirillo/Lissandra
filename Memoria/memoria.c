@@ -38,7 +38,8 @@ void inicializar_configuracion()
 	configuracion.PUERTO_SEEDS = string_array_to_list(puerto_seeds);
 	free(puerto_seeds);
 	imprimir_config_actual();
-	configuracion.RETARDO_MEMORIA = atoi(obtener_por_clave("RETARDO_MEMORIA"));
+	//Le ponemos más tiempo porque, si lo corremos en una compu, la memoria devuelve lo pedido antes que el Kernel pueda dormir el hilo
+	configuracion.RETARDO_MEMORIA = atoi(obtener_por_clave("RETARDO_MEMORIA")) + RETARDO_MINIMO;
 	configuracion.RETARDO_FS = atoi(obtener_por_clave("RETARDO_FS"));
 	configuracion.TAMANIO_MEMORIA = atoi(obtener_por_clave("TAMANIO_MEMORIA"));
 	configuracion.RETARDO_JOURNAL = atoi(obtener_por_clave("RETARDO_JOURNAL"));
@@ -218,7 +219,7 @@ void actualizar_config(){
 	}
 
 	sem_wait(&mutex_config);
-	configuracion.RETARDO_MEMORIA = config_get_int_value(auxConfig, "RETARDO_MEMORIA");
+	configuracion.RETARDO_MEMORIA = config_get_int_value(auxConfig, "RETARDO_MEMORIA") + RETARDO_MINIMO;
 	configuracion.RETARDO_FS = config_get_int_value(auxConfig, "RETARDO_FS");
 	configuracion.RETARDO_JOURNAL = config_get_int_value(auxConfig, "RETARDO_JOURNAL");
 	configuracion.RETARDO_GOSSIPING = config_get_int_value(auxConfig, "RETARDO_GOSSIPING");
@@ -235,7 +236,7 @@ void actualizar_config(){
 			"Tiempo de Gossiping: %d\n"
 			"Log level: %s"
 			"\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET,
-			configuracion.RETARDO_MEMORIA, configuracion.RETARDO_FS, configuracion.RETARDO_JOURNAL, configuracion.RETARDO_GOSSIPING, log_level_as_string(configuracion.LOG_LEVEL)));
+			(configuracion.RETARDO_MEMORIA-RETARDO_MINIMO), configuracion.RETARDO_FS, configuracion.RETARDO_JOURNAL, configuracion.RETARDO_GOSSIPING, log_level_as_string(configuracion.LOG_LEVEL)));
 	sem_post(&mutex_config);
 	printf("\n"COLOR_ANSI_MAGENTA ">" COLOR_ANSI_RESET);
 	fflush(stdout);
