@@ -478,7 +478,7 @@ void* ejecutar_proceso(void* un_proceso){
 
 				loggear_warning(string_from_format("ERROR al ejecutar la instruccion, finalizando proceso"));
 				imprimir_instruccion(respuesta, loggear_warning);
-				liberar_instruccion(respuesta);
+//				liberar_instruccion(respuesta);
 				finalizar_proceso(un_proceso);
 				return NULL;
 			}
