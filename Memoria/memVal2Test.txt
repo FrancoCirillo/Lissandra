@@ -1,0 +1,162 @@
+==9674== Memcheck, a memory error detector
+==9674== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==9674== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==9674== Command: Default/Memoria
+==9674== Parent PID: 9668
+==9674== 
+--9674-- 
+--9674-- Valgrind options:
+--9674--    --show-leak-kinds=all
+--9674--    --leak-check=full
+--9674--    --track-origins=yes
+--9674--    -v
+--9674--    --log-file=memVal2Test.txt
+--9674-- Contents of /proc/version:
+--9674--   Linux version 4.4.0-116-generic (buildd@lgw01-amd64-023) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.9) ) #140-Ubuntu SMP Mon Feb 12 21:22:43 UTC 2018
+--9674-- 
+--9674-- Arch and hwcaps: X86, LittleEndian, x86-mmxext-sse1-sse2-sse3-lzcnt
+--9674-- Page sizes: currently 4096, max supported 4096
+--9674-- Valgrind library directory: /usr/lib/valgrind
+--9674-- Reading syms from /lib/i386-linux-gnu/ld-2.23.so
+--9674--   Considering /lib/i386-linux-gnu/ld-2.23.so ..
+--9674--   .. CRC mismatch (computed 596cb2b8 wanted 417b32cc)
+--9674--   Considering /usr/lib/debug/lib/i386-linux-gnu/ld-2.23.so ..
+--9674--   .. CRC is valid
+--9674-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Memoria/Default/Memoria
+--9674-- Reading syms from /usr/lib/valgrind/memcheck-x86-linux
+--9674--   Considering /usr/lib/valgrind/memcheck-x86-linux ..
+--9674--   .. CRC mismatch (computed 6036da3f wanted 652e483f)
+--9674--    object doesn't have a symbol table
+--9674--    object doesn't have a dynamic symbol table
+--9674-- Scheduler: using generic scheduler lock implementation.
+--9674-- Reading suppressions file: /usr/lib/valgrind/default.supp
+==9674== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-9674-by-utnso-on-???
+==9674== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-9674-by-utnso-on-???
+==9674== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-9674-by-utnso-on-???
+==9674== 
+==9674== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==9674== don't want to do, unless you know exactly what you're doing,
+==9674== or are doing some strange experiment):
+==9674==   /usr/lib/valgrind/../../bin/vgdb --pid=9674 ...command...
+==9674== 
+==9674== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==9674==   /path/to/gdb Default/Memoria
+==9674== and then give GDB the following command
+==9674==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=9674
+==9674== --pid is optional if only one valgrind process is running
+==9674== 
+--9674-- REDIR: 0x4018eb0 (ld-linux.so.2:strlen) redirected to 0x380490f2 (???)
+--9674-- REDIR: 0x4018c70 (ld-linux.so.2:index) redirected to 0x380490cd (???)
+--9674-- Reading syms from /usr/lib/valgrind/vgpreload_core-x86-linux.so
+--9674--   Considering /usr/lib/valgrind/vgpreload_core-x86-linux.so ..
+--9674--   .. CRC mismatch (computed 5b95c0c4 wanted 39e79efa)
+--9674--    object doesn't have a symbol table
+--9674-- Reading syms from /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so
+--9674--   Considering /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so ..
+--9674--   .. CRC mismatch (computed 4d5a1526 wanted 33571d5b)
+--9674--    object doesn't have a symbol table
+==9674== WARNING: new redirection conflicts with existing -- ignoring it
+--9674--     old: 0x04018eb0 (strlen              ) R-> (0000.0) 0x380490f2 ???
+--9674--     new: 0x04018eb0 (strlen              ) R-> (2007.0) 0x0402f410 strlen
+--9674-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/libHerramientas.so
+--9674-- Reading syms from /lib/i386-linux-gnu/libpthread-2.23.so
+--9674--   Considering /usr/lib/debug/.build-id/12/78da59ecc0791dce5c44d8b8756a0480be3a5b.debug ..
+--9674--   .. build-id is valid
+--9674-- Reading syms from /usr/lib/libcommons.so
+--9674-- Reading syms from /lib/i386-linux-gnu/libc-2.23.so
+--9674--   Considering /lib/i386-linux-gnu/libc-2.23.so ..
+--9674--   .. CRC mismatch (computed af9c0474 wanted a5de3f2a)
+--9674--   Considering /usr/lib/debug/lib/i386-linux-gnu/libc-2.23.so ..
+--9674--   .. CRC is valid
+--9674-- REDIR: 0x410c4b0 (libc.so.6:strncasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x4113140 (libc.so.6:memrchr) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x4125b20 (libc.so.6:wcslen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x410a580 (libc.so.6:strlen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x410c610 (libc.so.6:memcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x4109ee0 (libc.so.6:strcmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x410bfc0 (libc.so.6:memset) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x4109f90 (libc.so.6:strcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x410b350 (libc.so.6:strstr) redirected to 0x4033700 (strstr)
+--9674-- REDIR: 0x410a7e0 (libc.so.6:__GI_strrchr) redirected to 0x402ee00 (__GI_strrchr)
+--9674-- REDIR: 0x410a5c0 (libc.so.6:__GI_strlen) redirected to 0x402f390 (__GI_strlen)
+--9674-- REDIR: 0x4105f00 (libc.so.6:malloc) redirected to 0x402c110 (malloc)
+--9674-- REDIR: 0x410c680 (libc.so.6:__GI_memcpy) redirected to 0x4030fb0 (__GI_memcpy)
+--9674-- REDIR: 0x4106810 (libc.so.6:calloc) redirected to 0x402e010 (calloc)
+--9674-- REDIR: 0x4106520 (libc.so.6:realloc) redirected to 0x402e250 (realloc)
+--9674-- REDIR: 0x4106470 (libc.so.6:free) redirected to 0x402d2f0 (free)
+--9674-- REDIR: 0x4113440 (libc.so.6:__strlen_sse2_bsf) redirected to 0x402f370 (strlen)
+--9674-- REDIR: 0x410a700 (libc.so.6:strncmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x41ca5c0 (libc.so.6:__strncmp_ssse3) redirected to 0x402fab0 (strncmp)
+--9674-- REDIR: 0x410e280 (libc.so.6:strchrnul) redirected to 0x40330b0 (strchrnul)
+--9674-- REDIR: 0x410c0d0 (libc.so.6:__GI_mempcpy) redirected to 0x40332c0 (__GI_mempcpy)
+--9674-- REDIR: 0x410a750 (libc.so.6:strncpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x4114dc0 (libc.so.6:__strncpy_ssse3) redirected to 0x402f5f0 (strncpy)
+--9674-- REDIR: 0x4109ae0 (libc.so.6:strcat) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x411eb30 (libc.so.6:__strcat_ssse3) redirected to 0x402f030 (strcat)
+--9674-- REDIR: 0x410c460 (libc.so.6:strcasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--9674-- REDIR: 0x41cbfb0 (libc.so.6:__strcasecmp_ssse3) redirected to 0x402fcf0 (strcasecmp)
+--9674-- REDIR: 0x410bc10 (libc.so.6:__GI_memcmp) redirected to 0x4031ef0 (__GI_memcmp)
+--9674-- REDIR: 0x410e1b0 (libc.so.6:__GI___rawmemchr) redirected to 0x4033110 (__GI___rawmemchr)
+--9674-- REDIR: 0x41ba4d0 (libc.so.6:__memset_sse2) redirected to 0x40327d0 (memset)
+--9674-- REDIR: 0x41bcb70 (libc.so.6:__memcpy_ssse3) redirected to 0x4030cc0 (memcpy)
+--9674-- REDIR: 0x4189eb0 (libc.so.6:__strcpy_chk) redirected to 0x4033130 (__strcpy_chk)
+--9674-- REDIR: 0x41c9150 (libc.so.6:__strcmp_ssse3) redirected to 0x4030450 (strcmp)
+--9674-- REDIR: 0x4113570 (libc.so.6:__strcpy_ssse3) redirected to 0x402f450 (strcpy)
+--9674-- REDIR: 0x410ba30 (libc.so.6:__GI_memchr) redirected to 0x40306d0 (__GI_memchr)
+==9674== 
+==9674== HEAP SUMMARY:
+==9674==     in use at exit: 357 bytes in 7 blocks
+==9674==   total heap usage: 24,088 allocs, 24,081 frees, 1,256,915 bytes allocated
+==9674== 
+==9674== Searching for pointers to 7 not-freed blocks
+==9674== Checked 17,006,220 bytes
+==9674== 
+==9674== 37 bytes in 4 blocks are definitely lost in loss record 1 of 4
+==9674==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==9674==    by 0x410A2C5: strdup (strdup.c:42)
+==9674==    by 0x804C518: acutalizar_tabla.7434 (misConexiones.c:182)
+==9674==    by 0x408E148: list_iterate (in /usr/lib/libcommons.so)
+==9674==    by 0x804CB19: actualizar_tabla_gossiping (misConexiones.c:225)
+==9674==    by 0x804C2A0: ejecutar_instruccion (memoria.c:157)
+==9674==    by 0x403D8A1: vigilar_conexiones_entrantes (utilsServidor.c:207)
+==9674==    by 0x8049958: main (memoria.c:20)
+==9674== 
+==9674== 48 bytes in 1 blocks are still reachable in loss record 2 of 4
+==9674==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==9674==    by 0x4162A1D: gaih_inet (getaddrinfo.c:1223)
+==9674==    by 0x41643E2: getaddrinfo (getaddrinfo.c:2425)
+==9674==    by 0x403CCBD: crear_conexion (utilsCliente.c:19)
+==9674==    by 0x804D125: enviar_tabla_gossiping.7559 (misConexiones.c:333)
+==9674==    by 0x408E148: list_iterate (in /usr/lib/libcommons.so)
+==9674==    by 0x804CF3A: gossipear_con_procesos_desconectados (misConexiones.c:351)
+==9674==    by 0x804AE5C: ejecutar_gossiping (componentes.c:553)
+==9674==    by 0x4073294: start_thread (pthread_create.c:333)
+==9674==    by 0x417C0AD: clone (clone.S:114)
+==9674== 
+==9674== 136 bytes in 1 blocks are possibly lost in loss record 3 of 4
+==9674==    at 0x402E0B8: calloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==9674==    by 0x4011726: allocate_dtv (dl-tls.c:322)
+==9674==    by 0x401214B: _dl_allocate_tls (dl-tls.c:539)
+==9674==    by 0x4073CC3: allocate_stack (allocatestack.c:588)
+==9674==    by 0x4073CC3: pthread_create@@GLIBC_2.1 (pthread_create.c:539)
+==9674==    by 0x804BCBE: iniciar_ejecutador_journal (memoria.c:176)
+==9674==    by 0x8049932: main (memoria.c:15)
+==9674== 
+==9674== 136 bytes in 1 blocks are possibly lost in loss record 4 of 4
+==9674==    at 0x402E0B8: calloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==9674==    by 0x4011726: allocate_dtv (dl-tls.c:322)
+==9674==    by 0x401214B: _dl_allocate_tls (dl-tls.c:539)
+==9674==    by 0x4073CC3: allocate_stack (allocatestack.c:588)
+==9674==    by 0x4073CC3: pthread_create@@GLIBC_2.1 (pthread_create.c:539)
+==9674==    by 0x804BD3E: iniciar_ejecutador_gossiping (memoria.c:186)
+==9674==    by 0x8049937: main (memoria.c:17)
+==9674== 
+==9674== LEAK SUMMARY:
+==9674==    definitely lost: 37 bytes in 4 blocks
+==9674==    indirectly lost: 0 bytes in 0 blocks
+==9674==      possibly lost: 272 bytes in 2 blocks
+==9674==    still reachable: 48 bytes in 1 blocks
+==9674==         suppressed: 0 bytes in 0 blocks
+==9674== 
+==9674== ERROR SUMMARY: 3 errors from 3 contexts (suppressed: 0 from 0)
+==9674== ERROR SUMMARY: 3 errors from 3 contexts (suppressed: 0 from 0)

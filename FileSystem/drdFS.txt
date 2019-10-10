@@ -1,0 +1,260 @@
+==6890== drd, a thread error detector
+==6890== Copyright (C) 2006-2015, and GNU GPL'd, by Bart Van Assche.
+==6890== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==6890== Command: Default/FileSystem
+==6890== Parent PID: 6889
+==6890== 
+--6890-- 
+--6890-- Valgrind options:
+--6890--    --tool=drd
+--6890--    --check-stack-var=yes
+--6890--    --exclusive-threshold=40000
+--6890--    --free-is-write=yes
+--6890--    --log-file=drdFS.txt
+--6890--    -v
+--6890-- Contents of /proc/version:
+--6890--   Linux version 4.4.0-116-generic (buildd@lgw01-amd64-023) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.9) ) #140-Ubuntu SMP Mon Feb 12 21:22:43 UTC 2018
+--6890-- 
+--6890-- Arch and hwcaps: X86, LittleEndian, x86-mmxext-sse1-sse2-sse3-lzcnt
+--6890-- Page sizes: currently 4096, max supported 4096
+--6890-- Valgrind library directory: /usr/lib/valgrind
+--6890-- Reading syms from /lib/i386-linux-gnu/ld-2.23.so
+--6890--   Considering /lib/i386-linux-gnu/ld-2.23.so ..
+--6890--   .. CRC mismatch (computed 596cb2b8 wanted 417b32cc)
+--6890--   Considering /usr/lib/debug/lib/i386-linux-gnu/ld-2.23.so ..
+--6890--   .. CRC is valid
+--6890-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/Default/FileSystem
+--6890-- Reading syms from /usr/lib/valgrind/drd-x86-linux
+--6890--   Considering /usr/lib/valgrind/drd-x86-linux ..
+--6890--   .. CRC mismatch (computed 74d13dcc wanted e7cc82e3)
+--6890--    object doesn't have a symbol table
+--6890--    object doesn't have a dynamic symbol table
+--6890-- Scheduler: using generic scheduler lock implementation.
+--6890-- Reading suppressions file: /usr/lib/valgrind/default.supp
+==6890== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-6890-by-utnso-on-???
+==6890== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-6890-by-utnso-on-???
+==6890== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-6890-by-utnso-on-???
+==6890== 
+==6890== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==6890== don't want to do, unless you know exactly what you're doing,
+==6890== or are doing some strange experiment):
+==6890==   /usr/lib/valgrind/../../bin/vgdb --pid=6890 ...command...
+==6890== 
+==6890== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==6890==   /path/to/gdb Default/FileSystem
+==6890== and then give GDB the following command
+==6890==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=6890
+==6890== --pid is optional if only one valgrind process is running
+==6890== 
+--6890-- Reading syms from /usr/lib/valgrind/vgpreload_core-x86-linux.so
+--6890--   Considering /usr/lib/valgrind/vgpreload_core-x86-linux.so ..
+--6890--   .. CRC mismatch (computed 5b95c0c4 wanted 39e79efa)
+--6890--    object doesn't have a symbol table
+--6890-- Reading syms from /usr/lib/valgrind/vgpreload_drd-x86-linux.so
+--6890--   Considering /usr/lib/valgrind/vgpreload_drd-x86-linux.so ..
+--6890--   .. CRC mismatch (computed f83d83c6 wanted 8cb214f5)
+--6890--    object doesn't have a symbol table
+--6890-- REDIR: 0x4018eb0 (ld-linux.so.2:strlen) redirected to 0x403b330 (strlen)
+--6890-- Reading syms from /lib/i386-linux-gnu/libpthread-2.23.so
+--6890--   Considering /usr/lib/debug/.build-id/12/78da59ecc0791dce5c44d8b8756a0480be3a5b.debug ..
+--6890--   .. build-id is valid
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x04064580 (pthread_create@@GLIB) W-> (0000.0) 0x04032540 pthread_create@*
+--6890--     new: 0x04064580 (pthread_create@@GLIB) W-> (0000.0) 0x04032300 pthread_create
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x04065230 (pthread_create@GLIBC) W-> (0000.0) 0x04032540 pthread_create@*
+--6890--     new: 0x04065230 (pthread_create@GLIBC) W-> (0000.0) 0x04032300 pthread_create
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x040697d0 (pthread_cond_init@@G) W-> (0000.0) 0x04035240 pthread_cond_init@*
+--6890--     new: 0x040697d0 (pthread_cond_init@@G) W-> (0000.0) 0x04035150 pthread_cond_init
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x04069870 (pthread_cond_destroy) W-> (0000.0) 0x04035500 pthread_cond_destroy@*
+--6890--     new: 0x04069870 (pthread_cond_destroy) W-> (0000.0) 0x04035420 pthread_cond_destroy
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x04069990 (pthread_cond_wait@@G) W-> (0000.0) 0x04035800 pthread_cond_wait@*
+--6890--     new: 0x04069990 (pthread_cond_wait@@G) W-> (0000.0) 0x040356c0 pthread_cond_wait
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x04069d00 (pthread_cond_timedwa) W-> (0000.0) 0x04035bd0 pthread_cond_timedwait@*
+--6890--     new: 0x04069d00 (pthread_cond_timedwa) W-> (0000.0) 0x04035a80 pthread_cond_timedwait
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a0f0 (pthread_cond_signal@) W-> (0000.0) 0x04035f50 pthread_cond_signal@*
+--6890--     new: 0x0406a0f0 (pthread_cond_signal@) W-> (0000.0) 0x04035e70 pthread_cond_signal
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a1f0 (pthread_cond_broadca) W-> (0000.0) 0x040361f0 pthread_cond_broadcast@*
+--6890--     new: 0x0406a1f0 (pthread_cond_broadca) W-> (0000.0) 0x04036110 pthread_cond_broadcast
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a340 (pthread_cond_init@GL) W-> (0000.0) 0x04035240 pthread_cond_init@*
+--6890--     new: 0x0406a340 (pthread_cond_init@GL) W-> (0000.0) 0x04035150 pthread_cond_init
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a370 (pthread_cond_destroy) W-> (0000.0) 0x04035500 pthread_cond_destroy@*
+--6890--     new: 0x0406a370 (pthread_cond_destroy) W-> (0000.0) 0x04035420 pthread_cond_destroy
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a3a0 (pthread_cond_wait@GL) W-> (0000.0) 0x04035800 pthread_cond_wait@*
+--6890--     new: 0x0406a3a0 (pthread_cond_wait@GL) W-> (0000.0) 0x040356c0 pthread_cond_wait
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a410 (pthread_cond_timedwa) W-> (0000.0) 0x04035bd0 pthread_cond_timedwait@*
+--6890--     new: 0x0406a410 (pthread_cond_timedwa) W-> (0000.0) 0x04035a80 pthread_cond_timedwait
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a480 (pthread_cond_signal@) W-> (0000.0) 0x04035f50 pthread_cond_signal@*
+--6890--     new: 0x0406a480 (pthread_cond_signal@) W-> (0000.0) 0x04035e70 pthread_cond_signal
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a4f0 (pthread_cond_broadca) W-> (0000.0) 0x040361f0 pthread_cond_broadcast@*
+--6890--     new: 0x0406a4f0 (pthread_cond_broadca) W-> (0000.0) 0x04036110 pthread_cond_broadcast
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a680 (pthread_spin_init   ) W-> (0000.0) 0x040363b0 pthread_spin_init
+--6890--     new: 0x0406a680 (pthread_spin_init   ) W-> (0000.0) 0x04036e60 pthread_spin_unlock
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406a680 (pthread_spin_init   ) W-> (0000.0) 0x040363b0 pthread_spin_init
+--6890--     new: 0x0406a680 (pthread_spin_init   ) W-> (0000.0) 0x04036e60 pthread_spin_unlock
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406b590 (sem_init@@GLIBC_2.1 ) W-> (0000.0) 0x04037a30 sem_init@*
+--6890--     new: 0x0406b590 (sem_init@@GLIBC_2.1 ) W-> (0000.0) 0x04037940 sem_init
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406b5f0 (sem_init@GLIBC_2.0  ) W-> (0000.0) 0x04037a30 sem_init@*
+--6890--     new: 0x0406b5f0 (sem_init@GLIBC_2.0  ) W-> (0000.0) 0x04037940 sem_init
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406b630 (sem_destroy@@GLIBC_2) W-> (0000.0) 0x04037cf0 sem_destroy@*
+--6890--     new: 0x0406b630 (sem_destroy@@GLIBC_2) W-> (0000.0) 0x04037c10 sem_destroy
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406b630 (sem_destroy@@GLIBC_2) W-> (0000.0) 0x04037cf0 sem_destroy@*
+--6890--     new: 0x0406b630 (sem_destroy@@GLIBC_2) W-> (0000.0) 0x04037c10 sem_destroy
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406c150 (sem_wait@@GLIBC_2.1 ) W-> (0000.0) 0x04038500 sem_wait@*
+--6890--     new: 0x0406c150 (sem_wait@@GLIBC_2.1 ) W-> (0000.0) 0x04038420 sem_wait
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406c180 (sem_trywait@@GLIBC_2) W-> (0000.0) 0x040387a0 sem_trywait@*
+--6890--     new: 0x0406c180 (sem_trywait@@GLIBC_2) W-> (0000.0) 0x040386c0 sem_trywait
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406c1e0 (sem_trywait@GLIBC_2.) W-> (0000.0) 0x040387a0 sem_trywait@*
+--6890--     new: 0x0406c1e0 (sem_trywait@GLIBC_2.) W-> (0000.0) 0x040386c0 sem_trywait
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406c230 (sem_wait@GLIBC_2.0  ) W-> (0000.0) 0x04038500 sem_wait@*
+--6890--     new: 0x0406c230 (sem_wait@GLIBC_2.0  ) W-> (0000.0) 0x04038420 sem_wait
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406c590 (sem_post@@GLIBC_2.1 ) W-> (0000.0) 0x04038d10 sem_post@*
+--6890--     new: 0x0406c590 (sem_post@@GLIBC_2.1 ) W-> (0000.0) 0x04038c30 sem_post
+==6890== WARNING: new redirection conflicts with existing -- ignoring it
+--6890--     old: 0x0406c640 (sem_post@GLIBC_2.0  ) W-> (0000.0) 0x04038d10 sem_post@*
+--6890--     new: 0x0406c640 (sem_post@GLIBC_2.0  ) W-> (0000.0) 0x04038c30 sem_post
+--6890-- Reading syms from /usr/lib/libcommons.so
+--6890-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/libHerramientas.so
+--6890-- Reading syms from /lib/i386-linux-gnu/libc-2.23.so
+--6890--   Considering /lib/i386-linux-gnu/libc-2.23.so ..
+--6890--   .. CRC mismatch (computed af9c0474 wanted a5de3f2a)
+--6890--   Considering /usr/lib/debug/lib/i386-linux-gnu/libc-2.23.so ..
+--6890--   .. CRC is valid
+--6890-- REDIR: 0x41194b0 (libc.so.6:strncasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x4120140 (libc.so.6:memrchr) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x4132b20 (libc.so.6:wcslen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x4117580 (libc.so.6:strlen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x4119610 (libc.so.6:memcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x4116ee0 (libc.so.6:strcmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x4118fc0 (libc.so.6:memset) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x4116f90 (libc.so.6:strcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x4118350 (libc.so.6:strstr) redirected to 0x403e840 (strstr)
+--6890-- REDIR: 0x41177e0 (libc.so.6:__GI_strrchr) redirected to 0x403aee0 (__GI_strrchr)
+--6890-- REDIR: 0x411b280 (libc.so.6:strchrnul) redirected to 0x403e3e0 (strchrnul)
+--6890-- REDIR: 0x4112f00 (libc.so.6:malloc) redirected to 0x402ef50 (malloc)
+--6890-- REDIR: 0x4113810 (libc.so.6:calloc) redirected to 0x4030e50 (calloc)
+--6890-- REDIR: 0x406b590 (libpthread.so.0:sem_init@@GLIBC_2.1) redirected to 0x4037a30 (sem_init@*)
+--6890-- REDIR: 0x41175c0 (libc.so.6:__GI_strlen) redirected to 0x403b2b0 (__GI_strlen)
+--6890-- REDIR: 0x4119680 (libc.so.6:__GI_memcpy) redirected to 0x403c9d0 (__GI_memcpy)
+--6890-- REDIR: 0x4113520 (libc.so.6:realloc) redirected to 0x4031090 (realloc)
+--6890-- REDIR: 0x4113470 (libc.so.6:free) redirected to 0x4030130 (free)
+--6890-- REDIR: 0x4120440 (libc.so.6:__strlen_sse2_bsf) redirected to 0x403b290 (strlen)
+--6890-- REDIR: 0x4117700 (libc.so.6:strncmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x41d75c0 (libc.so.6:__strncmp_ssse3) redirected to 0x403b5d0 (strncmp)
+--6890-- REDIR: 0x4119460 (libc.so.6:strcasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x41d8fb0 (libc.so.6:__strcasecmp_ssse3) redirected to 0x403b810 (strcasecmp)
+--6890-- REDIR: 0x41190d0 (libc.so.6:__GI_mempcpy) redirected to 0x403e5a0 (__GI_mempcpy)
+--6890-- REDIR: 0x4116ae0 (libc.so.6:strcat) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6890-- REDIR: 0x412bb30 (libc.so.6:__strcat_ssse3) redirected to 0x403b110 (strcat)
+--6890-- REDIR: 0x406c150 (libpthread.so.0:sem_wait@@GLIBC_2.1) redirected to 0x4038500 (sem_wait@*)
+--6890-- REDIR: 0x406c590 (libpthread.so.0:sem_post@@GLIBC_2.1) redirected to 0x4038d10 (sem_post@*)
+--6890-- REDIR: 0x4064580 (libpthread.so.0:pthread_create@@GLIBC_2.1) redirected to 0x4032540 (pthread_create@*)
+--6890-- REDIR: 0x4066100 (libpthread.so.0:pthread_mutex_init) redirected to 0x4033ad0 (pthread_mutex_init)
+--6890-- REDIR: 0x4066810 (libpthread.so.0:pthread_mutex_lock) redirected to 0x4034250 (pthread_mutex_lock)
+--6890-- REDIR: 0x4067d80 (libpthread.so.0:pthread_mutex_unlock) redirected to 0x4034d90 (pthread_mutex_unlock)
+--6890-- REDIR: 0x4066230 (libpthread.so.0:pthread_mutex_destroy) redirected to 0x4033ef0 (pthread_mutex_destroy)
+--6890-- REDIR: 0x40652d0 (libpthread.so.0:pthread_detach) redirected to 0x4032fc0 (pthread_detach)
+--6890-- REDIR: 0x4118f60 (libc.so.6:__GI_memmove) redirected to 0x403de00 (__GI_memmove)
+--6890-- REDIR: 0x41c74d0 (libc.so.6:__memset_sse2) redirected to 0x403db00 (memset)
+--6890-- REDIR: 0x41c9b70 (libc.so.6:__memcpy_ssse3) redirected to 0x403c760 (memcpy)
+--6890-- REDIR: 0x4120570 (libc.so.6:__strcpy_ssse3) redirected to 0x403b370 (strcpy)
+--6890-- REDIR: 0x41d6150 (libc.so.6:__strcmp_ssse3) redirected to 0x403bf70 (strcmp)
+==6890== Thread 4:
+==6890== Conflicting store by thread 4 at 0x04259018 size 1
+==6890==    at 0x403E604: __GI_mempcpy (in /usr/lib/valgrind/vgpreload_drd-x86-linux.so)
+==6890==    by 0x410B643: _IO_file_xsputn@@GLIBC_2.1 (fileops.c:1319)
+==6890==    by 0x4101D5F: puts (ioputs.c:40)
+==6890==    by 0x804DB2C: imprimir_donde_corresponda (fileSystem.c:530)
+==6890==    by 0x804DF41: execute_create (instructions.c:110)
+==6890==    by 0x804E8C5: ejecutar_instruccion (instructions.c:33)
+==6890==    by 0x40322EC: ??? (in /usr/lib/valgrind/vgpreload_drd-x86-linux.so)
+==6890==    by 0x4064294: start_thread (pthread_create.c:333)
+==6890==    by 0x41890AD: clone (clone.S:114)
+==6890== Address 0x4259018 is at offset 0 from 0x4259018. Allocation context:
+==6890==    at 0x402EFBC: malloc (in /usr/lib/valgrind/vgpreload_drd-x86-linux.so)
+==6890==    by 0x40FF92D: _IO_file_doallocate (filedoalloc.c:127)
+==6890==    by 0x410D1C6: _IO_doallocbuf (genops.c:398)
+==6890==    by 0x410C560: _IO_file_overflow@@GLIBC_2.1 (fileops.c:820)
+==6890==    by 0x410B683: _IO_file_xsputn@@GLIBC_2.1 (fileops.c:1331)
+==6890==    by 0x40E4252: vfprintf (vfprintf.c:1320)
+==6890==    by 0x419733D: __printf_chk (printf_chk.c:35)
+==6890==    by 0x804A093: printf (stdio2.h:104)
+==6890==    by 0x804A093: main (fileSystem.c:9)
+==6890== Other segment start (thread 1)
+==6890==    at 0x4038D6B: sem_post@* (in /usr/lib/valgrind/vgpreload_drd-x86-linux.so)
+==6890==    by 0x408773B: loggear_trace (logging.c:8)
+==6890==    by 0x804DDEA: evaluar_instruccion (instructions.c:15)
+==6890==    by 0x4089851: vigilar_conexiones_entrantes (utilsServidor.c:200)
+==6890==    by 0x804D8B0: inicializar_conexiones (fileSystem.c:479)
+==6890==    by 0x804A0A1: main (fileSystem.c:13)
+==6890== Other segment end (thread 1)
+==6890==    at 0x41819F5: ??? (syscall-template.S:84)
+==6890==    by 0x40891BC: vigilar_conexiones_entrantes (utilsServidor.c:91)
+==6890==    by 0x804D8B0: inicializar_conexiones (fileSystem.c:479)
+==6890==    by 0x804A0A1: main (fileSystem.c:13)
+==6890== 
+==6890== 
+==6890== Process terminating with default action of signal 2 (SIGINT)
+==6890==    at 0x41819F5: ??? (syscall-template.S:84)
+==6890==    by 0x40891BC: vigilar_conexiones_entrantes (utilsServidor.c:91)
+==6890==    by 0x804D8B0: inicializar_conexiones (fileSystem.c:479)
+==6890==    by 0x804A0A1: main (fileSystem.c:13)
+==6890== 
+==6890== ERROR SUMMARY: 20 errors from 1 contexts (suppressed: 408 from 206)
+==6890== 
+==6890== 20 errors in context 1 of 1:
+==6890== Conflicting store by thread 4 at 0x04259018 size 1
+==6890==    at 0x403E604: __GI_mempcpy (in /usr/lib/valgrind/vgpreload_drd-x86-linux.so)
+==6890==    by 0x410B643: _IO_file_xsputn@@GLIBC_2.1 (fileops.c:1319)
+==6890==    by 0x4101D5F: puts (ioputs.c:40)
+==6890==    by 0x804DB2C: imprimir_donde_corresponda (fileSystem.c:530)
+==6890==    by 0x804DF41: execute_create (instructions.c:110)
+==6890==    by 0x804E8C5: ejecutar_instruccion (instructions.c:33)
+==6890==    by 0x40322EC: ??? (in /usr/lib/valgrind/vgpreload_drd-x86-linux.so)
+==6890==    by 0x4064294: start_thread (pthread_create.c:333)
+==6890==    by 0x41890AD: clone (clone.S:114)
+==6890== Address 0x4259018 is at offset 0 from 0x4259018. Allocation context:
+==6890==    at 0x402EFBC: malloc (in /usr/lib/valgrind/vgpreload_drd-x86-linux.so)
+==6890==    by 0x40FF92D: _IO_file_doallocate (filedoalloc.c:127)
+==6890==    by 0x410D1C6: _IO_doallocbuf (genops.c:398)
+==6890==    by 0x410C560: _IO_file_overflow@@GLIBC_2.1 (fileops.c:820)
+==6890==    by 0x410B683: _IO_file_xsputn@@GLIBC_2.1 (fileops.c:1331)
+==6890==    by 0x40E4252: vfprintf (vfprintf.c:1320)
+==6890==    by 0x419733D: __printf_chk (printf_chk.c:35)
+==6890==    by 0x804A093: printf (stdio2.h:104)
+==6890==    by 0x804A093: main (fileSystem.c:9)
+==6890== Other segment start (thread 1)
+==6890==    (thread finished, call stack no longer available)
+==6890== Other segment end (thread 1)
+==6890==    (thread finished, call stack no longer available)
+==6890== 
+--6890-- 
+--6890-- used_suppression:    138 drd-ld /usr/lib/valgrind/default.supp:584
+--6890-- used_suppression:    119 drd-libpthread-pthread_create /usr/lib/valgrind/default.supp:645
+--6890-- used_suppression:     97 drd-libpthread-__deallocate_stack /usr/lib/valgrind/default.supp:657
+--6890-- used_suppression:     54 drd-libc-stdio /usr/lib/valgrind/default.supp:600
+==6890== 
+==6890== ERROR SUMMARY: 20 errors from 1 contexts (suppressed: 408 from 206)

@@ -114,7 +114,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 			paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
 			if(paginaAgregada !=NULL){
 				char* paginaShow = pagina_a_str(paginaAgregada);
-				loggear_info(string_from_format("\nPagina agregada: %s", paginaShow));
+				loggear_info(string_from_format("Pagina agregada: %s", paginaShow));
 				free(paginaShow);
 				suTablaDePaginas = nueva_tabla_de_paginas();
 				dictionary_put(tablaDeSegmentos, (char *)list_get(instruccion->parametros, 0), suTablaDePaginas);
@@ -158,7 +158,7 @@ int ejecutar_instruccion_insert(instr_t *instruccion, bool flagMod) //Si se inse
 				void *paginaAgregada = insertar_instruccion_en_memoria(instruccion, &numeroDePaginaAgregado);
 				if(paginaAgregada != NULL){
 					char* paginaStr = pagina_a_str(paginaAgregada);
-					loggear_info(string_from_format("\nPagina agregada: %s", paginaStr));
+					loggear_info(string_from_format("Pagina agregada: %s", paginaStr));
 					free(paginaStr);
 					filaTabPags * filaAgregada = agregar_fila_tabla(suTablaDePaginas, numeroDePaginaAgregado, paginaAgregada, flagMod);
 					loggear_trace(string_from_format("Tabla de paginas actual: (Fila nueva)"));

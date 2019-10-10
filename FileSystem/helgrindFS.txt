@@ -1,1089 +1,280 @@
-==14093== Helgrind, a thread error detector
-==14093== Copyright (C) 2007-2015, and GNU GPL'd, by OpenWorks LLP et al.
-==14093== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
-==14093== Command: Default/FileSystem
-==14093== Parent PID: 14092
-==14093== 
---14093-- 
---14093-- Valgrind options:
---14093--    --tool=helgrind
---14093--    --log-file=helgrindFS.txt
---14093--    -v
---14093-- Contents of /proc/version:
---14093--   Linux version 4.4.0-116-generic (buildd@lgw01-amd64-023) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.9) ) #140-Ubuntu SMP Mon Feb 12 21:22:43 UTC 2018
---14093-- 
---14093-- Arch and hwcaps: X86, LittleEndian, x86-mmxext-sse1-sse2-sse3-lzcnt
---14093-- Page sizes: currently 4096, max supported 4096
---14093-- Valgrind library directory: /usr/lib/valgrind
---14093-- Reading syms from /lib/i386-linux-gnu/ld-2.23.so
---14093--   Considering /lib/i386-linux-gnu/ld-2.23.so ..
---14093--   .. CRC mismatch (computed 596cb2b8 wanted 417b32cc)
---14093--   Considering /usr/lib/debug/lib/i386-linux-gnu/ld-2.23.so ..
---14093--   .. CRC is valid
---14093-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/Default/FileSystem
---14093-- Reading syms from /usr/lib/valgrind/helgrind-x86-linux
---14093--   Considering /usr/lib/valgrind/helgrind-x86-linux ..
---14093--   .. CRC mismatch (computed 85bd4c46 wanted 6890060d)
---14093--    object doesn't have a symbol table
---14093--    object doesn't have a dynamic symbol table
---14093-- Scheduler: using generic scheduler lock implementation.
---14093-- Reading suppressions file: /usr/lib/valgrind/default.supp
-==14093== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-14093-by-utnso-on-???
-==14093== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-14093-by-utnso-on-???
-==14093== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-14093-by-utnso-on-???
-==14093== 
-==14093== TO CONTROL THIS PROCESS USING vgdb (which you probably
-==14093== don't want to do, unless you know exactly what you're doing,
-==14093== or are doing some strange experiment):
-==14093==   /usr/lib/valgrind/../../bin/vgdb --pid=14093 ...command...
-==14093== 
-==14093== TO DEBUG THIS PROCESS USING GDB: start GDB like this
-==14093==   /path/to/gdb Default/FileSystem
-==14093== and then give GDB the following command
-==14093==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=14093
-==14093== --pid is optional if only one valgrind process is running
-==14093== 
---14093-- Reading syms from /usr/lib/valgrind/vgpreload_core-x86-linux.so
---14093--   Considering /usr/lib/valgrind/vgpreload_core-x86-linux.so ..
---14093--   .. CRC mismatch (computed 5b95c0c4 wanted 39e79efa)
---14093--    object doesn't have a symbol table
---14093-- Reading syms from /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so
---14093--   Considering /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so ..
---14093--   .. CRC mismatch (computed d9eac17a wanted 34559146)
---14093--    object doesn't have a symbol table
---14093-- REDIR: 0x4018eb0 (ld-linux.so.2:strlen) redirected to 0x4033d10 (strlen)
---14093-- Reading syms from /lib/i386-linux-gnu/libpthread-2.23.so
---14093--   Considering /usr/lib/debug/.build-id/12/78da59ecc0791dce5c44d8b8756a0480be3a5b.debug ..
---14093--   .. build-id is valid
-==14093== WARNING: new redirection conflicts with existing -- ignoring it
---14093--     old: 0x04062680 (pthread_spin_init   ) W-> (0000.0) 0x04033340 pthread_spin_init
---14093--     new: 0x04062680 (pthread_spin_init   ) W-> (0000.0) 0x04033350 pthread_spin_unlock
-==14093== WARNING: new redirection conflicts with existing -- ignoring it
---14093--     old: 0x04062680 (pthread_spin_init   ) W-> (0000.0) 0x04033340 pthread_spin_init
---14093--     new: 0x04062680 (pthread_spin_init   ) W-> (0000.0) 0x04033350 pthread_spin_unlock
-==14093== WARNING: new redirection conflicts with existing -- ignoring it
---14093--     old: 0x04064150 (sem_wait@@GLIBC_2.1 ) W-> (0000.0) 0x04033440 sem_wait@*
---14093--     new: 0x04064150 (sem_wait@@GLIBC_2.1 ) W-> (0000.0) 0x04033430 sem_wait
-==14093== WARNING: new redirection conflicts with existing -- ignoring it
---14093--     old: 0x04064230 (sem_wait@GLIBC_2.0  ) W-> (0000.0) 0x04033440 sem_wait@*
---14093--     new: 0x04064230 (sem_wait@GLIBC_2.0  ) W-> (0000.0) 0x04033430 sem_wait
-==14093== WARNING: new redirection conflicts with existing -- ignoring it
---14093--     old: 0x04064590 (sem_post@@GLIBC_2.1 ) W-> (0000.0) 0x04033460 sem_post@*
---14093--     new: 0x04064590 (sem_post@@GLIBC_2.1 ) W-> (0000.0) 0x04033450 sem_post
-==14093== WARNING: new redirection conflicts with existing -- ignoring it
---14093--     old: 0x04064640 (sem_post@GLIBC_2.0  ) W-> (0000.0) 0x04033460 sem_post@*
---14093--     new: 0x04064640 (sem_post@GLIBC_2.0  ) W-> (0000.0) 0x04033450 sem_post
---14093-- Reading syms from /usr/lib/libcommons.so
---14093-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/libHerramientas.so
---14093-- Reading syms from /lib/i386-linux-gnu/libc-2.23.so
---14093--   Considering /lib/i386-linux-gnu/libc-2.23.so ..
---14093--   .. CRC mismatch (computed af9c0474 wanted a5de3f2a)
---14093--   Considering /usr/lib/debug/lib/i386-linux-gnu/libc-2.23.so ..
---14093--   .. CRC is valid
---14093-- REDIR: 0x41114b0 (libc.so.6:strncasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x4118140 (libc.so.6:memrchr) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x412ab20 (libc.so.6:wcslen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x410f580 (libc.so.6:strlen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x4111610 (libc.so.6:memcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x410eee0 (libc.so.6:strcmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x4110fc0 (libc.so.6:memset) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x410ef90 (libc.so.6:strcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x4110350 (libc.so.6:strstr) redirected to 0x4037220 (strstr)
---14093-- REDIR: 0x410f7e0 (libc.so.6:__GI_strrchr) redirected to 0x40338c0 (__GI_strrchr)
---14093-- REDIR: 0x4113280 (libc.so.6:strchrnul) redirected to 0x4036dc0 (strchrnul)
---14093-- REDIR: 0x410af00 (libc.so.6:malloc) redirected to 0x402d300 (malloc)
---14093-- REDIR: 0x410b810 (libc.so.6:calloc) redirected to 0x402f200 (calloc)
---14093-- REDIR: 0x4063590 (libpthread.so.0:sem_init@@GLIBC_2.1) redirected to 0x4033400 (sem_init@*)
---14093-- REDIR: 0x410f5c0 (libc.so.6:__GI_strlen) redirected to 0x4033c90 (__GI_strlen)
---14093-- REDIR: 0x4111680 (libc.so.6:__GI_memcpy) redirected to 0x40353b0 (__GI_memcpy)
---14093-- REDIR: 0x410b520 (libc.so.6:realloc) redirected to 0x402f440 (realloc)
---14093-- REDIR: 0x410b470 (libc.so.6:free) redirected to 0x402e4e0 (free)
---14093-- REDIR: 0x4118440 (libc.so.6:__strlen_sse2_bsf) redirected to 0x4033c70 (strlen)
---14093-- REDIR: 0x410f700 (libc.so.6:strncmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x41cf5c0 (libc.so.6:__strncmp_ssse3) redirected to 0x4033fb0 (strncmp)
---14093-- REDIR: 0x4111460 (libc.so.6:strcasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x41d0fb0 (libc.so.6:__strcasecmp_ssse3) redirected to 0x40341f0 (strcasecmp)
---14093-- REDIR: 0x41110d0 (libc.so.6:__GI_mempcpy) redirected to 0x4036f80 (__GI_mempcpy)
---14093-- REDIR: 0x410eae0 (libc.so.6:strcat) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x4123b30 (libc.so.6:__strcat_ssse3) redirected to 0x4033af0 (strcat)
---14093-- REDIR: 0x4064150 (libpthread.so.0:sem_wait@@GLIBC_2.1) redirected to 0x4033440 (sem_wait@*)
---14093-- REDIR: 0x4064590 (libpthread.so.0:sem_post@@GLIBC_2.1) redirected to 0x4033460 (sem_post@*)
---14093-- REDIR: 0x405c580 (libpthread.so.0:pthread_create@@GLIBC_2.1) redirected to 0x4032cb0 (pthread_create@*)
---14093-- REDIR: 0x4110f60 (libc.so.6:__GI_memmove) redirected to 0x40367e0 (__GI_memmove)
---14093-- REDIR: 0x41bf4d0 (libc.so.6:__memset_sse2) redirected to 0x40364e0 (memset)
---14093-- REDIR: 0x41c1b70 (libc.so.6:__memcpy_ssse3) redirected to 0x4035140 (memcpy)
---14093-- REDIR: 0x4118570 (libc.so.6:__strcpy_ssse3) redirected to 0x4033d50 (strcpy)
---14093-- REDIR: 0x41ce150 (libc.so.6:__strcmp_ssse3) redirected to 0x4034950 (strcmp)
---14093-- REDIR: 0x4110c10 (libc.so.6:__GI_memcmp) redirected to 0x4036070 (__GI_memcmp)
---14093-- REDIR: 0x41131b0 (libc.so.6:__GI___rawmemchr) redirected to 0x4036e20 (__GI___rawmemchr)
---14093-- REDIR: 0x410f750 (libc.so.6:strncpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
---14093-- REDIR: 0x4119dc0 (libc.so.6:__strncpy_ssse3) redirected to 0x4033db0 (strncpy)
-==14093== ---Thread-Announcement------------------------------------------
-==14093== 
-==14093== Thread #32 was created
-==14093==    at 0x4181091: clone (clone.S:88)
-==14093==    by 0x405B1AD: create_thread (createthread.c:102)
-==14093==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
-==14093==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804DDBA: evaluar_instruccion (instructions.c:13)
-==14093==    by 0x4081851: vigilar_conexiones_entrantes (utilsServidor.c:200)
-==14093==    by 0x804D8A0: inicializar_conexiones (fileSystem.c:479)
-==14093==    by 0x804A0A1: main (fileSystem.c:13)
-==14093== 
-==14093== ---Thread-Announcement------------------------------------------
-==14093== 
-==14093== Thread #2 was created
-==14093==    at 0x4181091: clone (clone.S:88)
-==14093==    by 0x405B1AD: create_thread (createthread.c:102)
-==14093==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
-==14093==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804EEDB: iniciar_dumpeo (memtable.c:156)
-==14093==    by 0x804D3B7: inicializar_FS (fileSystem.c:306)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093== 
-==14093== ---Thread-Announcement------------------------------------------
-==14093== 
-==14093== Thread #4 was created
-==14093==    at 0x4181091: clone (clone.S:88)
-==14093==    by 0x405B1AD: create_thread (createthread.c:102)
-==14093==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
-==14093==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804DDBA: evaluar_instruccion (instructions.c:13)
-==14093==    by 0x4081851: vigilar_conexiones_entrantes (utilsServidor.c:200)
-==14093==    by 0x804D8A0: inicializar_conexiones (fileSystem.c:479)
-==14093==    by 0x804A0A1: main (fileSystem.c:13)
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 4 at 0x42527F8 by thread #32
-==14093== Locks held: none
-==14093==    at 0x4077C05: dictionary_get (in /usr/lib/libcommons.so)
-==14093==    by 0x804EC41: obtener_registros_mem (memtable.c:103)
-==14093==    by 0x804D7C2: obtener_registros_key (fileSystem.c:424)
-==14093==    by 0x804E16C: execute_select (instructions.c:169)
-==14093==    by 0x804E845: ejecutar_instruccion (instructions.c:43)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 4 by thread #2
-==14093== Locks held: none
-==14093==    at 0x4077AE4: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x42527f8 is 8 bytes inside a block of size 16 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4078004: dictionary_create_element (in /usr/lib/libcommons.so)
-==14093==    by 0x4077B3F: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x804DED8: execute_create (instructions.c:100)
-==14093==    by 0x804E8B5: ejecutar_instruccion (instructions.c:33)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #4
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 4 at 0x4282AA0 by thread #32
-==14093== Locks held: none
-==14093==    at 0x4077124: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x40775AF: list_filter (in /usr/lib/libcommons.so)
-==14093==    by 0x804EC4A: obtener_registros_mem (memtable.c:109)
-==14093==    by 0x804D7C2: obtener_registros_key (fileSystem.c:424)
-==14093==    by 0x804E16C: execute_select (instructions.c:169)
-==14093==    by 0x804E845: ejecutar_instruccion (instructions.c:43)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4282aa0 is 0 bytes inside a block of size 8 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4076E01: list_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB87: agregar_tabla_a_mem (memtable.c:88)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #2
-==14093== 
---14093-- REDIR: 0x4110a30 (libc.so.6:__GI_memchr) redirected to 0x4034bd0 (__GI_memchr)
-==14093== ---Thread-Announcement------------------------------------------
-==14093== 
-==14093== Thread #105 was created
-==14093==    at 0x4181091: clone (clone.S:88)
-==14093==    by 0x405B1AD: create_thread (createthread.c:102)
-==14093==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
-==14093==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804DDBA: evaluar_instruccion (instructions.c:13)
-==14093==    by 0x4081851: vigilar_conexiones_entrantes (utilsServidor.c:200)
-==14093==    by 0x804D8A0: inicializar_conexiones (fileSystem.c:479)
-==14093==    by 0x804A0A1: main (fileSystem.c:13)
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 4 at 0x42527F8 by thread #2
-==14093== Locks held: none
-==14093==    at 0x4077AE4: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 4 by thread #105
-==14093== Locks held: none
-==14093==    at 0x4077C05: dictionary_get (in /usr/lib/libcommons.so)
-==14093==    by 0x804EC41: obtener_registros_mem (memtable.c:103)
-==14093==    by 0x804D7C2: obtener_registros_key (fileSystem.c:424)
-==14093==    by 0x804E16C: execute_select (instructions.c:169)
-==14093==    by 0x804E845: ejecutar_instruccion (instructions.c:43)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x42527f8 is 8 bytes inside a block of size 16 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4078004: dictionary_create_element (in /usr/lib/libcommons.so)
-==14093==    by 0x4077B3F: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x804DED8: execute_create (instructions.c:100)
-==14093==    by 0x804E8B5: ejecutar_instruccion (instructions.c:33)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #4
-==14093== 
-==14093== ---Thread-Announcement------------------------------------------
-==14093== 
-==14093== Thread #7 was created
-==14093==    at 0x4181091: clone (clone.S:88)
-==14093==    by 0x405B1AD: create_thread (createthread.c:102)
-==14093==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
-==14093==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804BDBF: crear_hilo_compactador (compactador.c:9)
-==14093==    by 0x804DF0E: execute_create (instructions.c:106)
-==14093==    by 0x804E8B5: ejecutar_instruccion (instructions.c:33)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== ---Thread-Announcement------------------------------------------
-==14093== 
-==14093== Thread #5 was created
-==14093==    at 0x4181091: clone (clone.S:88)
-==14093==    by 0x405B1AD: create_thread (createthread.c:102)
-==14093==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
-==14093==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804BDBF: crear_hilo_compactador (compactador.c:9)
-==14093==    by 0x804DF0E: execute_create (instructions.c:106)
-==14093==    by 0x804E8B5: ejecutar_instruccion (instructions.c:33)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== ---Thread-Announcement------------------------------------------
-==14093== 
-==14093== Thread #1 is the program's root thread
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 1 at 0x4251AE3 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 1 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4036FBC: __GI_mempcpy (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x41052F4: _IO_default_xsputn (genops.c:438)
-==14093==    by 0x41036C5: _IO_file_xsputn@@GLIBC_2.1 (fileops.c:1352)
-==14093==    by 0x40F8DFB: fwrite (iofwrite.c:39)
-==14093==    by 0x804A592: actualizar_bitmap (Estructuras.c:357)
-==14093==    by 0x804B4BA: ocupar_bloque (Estructuras.c:407)
-==14093==    by 0x804B684: escribir_registro_bloque (Estructuras.c:175)
-==14093==    by 0x804BD36: bajar_registro.9096 (compactador.c:185)
-==14093==  Address 0x4251ae3 is 3 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 1 at 0x4251AE0 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078AD6: bitarray_test_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804A5CE: bloque_esta_ocupado (Estructuras.c:379)
-==14093==    by 0x804A6AC: siguiente_bloque_disponible (Estructuras.c:390)
-==14093==    by 0x804B892: inicializar_archivo (Estructuras.c:723)
-==14093==    by 0x804BE81: finalizar_compactacion (compactador.c:168)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 1 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4251ae0 is 0 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 1 at 0x4251AE0 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078B4A: bitarray_set_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804B4A3: ocupar_bloque (Estructuras.c:401)
-==14093==    by 0x804B8B7: inicializar_archivo (Estructuras.c:734)
-==14093==    by 0x804BE81: finalizar_compactacion (compactador.c:168)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 1 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4251ae0 is 0 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 1 at 0x4251AE0 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078B4F: bitarray_set_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804B4A3: ocupar_bloque (Estructuras.c:401)
-==14093==    by 0x804B8B7: inicializar_archivo (Estructuras.c:734)
-==14093==    by 0x804BE81: finalizar_compactacion (compactador.c:168)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 1 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4251ae0 is 0 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 1 at 0x4251AE3 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BA5: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 1 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4251ae3 is 3 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== ---Thread-Announcement------------------------------------------
-==14093== 
-==14093== Thread #213 was created
-==14093==    at 0x4181091: clone (clone.S:88)
-==14093==    by 0x405B1AD: create_thread (createthread.c:102)
-==14093==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
-==14093==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804DDBA: evaluar_instruccion (instructions.c:13)
-==14093==    by 0x4081851: vigilar_conexiones_entrantes (utilsServidor.c:200)
-==14093==    by 0x804D8A0: inicializar_conexiones (fileSystem.c:479)
-==14093==    by 0x804A0A1: main (fileSystem.c:13)
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 4 at 0x42527F8 by thread #213
-==14093== Locks held: none
-==14093==    at 0x4077C05: dictionary_get (in /usr/lib/libcommons.so)
-==14093==    by 0x804EBC6: agregar_registro (memtable.c:94)
-==14093==    by 0x804DFC6: execute_insert (instructions.c:143)
-==14093==    by 0x804E6A4: ejecutar_instruccion_insert (instructions.c:312)
-==14093==    by 0x804E87D: ejecutar_instruccion (instructions.c:38)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 4 by thread #2
-==14093== Locks held: none
-==14093==    at 0x4077AE4: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x42527f8 is 8 bytes inside a block of size 16 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4078004: dictionary_create_element (in /usr/lib/libcommons.so)
-==14093==    by 0x4077B3F: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x804DED8: execute_create (instructions.c:100)
-==14093==    by 0x804E8B5: ejecutar_instruccion (instructions.c:33)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #4
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 4 at 0xF1F12EC by thread #213
-==14093== Locks held: none
-==14093==    at 0x4076E47: list_add (in /usr/lib/libcommons.so)
-==14093==    by 0x804DFC6: execute_insert (instructions.c:143)
-==14093==    by 0x804E6A4: ejecutar_instruccion_insert (instructions.c:312)
-==14093==    by 0x804E87D: ejecutar_instruccion (instructions.c:38)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0xf1f12ec is 4 bytes inside a block of size 8 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4076E01: list_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB87: agregar_tabla_a_mem (memtable.c:88)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #2
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 4 at 0xF1F12E8 by thread #213
-==14093== Locks held: none
-==14093==    at 0x4076E54: list_add (in /usr/lib/libcommons.so)
-==14093==    by 0x804DFC6: execute_insert (instructions.c:143)
-==14093==    by 0x804E6A4: ejecutar_instruccion_insert (instructions.c:312)
-==14093==    by 0x804E87D: ejecutar_instruccion (instructions.c:38)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 4 by thread #2
-==14093== Locks held: none
-==14093==    at 0x407870C: config_save (in /usr/lib/libcommons.so)
-==14093==    by 0x804A97E: aumentar_tam_archivo (Estructuras.c:550)
-==14093==    by 0x804B59A: escribir_registro_bloque (Estructuras.c:193)
-==14093==    by 0x804EE9A: escribir_reg_en_tmp.9144 (memtable.c:210)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804F1E6: dumpear_tabla (memtable.c:214)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA39: dumpear_memtable (memtable.c:185)
-==14093==    by 0x804EA39: dumpeo (memtable.c:171)
-==14093==  Address 0xf1f12e8 is 0 bytes inside a block of size 8 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4076E01: list_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB87: agregar_tabla_a_mem (memtable.c:88)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #2
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 4 at 0xF1F12EC by thread #213
-==14093== Locks held: none
-==14093==    at 0x4076E8B: list_add (in /usr/lib/libcommons.so)
-==14093==    by 0x804DFC6: execute_insert (instructions.c:143)
-==14093==    by 0x804E6A4: ejecutar_instruccion_insert (instructions.c:312)
-==14093==    by 0x804E87D: ejecutar_instruccion (instructions.c:38)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 4 by thread #2
-==14093== Locks held: none
-==14093==    at 0x40786BF: config_remove_key (in /usr/lib/libcommons.so)
-==14093==    by 0x4078677: config_set_value (in /usr/lib/libcommons.so)
-==14093==    by 0x804A976: aumentar_tam_archivo (Estructuras.c:549)
-==14093==    by 0x804B59A: escribir_registro_bloque (Estructuras.c:193)
-==14093==    by 0x804EE9A: escribir_reg_en_tmp.9144 (memtable.c:210)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804F1E6: dumpear_tabla (memtable.c:214)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==  Address 0xf1f12ec is 4 bytes inside a block of size 8 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4076E01: list_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB87: agregar_tabla_a_mem (memtable.c:88)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #2
-==14093== 
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 1 at 0x4251AE1 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078B4F: bitarray_set_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804B4A3: ocupar_bloque (Estructuras.c:401)
-==14093==    by 0x804B684: escribir_registro_bloque (Estructuras.c:175)
-==14093==    by 0x804BD36: bajar_registro.9096 (compactador.c:185)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804BEB2: finalizar_compactacion (compactador.c:191)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 1 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078AD6: bitarray_test_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804A5CE: bloque_esta_ocupado (Estructuras.c:379)
-==14093==    by 0x804A6AC: siguiente_bloque_disponible (Estructuras.c:390)
-==14093==    by 0x804B892: inicializar_archivo (Estructuras.c:723)
-==14093==    by 0x804BE81: finalizar_compactacion (compactador.c:168)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==  Address 0x4251ae1 is 1 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== Warning: invalid file descriptor 1031 in syscall open()
-==14093==    at 0x416F73F: ??? (syscall-template.S:84)
-==14093==    by 0x4103ACF: _IO_file_open (fileops.c:221)
-==14093==    by 0x4103C50: _IO_file_fopen@@GLIBC_2.1 (fileops.c:328)
-==14093==    by 0x40F83B0: __fopen_internal (iofopen.c:86)
-==14093==    by 0x40F841D: fopen@@GLIBC_2.1 (iofopen.c:97)
-==14093==    by 0x407835E: config_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804A923: aumentar_tam_archivo (Estructuras.c:544)
-==14093==    by 0x804B59A: escribir_registro_bloque (Estructuras.c:193)
-==14093==    by 0x804BD36: bajar_registro.9096 (compactador.c:185)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804BEB2: finalizar_compactacion (compactador.c:191)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093== 
-==14093== Process terminating with default action of signal 11 (SIGSEGV)
-==14093==  Access not within mapped region at address 0x4
-==14093==    at 0x40784E1: config_get_string_value (in /usr/lib/libcommons.so)
-==14093==    by 0x4078519: config_get_int_value (in /usr/lib/libcommons.so)
-==14093==    by 0x804A932: aumentar_tam_archivo (Estructuras.c:545)
-==14093==    by 0x804B59A: escribir_registro_bloque (Estructuras.c:193)
-==14093==    by 0x804BD36: bajar_registro.9096 (compactador.c:185)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804BEB2: finalizar_compactacion (compactador.c:191)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  If you believe this happened as a result of a stack
-==14093==  overflow in your program's main thread (unlikely but
-==14093==  possible), you can try to increase the size of the
-==14093==  main thread stack using the --main-stacksize= flag.
-==14093==  The main thread stack size used in this run was 8388608.
-==14093== 
-==14093== ERROR SUMMARY: 47 errors from 13 contexts (suppressed: 283631 from 774)
-==14093== 
-==14093== 1 errors in context 1 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 1 at 0x4251AE1 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078B4F: bitarray_set_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804B4A3: ocupar_bloque (Estructuras.c:401)
-==14093==    by 0x804B684: escribir_registro_bloque (Estructuras.c:175)
-==14093==    by 0x804BD36: bajar_registro.9096 (compactador.c:185)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804BEB2: finalizar_compactacion (compactador.c:191)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 1 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078AD6: bitarray_test_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804A5CE: bloque_esta_ocupado (Estructuras.c:379)
-==14093==    by 0x804A6AC: siguiente_bloque_disponible (Estructuras.c:390)
-==14093==    by 0x804B892: inicializar_archivo (Estructuras.c:723)
-==14093==    by 0x804BE81: finalizar_compactacion (compactador.c:168)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==  Address 0x4251ae1 is 1 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== 
-==14093== 1 errors in context 2 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 4 at 0xF1F12EC by thread #213
-==14093== Locks held: none
-==14093==    at 0x4076E8B: list_add (in /usr/lib/libcommons.so)
-==14093==    by 0x804DFC6: execute_insert (instructions.c:143)
-==14093==    by 0x804E6A4: ejecutar_instruccion_insert (instructions.c:312)
-==14093==    by 0x804E87D: ejecutar_instruccion (instructions.c:38)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 4 by thread #2
-==14093== Locks held: none
-==14093==    at 0x40786BF: config_remove_key (in /usr/lib/libcommons.so)
-==14093==    by 0x4078677: config_set_value (in /usr/lib/libcommons.so)
-==14093==    by 0x804A976: aumentar_tam_archivo (Estructuras.c:549)
-==14093==    by 0x804B59A: escribir_registro_bloque (Estructuras.c:193)
-==14093==    by 0x804EE9A: escribir_reg_en_tmp.9144 (memtable.c:210)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804F1E6: dumpear_tabla (memtable.c:214)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==  Address 0xf1f12ec is 4 bytes inside a block of size 8 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4076E01: list_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB87: agregar_tabla_a_mem (memtable.c:88)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #2
-==14093== 
-==14093== 
-==14093== 1 errors in context 3 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 4 at 0xF1F12E8 by thread #213
-==14093== Locks held: none
-==14093==    at 0x4076E54: list_add (in /usr/lib/libcommons.so)
-==14093==    by 0x804DFC6: execute_insert (instructions.c:143)
-==14093==    by 0x804E6A4: ejecutar_instruccion_insert (instructions.c:312)
-==14093==    by 0x804E87D: ejecutar_instruccion (instructions.c:38)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 4 by thread #2
-==14093== Locks held: none
-==14093==    at 0x407870C: config_save (in /usr/lib/libcommons.so)
-==14093==    by 0x804A97E: aumentar_tam_archivo (Estructuras.c:550)
-==14093==    by 0x804B59A: escribir_registro_bloque (Estructuras.c:193)
-==14093==    by 0x804EE9A: escribir_reg_en_tmp.9144 (memtable.c:210)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804F1E6: dumpear_tabla (memtable.c:214)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA39: dumpear_memtable (memtable.c:185)
-==14093==    by 0x804EA39: dumpeo (memtable.c:171)
-==14093==  Address 0xf1f12e8 is 0 bytes inside a block of size 8 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4076E01: list_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB87: agregar_tabla_a_mem (memtable.c:88)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #2
-==14093== 
-==14093== 
-==14093== 1 errors in context 4 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 4 at 0xF1F12EC by thread #213
-==14093== Locks held: none
-==14093==    at 0x4076E47: list_add (in /usr/lib/libcommons.so)
-==14093==    by 0x804DFC6: execute_insert (instructions.c:143)
-==14093==    by 0x804E6A4: ejecutar_instruccion_insert (instructions.c:312)
-==14093==    by 0x804E87D: ejecutar_instruccion (instructions.c:38)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0xf1f12ec is 4 bytes inside a block of size 8 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4076E01: list_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB87: agregar_tabla_a_mem (memtable.c:88)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #2
-==14093== 
-==14093== 
-==14093== 1 errors in context 5 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 4 at 0x42527F8 by thread #213
-==14093== Locks held: none
-==14093==    at 0x4077C05: dictionary_get (in /usr/lib/libcommons.so)
-==14093==    by 0x804EBC6: agregar_registro (memtable.c:94)
-==14093==    by 0x804DFC6: execute_insert (instructions.c:143)
-==14093==    by 0x804E6A4: ejecutar_instruccion_insert (instructions.c:312)
-==14093==    by 0x804E87D: ejecutar_instruccion (instructions.c:38)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 4 by thread #2
-==14093== Locks held: none
-==14093==    at 0x4077AE4: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x42527f8 is 8 bytes inside a block of size 16 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4078004: dictionary_create_element (in /usr/lib/libcommons.so)
-==14093==    by 0x4077B3F: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x804DED8: execute_create (instructions.c:100)
-==14093==    by 0x804E8B5: ejecutar_instruccion (instructions.c:33)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #4
-==14093== 
-==14093== 
-==14093== 2 errors in context 6 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 4 at 0x42527F8 by thread #2
-==14093== Locks held: none
-==14093==    at 0x4077AE4: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 4 by thread #105
-==14093== Locks held: none
-==14093==    at 0x4077C05: dictionary_get (in /usr/lib/libcommons.so)
-==14093==    by 0x804EC41: obtener_registros_mem (memtable.c:103)
-==14093==    by 0x804D7C2: obtener_registros_key (fileSystem.c:424)
-==14093==    by 0x804E16C: execute_select (instructions.c:169)
-==14093==    by 0x804E845: ejecutar_instruccion (instructions.c:43)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x42527f8 is 8 bytes inside a block of size 16 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4078004: dictionary_create_element (in /usr/lib/libcommons.so)
-==14093==    by 0x4077B3F: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x804DED8: execute_create (instructions.c:100)
-==14093==    by 0x804E8B5: ejecutar_instruccion (instructions.c:33)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #4
-==14093== 
-==14093== 
-==14093== 3 errors in context 7 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 1 at 0x4251AE0 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078B4F: bitarray_set_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804B4A3: ocupar_bloque (Estructuras.c:401)
-==14093==    by 0x804B8B7: inicializar_archivo (Estructuras.c:734)
-==14093==    by 0x804BE81: finalizar_compactacion (compactador.c:168)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 1 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4251ae0 is 0 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== 
-==14093== 3 errors in context 8 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 1 at 0x4251AE0 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078B4A: bitarray_set_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804B4A3: ocupar_bloque (Estructuras.c:401)
-==14093==    by 0x804B8B7: inicializar_archivo (Estructuras.c:734)
-==14093==    by 0x804BE81: finalizar_compactacion (compactador.c:168)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 1 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4251ae0 is 0 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== 
-==14093== 3 errors in context 9 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 1 at 0x4251AE3 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BA5: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 1 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4251ae3 is 3 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== 
-==14093== 4 errors in context 10 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 4 at 0x4282AA0 by thread #32
-==14093== Locks held: none
-==14093==    at 0x4077124: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x40775AF: list_filter (in /usr/lib/libcommons.so)
-==14093==    by 0x804EC4A: obtener_registros_mem (memtable.c:109)
-==14093==    by 0x804D7C2: obtener_registros_key (fileSystem.c:424)
-==14093==    by 0x804E16C: execute_select (instructions.c:169)
-==14093==    by 0x804E845: ejecutar_instruccion (instructions.c:43)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4282aa0 is 0 bytes inside a block of size 8 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4076E01: list_create (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB87: agregar_tabla_a_mem (memtable.c:88)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #2
-==14093== 
-==14093== 
-==14093== 4 errors in context 11 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 4 at 0x42527F8 by thread #32
-==14093== Locks held: none
-==14093==    at 0x4077C05: dictionary_get (in /usr/lib/libcommons.so)
-==14093==    by 0x804EC41: obtener_registros_mem (memtable.c:103)
-==14093==    by 0x804D7C2: obtener_registros_key (fileSystem.c:424)
-==14093==    by 0x804E16C: execute_select (instructions.c:169)
-==14093==    by 0x804E845: ejecutar_instruccion (instructions.c:43)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 4 by thread #2
-==14093== Locks held: none
-==14093==    at 0x4077AE4: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x4077CDA: dictionary_iterator (in /usr/lib/libcommons.so)
-==14093==    by 0x804EA57: limpiar_memtable (memtable.c:79)
-==14093==    by 0x804EA57: dumpeo (memtable.c:174)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x42527f8 is 8 bytes inside a block of size 16 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x4078004: dictionary_create_element (in /usr/lib/libcommons.so)
-==14093==    by 0x4077B3F: dictionary_put (in /usr/lib/libcommons.so)
-==14093==    by 0x804EB9A: agregar_tabla_a_mem (memtable.c:89)
-==14093==    by 0x804DED8: execute_create (instructions.c:100)
-==14093==    by 0x804E8B5: ejecutar_instruccion (instructions.c:33)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Block was alloc'd by thread #4
-==14093== 
-==14093== 
-==14093== 9 errors in context 12 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during write of size 1 at 0x4251AE3 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous read of size 1 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4036FBC: __GI_mempcpy (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x41052F4: _IO_default_xsputn (genops.c:438)
-==14093==    by 0x41036C5: _IO_file_xsputn@@GLIBC_2.1 (fileops.c:1352)
-==14093==    by 0x40F8DFB: fwrite (iofwrite.c:39)
-==14093==    by 0x804A592: actualizar_bitmap (Estructuras.c:357)
-==14093==    by 0x804B4BA: ocupar_bloque (Estructuras.c:407)
-==14093==    by 0x804B684: escribir_registro_bloque (Estructuras.c:175)
-==14093==    by 0x804BD36: bajar_registro.9096 (compactador.c:185)
-==14093==  Address 0x4251ae3 is 3 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
-==14093== 
-==14093== 14 errors in context 13 of 13:
-==14093== ----------------------------------------------------------------
-==14093== 
-==14093== Possible data race during read of size 1 at 0x4251AE0 by thread #5
-==14093== Locks held: none
-==14093==    at 0x4078AD6: bitarray_test_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804A5CE: bloque_esta_ocupado (Estructuras.c:379)
-==14093==    by 0x804A6AC: siguiente_bloque_disponible (Estructuras.c:390)
-==14093==    by 0x804B892: inicializar_archivo (Estructuras.c:723)
-==14093==    by 0x804BE81: finalizar_compactacion (compactador.c:168)
-==14093==    by 0x804C795: compactador (compactador.c:105)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093== 
-==14093== This conflicts with a previous write of size 1 by thread #7
-==14093== Locks held: none
-==14093==    at 0x4078BAE: bitarray_clean_bit (in /usr/lib/libcommons.so)
-==14093==    by 0x804AFCE: liberar_bloque (Estructuras.c:413)
-==14093==    by 0x804AFCE: liberar_bloques (Estructuras.c:590)
-==14093==    by 0x4077148: list_iterate (in /usr/lib/libcommons.so)
-==14093==    by 0x804C747: compactador (compactador.c:100)
-==14093==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x405C294: start_thread (pthread_create.c:333)
-==14093==    by 0x41810AD: clone (clone.S:114)
-==14093==  Address 0x4251ae0 is 0 bytes inside a block of size 513 alloc'd
-==14093==    at 0x402D36C: malloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
-==14093==    by 0x804A452: inicializar_bitarray (Estructuras.c:321)
-==14093==    by 0x804D3D2: inicializar_FS (fileSystem.c:311)
-==14093==    by 0x804A09C: main (fileSystem.c:11)
-==14093==  Block was alloc'd by thread #1
-==14093== 
---14093-- 
---14093-- used_suppression: 151861 helgrind-glibc2X-004 /usr/lib/valgrind/default.supp:931
---14093-- used_suppression:   7033 helgrind-glibc2X-005 /usr/lib/valgrind/default.supp:945
---14093-- used_suppression: 124536 helgrind-glibc-io-xsputn-mempcpy /usr/lib/valgrind/default.supp:937
---14093-- used_suppression:    201 helgrind-glibc2X-108 /usr/lib/valgrind/default.supp:1018
-==14093== 
-==14093== ERROR SUMMARY: 47 errors from 13 contexts (suppressed: 283631 from 774)
+==3680== Helgrind, a thread error detector
+==3680== Copyright (C) 2007-2015, and GNU GPL'd, by OpenWorks LLP et al.
+==3680== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==3680== Command: Default/FileSystem
+==3680== Parent PID: 3678
+==3680== 
+--3680-- 
+--3680-- Valgrind options:
+--3680--    --tool=helgrind
+--3680--    --log-file=helgrindFS.txt
+--3680--    -v
+--3680-- Contents of /proc/version:
+--3680--   Linux version 4.4.0-116-generic (buildd@lgw01-amd64-023) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.9) ) #140-Ubuntu SMP Mon Feb 12 21:22:43 UTC 2018
+--3680-- 
+--3680-- Arch and hwcaps: X86, LittleEndian, x86-mmxext-sse1-sse2-sse3-lzcnt
+--3680-- Page sizes: currently 4096, max supported 4096
+--3680-- Valgrind library directory: /usr/lib/valgrind
+--3680-- Reading syms from /lib/i386-linux-gnu/ld-2.23.so
+--3680--   Considering /lib/i386-linux-gnu/ld-2.23.so ..
+--3680--   .. CRC mismatch (computed 596cb2b8 wanted 417b32cc)
+--3680--   Considering /usr/lib/debug/lib/i386-linux-gnu/ld-2.23.so ..
+--3680--   .. CRC is valid
+--3680-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/Default/FileSystem
+--3680-- Reading syms from /usr/lib/valgrind/helgrind-x86-linux
+--3680--   Considering /usr/lib/valgrind/helgrind-x86-linux ..
+--3680--   .. CRC mismatch (computed 85bd4c46 wanted 6890060d)
+--3680--    object doesn't have a symbol table
+--3680--    object doesn't have a dynamic symbol table
+--3680-- Scheduler: using generic scheduler lock implementation.
+--3680-- Reading suppressions file: /usr/lib/valgrind/default.supp
+==3680== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-3680-by-utnso-on-???
+==3680== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-3680-by-utnso-on-???
+==3680== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-3680-by-utnso-on-???
+==3680== 
+==3680== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==3680== don't want to do, unless you know exactly what you're doing,
+==3680== or are doing some strange experiment):
+==3680==   /usr/lib/valgrind/../../bin/vgdb --pid=3680 ...command...
+==3680== 
+==3680== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==3680==   /path/to/gdb Default/FileSystem
+==3680== and then give GDB the following command
+==3680==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=3680
+==3680== --pid is optional if only one valgrind process is running
+==3680== 
+--3680-- Reading syms from /usr/lib/valgrind/vgpreload_core-x86-linux.so
+--3680--   Considering /usr/lib/valgrind/vgpreload_core-x86-linux.so ..
+--3680--   .. CRC mismatch (computed 5b95c0c4 wanted 39e79efa)
+--3680--    object doesn't have a symbol table
+--3680-- Reading syms from /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so
+--3680--   Considering /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so ..
+--3680--   .. CRC mismatch (computed d9eac17a wanted 34559146)
+--3680--    object doesn't have a symbol table
+--3680-- REDIR: 0x4018eb0 (ld-linux.so.2:strlen) redirected to 0x4033d10 (strlen)
+--3680-- Reading syms from /lib/i386-linux-gnu/libpthread-2.23.so
+--3680--   Considering /usr/lib/debug/.build-id/12/78da59ecc0791dce5c44d8b8756a0480be3a5b.debug ..
+--3680--   .. build-id is valid
+==3680== WARNING: new redirection conflicts with existing -- ignoring it
+--3680--     old: 0x04062680 (pthread_spin_init   ) W-> (0000.0) 0x04033340 pthread_spin_init
+--3680--     new: 0x04062680 (pthread_spin_init   ) W-> (0000.0) 0x04033350 pthread_spin_unlock
+==3680== WARNING: new redirection conflicts with existing -- ignoring it
+--3680--     old: 0x04062680 (pthread_spin_init   ) W-> (0000.0) 0x04033340 pthread_spin_init
+--3680--     new: 0x04062680 (pthread_spin_init   ) W-> (0000.0) 0x04033350 pthread_spin_unlock
+==3680== WARNING: new redirection conflicts with existing -- ignoring it
+--3680--     old: 0x04064150 (sem_wait@@GLIBC_2.1 ) W-> (0000.0) 0x04033440 sem_wait@*
+--3680--     new: 0x04064150 (sem_wait@@GLIBC_2.1 ) W-> (0000.0) 0x04033430 sem_wait
+==3680== WARNING: new redirection conflicts with existing -- ignoring it
+--3680--     old: 0x04064230 (sem_wait@GLIBC_2.0  ) W-> (0000.0) 0x04033440 sem_wait@*
+--3680--     new: 0x04064230 (sem_wait@GLIBC_2.0  ) W-> (0000.0) 0x04033430 sem_wait
+==3680== WARNING: new redirection conflicts with existing -- ignoring it
+--3680--     old: 0x04064590 (sem_post@@GLIBC_2.1 ) W-> (0000.0) 0x04033460 sem_post@*
+--3680--     new: 0x04064590 (sem_post@@GLIBC_2.1 ) W-> (0000.0) 0x04033450 sem_post
+==3680== WARNING: new redirection conflicts with existing -- ignoring it
+--3680--     old: 0x04064640 (sem_post@GLIBC_2.0  ) W-> (0000.0) 0x04033460 sem_post@*
+--3680--     new: 0x04064640 (sem_post@GLIBC_2.0  ) W-> (0000.0) 0x04033450 sem_post
+--3680-- Reading syms from /usr/lib/libcommons.so
+--3680-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/libHerramientas.so
+--3680-- Reading syms from /lib/i386-linux-gnu/libc-2.23.so
+--3680--   Considering /lib/i386-linux-gnu/libc-2.23.so ..
+--3680--   .. CRC mismatch (computed af9c0474 wanted a5de3f2a)
+--3680--   Considering /usr/lib/debug/lib/i386-linux-gnu/libc-2.23.so ..
+--3680--   .. CRC is valid
+--3680-- REDIR: 0x41114b0 (libc.so.6:strncasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x4118140 (libc.so.6:memrchr) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x412ab20 (libc.so.6:wcslen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x410f580 (libc.so.6:strlen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x4111610 (libc.so.6:memcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x410eee0 (libc.so.6:strcmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x4110fc0 (libc.so.6:memset) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x410ef90 (libc.so.6:strcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x4110350 (libc.so.6:strstr) redirected to 0x4037220 (strstr)
+--3680-- REDIR: 0x410f7e0 (libc.so.6:__GI_strrchr) redirected to 0x40338c0 (__GI_strrchr)
+--3680-- REDIR: 0x4113280 (libc.so.6:strchrnul) redirected to 0x4036dc0 (strchrnul)
+--3680-- REDIR: 0x410af00 (libc.so.6:malloc) redirected to 0x402d300 (malloc)
+--3680-- REDIR: 0x410b810 (libc.so.6:calloc) redirected to 0x402f200 (calloc)
+--3680-- REDIR: 0x4063590 (libpthread.so.0:sem_init@@GLIBC_2.1) redirected to 0x4033400 (sem_init@*)
+--3680-- REDIR: 0x410f5c0 (libc.so.6:__GI_strlen) redirected to 0x4033c90 (__GI_strlen)
+--3680-- REDIR: 0x4111680 (libc.so.6:__GI_memcpy) redirected to 0x40353b0 (__GI_memcpy)
+--3680-- REDIR: 0x410b520 (libc.so.6:realloc) redirected to 0x402f440 (realloc)
+--3680-- REDIR: 0x410b470 (libc.so.6:free) redirected to 0x402e4e0 (free)
+--3680-- REDIR: 0x4118440 (libc.so.6:__strlen_sse2_bsf) redirected to 0x4033c70 (strlen)
+--3680-- REDIR: 0x410f700 (libc.so.6:strncmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x41cf5c0 (libc.so.6:__strncmp_ssse3) redirected to 0x4033fb0 (strncmp)
+--3680-- REDIR: 0x4111460 (libc.so.6:strcasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x41d0fb0 (libc.so.6:__strcasecmp_ssse3) redirected to 0x40341f0 (strcasecmp)
+--3680-- REDIR: 0x41110d0 (libc.so.6:__GI_mempcpy) redirected to 0x4036f80 (__GI_mempcpy)
+--3680-- REDIR: 0x410eae0 (libc.so.6:strcat) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x4123b30 (libc.so.6:__strcat_ssse3) redirected to 0x4033af0 (strcat)
+--3680-- REDIR: 0x4064150 (libpthread.so.0:sem_wait@@GLIBC_2.1) redirected to 0x4033440 (sem_wait@*)
+--3680-- REDIR: 0x4110c10 (libc.so.6:__GI_memcmp) redirected to 0x4036070 (__GI_memcmp)
+--3680-- REDIR: 0x41131b0 (libc.so.6:__GI___rawmemchr) redirected to 0x4036e20 (__GI___rawmemchr)
+--3680-- REDIR: 0x4064590 (libpthread.so.0:sem_post@@GLIBC_2.1) redirected to 0x4033460 (sem_post@*)
+--3680-- REDIR: 0x405c580 (libpthread.so.0:pthread_create@@GLIBC_2.1) redirected to 0x4032cb0 (pthread_create@*)
+--3680-- REDIR: 0x4110f60 (libc.so.6:__GI_memmove) redirected to 0x40367e0 (__GI_memmove)
+--3680-- REDIR: 0x41bf4d0 (libc.so.6:__memset_sse2) redirected to 0x40364e0 (memset)
+--3680-- REDIR: 0x41c1b70 (libc.so.6:__memcpy_ssse3) redirected to 0x4035140 (memcpy)
+--3680-- REDIR: 0x4118570 (libc.so.6:__strcpy_ssse3) redirected to 0x4033d50 (strcpy)
+--3680-- REDIR: 0x41ce150 (libc.so.6:__strcmp_ssse3) redirected to 0x4034950 (strcmp)
+--3680-- REDIR: 0x410f750 (libc.so.6:strncpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--3680-- REDIR: 0x4119dc0 (libc.so.6:__strncpy_ssse3) redirected to 0x4033db0 (strncpy)
+--3680-- REDIR: 0x4110a30 (libc.so.6:__GI_memchr) redirected to 0x4034bd0 (__GI_memchr)
+==3680== ---Thread-Announcement------------------------------------------
+==3680== 
+==3680== Thread #933 was created
+==3680==    at 0x4181091: clone (clone.S:88)
+==3680==    by 0x405B1AD: create_thread (createthread.c:102)
+==3680==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
+==3680==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x804DC0A: evaluar_instruccion (instructions.c:13)
+==3680==    by 0x4081612: vigilar_conexiones_entrantes (utilsServidor.c:167)
+==3680==    by 0x804D700: inicializar_conexiones (fileSystem.c:481)
+==3680==    by 0x804A0D1: main (fileSystem.c:13)
+==3680== 
+==3680== ---Thread-Announcement------------------------------------------
+==3680== 
+==3680== Thread #2 was created
+==3680==    at 0x4181091: clone (clone.S:88)
+==3680==    by 0x405B1AD: create_thread (createthread.c:102)
+==3680==    by 0x405C99E: pthread_create@@GLIBC_2.1 (pthread_create.c:679)
+==3680==    by 0x4032043: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x804ECEB: iniciar_dumpeo (memtable.c:161)
+==3680==    by 0x804D20B: inicializar_FS (fileSystem.c:307)
+==3680==    by 0x804A0CC: main (fileSystem.c:11)
+==3680== 
+==3680== ---Thread-Announcement------------------------------------------
+==3680== 
+==3680== Thread #1 is the program's root thread
+==3680== 
+==3680== ----------------------------------------------------------------
+==3680== 
+==3680== Possible data race during write of size 4 at 0x4251C64 by thread #933
+==3680== Locks held: none
+==3680==    at 0x4077FBC: internal_dictionary_clean_and_destroy_elements (in /usr/lib/libcommons.so)
+==3680==    by 0x4077D3F: dictionary_clean_and_destroy_elements (in /usr/lib/libcommons.so)
+==3680==    by 0x804E924: finalizar_memtable (memtable.c:19)
+==3680==    by 0x804D307: finalizar_FS (fileSystem.c:323)
+==3680==    by 0x804E65D: ejecutar_instruccion (instructions.c:62)
+==3680==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x405C294: start_thread (pthread_create.c:333)
+==3680==    by 0x41810AD: clone (clone.S:114)
+==3680== 
+==3680== This conflicts with a previous read of size 4 by thread #2
+==3680== Locks held: none
+==3680==    at 0x4077CBF: dictionary_iterator (in /usr/lib/libcommons.so)
+==3680==    by 0x804E8A7: limpiar_memtable (memtable.c:79)
+==3680==    by 0x804E8A7: dumpeo (memtable.c:179)
+==3680==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x405C294: start_thread (pthread_create.c:333)
+==3680==    by 0x41810AD: clone (clone.S:114)
+==3680==  Address 0x4251c64 is 52 bytes inside a block of size 80 alloc'd
+==3680==    at 0x402F2A8: calloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x4077A18: dictionary_create (in /usr/lib/libcommons.so)
+==3680==    by 0x804EE48: inicializar_memtable (memtable.c:6)
+==3680==    by 0x804D206: inicializar_FS (fileSystem.c:306)
+==3680==    by 0x804A0CC: main (fileSystem.c:11)
+==3680==  Block was alloc'd by thread #1
+==3680== 
+==3680== ----------------------------------------------------------------
+==3680== 
+==3680== Possible data race during write of size 4 at 0x4251C30 by thread #933
+==3680== Locks held: none
+==3680==    at 0x4077FBC: internal_dictionary_clean_and_destroy_elements (in /usr/lib/libcommons.so)
+==3680==    by 0x4077D1B: dictionary_clean (in /usr/lib/libcommons.so)
+==3680==    by 0x4077DB9: dictionary_destroy (in /usr/lib/libcommons.so)
+==3680==    by 0x804E935: finalizar_memtable (memtable.c:25)
+==3680==    by 0x804D307: finalizar_FS (fileSystem.c:323)
+==3680==    by 0x804E65D: ejecutar_instruccion (instructions.c:62)
+==3680==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x405C294: start_thread (pthread_create.c:333)
+==3680==    by 0x41810AD: clone (clone.S:114)
+==3680== 
+==3680== This conflicts with a previous read of size 4 by thread #2
+==3680== Locks held: none
+==3680==    at 0x4077CBF: dictionary_iterator (in /usr/lib/libcommons.so)
+==3680==    by 0x804E889: dumpear_memtable (memtable.c:190)
+==3680==    by 0x804E889: dumpeo (memtable.c:176)
+==3680==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x405C294: start_thread (pthread_create.c:333)
+==3680==    by 0x41810AD: clone (clone.S:114)
+==3680==  Address 0x4251c30 is 0 bytes inside a block of size 80 alloc'd
+==3680==    at 0x402F2A8: calloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x4077A18: dictionary_create (in /usr/lib/libcommons.so)
+==3680==    by 0x804EE48: inicializar_memtable (memtable.c:6)
+==3680==    by 0x804D206: inicializar_FS (fileSystem.c:306)
+==3680==    by 0x804A0CC: main (fileSystem.c:11)
+==3680==  Block was alloc'd by thread #1
+==3680== 
+--3680-- REDIR: 0x405e810 (libpthread.so.0:pthread_mutex_lock) redirected to 0x4032f90 (pthread_mutex_lock)
+--3680-- REDIR: 0x405fd80 (libpthread.so.0:pthread_mutex_unlock) redirected to 0x4032fc0 (pthread_mutex_unlock)
+==3680== 
+==3680== ERROR SUMMARY: 22 errors from 2 contexts (suppressed: 100411 from 417)
+==3680== 
+==3680== 2 errors in context 1 of 2:
+==3680== ----------------------------------------------------------------
+==3680== 
+==3680== Possible data race during write of size 4 at 0x4251C64 by thread #933
+==3680== Locks held: none
+==3680==    at 0x4077FBC: internal_dictionary_clean_and_destroy_elements (in /usr/lib/libcommons.so)
+==3680==    by 0x4077D3F: dictionary_clean_and_destroy_elements (in /usr/lib/libcommons.so)
+==3680==    by 0x804E924: finalizar_memtable (memtable.c:19)
+==3680==    by 0x804D307: finalizar_FS (fileSystem.c:323)
+==3680==    by 0x804E65D: ejecutar_instruccion (instructions.c:62)
+==3680==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x405C294: start_thread (pthread_create.c:333)
+==3680==    by 0x41810AD: clone (clone.S:114)
+==3680== 
+==3680== This conflicts with a previous read of size 4 by thread #2
+==3680== Locks held: none
+==3680==    at 0x4077CBF: dictionary_iterator (in /usr/lib/libcommons.so)
+==3680==    by 0x804E8A7: limpiar_memtable (memtable.c:79)
+==3680==    by 0x804E8A7: dumpeo (memtable.c:179)
+==3680==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x405C294: start_thread (pthread_create.c:333)
+==3680==    by 0x41810AD: clone (clone.S:114)
+==3680==  Address 0x4251c64 is 52 bytes inside a block of size 80 alloc'd
+==3680==    at 0x402F2A8: calloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x4077A18: dictionary_create (in /usr/lib/libcommons.so)
+==3680==    by 0x804EE48: inicializar_memtable (memtable.c:6)
+==3680==    by 0x804D206: inicializar_FS (fileSystem.c:306)
+==3680==    by 0x804A0CC: main (fileSystem.c:11)
+==3680==  Block was alloc'd by thread #1
+==3680== 
+==3680== 
+==3680== 20 errors in context 2 of 2:
+==3680== ----------------------------------------------------------------
+==3680== 
+==3680== Possible data race during write of size 4 at 0x4251C30 by thread #933
+==3680== Locks held: none
+==3680==    at 0x4077FBC: internal_dictionary_clean_and_destroy_elements (in /usr/lib/libcommons.so)
+==3680==    by 0x4077D1B: dictionary_clean (in /usr/lib/libcommons.so)
+==3680==    by 0x4077DB9: dictionary_destroy (in /usr/lib/libcommons.so)
+==3680==    by 0x804E935: finalizar_memtable (memtable.c:25)
+==3680==    by 0x804D307: finalizar_FS (fileSystem.c:323)
+==3680==    by 0x804E65D: ejecutar_instruccion (instructions.c:62)
+==3680==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x405C294: start_thread (pthread_create.c:333)
+==3680==    by 0x41810AD: clone (clone.S:114)
+==3680== 
+==3680== This conflicts with a previous read of size 4 by thread #2
+==3680== Locks held: none
+==3680==    at 0x4077CBF: dictionary_iterator (in /usr/lib/libcommons.so)
+==3680==    by 0x804E889: dumpear_memtable (memtable.c:190)
+==3680==    by 0x804E889: dumpeo (memtable.c:176)
+==3680==    by 0x40321E2: ??? (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x405C294: start_thread (pthread_create.c:333)
+==3680==    by 0x41810AD: clone (clone.S:114)
+==3680==  Address 0x4251c30 is 0 bytes inside a block of size 80 alloc'd
+==3680==    at 0x402F2A8: calloc (in /usr/lib/valgrind/vgpreload_helgrind-x86-linux.so)
+==3680==    by 0x4077A18: dictionary_create (in /usr/lib/libcommons.so)
+==3680==    by 0x804EE48: inicializar_memtable (memtable.c:6)
+==3680==    by 0x804D206: inicializar_FS (fileSystem.c:306)
+==3680==    by 0x804A0CC: main (fileSystem.c:11)
+==3680==  Block was alloc'd by thread #1
+==3680== 
+--3680-- 
+--3680-- used_suppression:  68466 helgrind-glibc2X-004 /usr/lib/valgrind/default.supp:931
+--3680-- used_suppression:  31023 helgrind-glibc2X-005 /usr/lib/valgrind/default.supp:945
+--3680-- used_suppression:    922 helgrind-glibc2X-108 /usr/lib/valgrind/default.supp:1018
+==3680== 
+==3680== ERROR SUMMARY: 22 errors from 2 contexts (suppressed: 100411 from 417)

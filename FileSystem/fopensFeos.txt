@@ -1,0 +1,64 @@
+==23373== 
+==23373== 344 bytes in 1 blocks are still reachable in loss record 102 of 262
+==23373==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==23373==    by 0x40F3359: __fopen_internal (iofopen.c:69)
+==23373==    by 0x40F341D: fopen@@GLIBC_2.1 (iofopen.c:97)
+==23373==    by 0x4070ADA: txt_open_for_append (in /usr/lib/libcommons.so)
+==23373==    by 0x4070BE3: log_create (in /usr/lib/libcommons.so)
+==23373==    by 0x804BB79: iniciar_logger (Estructuras.c:876)
+==23373==    by 0x804D1CB: inicializar_FS (fileSystem.c:293)
+==23373==    by 0x804A10C: main (fileSystem.c:11)
+==23373== 
+==23373== 344 bytes in 1 blocks are still reachable in loss record 103 of 262
+==23373==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==23373==    by 0x40F3359: __fopen_internal (iofopen.c:69)
+==23373==    by 0x40F341D: fopen@@GLIBC_2.1 (iofopen.c:97)
+==23373==    by 0x4070ADA: txt_open_for_append (in /usr/lib/libcommons.so)
+==23373==    by 0x804B6DE: escribir_registro_bloque (Estructuras.c:155)
+==23373==    by 0x804BD14: bajar_registro.9099 (compactador.c:184)
+==23373==    by 0x4072CDA: dictionary_iterator (in /usr/lib/libcommons.so)
+==23373==    by 0x804BE51: finalizar_compactacion (compactador.c:190)
+==23373==    by 0x804C69D: compactador (compactador.c:104)
+==23373==    by 0x4057294: start_thread (pthread_create.c:333)
+==23373==    by 0x417C0AD: clone (clone.S:114)
+==23373== 
+==23373== 344 bytes in 1 blocks are still reachable in loss record 104 of 262
+==23373==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==23373==    by 0x40F3359: __fopen_internal (iofopen.c:69)
+==23373==    by 0x40F341D: fopen@@GLIBC_2.1 (iofopen.c:97)
+==23373==    by 0x804A269: abrir_archivo (Estructuras.c:8)
+==23373==    by 0x804B814: escribir_registro_bloque (Estructuras.c:200)
+==23373==    by 0x804BD14: bajar_registro.9099 (compactador.c:184)
+==23373==    by 0x4072CDA: dictionary_iterator (in /usr/lib/libcommons.so)
+==23373==    by 0x804BE51: finalizar_compactacion (compactador.c:190)
+==23373==    by 0x804C69D: compactador (compactador.c:104)
+==23373==    by 0x4057294: start_thread (pthread_create.c:333)
+==23373==    by 0x417C0AD: clone (clone.S:114)
+==23373== 
+==23373== 10,320 bytes in 30 blocks are still reachable in loss record 150 of 262
+==23373==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==23373==    by 0x40F3359: __fopen_internal (iofopen.c:69)
+==23373==    by 0x40F341D: fopen@@GLIBC_2.1 (iofopen.c:97)
+==23373==    by 0x804A269: abrir_archivo (Estructuras.c:8)
+==23373==    by 0x804ACFB: buscar_key_en_bloques (Estructuras.c:271)
+==23373==    by 0x804D5A8: leer_binario (fileSystem.c:376)
+==23373==    by 0x804D64A: obtener_registros_key (fileSystem.c:428)
+==23373==    by 0x804DFCC: execute_select (instructions.c:169)
+==23373==    by 0x804E6A5: ejecutar_instruccion (instructions.c:43)
+==23373==    by 0x4057294: start_thread (pthread_create.c:333)
+==23373==    by 0x417C0AD: clone (clone.S:114)
+==23373== 
+
+==23373== 338,152 bytes in 983 blocks are still reachable in loss record 217 of 262
+==23373==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==23373==    by 0x40F3359: __fopen_internal (iofopen.c:69)
+==23373==    by 0x40F341D: fopen@@GLIBC_2.1 (iofopen.c:97)
+==23373==    by 0x804A269: abrir_archivo (Estructuras.c:8)
+==23373==    by 0x804AE22: buscar_key_en_bloques (Estructuras.c:306)
+==23373==    by 0x804D5A8: leer_binario (fileSystem.c:376)
+==23373==    by 0x804D64A: obtener_registros_key (fileSystem.c:428)
+==23373==    by 0x804DFCC: execute_select (instructions.c:169)
+==23373==    by 0x804E6A5: ejecutar_instruccion (instructions.c:43)
+==23373==    by 0x4057294: start_thread (pthread_create.c:333)
+==23373==    by 0x417C0AD: clone (clone.S:114)
+==23373== 

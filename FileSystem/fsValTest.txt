@@ -1,0 +1,167 @@
+==6231== Memcheck, a memory error detector
+==6231== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==6231== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
+==6231== Command: Default/FileSystem
+==6231== Parent PID: 6230
+==6231== 
+--6231-- 
+--6231-- Valgrind options:
+--6231--    --show-leak-kinds=all
+--6231--    --leak-check=full
+--6231--    --track-origins=yes
+--6231--    -v
+--6231--    --log-file=fsValTest.txt
+--6231-- Contents of /proc/version:
+--6231--   Linux version 4.4.0-116-generic (buildd@lgw01-amd64-023) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.9) ) #140-Ubuntu SMP Mon Feb 12 21:22:43 UTC 2018
+--6231-- 
+--6231-- Arch and hwcaps: X86, LittleEndian, x86-mmxext-sse1-sse2-sse3-lzcnt
+--6231-- Page sizes: currently 4096, max supported 4096
+--6231-- Valgrind library directory: /usr/lib/valgrind
+--6231-- Reading syms from /lib/i386-linux-gnu/ld-2.23.so
+--6231--   Considering /lib/i386-linux-gnu/ld-2.23.so ..
+--6231--   .. CRC mismatch (computed 596cb2b8 wanted 417b32cc)
+--6231--   Considering /usr/lib/debug/lib/i386-linux-gnu/ld-2.23.so ..
+--6231--   .. CRC is valid
+--6231-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/FileSystem/Default/FileSystem
+--6231-- Reading syms from /usr/lib/valgrind/memcheck-x86-linux
+--6231--   Considering /usr/lib/valgrind/memcheck-x86-linux ..
+--6231--   .. CRC mismatch (computed 6036da3f wanted 652e483f)
+--6231--    object doesn't have a symbol table
+--6231--    object doesn't have a dynamic symbol table
+--6231-- Scheduler: using generic scheduler lock implementation.
+--6231-- Reading suppressions file: /usr/lib/valgrind/default.supp
+==6231== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-6231-by-utnso-on-???
+==6231== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-6231-by-utnso-on-???
+==6231== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-6231-by-utnso-on-???
+==6231== 
+==6231== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==6231== don't want to do, unless you know exactly what you're doing,
+==6231== or are doing some strange experiment):
+==6231==   /usr/lib/valgrind/../../bin/vgdb --pid=6231 ...command...
+==6231== 
+==6231== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==6231==   /path/to/gdb Default/FileSystem
+==6231== and then give GDB the following command
+==6231==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=6231
+==6231== --pid is optional if only one valgrind process is running
+==6231== 
+--6231-- REDIR: 0x4018eb0 (ld-linux.so.2:strlen) redirected to 0x380490f2 (???)
+--6231-- REDIR: 0x4018c70 (ld-linux.so.2:index) redirected to 0x380490cd (???)
+--6231-- Reading syms from /usr/lib/valgrind/vgpreload_core-x86-linux.so
+--6231--   Considering /usr/lib/valgrind/vgpreload_core-x86-linux.so ..
+--6231--   .. CRC mismatch (computed 5b95c0c4 wanted 39e79efa)
+--6231--    object doesn't have a symbol table
+--6231-- Reading syms from /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so
+--6231--   Considering /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so ..
+--6231--   .. CRC mismatch (computed 4d5a1526 wanted 33571d5b)
+--6231--    object doesn't have a symbol table
+==6231== WARNING: new redirection conflicts with existing -- ignoring it
+--6231--     old: 0x04018eb0 (strlen              ) R-> (0000.0) 0x380490f2 ???
+--6231--     new: 0x04018eb0 (strlen              ) R-> (2007.0) 0x0402f410 strlen
+--6231-- Reading syms from /lib/i386-linux-gnu/libpthread-2.23.so
+--6231--   Considering /usr/lib/debug/.build-id/12/78da59ecc0791dce5c44d8b8756a0480be3a5b.debug ..
+--6231--   .. build-id is valid
+--6231-- Reading syms from /usr/lib/libcommons.so
+--6231-- Reading syms from /home/utnso/git/tp-2019-1c-Como-PCs-en-el-agua/Herramientas/Debug/libHerramientas.so
+--6231-- Reading syms from /lib/i386-linux-gnu/libc-2.23.so
+--6231--   Considering /lib/i386-linux-gnu/libc-2.23.so ..
+--6231--   .. CRC mismatch (computed af9c0474 wanted a5de3f2a)
+--6231--   Considering /usr/lib/debug/lib/i386-linux-gnu/libc-2.23.so ..
+--6231--   .. CRC is valid
+--6231-- REDIR: 0x410c4b0 (libc.so.6:strncasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x4113140 (libc.so.6:memrchr) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x4125b20 (libc.so.6:wcslen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x410a580 (libc.so.6:strlen) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x410c610 (libc.so.6:memcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x4109ee0 (libc.so.6:strcmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x410bfc0 (libc.so.6:memset) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x4109f90 (libc.so.6:strcpy) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x410b350 (libc.so.6:strstr) redirected to 0x4033700 (strstr)
+--6231-- REDIR: 0x410a7e0 (libc.so.6:__GI_strrchr) redirected to 0x402ee00 (__GI_strrchr)
+--6231-- REDIR: 0x410e280 (libc.so.6:strchrnul) redirected to 0x40330b0 (strchrnul)
+--6231-- REDIR: 0x4105f00 (libc.so.6:malloc) redirected to 0x402c110 (malloc)
+--6231-- REDIR: 0x4106810 (libc.so.6:calloc) redirected to 0x402e010 (calloc)
+--6231-- REDIR: 0x410a5c0 (libc.so.6:__GI_strlen) redirected to 0x402f390 (__GI_strlen)
+--6231-- REDIR: 0x410c680 (libc.so.6:__GI_memcpy) redirected to 0x4030fb0 (__GI_memcpy)
+--6231-- REDIR: 0x4106520 (libc.so.6:realloc) redirected to 0x402e250 (realloc)
+--6231-- REDIR: 0x4106470 (libc.so.6:free) redirected to 0x402d2f0 (free)
+--6231-- REDIR: 0x4113440 (libc.so.6:__strlen_sse2_bsf) redirected to 0x402f370 (strlen)
+--6231-- REDIR: 0x410a700 (libc.so.6:strncmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x41ca5c0 (libc.so.6:__strncmp_ssse3) redirected to 0x402fab0 (strncmp)
+--6231-- REDIR: 0x410c460 (libc.so.6:strcasecmp) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x41cbfb0 (libc.so.6:__strcasecmp_ssse3) redirected to 0x402fcf0 (strcasecmp)
+--6231-- REDIR: 0x410c0d0 (libc.so.6:__GI_mempcpy) redirected to 0x40332c0 (__GI_mempcpy)
+--6231-- REDIR: 0x4109ae0 (libc.so.6:strcat) redirected to 0x4026560 (_vgnU_ifunc_wrapper)
+--6231-- REDIR: 0x411eb30 (libc.so.6:__strcat_ssse3) redirected to 0x402f030 (strcat)
+--6231-- REDIR: 0x410bc10 (libc.so.6:__GI_memcmp) redirected to 0x4031ef0 (__GI_memcmp)
+--6231-- REDIR: 0x410e1b0 (libc.so.6:__GI___rawmemchr) redirected to 0x4033110 (__GI___rawmemchr)
+--6231-- REDIR: 0x410bf60 (libc.so.6:__GI_memmove) redirected to 0x4032ad0 (__GI_memmove)
+--6231-- REDIR: 0x41ba4d0 (libc.so.6:__memset_sse2) redirected to 0x40327d0 (memset)
+--6231-- REDIR: 0x41c9150 (libc.so.6:__strcmp_ssse3) redirected to 0x4030450 (strcmp)
+--6231-- REDIR: 0x410ba30 (libc.so.6:__GI_memchr) redirected to 0x40306d0 (__GI_memchr)
+==6231== 
+==6231== HEAP SUMMARY:
+==6231==     in use at exit: 210 bytes in 15 blocks
+==6231==   total heap usage: 968 allocs, 953 frees, 204,363 bytes allocated
+==6231== 
+==6231== Searching for pointers to 15 not-freed blocks
+==6231== Checked 8,622,124 bytes
+==6231== 
+==6231== 15 bytes in 5 blocks are definitely lost in loss record 1 of 5
+==6231==    at 0x402E2CC: realloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==6231==    by 0x40710E7: string_append (in /usr/lib/libcommons.so)
+==6231==    by 0x4071A5E: _string_append_with_format_list (in /usr/lib/libcommons.so)
+==6231==    by 0x40711D3: string_from_vformat (in /usr/lib/libcommons.so)
+==6231==    by 0x4071171: string_from_format (in /usr/lib/libcommons.so)
+==6231==    by 0x4071214: string_itoa (in /usr/lib/libcommons.so)
+==6231==    by 0x804B33B: ocupar_bloque (Estructuras.c:407)
+==6231==    by 0x804B611: archivo_inicializar (Estructuras.c:686)
+==6231==    by 0x804B69B: crear_particiones (Estructuras.c:655)
+==6231==    by 0x804DBCE: execute_create (instructions.c:68)
+==6231==    by 0x407C6D8: vigilar_conexiones_entrantes (utilsServidor.c:167)
+==6231==    by 0x804D610: inicializar_conexiones (fileSystem.c:526)
+==6231== 
+==6231== 19 bytes in 4 blocks are indirectly lost in loss record 2 of 5
+==6231==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==6231==    by 0x410A2C5: strdup (strdup.c:42)
+==6231==    by 0x407B0D7: leer_a_instruccion (serializaciones.c:237)
+==6231==    by 0x407C6AF: vigilar_conexiones_entrantes (utilsServidor.c:165)
+==6231==    by 0x804D610: inicializar_conexiones (fileSystem.c:526)
+==6231==    by 0x8049F11: main (fileSystem.c:72)
+==6231== 
+==6231== 32 bytes in 4 blocks are indirectly lost in loss record 3 of 5
+==6231==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==6231==    by 0x4072905: list_create_element (in /usr/lib/libcommons.so)
+==6231==    by 0x4071E3D: list_add (in /usr/lib/libcommons.so)
+==6231==    by 0x407B0F9: leer_a_instruccion (serializaciones.c:239)
+==6231==    by 0x407C6AF: vigilar_conexiones_entrantes (utilsServidor.c:165)
+==6231==    by 0x804D610: inicializar_conexiones (fileSystem.c:526)
+==6231==    by 0x8049F11: main (fileSystem.c:72)
+==6231== 
+==6231== 59 (8 direct, 51 indirect) bytes in 1 blocks are definitely lost in loss record 4 of 5
+==6231==    at 0x402C17C: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==6231==    by 0x4071E01: list_create (in /usr/lib/libcommons.so)
+==6231==    by 0x407B070: leer_a_instruccion (serializaciones.c:223)
+==6231==    by 0x407C6AF: vigilar_conexiones_entrantes (utilsServidor.c:165)
+==6231==    by 0x804D610: inicializar_conexiones (fileSystem.c:526)
+==6231==    by 0x8049F11: main (fileSystem.c:72)
+==6231== 
+==6231== 136 bytes in 1 blocks are possibly lost in loss record 5 of 5
+==6231==    at 0x402E0B8: calloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+==6231==    by 0x4011726: allocate_dtv (dl-tls.c:322)
+==6231==    by 0x401214B: _dl_allocate_tls (dl-tls.c:539)
+==6231==    by 0x4057CC3: allocate_stack (allocatestack.c:588)
+==6231==    by 0x4057CC3: pthread_create@@GLIBC_2.1 (pthread_create.c:539)
+==6231==    by 0x804EA8B: iniciar_dumpeo (memtable.c:137)
+==6231==    by 0x804D0A7: inicializar_FS (fileSystem.c:352)
+==6231==    by 0x8049F0C: main (fileSystem.c:56)
+==6231== 
+==6231== LEAK SUMMARY:
+==6231==    definitely lost: 23 bytes in 6 blocks
+==6231==    indirectly lost: 51 bytes in 8 blocks
+==6231==      possibly lost: 136 bytes in 1 blocks
+==6231==    still reachable: 0 bytes in 0 blocks
+==6231==         suppressed: 0 bytes in 0 blocks
+==6231== 
+==6231== ERROR SUMMARY: 3 errors from 3 contexts (suppressed: 0 from 0)
+==6231== ERROR SUMMARY: 3 errors from 3 contexts (suppressed: 0 from 0)
